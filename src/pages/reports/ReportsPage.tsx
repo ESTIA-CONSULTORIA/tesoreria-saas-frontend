@@ -9,6 +9,8 @@ export default function ReportsPage() {
   const [cashFlow, setCashFlow] = useState<any>(null);
   const [balances, setBalances] = useState<any[]>([]);
   const [categorySummary, setCategorySummary] = useState<any[]>([]);
+  const [incomeStatement, setIncomeStatement] = useState<any>(null);
+  const [breakEvenPoint, setBreakEvenPoint] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -21,15 +23,19 @@ export default function ReportsPage() {
     try {
       setLoading(true);
       setError("");
-      const [cashRes, balanceRes, categoryRes] = await Promise.all([
+      const [cashRes, balanceRes, categoryRes, incomeRes, breakEvenRes] = await Promise.all([
         api.get("/reports/cash-flow", { params: { startDate, endDate } }),
         api.get("/reports/balance-by-account"),
         api.get("/reports/category-summary", { params: { startDate, endDate } }),
+        api.get("/reports/income-statement", { params: { startDate, endDate } }),
+        api.get("/reports/break-even-point", { params: { startDate, endDate } }),
       ]);
 
       setCashFlow(cashRes.data);
       setBalances(Array.isArray(balanceRes.data) ? balanceRes.data : []);
       setCategorySummary(Array.isArray(categoryRes.data) ? categoryRes.data : []);
+      setIncomeStatement(incomeRes.data);
+      setBreakEvenPoint(breakEvenRes.data);
     } catch (err: any) {
       setError(err.response?.data?.message || "No fue posible cargar reportes");
     } finally {
@@ -91,6 +97,78 @@ export default function ReportsPage() {
                     {row.category} ({row.type}) - {Number(row.total)}
                   </div>
                 ))}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+              <h3 className="mb-3 text-lg font-semibold">Estado de Resultados</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between text-slate-300">
+                  <span>Ventas</span>
+                  <span>{Number(incomeStatement?.ventas || 0)}</span>
+                </div>
+                <div className="flex justify-between text-slate-300">
+                  <span>Cortesías y Descuentos</span>
+                  <span>-{Number(incomeStatement?.cortesiasDescuentos || 0)}</span>
+                </div>
+                <div className="flex justify-between text-slate-300">
+                  <span>Costo de Venta</span>
+                  <span>-{Number(incomeStatement?.costoVenta || 0)}</span>
+                </div>
+                <div className="flex justify-between font-semibold text-white border-t border-slate-700 pt-2">
+                  <span>Utilidad Bruta</span>
+                  <span>{Number(incomeStatement?.utilidadBruta || 0)}</span>
+                </div>
+                <div className="flex justify-between text-slate-300">
+                  <span>Gastos Fijos</span>
+                  <span>-{Number(incomeStatement?.gastosFijos || 0)}</span>
+                </div>
+                <div className="flex justify-between text-slate-300">
+                  <span>Gastos Variables</span>
+                  <span>-{Number(incomeStatement?.gastosVariables || 0)}</span>
+                </div>
+                <div className="flex justify-between font-semibold text-white border-t border-slate-700 pt-2">
+                  <span>Utilidad Neta antes de impuestos</span>
+                  <span>{Number(incomeStatement?.utilidadNetaAntesImpuestos || 0)}</span>
+                </div>
+                <div className="flex justify-between text-slate-300">
+                  <span>Impuestos</span>
+                  <span>-{Number(incomeStatement?.impuestos || 0)}</span>
+                </div>
+                <div className="flex justify-between text-slate-300">
+                  <span>Inversiones</span>
+                  <span>-{Number(incomeStatement?.inversiones || 0)}</span>
+                </div>
+                <div className="flex justify-between font-bold text-green-400 border-t border-slate-700 pt-2">
+                  <span>Utilidad Real del Ejercicio</span>
+                  <span>{Number(incomeStatement?.utilidadReal || 0)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+              <h3 className="mb-3 text-lg font-semibold">Punto de Equilibrio</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between text-slate-300">
+                  <span>Ventas</span>
+                  <span>{Number(breakEvenPoint?.ventas || 0)}</span>
+                </div>
+                <div className="flex justify-between text-slate-300">
+                  <span>Costo Variable Total</span>
+                  <span>{Number(breakEvenPoint?.costoVariableTotal || 0)}</span>
+                </div>
+                <div className="flex justify-between text-slate-300">
+                  <span>Margen de Contribución</span>
+                  <span>{(Number(breakEvenPoint?.margenContribucion || 0) * 100).toFixed(2)}%</span>
+                </div>
+                <div className="flex justify-between text-slate-300">
+                  <span>Gastos Fijos</span>
+                  <span>{Number(breakEvenPoint?.gastosFijos || 0)}</span>
+                </div>
+                <div className="flex justify-between font-bold text-blue-400 border-t border-slate-700 pt-2">
+                  <span>Punto de Equilibrio</span>
+                  <span>{Number(breakEvenPoint?.puntoEquilibrio || 0)}</span>
+                </div>
               </div>
             </div>
           </div>
