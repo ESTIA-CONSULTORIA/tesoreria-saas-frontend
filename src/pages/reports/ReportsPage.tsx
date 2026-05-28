@@ -80,13 +80,17 @@ export default function ReportsPage() {
 
             <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
               <h3 className="mb-3 text-lg font-semibold">Balance por cuenta</h3>
-              <div className="space-y-2">
-                {balances.map((row) => (
-                  <div key={row.accountId} className="text-sm text-slate-300">
-                    {row.accountName} ({row.bank}) - {Number(row.balance)} {row.currency}
-                  </div>
-                ))}
-              </div>
+              {balances.length === 0 ? (
+                <p className="text-sm text-slate-400">No hay cuentas bancarias registradas</p>
+              ) : (
+                <div className="space-y-2">
+                  {balances.map((row) => (
+                    <div key={row.accountId} className="text-sm text-slate-300">
+                      {row.accountName} ({row.bank}) - {Number(row.balance)} {row.currency}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">

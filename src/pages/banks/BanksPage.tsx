@@ -16,14 +16,21 @@ interface BankAccount {
   isActive: boolean;
 }
 
+interface Branch {
+  id: string;
+  name: string;
+}
+
 export default function BanksPage() {
   const [banks, setBanks] = useState<BankAccount[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     loadBanks();
+    loadBranches();
   }, []);
 
   async function loadBanks() {
@@ -37,6 +44,20 @@ export default function BanksPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function loadBranches() {
+    try {
+      const response = await api.get("/branches");
+      setBranches(Array.isArray(response.data) ? response.data : []);
+    } catch {
+      setBranches([]);
+    }
+  }
+
+  function getBranchName(branchId: string): string {
+    const branch = branches.find((b) => b.id === branchId);
+    return branch?.name || branchId;
   }
 
   async function deleteBank(id: string) {
@@ -78,7 +99,7 @@ export default function BanksPage() {
                         {account.bank} · {account.accountNumber}
                       </p>
                       <p className="text-xs text-slate-500">
-                        Sucursal: {account.branchId} · Tipo: {account.type} · Moneda: {account.currency}
+                        Sucursal: {getBranchName(account.branchId)} · Tipo: {account.type} · Moneda: {account.currency}
                       </p>
                       <p className="text-xs text-slate-400">
                         Saldo inicial: {Number(account.initialBalance)} · Saldo actual: {Number(account.balance)}

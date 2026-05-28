@@ -13,19 +13,28 @@ interface Role {
   name: string;
 }
 
+interface Branch {
+  id: string;
+  name: string;
+}
+
 export default function CreateUserModal({ open, onClose, onCreated }: Props) {
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [roleId, setRoleId] = useState("");
   const [roleCode, setRoleCode] = useState("USER");
+  const [branchId, setBranchId] = useState("");
   const [roles, setRoles] = useState<Role[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (open) {
       loadRoles();
+      loadBranches();
     }
   }, [open]);
 
@@ -39,6 +48,16 @@ export default function CreateUserModal({ open, onClose, onCreated }: Props) {
     }
   }
 
+  async function loadBranches() {
+    try {
+      const response = await api.get("/branches");
+      const branchList = Array.isArray(response.data) ? response.data : [];
+      setBranches(branchList);
+    } catch {
+      setBranches([]);
+    }
+  }
+
   if (!open) return null;
 
   async function handleSubmit(e: React.FormEvent) {
@@ -48,22 +67,27 @@ export default function CreateUserModal({ open, onClose, onCreated }: Props) {
       setLoading(true);
       setError("");
 
+      const fullName = `${firstName} ${lastName}`.trim();
+
       await api.post("/users", {
-        name,
+        name: fullName,
         email,
         password,
         roleId: roleId || undefined,
         roleCode,
+        branchId: branchId || undefined,
       });
 
       onCreated();
       onClose();
 
-      setName("");
+      setFirstName("");
+      setLastName("");
       setEmail("");
       setPassword("");
       setRoleId("");
       setRoleCode("USER");
+      setBranchId("");
     } catch (err: any) {
       setError(err.response?.data?.message || "No fue posible crear el usuario");
     } finally {
@@ -103,18 +127,28 @@ export default function CreateUserModal({ open, onClose, onCreated }: Props) {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Nombre completo"
-            className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
-          />
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="Nombre"
+              required
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+            />
+            <input
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="Apellido"
+              required
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+            />
+          </div>
 
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Correo electronico"
+            placeholder="Correo electrónico"
             required
             className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
           />
@@ -123,7 +157,7 @@ export default function CreateUserModal({ open, onClose, onCreated }: Props) {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Contrasena"
+            placeholder="Contraseña"
             required
             className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
           />
@@ -137,6 +171,19 @@ export default function CreateUserModal({ open, onClose, onCreated }: Props) {
             {roles.map((role) => (
               <option key={role.id} value={role.id}>
                 {role.name} ({role.code})
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={branchId}
+            onChange={(e) => setBranchId(e.target.value)}
+            className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+          >
+            <option value="">Seleccionar sucursal (opcional)</option>
+            {branches.map((branch) => (
+              <option key={branch.id} value={branch.id}>
+                {branch.name}
               </option>
             ))}
           </select>
