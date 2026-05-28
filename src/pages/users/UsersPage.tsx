@@ -88,6 +88,98 @@ export default function UsersPage() {
     }
   }
 
+  async function activateAll() {
+    if (!selectedRole) return;
+    try {
+      const modules = selectedRole.permissions?.map((p) => p.module) || [];
+      await Promise.all(
+        modules.map((module) =>
+          api.put(`/roles/${selectedRole!.id}/permissions/${module}`, {
+            canView: true,
+            canCreate: true,
+            canEdit: true,
+            canDelete: true,
+          }),
+        ),
+      );
+      loadData();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible activar todos los permisos");
+    }
+  }
+
+  async function deactivateAll() {
+    if (!selectedRole) return;
+    try {
+      const modules = selectedRole.permissions?.map((p) => p.module) || [];
+      await Promise.all(
+        modules.map((module) =>
+          api.put(`/roles/${selectedRole!.id}/permissions/${module}`, {
+            canView: false,
+            canCreate: false,
+            canEdit: false,
+            canDelete: false,
+          }),
+        ),
+      );
+      loadData();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible desactivar todos los permisos");
+    }
+  }
+
+  async function setReadOnly() {
+    if (!selectedRole) return;
+    try {
+      const modules = selectedRole.permissions?.map((p) => p.module) || [];
+      await Promise.all(
+        modules.map((module) =>
+          api.put(`/roles/${selectedRole!.id}/permissions/${module}`, {
+            canView: true,
+            canCreate: false,
+            canEdit: false,
+            canDelete: false,
+          }),
+        ),
+      );
+      loadData();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible establecer solo lectura");
+    }
+  }
+
+  const moduleIcons: Record<string, string> = {
+    DASHBOARD: "📊",
+    COMPANIES: "🏢",
+    BRANCHES: "🏪",
+    USERS: "👤",
+    ROLES: "👥",
+    BANKS: "🏦",
+    MOVEMENTS: "🧾",
+    TRANSFERS: "🔁",
+    REPORTS: "📑",
+    TREASURY: "💰",
+    RECONCILIATION: "📋",
+    ADMINISTRATION: "🔐",
+    SETTINGS: "⚙️",
+  };
+
+  const moduleNames: Record<string, string> = {
+    DASHBOARD: "Dashboard",
+    COMPANIES: "Empresas",
+    BRANCHES: "Sucursales",
+    USERS: "Usuarios",
+    ROLES: "Roles",
+    BANKS: "Bancos",
+    MOVEMENTS: "Movimientos",
+    TRANSFERS: "Transferencias",
+    REPORTS: "Reportes",
+    TREASURY: "Tesorería",
+    RECONCILIATION: "Conciliación",
+    ADMINISTRATION: "Administración",
+    SETTINGS: "Configuración",
+  };
+
   return (
     <MainLayout>
       <CreateUserModal
@@ -210,71 +302,159 @@ export default function UsersPage() {
 
         {/* Modal de Permisos */}
         {permissionsModalOpen && selectedRole && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-            <div className="w-full max-w-4xl rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-              <div className="mb-6 flex items-center justify-between">
-                <div>
-                  <h3 className="text-2xl font-bold text-white">Permisos: {selectedRole.name}</h3>
-                  <p className="text-sm text-slate-400">Código: {selectedRole.code}</p>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4">
+            <div className="w-full max-w-6xl h-[90vh] rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl flex flex-col">
+              {/* Header */}
+              <div className="border-b border-slate-700 p-6 bg-slate-800/50">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-2xl font-bold text-white mb-1">{selectedRole.name}</h3>
+                    <p className="text-sm text-slate-400">{selectedRole.description || "Sin descripción"}</p>
+                    <p className="text-xs text-slate-500 mt-1">Código: {selectedRole.code}</p>
+                  </div>
+                  <button
+                    onClick={() => setPermissionsModalOpen(false)}
+                    className="rounded-lg bg-slate-700 px-4 py-2 text-sm text-white hover:bg-slate-600 transition-colors"
+                  >
+                    ✕
+                  </button>
                 </div>
-                <button
-                  onClick={() => setPermissionsModalOpen(false)}
-                  className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700"
-                >
-                  Cerrar
-                </button>
               </div>
 
-              <div className="space-y-4">
+              {/* Botones de acción rápida */}
+              <div className="border-b border-slate-700 p-4 bg-slate-800/30">
+                <div className="flex gap-3">
+                  <button
+                    onClick={activateAll}
+                    className="rounded-lg bg-green-600/20 border border-green-600/50 px-4 py-2 text-sm font-medium text-green-400 hover:bg-green-600/30 transition-colors"
+                  >
+                    ✅ Activar todo
+                  </button>
+                  <button
+                    onClick={deactivateAll}
+                    className="rounded-lg bg-red-600/20 border border-red-600/50 px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-600/30 transition-colors"
+                  >
+                    ❌ Desactivar todo
+                  </button>
+                  <button
+                    onClick={setReadOnly}
+                    className="rounded-lg bg-blue-600/20 border border-blue-600/50 px-4 py-2 text-sm font-medium text-blue-400 hover:bg-blue-600/30 transition-colors"
+                  >
+                    👁️ Solo lectura
+                  </button>
+                </div>
+              </div>
+
+              {/* Grid de permisos */}
+              <div className="flex-1 overflow-y-auto p-6">
                 {selectedRole.permissions && selectedRole.permissions.length > 0 ? (
-                  selectedRole.permissions.map((permission) => (
-                    <div key={permission.id} className="rounded-xl border border-slate-800 bg-slate-800/50 p-4">
-                      <h4 className="mb-3 text-lg font-semibold">{permission.module}</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={permission.canView}
-                            onChange={(e) => updatePermission(permission.module, "canView", e.target.checked)}
-                            className="rounded"
-                          />
-                          <span className="text-sm text-slate-300">Ver</span>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {selectedRole.permissions.map((permission) => (
+                      <div
+                        key={permission.id}
+                        className="rounded-xl border border-slate-700 bg-slate-800/50 p-4 hover:bg-slate-800/70 transition-colors"
+                      >
+                        <div className="flex items-center gap-3 mb-4">
+                          <span className="text-2xl">{moduleIcons[permission.module] || "📦"}</span>
+                          <div>
+                            <h4 className="font-semibold text-white text-sm">
+                              {moduleNames[permission.module] || permission.module}
+                            </h4>
+                            <p className="text-xs text-slate-500">{permission.module}</p>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={permission.canCreate}
-                            onChange={(e) => updatePermission(permission.module, "canCreate", e.target.checked)}
-                            className="rounded"
-                          />
-                          <span className="text-sm text-slate-300">Crear</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={permission.canEdit}
-                            onChange={(e) => updatePermission(permission.module, "canEdit", e.target.checked)}
-                            className="rounded"
-                          />
-                          <span className="text-sm text-slate-300">Editar</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={permission.canDelete}
-                            onChange={(e) => updatePermission(permission.module, "canDelete", e.target.checked)}
-                            className="rounded"
-                          />
-                          <span className="text-sm text-slate-300">Eliminar</span>
+
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-slate-400">Ver</span>
+                            <button
+                              onClick={() => updatePermission(permission.module, "canView", !permission.canView)}
+                              className={`w-12 h-6 rounded-full transition-colors ${
+                                permission.canView ? "bg-blue-600" : "bg-slate-700"
+                              }`}
+                            >
+                              <div
+                                className={`w-5 h-5 rounded-full bg-white transition-transform ${
+                                  permission.canView ? "translate-x-6" : "translate-x-0.5"
+                                }`}
+                              />
+                            </button>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-slate-400">Crear</span>
+                            <button
+                              onClick={() => updatePermission(permission.module, "canCreate", !permission.canCreate)}
+                              className={`w-12 h-6 rounded-full transition-colors ${
+                                permission.canCreate ? "bg-blue-600" : "bg-slate-700"
+                              }`}
+                            >
+                              <div
+                                className={`w-5 h-5 rounded-full bg-white transition-transform ${
+                                  permission.canCreate ? "translate-x-6" : "translate-x-0.5"
+                                }`}
+                              />
+                            </button>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-slate-400">Editar</span>
+                            <button
+                              onClick={() => updatePermission(permission.module, "canEdit", !permission.canEdit)}
+                              className={`w-12 h-6 rounded-full transition-colors ${
+                                permission.canEdit ? "bg-blue-600" : "bg-slate-700"
+                              }`}
+                            >
+                              <div
+                                className={`w-5 h-5 rounded-full bg-white transition-transform ${
+                                  permission.canEdit ? "translate-x-6" : "translate-x-0.5"
+                                }`}
+                              />
+                            </button>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-slate-400">Eliminar</span>
+                            <button
+                              onClick={() => updatePermission(permission.module, "canDelete", !permission.canDelete)}
+                              className={`w-12 h-6 rounded-full transition-colors ${
+                                permission.canDelete ? "bg-blue-600" : "bg-slate-700"
+                              }`}
+                            >
+                              <div
+                                className={`w-5 h-5 rounded-full bg-white transition-transform ${
+                                  permission.canDelete ? "translate-x-6" : "translate-x-0.5"
+                                }`}
+                              />
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    ))}
+                  </div>
                 ) : (
-                  <div className="rounded-xl bg-slate-800/50 p-4 text-center text-slate-400">
-                    No hay permisos configurados para este rol
+                  <div className="rounded-xl bg-slate-800/50 p-8 text-center text-slate-400">
+                    <p className="text-lg">No hay permisos configurados para este rol</p>
                   </div>
                 )}
+              </div>
+
+              {/* Footer */}
+              <div className="border-t border-slate-700 p-4 bg-slate-800/50">
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setPermissionsModalOpen(false)}
+                    className="rounded-lg bg-slate-700 px-6 py-2 text-sm font-medium text-white hover:bg-slate-600 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={() => setPermissionsModalOpen(false)}
+                    className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+                  >
+                    Guardar cambios
+                  </button>
+                </div>
               </div>
             </div>
           </div>
