@@ -21,6 +21,7 @@ export default function LoginPage() {
       });
 
       const token = response.data.access_token;
+      const modulosActivos = response.data.modulosActivos || [];
 
       login(
         token,
@@ -29,7 +30,8 @@ export default function LoginPage() {
           id: "1",
           email,
           name: "Administrador",
-        }
+        },
+        modulosActivos
       );
 
       navigate("/dashboard");

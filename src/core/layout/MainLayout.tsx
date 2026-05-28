@@ -1,24 +1,25 @@
 import { Link, useLocation } from "react-router-dom";
 import Header from "./Header";
 import { theme } from "../theme/theme";
+import { useModulo } from "../hooks/useModulo";
 
 interface Props {
   children: React.ReactNode;
 }
 
 const navItems = [
-  { label: "Dashboard", to: "/dashboard", icon: "📊" },
-  { label: "Empresas", to: "/companies", icon: "🏢" },
-  { label: "Sucursales", to: "/branches", icon: "🏪" },
-  { label: "Usuarios y Roles", to: "/users", icon: "👤" },
-  { label: "Bancos", to: "/banks", icon: "🏦" },
-  { label: "Movimientos", to: "/movements", icon: "🧾" },
-  { label: "Transferencias", to: "/transfers", icon: "🔁" },
-  { label: "Reportes", to: "/reports", icon: "📑" },
-  { label: "Tesorería", to: "/treasury", icon: "💰" },
-  { label: "Conciliación", to: "/reconciliation", icon: "📋" },
-  { label: "Administración", to: "/administration", icon: "🔐", adminOnly: true },
-  { label: "Configuración", to: "/settings", icon: "⚙️" },
+  { label: "Dashboard", to: "/dashboard", icon: "📊", modulo: "dashboard" },
+  { label: "Empresas", to: "/companies", icon: "🏢", modulo: "empresas" },
+  { label: "Sucursales", to: "/branches", icon: "🏪", modulo: "sucursales" },
+  { label: "Usuarios y Roles", to: "/users", icon: "👤", modulo: "usuarios" },
+  { label: "Bancos", to: "/banks", icon: "🏦", modulo: "bancos" },
+  { label: "Movimientos", to: "/movements", icon: "🧾", modulo: "movimientos" },
+  { label: "Transferencias", to: "/transfers", icon: "🔁", modulo: "transferencias" },
+  { label: "Reportes", to: "/reports", icon: "📑", modulo: "reportes" },
+  { label: "Tesorería", to: "/treasury", icon: "💰", modulo: "tesoreria" },
+  { label: "Conciliación", to: "/reconciliation", icon: "📋", modulo: "conciliacion" },
+  { label: "Administración", to: "/administration", icon: "🔐", adminOnly: true, modulo: "administracion" },
+  { label: "Configuración", to: "/settings", icon: "⚙️", modulo: "configuracion" },
 ];
 
 export default function MainLayout({ children }: Props) {
@@ -39,6 +40,10 @@ export default function MainLayout({ children }: Props) {
           <nav className="flex flex-col gap-1 px-2">
             {navItems.map((item) => {
               const isActive = location.pathname === item.to;
+              const moduloActivo = useModulo(item.modulo);
+
+              if (!moduloActivo) return null;
+
               return (
                 <Link
                   key={item.to}

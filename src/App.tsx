@@ -15,6 +15,7 @@ import SettingsPage from "./pages/settings/SettingsPage";
 import LoginPage from "./pages/Login/LoginPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
 import ProtectedRoute from "./core/router/ProtectedRoute";
+import ModuloRoute from "./core/router/ModuloRoute";
 
 function App() {
   return (
@@ -34,7 +35,9 @@ function App() {
         path="/companies"
         element={
           <ProtectedRoute>
-            <CompaniesPage />
+            <ModuloRoute modulo="empresas">
+              <CompaniesPage />
+            </ModuloRoute>
           </ProtectedRoute>
         }
       />
@@ -43,7 +46,9 @@ function App() {
         path="/branches"
         element={
           <ProtectedRoute>
-            <BranchesPage />
+            <ModuloRoute modulo="sucursales">
+              <BranchesPage />
+            </ModuloRoute>
           </ProtectedRoute>
         }
       />
@@ -52,7 +57,9 @@ function App() {
         path="/users"
         element={
           <ProtectedRoute>
-            <UsersPage />
+            <ModuloRoute modulo="usuarios">
+              <UsersPage />
+            </ModuloRoute>
           </ProtectedRoute>
         }
       />
@@ -61,7 +68,9 @@ function App() {
         path="/roles"
         element={
           <ProtectedRoute>
-            <RolesPage />
+            <ModuloRoute modulo="usuarios">
+              <RolesPage />
+            </ModuloRoute>
           </ProtectedRoute>
         }
       />
@@ -70,7 +79,9 @@ function App() {
         path="/banks"
         element={
           <ProtectedRoute>
-            <BanksPage />
+            <ModuloRoute modulo="bancos">
+              <BanksPage />
+            </ModuloRoute>
           </ProtectedRoute>
         }
       />
@@ -79,7 +90,9 @@ function App() {
         path="/movements"
         element={
           <ProtectedRoute>
-            <MovementsPage />
+            <ModuloRoute modulo="movimientos">
+              <MovementsPage />
+            </ModuloRoute>
           </ProtectedRoute>
         }
       />
@@ -88,7 +101,9 @@ function App() {
         path="/transfers"
         element={
           <ProtectedRoute>
-            <TransfersPage />
+            <ModuloRoute modulo="transferencias">
+              <TransfersPage />
+            </ModuloRoute>
           </ProtectedRoute>
         }
       />
@@ -97,7 +112,9 @@ function App() {
         path="/reports"
         element={
           <ProtectedRoute>
-            <ReportsPage />
+            <ModuloRoute modulo="reportes">
+              <ReportsPage />
+            </ModuloRoute>
           </ProtectedRoute>
         }
       />
@@ -106,7 +123,9 @@ function App() {
         path="/treasury"
         element={
           <ProtectedRoute>
-            <TreasuryPage />
+            <ModuloRoute modulo="tesoreria">
+              <TreasuryPage />
+            </ModuloRoute>
           </ProtectedRoute>
         }
       />
@@ -115,7 +134,9 @@ function App() {
         path="/reconciliation"
         element={
           <ProtectedRoute>
-            <ReconciliationPage />
+            <ModuloRoute modulo="conciliacion">
+              <ReconciliationPage />
+            </ModuloRoute>
           </ProtectedRoute>
         }
       />
@@ -124,7 +145,9 @@ function App() {
         path="/administration"
         element={
           <ProtectedRoute>
-            <AdministrationPage />
+            <ModuloRoute modulo="administracion">
+              <AdministrationPage />
+            </ModuloRoute>
           </ProtectedRoute>
         }
       />
@@ -133,7 +156,9 @@ function App() {
         path="/settings"
         element={
           <ProtectedRoute>
-            <SettingsPage />
+            <ModuloRoute modulo="configuracion">
+              <SettingsPage />
+            </ModuloRoute>
           </ProtectedRoute>
         }
       />
