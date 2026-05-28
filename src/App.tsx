@@ -12,6 +12,9 @@ import ReconciliationPage from "./pages/reconciliation/ReconciliationPage";
 import AdministrationPage from "./pages/administration/AdministrationPage";
 import SettingsPage from "./pages/settings/SettingsPage";
 import PosConfigPage from "./pages/pos-config/PosConfigPage";
+import SuppliersPage from "./pages/suppliers/SuppliersPage";
+import PurchasesPage from "./pages/purchases/PurchasesPage";
+import CostsPage from "./pages/costs/CostsPage";
 
 import LoginPage from "./pages/Login/LoginPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
@@ -170,6 +173,39 @@ function App() {
           <ProtectedRoute>
             <ModuloRoute modulo="configuracion-pos">
               <PosConfigPage />
+            </ModuloRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/suppliers"
+        element={
+          <ProtectedRoute>
+            <ModuloRoute modulo="proveedores">
+              <SuppliersPage />
+            </ModuloRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/purchases"
+        element={
+          <ProtectedRoute>
+            <ModuloRoute modulo="compras">
+              <PurchasesPage />
+            </ModuloRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/costs"
+        element={
+          <ProtectedRoute>
+            <ModuloRoute modulo="costos">
+              <CostsPage />
             </ModuloRoute>
           </ProtectedRoute>
         }
