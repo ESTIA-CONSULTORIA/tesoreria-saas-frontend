@@ -24,6 +24,8 @@ export default function MovementsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedMovement, setSelectedMovement] = useState<Movement | null>(null);
   const [accountId, setAccountId] = useState("");
   const [type, setType] = useState("");
   const [category, setCategory] = useState("");
@@ -65,6 +67,16 @@ export default function MovementsPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function getAccountName(accountId: string): string {
+    const account = accounts.find((acc) => acc.id === accountId);
+    return account?.name || accountId;
+  }
+
+  function handleMovementClick(movement: Movement) {
+    setSelectedMovement(movement);
+    setDetailModalOpen(true);
   }
 
   return (
@@ -115,9 +127,13 @@ export default function MovementsPage() {
                 </thead>
                 <tbody>
                   {movements.map((item) => (
-                    <tr key={item.id} className="border-t border-slate-800">
+                    <tr
+                      key={item.id}
+                      className="border-t border-slate-800 cursor-pointer hover:bg-slate-800/50"
+                      onClick={() => handleMovementClick(item)}
+                    >
                       <td className="p-2">{new Date(item.createdAt).toLocaleString()}</td>
-                      <td className="p-2">{item.accountId}</td>
+                      <td className="p-2">{getAccountName(item.accountId)}</td>
                       <td className="p-2">{item.type === "INCOME" ? "INGRESO" : "EGRESO"}</td>
                       <td className="p-2">{item.category}</td>
                       <td className="p-2">{item.concept}</td>
@@ -131,6 +147,56 @@ export default function MovementsPage() {
               <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white disabled:opacity-40">Anterior</button>
               <span className="text-sm text-slate-400">Pagina {page} de {totalPages}</span>
               <button disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white disabled:opacity-40">Siguiente</button>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de detalle de movimiento */}
+        {detailModalOpen && selectedMovement && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+            <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <h3 className="text-2xl font-bold text-white">Detalle del Movimiento</h3>
+                  <p className="text-sm text-slate-400">Información completa</p>
+                </div>
+                <button
+                  onClick={() => setDetailModalOpen(false)}
+                  className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700"
+                >
+                  Cerrar
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-slate-400">ID</p>
+                  <p className="text-lg font-semibold">{selectedMovement.id}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-400">Cuenta</p>
+                  <p className="text-lg font-semibold">{getAccountName(selectedMovement.accountId)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-400">Tipo</p>
+                  <p className="text-lg font-semibold">{selectedMovement.type === "INCOME" ? "INGRESO" : "EGRESO"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-400">Categoría</p>
+                  <p className="text-lg font-semibold">{selectedMovement.category}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-400">Concepto</p>
+                  <p className="text-lg font-semibold">{selectedMovement.concept}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-400">Monto</p>
+                  <p className="text-lg font-semibold">{Number(selectedMovement.amount)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-400">Fecha de creación</p>
+                  <p className="text-lg font-semibold">{new Date(selectedMovement.createdAt).toLocaleString()}</p>
+                </div>
+              </div>
             </div>
           </div>
         )}
