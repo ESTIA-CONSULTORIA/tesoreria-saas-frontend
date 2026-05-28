@@ -12,6 +12,7 @@ const navItems = [
   { label: "Sucursales", to: "/branches", icon: "🏪" },
   { label: "Usuarios", to: "/users", icon: "👤" },
   { label: "Roles", to: "/roles", icon: "🛡️" },
+  { label: "Bancos", to: "/banks", icon: "🏦" },
   { label: "Tesorería", to: "/treasury", icon: "💰" },
   { label: "Configuración", to: "/settings", icon: "⚙️" },
 ];

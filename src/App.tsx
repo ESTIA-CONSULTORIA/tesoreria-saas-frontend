@@ -3,6 +3,7 @@ import CompaniesPage from "./pages/companies/CompaniesPage";
 import BranchesPage from "./pages/branches/BranchesPage";
 import UsersPage from "./pages/users/UsersPage";
 import RolesPage from "./pages/roles/RolesPage";
+import BanksPage from "./pages/banks/BanksPage";
 
 import LoginPage from "./pages/Login/LoginPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
@@ -54,6 +55,15 @@ function App() {
         element={
           <ProtectedRoute>
             <RolesPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/banks"
+        element={
+          <ProtectedRoute>
+            <BanksPage />
           </ProtectedRoute>
         }
       />
