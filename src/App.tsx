@@ -1,6 +1,8 @@
 import { Routes, Route } from "react-router-dom";
 import CompaniesPage from "./pages/companies/CompaniesPage";
 import BranchesPage from "./pages/branches/BranchesPage";
+import UsersPage from "./pages/users/UsersPage";
+import RolesPage from "./pages/roles/RolesPage";
 
 import LoginPage from "./pages/Login/LoginPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
@@ -34,6 +36,24 @@ function App() {
         element={
           <ProtectedRoute>
             <BranchesPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/users"
+        element={
+          <ProtectedRoute>
+            <UsersPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/roles"
+        element={
+          <ProtectedRoute>
+            <RolesPage />
           </ProtectedRoute>
         }
       />

@@ -10,6 +10,8 @@ const navItems = [
   { label: "Dashboard", to: "/dashboard", icon: "📊" },
   { label: "Empresas", to: "/companies", icon: "🏢" },
   { label: "Sucursales", to: "/branches", icon: "🏪" },
+  { label: "Usuarios", to: "/users", icon: "👤" },
+  { label: "Roles", to: "/roles", icon: "🛡️" },
   { label: "Tesorería", to: "/treasury", icon: "💰" },
   { label: "Configuración", to: "/settings", icon: "⚙️" },
 ];
