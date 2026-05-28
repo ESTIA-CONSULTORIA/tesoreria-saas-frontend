@@ -42,12 +42,35 @@ interface SystemConfig {
   allowedOrigins: string[];
 }
 
+interface AddonSubscription {
+  id: string;
+  tenantId: string;
+  moduloNombre: string;
+  activoDesde: string;
+  activoHasta: string;
+  precio: number;
+  status: string;
+}
+
+const AVAILABLE_ADDONS = [
+  { key: "proveedores", label: "Proveedores" },
+  { key: "compras", label: "Compras" },
+  { key: "costos", label: "Costos y Producción" },
+  { key: "configuracion-pos", label: "Configuración POS" },
+  { key: "integraciones", label: "Integraciones" },
+  { key: "rh", label: "Recursos Humanos" },
+  { key: "sat-cfdi", label: "SAT CFDI" },
+  { key: "white-label", label: "White Label" },
+];
+
 export default function AdministrationPage() {
   const [activeTab, setActiveTab] = useState<"audit" | "tenants" | "sessions" | "config">("audit");
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [config, setConfig] = useState<SystemConfig | null>(null);
+  const [selectedTenant, setSelectedTenant] = useState<string | null>(null);
+  const [tenantAddons, setTenantAddons] = useState<AddonSubscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filters, setFilters] = useState({
@@ -102,6 +125,39 @@ export default function AdministrationPage() {
       loadData();
     } catch (err: any) {
       setError(err.response?.data?.message || "No fue posible actualizar la configuración");
+    }
+  }
+
+  async function loadTenantAddons(tenantId: string) {
+    try {
+      const response = await api.get(`/addons/tenant/${tenantId}/modules`);
+      setTenantAddons(Array.isArray(response.data) ? response.data : []);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible cargar los módulos del tenant");
+    }
+  }
+
+  async function activateAddon(tenantId: string, moduloNombre: string) {
+    try {
+      await api.post("/addons", {
+        tenantId,
+        moduloNombre,
+        activoDesde: new Date().toISOString().split('T')[0],
+        status: "ACTIVO",
+        precio: 0,
+      });
+      loadTenantAddons(tenantId);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible activar el módulo");
+    }
+  }
+
+  async function deactivateAddon(addonId: string, tenantId: string) {
+    try {
+      await api.put(`/addons/${addonId}`, { status: "CANCELADO" });
+      loadTenantAddons(tenantId);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible desactivar el módulo");
     }
   }
 
@@ -258,49 +314,124 @@ export default function AdministrationPage() {
 
             {/* Gestión de Tenants */}
             {activeTab === "tenants" && (
-              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-                <h3 className="mb-3 text-lg font-semibold">Tenants del Sistema</h3>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-left text-sm">
-                    <thead className="text-slate-400">
-                      <tr>
-                        <th className="p-2">ID</th>
-                        <th className="p-2">Nombre Legal</th>
-                        <th className="p-2">Nombre Comercial</th>
-                        <th className="p-2">RUT/NIT</th>
-                        <th className="p-2">Estado</th>
-                        <th className="p-2">Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tenants.map((tenant) => (
-                        <tr key={tenant.id} className="border-t border-slate-800">
-                          <td className="p-2">{tenant.id}</td>
-                          <td className="p-2">{tenant.legalName}</td>
-                          <td className="p-2">{tenant.tradeName}</td>
-                          <td className="p-2">{tenant.taxId || "-"}</td>
-                          <td className="p-2">
-                            <span
-                              className={`rounded-full px-2 py-1 text-xs ${
-                                tenant.isActive ? "bg-green-900/40 text-green-300" : "bg-red-900/40 text-red-300"
+              <div className="space-y-4">
+                <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                  <h3 className="mb-3 text-lg font-semibold">Tenants del Sistema</h3>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-left text-sm">
+                      <thead className="text-slate-400">
+                        <tr>
+                          <th className="p-2">ID</th>
+                          <th className="p-2">Nombre Legal</th>
+                          <th className="p-2">Nombre Comercial</th>
+                          <th className="p-2">RUT/NIT</th>
+                          <th className="p-2">Estado</th>
+                          <th className="p-2">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {tenants.map((tenant) => (
+                          <tr key={tenant.id} className="border-t border-slate-800">
+                            <td className="p-2">{tenant.id}</td>
+                            <td className="p-2">{tenant.legalName}</td>
+                            <td className="p-2">{tenant.tradeName}</td>
+                            <td className="p-2">{tenant.taxId || "-"}</td>
+                            <td className="p-2">
+                              <span
+                                className={`rounded-full px-2 py-1 text-xs ${
+                                  tenant.isActive ? "bg-green-900/40 text-green-300" : "bg-red-900/40 text-red-300"
+                                }`}
+                              >
+                                {tenant.isActive ? "Activo" : "Inactivo"}
+                              </span>
+                            </td>
+                            <td className="p-2">
+                              <button
+                                onClick={() => updateTenant(tenant.id, { isActive: !tenant.isActive })}
+                                className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700 mr-2"
+                              >
+                                {tenant.isActive ? "Desactivar" : "Activar"}
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setSelectedTenant(tenant.id);
+                                  loadTenantAddons(tenant.id);
+                                }}
+                                className="rounded bg-green-600 px-2 py-1 text-xs text-white hover:bg-green-700"
+                              >
+                                Módulos
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Módulos Add-on del Tenant Seleccionado */}
+                {selectedTenant && (
+                  <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-semibold">Módulos Adicionales - {tenants.find(t => t.id === selectedTenant)?.tradeName}</h3>
+                      <button
+                        onClick={() => setSelectedTenant(null)}
+                        className="text-slate-400 hover:text-white text-sm"
+                      >
+                        Cerrar
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {AVAILABLE_ADDONS.map((addon) => {
+                        const isActive = tenantAddons.some(a => a.moduloNombre === addon.key && a.status === "ACTIVO");
+                        const addonSub = tenantAddons.find(a => a.moduloNombre === addon.key);
+                        return (
+                          <div
+                            key={addon.key}
+                            className={`p-4 rounded-lg border ${
+                              isActive
+                                ? "border-green-600 bg-green-900/20"
+                                : "border-slate-700 bg-slate-800"
+                            }`}
+                          >
+                            <div className="flex justify-between items-start mb-2">
+                              <span className="font-medium text-white">{addon.label}</span>
+                              <span
+                                className={`text-xs px-2 py-1 rounded ${
+                                  isActive ? "bg-green-600 text-white" : "bg-slate-700 text-slate-400"
+                                }`}
+                              >
+                                {isActive ? "Activo" : "Inactivo"}
+                              </span>
+                            </div>
+                            {isActive && addonSub && (
+                              <div className="text-xs text-slate-400 mb-2">
+                                Desde: {addonSub.activoDesde}
+                              </div>
+                            )}
+                            <button
+                              onClick={() => {
+                                if (isActive && addonSub) {
+                                  deactivateAddon(addonSub.id, selectedTenant);
+                                } else {
+                                  activateAddon(selectedTenant, addon.key);
+                                }
+                              }}
+                              className={`w-full py-1 rounded text-xs font-medium ${
+                                isActive
+                                  ? "bg-red-600 text-white hover:bg-red-700"
+                                  : "bg-blue-600 text-white hover:bg-blue-700"
                               }`}
                             >
-                              {tenant.isActive ? "Activo" : "Inactivo"}
-                            </span>
-                          </td>
-                          <td className="p-2">
-                            <button
-                              onClick={() => updateTenant(tenant.id, { isActive: !tenant.isActive })}
-                              className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700"
-                            >
-                              {tenant.isActive ? "Desactivar" : "Activar"}
+                              {isActive ? "Desactivar" : "Activar"}
                             </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
