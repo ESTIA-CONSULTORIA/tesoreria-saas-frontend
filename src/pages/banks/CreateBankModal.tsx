@@ -1,10 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "../../core/api/api";
 
 interface Props {
   open: boolean;
   onClose: () => void;
   onCreated: () => void;
+}
+
+interface Branch {
+  id: string;
+  name: string;
+  code: string;
 }
 
 export default function CreateBankModal({ open, onClose, onCreated }: Props) {
@@ -15,8 +21,24 @@ export default function CreateBankModal({ open, onClose, onCreated }: Props) {
   const [initialBalance, setInitialBalance] = useState("0");
   const [currency, setCurrency] = useState("MXN");
   const [type, setType] = useState("BANCO");
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      loadBranches();
+    }
+  }, [open]);
+
+  async function loadBranches() {
+    try {
+      const response = await api.get("/branches");
+      setBranches(Array.isArray(response.data) ? response.data : []);
+    } catch {
+      setBranches([]);
+    }
+  }
 
   if (!open) return null;
 
@@ -62,7 +84,19 @@ export default function CreateBankModal({ open, onClose, onCreated }: Props) {
         </div>
         {error && <div className="mb-4 rounded-lg border border-red-700 bg-red-900/30 p-3 text-sm text-red-300">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input value={branchId} onChange={(e) => setBranchId(e.target.value)} placeholder="Branch ID" required className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500" />
+          <select
+            value={branchId}
+            onChange={(e) => setBranchId(e.target.value)}
+            required
+            className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+          >
+            <option value="">Seleccionar sucursal</option>
+            {branches.map((branch) => (
+              <option key={branch.id} value={branch.id}>
+                {branch.name} ({branch.code})
+              </option>
+            ))}
+          </select>
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre" required className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500" />
           <input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} placeholder="Numero de cuenta" required className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500" />
           <input value={bank} onChange={(e) => setBank(e.target.value)} placeholder="Banco" required className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500" />
