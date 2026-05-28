@@ -5,6 +5,7 @@ import UsersPage from "./pages/users/UsersPage";
 import RolesPage from "./pages/roles/RolesPage";
 import BanksPage from "./pages/banks/BanksPage";
 import MovementsPage from "./pages/movements/MovementsPage";
+import TransfersPage from "./pages/transfers/TransfersPage";
 
 import LoginPage from "./pages/Login/LoginPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
@@ -74,6 +75,15 @@ function App() {
         element={
           <ProtectedRoute>
             <MovementsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/transfers"
+        element={
+          <ProtectedRoute>
+            <TransfersPage />
           </ProtectedRoute>
         }
       />

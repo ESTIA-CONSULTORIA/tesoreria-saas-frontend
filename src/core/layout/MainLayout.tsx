@@ -14,6 +14,7 @@ const navItems = [
   { label: "Roles", to: "/roles", icon: "🛡️" },
   { label: "Bancos", to: "/banks", icon: "🏦" },
   { label: "Movimientos", to: "/movements", icon: "🧾" },
+  { label: "Transferencias", to: "/transfers", icon: "🔁" },
   { label: "Tesorería", to: "/treasury", icon: "💰" },
   { label: "Configuración", to: "/settings", icon: "⚙️" },
 ];
