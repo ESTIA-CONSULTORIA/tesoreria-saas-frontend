@@ -8,6 +8,7 @@ import MovementsPage from "./pages/movements/MovementsPage";
 import TransfersPage from "./pages/transfers/TransfersPage";
 import ReportsPage from "./pages/reports/ReportsPage";
 import TreasuryPage from "./pages/treasury/TreasuryPage";
+import ReconciliationPage from "./pages/reconciliation/ReconciliationPage";
 import SettingsPage from "./pages/settings/SettingsPage";
 
 import LoginPage from "./pages/Login/LoginPage";
@@ -105,6 +106,15 @@ function App() {
         element={
           <ProtectedRoute>
             <TreasuryPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/reconciliation"
+        element={
+          <ProtectedRoute>
+            <ReconciliationPage />
           </ProtectedRoute>
         }
       />

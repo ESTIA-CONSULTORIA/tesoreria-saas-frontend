@@ -10,12 +10,13 @@ const navItems = [
   { label: "Dashboard", to: "/dashboard", icon: "📊" },
   { label: "Empresas", to: "/companies", icon: "🏢" },
   { label: "Sucursales", to: "/branches", icon: "🏪" },
-  { label: "Usuarios y Roles", to: "/users", icon: "�" },
+  { label: "Usuarios y Roles", to: "/users", icon: "👤" },
   { label: "Bancos", to: "/banks", icon: "🏦" },
   { label: "Movimientos", to: "/movements", icon: "🧾" },
   { label: "Transferencias", to: "/transfers", icon: "🔁" },
   { label: "Reportes", to: "/reports", icon: "📑" },
   { label: "Tesorería", to: "/treasury", icon: "💰" },
+  { label: "Conciliación", to: "/reconciliation", icon: "📋" },
   { label: "Configuración", to: "/settings", icon: "⚙️" },
 ];
 
