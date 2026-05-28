@@ -17,6 +17,7 @@ const navItems = [
   { label: "Reportes", to: "/reports", icon: "📑" },
   { label: "Tesorería", to: "/treasury", icon: "💰" },
   { label: "Conciliación", to: "/reconciliation", icon: "📋" },
+  { label: "Administración", to: "/administration", icon: "🔐", adminOnly: true },
   { label: "Configuración", to: "/settings", icon: "⚙️" },
 ];
 
