@@ -4,6 +4,7 @@ import BranchesPage from "./pages/branches/BranchesPage";
 import UsersPage from "./pages/users/UsersPage";
 import RolesPage from "./pages/roles/RolesPage";
 import BanksPage from "./pages/banks/BanksPage";
+import MovementsPage from "./pages/movements/MovementsPage";
 
 import LoginPage from "./pages/Login/LoginPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
@@ -64,6 +65,15 @@ function App() {
         element={
           <ProtectedRoute>
             <BanksPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/movements"
+        element={
+          <ProtectedRoute>
+            <MovementsPage />
           </ProtectedRoute>
         }
       />

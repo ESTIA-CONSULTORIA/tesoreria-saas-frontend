@@ -1,0 +1,140 @@
+import { useEffect, useState } from "react";
+import MainLayout from "../../core/layout/MainLayout";
+import { api } from "../../core/api/api";
+import CreateMovementModal from "./CreateMovementModal";
+
+interface Movement {
+  id: string;
+  accountId: string;
+  type: "INCOME" | "EXPENSE";
+  category: string;
+  concept: string;
+  amount: number;
+  createdAt: string;
+}
+
+interface BankAccount {
+  id: string;
+  name: string;
+}
+
+export default function MovementsPage() {
+  const [movements, setMovements] = useState<Movement[]>([]);
+  const [accounts, setAccounts] = useState<BankAccount[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [accountId, setAccountId] = useState("");
+  const [type, setType] = useState("");
+  const [category, setCategory] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 10;
+
+  useEffect(() => {
+    loadAccounts();
+  }, []);
+
+  useEffect(() => {
+    loadMovements();
+  }, [accountId, type, category, startDate, endDate, page]);
+
+  async function loadAccounts() {
+    try {
+      const response = await api.get("/banks");
+      setAccounts(Array.isArray(response.data) ? response.data : []);
+    } catch {
+      setAccounts([]);
+    }
+  }
+
+  async function loadMovements() {
+    try {
+      setLoading(true);
+      setError("");
+      const response = await api.get("/movements", {
+        params: { accountId, type, category, startDate, endDate, page, limit },
+      });
+      const payload = response.data?.data ? response.data : { data: response.data, totalPages: 1 };
+      setMovements(Array.isArray(payload.data) ? payload.data : []);
+      setTotalPages(payload.totalPages || 1);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible cargar movimientos");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <MainLayout>
+      <CreateMovementModal open={modalOpen} onClose={() => setModalOpen(false)} onCreated={loadMovements} />
+      <div className="space-y-6">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-3xl font-bold">Movimientos</h2>
+            <p className="text-slate-400">Filtros y paginacion por cuenta, tipo, fecha y categoria</p>
+          </div>
+          <button onClick={() => setModalOpen(true)} className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700">
+            + Nuevo Movimiento
+          </button>
+        </div>
+
+        <div className="grid gap-3 rounded-xl border border-slate-800 bg-slate-900 p-4 md:grid-cols-5">
+          <select value={accountId} onChange={(e) => { setPage(1); setAccountId(e.target.value); }} className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-white">
+            <option value="">Todas las cuentas</option>
+            {accounts.map((acc) => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
+          </select>
+          <select value={type} onChange={(e) => { setPage(1); setType(e.target.value); }} className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-white">
+            <option value="">Todos los tipos</option>
+            <option value="INGRESO">INGRESO</option>
+            <option value="EGRESO">EGRESO</option>
+          </select>
+          <input value={category} onChange={(e) => { setPage(1); setCategory(e.target.value); }} placeholder="Categoria" className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-white" />
+          <input type="date" value={startDate} onChange={(e) => { setPage(1); setStartDate(e.target.value); }} className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-white" />
+          <input type="date" value={endDate} onChange={(e) => { setPage(1); setEndDate(e.target.value); }} className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-white" />
+        </div>
+
+        {error && <div className="rounded-xl border border-red-700 bg-red-900/30 p-4 text-red-300">{error}</div>}
+        {loading ? (
+          <div className="rounded-xl bg-slate-900 p-6">Cargando movimientos...</div>
+        ) : (
+          <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead className="text-slate-400">
+                  <tr>
+                    <th className="p-2">Fecha</th>
+                    <th className="p-2">Cuenta</th>
+                    <th className="p-2">Tipo</th>
+                    <th className="p-2">Categoria</th>
+                    <th className="p-2">Concepto</th>
+                    <th className="p-2">Monto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {movements.map((item) => (
+                    <tr key={item.id} className="border-t border-slate-800">
+                      <td className="p-2">{new Date(item.createdAt).toLocaleString()}</td>
+                      <td className="p-2">{item.accountId}</td>
+                      <td className="p-2">{item.type === "INCOME" ? "INGRESO" : "EGRESO"}</td>
+                      <td className="p-2">{item.category}</td>
+                      <td className="p-2">{item.concept}</td>
+                      <td className="p-2">{Number(item.amount)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-4 flex items-center justify-between">
+              <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white disabled:opacity-40">Anterior</button>
+              <span className="text-sm text-slate-400">Pagina {page} de {totalPages}</span>
+              <button disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white disabled:opacity-40">Siguiente</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </MainLayout>
+  );
+}
