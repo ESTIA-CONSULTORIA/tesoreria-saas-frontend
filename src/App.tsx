@@ -7,6 +7,7 @@ import BanksPage from "./pages/banks/BanksPage";
 import MovementsPage from "./pages/movements/MovementsPage";
 import TransfersPage from "./pages/transfers/TransfersPage";
 import ReportsPage from "./pages/reports/ReportsPage";
+import TreasuryPage from "./pages/treasury/TreasuryPage";
 import SettingsPage from "./pages/settings/SettingsPage";
 
 import LoginPage from "./pages/Login/LoginPage";
@@ -95,6 +96,15 @@ function App() {
         element={
           <ProtectedRoute>
             <ReportsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/treasury"
+        element={
+          <ProtectedRoute>
+            <TreasuryPage />
           </ProtectedRoute>
         }
       />
