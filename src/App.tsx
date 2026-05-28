@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import CompaniesPage from "./pages/companies/CompaniesPage";
+import BranchesPage from "./pages/branches/BranchesPage";
 
 import LoginPage from "./pages/Login/LoginPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
@@ -20,13 +21,22 @@ function App() {
       />
 
       <Route
-  path="/companies"
-  element={
-    <ProtectedRoute>
-      <CompaniesPage />
-    </ProtectedRoute>
-  }
-/>
+        path="/companies"
+        element={
+          <ProtectedRoute>
+            <CompaniesPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/branches"
+        element={
+          <ProtectedRoute>
+            <BranchesPage />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }

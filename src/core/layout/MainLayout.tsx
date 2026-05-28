@@ -9,6 +9,7 @@ interface Props {
 const navItems = [
   { label: "Dashboard", to: "/dashboard", icon: "📊" },
   { label: "Empresas", to: "/companies", icon: "🏢" },
+  { label: "Sucursales", to: "/branches", icon: "🏪" },
   { label: "Tesorería", to: "/treasury", icon: "💰" },
   { label: "Configuración", to: "/settings", icon: "⚙️" },
 ];
