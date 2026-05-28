@@ -15,6 +15,7 @@ const navItems = [
   { label: "Bancos", to: "/banks", icon: "🏦" },
   { label: "Movimientos", to: "/movements", icon: "🧾" },
   { label: "Transferencias", to: "/transfers", icon: "🔁" },
+  { label: "Reportes", to: "/reports", icon: "📑" },
   { label: "Tesorería", to: "/treasury", icon: "💰" },
   { label: "Configuración", to: "/settings", icon: "⚙️" },
 ];
