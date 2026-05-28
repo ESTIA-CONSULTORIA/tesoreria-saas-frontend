@@ -12,15 +12,33 @@ interface Transfer {
   createdAt: string;
 }
 
+interface BankAccount {
+  id: string;
+  name: string;
+}
+
 export default function TransfersPage() {
   const [transfers, setTransfers] = useState<Transfer[]>([]);
+  const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null);
 
   useEffect(() => {
+    loadAccounts();
     loadTransfers();
   }, []);
+
+  async function loadAccounts() {
+    try {
+      const response = await api.get("/banks");
+      setAccounts(Array.isArray(response.data) ? response.data : []);
+    } catch {
+      setAccounts([]);
+    }
+  }
 
   async function loadTransfers() {
     try {
@@ -33,6 +51,16 @@ export default function TransfersPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function getAccountName(accountId: string): string {
+    const account = accounts.find((acc) => acc.id === accountId);
+    return account?.name || accountId;
+  }
+
+  function handleTransferClick(transfer: Transfer) {
+    setSelectedTransfer(transfer);
+    setDetailModalOpen(true);
   }
 
   return (
@@ -57,10 +85,14 @@ export default function TransfersPage() {
               <div className="rounded-xl bg-slate-900 p-6">No existen transferencias registradas</div>
             ) : (
               transfers.map((transfer) => (
-                <div key={transfer.id} className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+                <div
+                  key={transfer.id}
+                  className="rounded-xl border border-slate-800 bg-slate-900 p-6 cursor-pointer hover:bg-slate-800/50"
+                  onClick={() => handleTransferClick(transfer)}
+                >
                   <h3 className="text-lg font-semibold">{Number(transfer.amount)}</h3>
                   <p className="text-sm text-slate-400">
-                    {transfer.fromAccountId} → {transfer.toAccountId}
+                    {getAccountName(transfer.fromAccountId)} → {getAccountName(transfer.toAccountId)}
                   </p>
                   <p className="text-xs text-slate-500">
                     {transfer.concept || "Sin concepto"} · {new Date(transfer.createdAt).toLocaleString()}
@@ -68,6 +100,52 @@ export default function TransfersPage() {
                 </div>
               ))
             )}
+          </div>
+        )}
+
+        {/* Modal de detalle de transferencia */}
+        {detailModalOpen && selectedTransfer && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+            <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <h3 className="text-2xl font-bold text-white">Detalle de Transferencia</h3>
+                  <p className="text-sm text-slate-400">Información completa</p>
+                </div>
+                <button
+                  onClick={() => setDetailModalOpen(false)}
+                  className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700"
+                >
+                  Cerrar
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-slate-400">ID</p>
+                  <p className="text-lg font-semibold">{selectedTransfer.id}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-400">Cuenta Origen</p>
+                  <p className="text-lg font-semibold">{getAccountName(selectedTransfer.fromAccountId)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-400">Cuenta Destino</p>
+                  <p className="text-lg font-semibold">{getAccountName(selectedTransfer.toAccountId)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-400">Monto</p>
+                  <p className="text-lg font-semibold">{Number(selectedTransfer.amount)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-400">Concepto</p>
+                  <p className="text-lg font-semibold">{selectedTransfer.concept || "Sin concepto"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-400">Fecha de creación</p>
+                  <p className="text-lg font-semibold">{new Date(selectedTransfer.createdAt).toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
