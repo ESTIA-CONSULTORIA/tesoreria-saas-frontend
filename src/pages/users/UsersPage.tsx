@@ -20,6 +20,7 @@ interface Permission {
   canCreate: boolean;
   canEdit: boolean;
   canDelete: boolean;
+  subPermissions?: string[] | null;
 }
 
 interface Role {
@@ -41,6 +42,7 @@ export default function UsersPage() {
   const [permissionsModalOpen, setPermissionsModalOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [localPermissions, setLocalPermissions] = useState<Permission[]>([]);
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadData();
@@ -98,6 +100,38 @@ export default function UsersPage() {
       // Revert on error
       setLocalPermissions(previousPermissions);
       setError(err.response?.data?.message || "No fue posible actualizar permiso");
+    }
+  }
+
+  async function updateSubPermission(module: string, subPermissionKey: string, value: boolean) {
+    if (!selectedRole) return;
+
+    const permission = localPermissions.find((p) => p.module === module);
+    if (!permission) return;
+
+    const currentSubPermissions = permission.subPermissions || [];
+    const previousPermissions = [...localPermissions];
+
+    let newSubPermissions: string[];
+    if (value) {
+      newSubPermissions = [...currentSubPermissions, subPermissionKey];
+    } else {
+      newSubPermissions = currentSubPermissions.filter((key) => key !== subPermissionKey);
+    }
+
+    // Optimistic update
+    setLocalPermissions((prev) =>
+      prev.map((p) =>
+        p.module === module ? { ...p, subPermissions: newSubPermissions } : p
+      )
+    );
+
+    try {
+      await api.put(`/roles/${selectedRole.id}/permissions/${module}`, { subPermissions: newSubPermissions });
+      loadData();
+    } catch (err: any) {
+      setLocalPermissions(previousPermissions);
+      setError(err.response?.data?.message || "No fue posible actualizar sub-permiso");
     }
   }
 
@@ -229,11 +263,68 @@ export default function UsersPage() {
     MOVEMENTS: "Movimientos",
     TRANSFERS: "Transferencias",
     REPORTS: "Reportes",
+    POS: "POS",
     TREASURY: "Tesorería",
     RECONCILIATION: "Conciliación",
     ADMINISTRATION: "Administración",
     SETTINGS: "Configuración",
   };
+
+  const subPermissionsConfig: Record<string, { label: string; key: string }[]> = {
+    REPORTS: [
+      { label: "Reporte de ventas", key: "sales_report" },
+      { label: "Reporte de gastos", key: "expenses_report" },
+      { label: "Reporte de compras", key: "purchases_report" },
+      { label: "Descuentos y cortesías", key: "discounts_courtesies" },
+      { label: "Venta por área/grupo/mesa", key: "sales_by_area" },
+      { label: "Flujo de efectivo", key: "cash_flow" },
+      { label: "Balance por cuenta", key: "balance_by_account" },
+      { label: "Estado de resultados", key: "income_statement" },
+      { label: "Punto de equilibrio", key: "break_even_point" },
+    ],
+    POS: [
+      { label: "Apertura y cierre de turno", key: "open_close_shift" },
+      { label: "Cancelar productos", key: "cancel_products" },
+      { label: "Cancelar ticket completo", key: "cancel_ticket" },
+      { label: "Aplicar descuentos", key: "apply_discounts" },
+      { label: "Aplicar cortesías", key: "apply_courtesies" },
+      { label: "Ver costos en pantalla", key: "view_costs" },
+      { label: "Reimprimir tickets", key: "reprint_tickets" },
+      { label: "Cambio de precio manual", key: "manual_price_change" },
+      { label: "Cobro con tarjeta", key: "card_payment" },
+      { label: "Cobro en efectivo", key: "cash_payment" },
+      { label: "Dividir cuenta", key: "split_bill" },
+      { label: "Transferir mesa", key: "transfer_table" },
+      { label: "Abrir cajón de dinero", key: "open_cash_drawer" },
+    ],
+    MOVEMENTS: [
+      { label: "Ver solo movimientos propios", key: "view_own_movements" },
+      { label: "Ver todos los movimientos", key: "view_all_movements" },
+      { label: "Aprobar movimientos", key: "approve_movements" },
+      { label: "Exportar movimientos", key: "export_movements" },
+    ],
+    RECONCILIATION: [
+      { label: "Ver conciliaciones", key: "view_reconciliations" },
+      { label: "Conciliar manualmente", key: "manual_reconciliation" },
+      { label: "Aprobar conciliación", key: "approve_reconciliation" },
+    ],
+  };
+
+  function toggleCardExpansion(module: string) {
+    setExpandedCards((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(module)) {
+        newSet.delete(module);
+      } else {
+        newSet.add(module);
+      }
+      return newSet;
+    });
+  }
+
+  function hasSubPermissions(module: string): boolean {
+    return module in subPermissionsConfig;
+  }
 
   return (
     <MainLayout>
@@ -411,11 +502,19 @@ export default function UsersPage() {
                       >
                         <div className="flex items-center gap-2 mb-3">
                           <span className="text-xl">{moduleIcons[permission.module] || "📦"}</span>
-                          <div>
+                          <div className="flex-1">
                             <h4 className="font-semibold text-white text-xs">
                               {moduleNames[permission.module] || permission.module}
                             </h4>
                           </div>
+                          {hasSubPermissions(permission.module) && (
+                            <button
+                              onClick={() => toggleCardExpansion(permission.module)}
+                              className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                            >
+                              {expandedCards.has(permission.module) ? "▲" : "▼"}
+                            </button>
+                          )}
                         </div>
 
                         <div className="space-y-2">
@@ -483,6 +582,28 @@ export default function UsersPage() {
                             </button>
                           </div>
                         </div>
+
+                        {/* Panel de sub-permisos */}
+                        {hasSubPermissions(permission.module) && expandedCards.has(permission.module) && (
+                          <div className={`mt-3 pt-3 border-t border-slate-700 ${!permission.canView ? 'opacity-50 pointer-events-none' : ''}`}>
+                            <div className="space-y-1.5">
+                              {subPermissionsConfig[permission.module]?.map((subPerm) => {
+                                const isChecked = (permission.subPermissions || []).includes(subPerm.key);
+                                return (
+                                  <div key={subPerm.key} className="flex items-center gap-2">
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={(e) => updateSubPermission(permission.module, subPerm.key, e.target.checked)}
+                                      className="rounded w-3 h-3"
+                                    />
+                                    <span className="text-xs text-slate-300">{subPerm.label}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
