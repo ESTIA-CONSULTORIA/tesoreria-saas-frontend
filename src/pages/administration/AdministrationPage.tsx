@@ -266,7 +266,8 @@ export default function AdministrationPage() {
                 </div>
 
                 <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-                  <div className="overflow-x-auto">
+                  {/* Desktop Table */}
+                  <div className="hidden md:block overflow-x-auto">
                     <table className="min-w-full text-left text-sm">
                       <thead className="text-slate-400">
                         <tr>
@@ -308,6 +309,36 @@ export default function AdministrationPage() {
                       </tbody>
                     </table>
                   </div>
+
+                  {/* Mobile Cards */}
+                  <div className="md:hidden space-y-3">
+                    {auditLogs.map((log) => (
+                      <div key={log.id} className="rounded-lg border border-slate-800 bg-slate-800 p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <p className="font-semibold text-white">{log.userName || "Usuario"}</p>
+                          <span
+                            className={`text-xs px-2 py-1 rounded ${
+                              log.action === "CREATE"
+                                ? "bg-green-900/40 text-green-300"
+                                : log.action === "UPDATE"
+                                ? "bg-blue-900/40 text-blue-300"
+                                : log.action === "DELETE"
+                                ? "bg-red-900/40 text-red-300"
+                                : "bg-slate-700 text-slate-300"
+                            }`}
+                          >
+                            {log.action}
+                          </span>
+                        </div>
+                        <div className="text-xs text-slate-400 space-y-1">
+                          <p><span className="text-slate-500">Fecha:</span> {new Date(log.createdAt).toLocaleString()}</p>
+                          <p><span className="text-slate-500">Email:</span> {log.userEmail || "-"}</p>
+                          <p><span className="text-slate-500">Módulo:</span> {log.module}</p>
+                          <p><span className="text-slate-500">IP:</span> {log.ipAddress || "-"}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -317,7 +348,8 @@ export default function AdministrationPage() {
               <div className="space-y-4">
                 <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
                   <h3 className="mb-3 text-lg font-semibold">Tenants del Sistema</h3>
-                  <div className="overflow-x-auto">
+                  {/* Desktop Table */}
+                  <div className="hidden md:block overflow-x-auto">
                     <table className="min-w-full text-left text-sm">
                       <thead className="text-slate-400">
                         <tr>
@@ -366,6 +398,46 @@ export default function AdministrationPage() {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+
+                  {/* Mobile Cards */}
+                  <div className="md:hidden space-y-3">
+                    {tenants.map((tenant) => (
+                      <div key={tenant.id} className="rounded-lg border border-slate-800 bg-slate-800 p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <p className="font-semibold text-white">{tenant.tradeName}</p>
+                          <span
+                            className={`text-xs px-2 py-1 rounded ${
+                              tenant.isActive ? "bg-green-900/40 text-green-300" : "bg-red-900/40 text-red-300"
+                            }`}
+                          >
+                            {tenant.isActive ? "Activo" : "Inactivo"}
+                          </span>
+                        </div>
+                        <div className="text-xs text-slate-400 space-y-1 mb-3">
+                          <p><span className="text-slate-500">ID:</span> {tenant.id}</p>
+                          <p><span className="text-slate-500">Nombre Legal:</span> {tenant.legalName}</p>
+                          <p><span className="text-slate-500">RUT/NIT:</span> {tenant.taxId || "-"}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => updateTenant(tenant.id, { isActive: !tenant.isActive })}
+                            className="flex-1 rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700"
+                          >
+                            {tenant.isActive ? "Desactivar" : "Activar"}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedTenant(tenant.id);
+                              loadTenantAddons(tenant.id);
+                            }}
+                            className="flex-1 rounded bg-green-600 px-2 py-1 text-xs text-white hover:bg-green-700"
+                          >
+                            Módulos
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 

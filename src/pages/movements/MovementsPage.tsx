@@ -93,7 +93,7 @@ export default function MovementsPage() {
           </button>
         </div>
 
-        <div className="grid gap-3 rounded-xl border border-slate-800 bg-slate-900 p-4 md:grid-cols-5">
+        <div className="grid gap-3 rounded-xl border border-slate-800 bg-slate-900 p-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
           <select value={accountId} onChange={(e) => { setPage(1); setAccountId(e.target.value); }} className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-white">
             <option value="">Todas las cuentas</option>
             {accounts.map((acc) => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
@@ -113,7 +113,8 @@ export default function MovementsPage() {
           <div className="rounded-xl bg-slate-900 p-6">Cargando movimientos...</div>
         ) : (
           <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-            <div className="overflow-x-auto">
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="min-w-full text-left text-sm">
                 <thead className="text-slate-400">
                   <tr>
@@ -143,6 +144,33 @@ export default function MovementsPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden space-y-3">
+              {movements.map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-lg border border-slate-800 bg-slate-800 p-4 cursor-pointer hover:bg-slate-700"
+                  onClick={() => handleMovementClick(item)}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <p className="font-semibold text-white">{item.concept}</p>
+                      <p className="text-xs text-slate-400">{new Date(item.createdAt).toLocaleString()}</p>
+                    </div>
+                    <span className={`text-sm font-bold ${item.type === "INCOME" ? "text-green-400" : "text-red-400"}`}>
+                      {Number(item.amount)}
+                    </span>
+                  </div>
+                  <div className="text-xs text-slate-400 space-y-1">
+                    <p><span className="text-slate-500">Cuenta:</span> {getAccountName(item.accountId)}</p>
+                    <p><span className="text-slate-500">Tipo:</span> {item.type === "INCOME" ? "INGRESO" : "EGRESO"}</p>
+                    <p><span className="text-slate-500">Categoría:</span> {item.category}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
             <div className="mt-4 flex items-center justify-between">
               <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white disabled:opacity-40">Anterior</button>
               <span className="text-sm text-slate-400">Pagina {page} de {totalPages}</span>
@@ -153,8 +181,8 @@ export default function MovementsPage() {
 
         {/* Modal de detalle de movimiento */}
         {detailModalOpen && selectedMovement && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-            <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
+          <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/70 px-4">
+            <div className="w-full max-w-lg rounded-t-2xl md:rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl md:h-auto h-[80vh] overflow-y-auto">
               <div className="mb-6 flex items-center justify-between">
                 <div>
                   <h3 className="text-2xl font-bold text-white">Detalle del Movimiento</h3>

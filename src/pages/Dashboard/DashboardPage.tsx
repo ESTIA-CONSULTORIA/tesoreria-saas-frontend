@@ -57,7 +57,7 @@ export default function DashboardPage() {
           <div className="rounded-xl bg-slate-900 p-6">Cargando dashboard...</div>
         ) : (
           <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-xl bg-slate-900 p-6">
                 <p className="text-sm text-slate-400">Empresas</p>
                 <p className="text-2xl font-bold">{kpis?.totalCompanies || 0}</p>
@@ -72,9 +72,14 @@ export default function DashboardPage() {
                 <p className="text-sm text-slate-400">Saldo total</p>
                 <p className="text-2xl font-bold">{Number(kpis?.totalBalance || 0)}</p>
               </div>
+
+              <div className="rounded-xl bg-slate-900 p-6">
+                <p className="text-sm text-slate-400">Movimientos</p>
+                <p className="text-2xl font-bold">{kpis?.totalMovements || 0}</p>
+              </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
               <div className="rounded-xl bg-slate-900 p-6">
                 <h3 className="mb-4 text-lg font-semibold">Ultimos 5 movimientos</h3>
                 <div className="space-y-3">

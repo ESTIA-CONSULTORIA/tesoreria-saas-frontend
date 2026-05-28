@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import { useState } from "react";
 import Header from "./Header";
 import { theme } from "../theme/theme";
 import { useModulo } from "../hooks/useModulo";
@@ -28,17 +29,28 @@ const navItems = [
 
 export default function MainLayout({ children }: Props) {
   const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const primaryColor = localStorage.getItem("tenant_primary_color") || "";
   const sidebarColor = localStorage.getItem("tenant_sidebar_color") || "";
 
   return (
     <div className={`min-h-screen ${theme.colors.background} ${theme.colors.text}`}>
-      <Header />
+      <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
-      <div className="flex">
+      <div className="flex relative">
+        {/* Mobile Overlay */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         {/* Sidebar */}
         <aside
-          className={`hidden md:flex ${theme.sidebar.width} min-h-[calc(100vh-64px)] border-r ${theme.colors.border} ${theme.colors.surface} flex-col py-2`}
+          className={`fixed lg:static z-50 lg:z-auto w-64 min-h-[calc(100vh-64px)] border-r ${theme.colors.border} ${theme.colors.surface} flex-col py-2 transition-transform duration-300
+            ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+            ${sidebarOpen ? "flex" : "hidden lg:flex"}`}
           style={sidebarColor ? { backgroundColor: sidebarColor } : undefined}
         >
           <nav className="flex flex-col gap-1 px-2">
@@ -52,6 +64,7 @@ export default function MainLayout({ children }: Props) {
                 <Link
                   key={item.to}
                   to={item.to}
+                  onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                     ${
                       isActive
@@ -76,7 +89,7 @@ export default function MainLayout({ children }: Props) {
         </aside>
 
         {/* Content */}
-        <main className="flex-1 p-6 overflow-auto">
+        <main className="flex-1 p-4 md:p-6 overflow-auto w-full">
           {children}
         </main>
       </div>
