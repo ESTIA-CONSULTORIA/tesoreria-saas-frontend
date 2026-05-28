@@ -40,6 +40,7 @@ export default function UsersPage() {
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [permissionsModalOpen, setPermissionsModalOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [localPermissions, setLocalPermissions] = useState<Permission[]>([]);
 
   useEffect(() => {
     loadData();
@@ -75,23 +76,48 @@ export default function UsersPage() {
 
   async function handleRoleClick(role: Role) {
     setSelectedRole(role);
+    setLocalPermissions(role.permissions || []);
     setPermissionsModalOpen(true);
   }
 
   async function updatePermission(module: string, field: keyof Permission, value: boolean) {
     if (!selectedRole) return;
+
+    // Optimistic update
+    const previousPermissions = [...localPermissions];
+    setLocalPermissions((prev) =>
+      prev.map((p) =>
+        p.module === module ? { ...p, [field]: value } : p
+      )
+    );
+
     try {
       await api.put(`/roles/${selectedRole.id}/permissions/${module}`, { [field]: value });
       loadData();
     } catch (err: any) {
+      // Revert on error
+      setLocalPermissions(previousPermissions);
       setError(err.response?.data?.message || "No fue posible actualizar permiso");
     }
   }
 
   async function activateAll() {
     if (!selectedRole) return;
+
+    // Optimistic update
+    const previousPermissions = [...localPermissions];
+    setLocalPermissions((prev) =>
+      prev.map((p) => ({
+        ...p,
+        canView: true,
+        canCreate: true,
+        canEdit: true,
+        canDelete: true,
+      }))
+    );
+
     try {
-      const modules = selectedRole.permissions?.map((p) => p.module) || [];
+      const modules = localPermissions.map((p) => p.module);
       await Promise.all(
         modules.map((module) =>
           api.put(`/roles/${selectedRole!.id}/permissions/${module}`, {
@@ -104,14 +130,28 @@ export default function UsersPage() {
       );
       loadData();
     } catch (err: any) {
+      setLocalPermissions(previousPermissions);
       setError(err.response?.data?.message || "No fue posible activar todos los permisos");
     }
   }
 
   async function deactivateAll() {
     if (!selectedRole) return;
+
+    // Optimistic update
+    const previousPermissions = [...localPermissions];
+    setLocalPermissions((prev) =>
+      prev.map((p) => ({
+        ...p,
+        canView: false,
+        canCreate: false,
+        canEdit: false,
+        canDelete: false,
+      }))
+    );
+
     try {
-      const modules = selectedRole.permissions?.map((p) => p.module) || [];
+      const modules = localPermissions.map((p) => p.module);
       await Promise.all(
         modules.map((module) =>
           api.put(`/roles/${selectedRole!.id}/permissions/${module}`, {
@@ -124,14 +164,28 @@ export default function UsersPage() {
       );
       loadData();
     } catch (err: any) {
+      setLocalPermissions(previousPermissions);
       setError(err.response?.data?.message || "No fue posible desactivar todos los permisos");
     }
   }
 
   async function setReadOnly() {
     if (!selectedRole) return;
+
+    // Optimistic update
+    const previousPermissions = [...localPermissions];
+    setLocalPermissions((prev) =>
+      prev.map((p) => ({
+        ...p,
+        canView: true,
+        canCreate: false,
+        canEdit: false,
+        canDelete: false,
+      }))
+    );
+
     try {
-      const modules = selectedRole.permissions?.map((p) => p.module) || [];
+      const modules = localPermissions.map((p) => p.module);
       await Promise.all(
         modules.map((module) =>
           api.put(`/roles/${selectedRole!.id}/permissions/${module}`, {
@@ -144,6 +198,7 @@ export default function UsersPage() {
       );
       loadData();
     } catch (err: any) {
+      setLocalPermissions(previousPermissions);
       setError(err.response?.data?.message || "No fue posible establecer solo lectura");
     }
   }
@@ -346,36 +401,35 @@ export default function UsersPage() {
               </div>
 
               {/* Grid de permisos */}
-              <div className="flex-1 overflow-y-auto p-6">
-                {selectedRole.permissions && selectedRole.permissions.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {selectedRole.permissions.map((permission) => (
+              <div className="flex-1 overflow-y-auto p-4">
+                {localPermissions.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                    {localPermissions.map((permission) => (
                       <div
                         key={permission.id}
-                        className="rounded-xl border border-slate-700 bg-slate-800/50 p-4 hover:bg-slate-800/70 transition-colors"
+                        className="rounded-lg border border-slate-700 bg-slate-800/50 p-3 hover:bg-slate-800/70 transition-colors"
                       >
-                        <div className="flex items-center gap-3 mb-4">
-                          <span className="text-2xl">{moduleIcons[permission.module] || "📦"}</span>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-xl">{moduleIcons[permission.module] || "📦"}</span>
                           <div>
-                            <h4 className="font-semibold text-white text-sm">
+                            <h4 className="font-semibold text-white text-xs">
                               {moduleNames[permission.module] || permission.module}
                             </h4>
-                            <p className="text-xs text-slate-500">{permission.module}</p>
                           </div>
                         </div>
 
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-slate-400">Ver</span>
                             <button
                               onClick={() => updatePermission(permission.module, "canView", !permission.canView)}
-                              className={`w-12 h-6 rounded-full transition-colors ${
+                              className={`w-10 h-5 rounded-full transition-colors ${
                                 permission.canView ? "bg-blue-600" : "bg-slate-700"
                               }`}
                             >
                               <div
-                                className={`w-5 h-5 rounded-full bg-white transition-transform ${
-                                  permission.canView ? "translate-x-6" : "translate-x-0.5"
+                                className={`w-4 h-4 rounded-full bg-white transition-transform ${
+                                  permission.canView ? "translate-x-5" : "translate-x-0.5"
                                 }`}
                               />
                             </button>
@@ -385,13 +439,13 @@ export default function UsersPage() {
                             <span className="text-xs text-slate-400">Crear</span>
                             <button
                               onClick={() => updatePermission(permission.module, "canCreate", !permission.canCreate)}
-                              className={`w-12 h-6 rounded-full transition-colors ${
+                              className={`w-10 h-5 rounded-full transition-colors ${
                                 permission.canCreate ? "bg-blue-600" : "bg-slate-700"
                               }`}
                             >
                               <div
-                                className={`w-5 h-5 rounded-full bg-white transition-transform ${
-                                  permission.canCreate ? "translate-x-6" : "translate-x-0.5"
+                                className={`w-4 h-4 rounded-full bg-white transition-transform ${
+                                  permission.canCreate ? "translate-x-5" : "translate-x-0.5"
                                 }`}
                               />
                             </button>
@@ -401,13 +455,13 @@ export default function UsersPage() {
                             <span className="text-xs text-slate-400">Editar</span>
                             <button
                               onClick={() => updatePermission(permission.module, "canEdit", !permission.canEdit)}
-                              className={`w-12 h-6 rounded-full transition-colors ${
+                              className={`w-10 h-5 rounded-full transition-colors ${
                                 permission.canEdit ? "bg-blue-600" : "bg-slate-700"
                               }`}
                             >
                               <div
-                                className={`w-5 h-5 rounded-full bg-white transition-transform ${
-                                  permission.canEdit ? "translate-x-6" : "translate-x-0.5"
+                                className={`w-4 h-4 rounded-full bg-white transition-transform ${
+                                  permission.canEdit ? "translate-x-5" : "translate-x-0.5"
                                 }`}
                               />
                             </button>
@@ -417,13 +471,13 @@ export default function UsersPage() {
                             <span className="text-xs text-slate-400">Eliminar</span>
                             <button
                               onClick={() => updatePermission(permission.module, "canDelete", !permission.canDelete)}
-                              className={`w-12 h-6 rounded-full transition-colors ${
+                              className={`w-10 h-5 rounded-full transition-colors ${
                                 permission.canDelete ? "bg-blue-600" : "bg-slate-700"
                               }`}
                             >
                               <div
-                                className={`w-5 h-5 rounded-full bg-white transition-transform ${
-                                  permission.canDelete ? "translate-x-6" : "translate-x-0.5"
+                                className={`w-4 h-4 rounded-full bg-white transition-transform ${
+                                  permission.canDelete ? "translate-x-5" : "translate-x-0.5"
                                 }`}
                               />
                             </button>
