@@ -11,6 +11,7 @@ import TreasuryPage from "./pages/treasury/TreasuryPage";
 import ReconciliationPage from "./pages/reconciliation/ReconciliationPage";
 import AdministrationPage from "./pages/administration/AdministrationPage";
 import SettingsPage from "./pages/settings/SettingsPage";
+import PosConfigPage from "./pages/pos-config/PosConfigPage";
 
 import LoginPage from "./pages/Login/LoginPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
@@ -158,6 +159,17 @@ function App() {
           <ProtectedRoute>
             <ModuloRoute modulo="configuracion">
               <SettingsPage />
+            </ModuloRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/pos-config"
+        element={
+          <ProtectedRoute>
+            <ModuloRoute modulo="configuracion-pos">
+              <PosConfigPage />
             </ModuloRoute>
           </ProtectedRoute>
         }

@@ -20,6 +20,7 @@ const navItems = [
   { label: "Conciliación", to: "/reconciliation", icon: "📋", modulo: "conciliacion" },
   { label: "Administración", to: "/administration", icon: "🔐", adminOnly: true, modulo: "administracion" },
   { label: "Configuración", to: "/settings", icon: "⚙️", modulo: "configuracion" },
+  { label: "Configuración POS", to: "/pos-config", icon: "🖥️", modulo: "configuracion-pos" },
 ];
 
 export default function MainLayout({ children }: Props) {
