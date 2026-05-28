@@ -13,12 +13,22 @@ interface User {
   isActive: boolean;
 }
 
+interface Permission {
+  id: string;
+  module: string;
+  canView: boolean;
+  canCreate: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+}
+
 interface Role {
   id: string;
   code: string;
   name: string;
   description?: string;
   isActive: boolean;
+  permissions?: Permission[];
 }
 
 export default function UsersPage() {
@@ -28,6 +38,8 @@ export default function UsersPage() {
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [roleModalOpen, setRoleModalOpen] = useState(false);
+  const [permissionsModalOpen, setPermissionsModalOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
 
   useEffect(() => {
     loadData();
@@ -58,6 +70,21 @@ export default function UsersPage() {
       setError(err.response?.data?.message || "No fue posible cargar datos");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleRoleClick(role: Role) {
+    setSelectedRole(role);
+    setPermissionsModalOpen(true);
+  }
+
+  async function updatePermission(module: string, field: keyof Permission, value: boolean) {
+    if (!selectedRole) return;
+    try {
+      await api.put(`/roles/${selectedRole.id}/permissions/${module}`, { [field]: value });
+      loadData();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible actualizar permiso");
     }
   }
 
@@ -120,7 +147,8 @@ export default function UsersPage() {
                     {roles.map((role) => (
                       <div
                         key={role.id}
-                        className="rounded-xl border border-slate-800 bg-slate-900 p-4"
+                        onClick={() => handleRoleClick(role)}
+                        className="rounded-xl border border-slate-800 bg-slate-900 p-4 cursor-pointer hover:bg-slate-800/50 transition-colors"
                       >
                         <div className="flex flex-col gap-2">
                           <div>
@@ -174,6 +202,78 @@ export default function UsersPage() {
                       </div>
                     </div>
                   ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Permisos */}
+        {permissionsModalOpen && selectedRole && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+            <div className="w-full max-w-4xl rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <h3 className="text-2xl font-bold text-white">Permisos: {selectedRole.name}</h3>
+                  <p className="text-sm text-slate-400">Código: {selectedRole.code}</p>
+                </div>
+                <button
+                  onClick={() => setPermissionsModalOpen(false)}
+                  className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700"
+                >
+                  Cerrar
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {selectedRole.permissions && selectedRole.permissions.length > 0 ? (
+                  selectedRole.permissions.map((permission) => (
+                    <div key={permission.id} className="rounded-xl border border-slate-800 bg-slate-800/50 p-4">
+                      <h4 className="mb-3 text-lg font-semibold">{permission.module}</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={permission.canView}
+                            onChange={(e) => updatePermission(permission.module, "canView", e.target.checked)}
+                            className="rounded"
+                          />
+                          <span className="text-sm text-slate-300">Ver</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={permission.canCreate}
+                            onChange={(e) => updatePermission(permission.module, "canCreate", e.target.checked)}
+                            className="rounded"
+                          />
+                          <span className="text-sm text-slate-300">Crear</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={permission.canEdit}
+                            onChange={(e) => updatePermission(permission.module, "canEdit", e.target.checked)}
+                            className="rounded"
+                          />
+                          <span className="text-sm text-slate-300">Editar</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={permission.canDelete}
+                            onChange={(e) => updatePermission(permission.module, "canDelete", e.target.checked)}
+                            className="rounded"
+                          />
+                          <span className="text-sm text-slate-300">Eliminar</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="rounded-xl bg-slate-800/50 p-4 text-center text-slate-400">
+                    No hay permisos configurados para este rol
+                  </div>
                 )}
               </div>
             </div>
