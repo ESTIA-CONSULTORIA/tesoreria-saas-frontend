@@ -13,38 +13,68 @@ interface Invoice {
   paymentDate?: string;
   concept?: string;
   needsManualReview: boolean;
+  movementId?: string;
+  bankAccountId?: string;
+  bankName?: string;
   createdAt: string;
 }
 
+interface Movement {
+  id: string;
+  accountId: string;
+  bankName?: string;
+  amount: number;
+  type: "INCOME" | "EXPENSE";
+  category: string;
+  concept?: string;
+  createdAt: string;
+}
+
+interface ReconciliationData {
+  reconciled: Array<{ invoice: Invoice; movement: Movement }>;
+  pending: Invoice[];
+  notReconciled: Movement[];
+}
+
 export default function ReconciliationPage() {
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [reconciliationData, setReconciliationData] = useState<ReconciliationData | null>(null);
   const [summary, setSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState<"all" | "conciliadas" | "pendientes" | "noConciliadas">("all");
+  const [activeTab, setActiveTab] = useState<"reconciled" | "pending" | "notReconciled">("reconciled");
   const [modalOpen, setModalOpen] = useState(false);
+  const [reconcileModalOpen, setReconcileModalOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [availableMovements, setAvailableMovements] = useState<Movement[]>([]);
+  const [filters, setFilters] = useState({
+    bankAccountId: "",
+    startDate: "",
+    endDate: "",
+    type: "" as "EMITIDA" | "RECIBIDA" | "",
+  });
   const [formData, setFormData] = useState({
     invoiceNumber: "",
     type: "EMITIDA" as "EMITIDA" | "RECIBIDA",
     status: "PENDIENTE_PAGO" as "PAGADA" | "PENDIENTE_COBRO" | "PENDIENTE_PAGO",
     amount: "",
     dueDate: "",
+    bankAccountId: "",
     concept: "",
   });
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [filters]);
 
   async function loadData() {
     try {
       setLoading(true);
       setError("");
-      const [invoicesRes, summaryRes] = await Promise.all([
-        api.get("/reconciliation"),
+      const [dataRes, summaryRes] = await Promise.all([
+        api.get("/reconciliation/data", { params: filters }),
         api.get("/reconciliation/summary"),
       ]);
-      setInvoices(Array.isArray(invoicesRes.data) ? invoicesRes.data : []);
+      setReconciliationData(dataRes.data);
       setSummary(summaryRes.data);
     } catch (err: any) {
       setError(err.response?.data?.message || "No fue posible cargar los datos de conciliación");
@@ -60,6 +90,7 @@ export default function ReconciliationPage() {
         ...formData,
         amount: Number(formData.amount),
         dueDate: new Date(formData.dueDate),
+        bankAccountId: formData.bankAccountId || undefined,
       });
       setModalOpen(false);
       setFormData({
@@ -68,6 +99,7 @@ export default function ReconciliationPage() {
         status: "PENDIENTE_PAGO",
         amount: "",
         dueDate: "",
+        bankAccountId: "",
         concept: "",
       });
       loadData();
@@ -76,28 +108,30 @@ export default function ReconciliationPage() {
     }
   }
 
-  async function handleUpdateStatus(id: string, status: "CONCILIADA" | "PENDIENTE" | "NO_CONCILIADA") {
+  async function handleManualReconciliation(invoice: Invoice) {
+    setSelectedInvoice(invoice);
     try {
-      await api.put(`/reconciliation/${id}/status`, { status });
-      loadData();
+      const movementsRes = await api.get("/reconciliation/movements", {
+        params: { bankAccountId: invoice.bankAccountId },
+      });
+      setAvailableMovements(Array.isArray(movementsRes.data) ? movementsRes.data : []);
+      setReconcileModalOpen(true);
     } catch (err: any) {
-      setError(err.response?.data?.message || "No fue posible actualizar el estado");
+      setError(err.response?.data?.message || "No fue posible cargar movimientos");
     }
   }
 
-  async function handleManualReview(id: string) {
+  async function confirmReconciliation(movementId: string) {
+    if (!selectedInvoice) return;
     try {
-      await api.put(`/reconciliation/${id}/manual-review`);
+      await api.post(`/reconciliation/${selectedInvoice.id}/reconcile`, { movementId });
+      setReconcileModalOpen(false);
+      setSelectedInvoice(null);
       loadData();
     } catch (err: any) {
-      setError(err.response?.data?.message || "No fue posible marcar para revisión manual");
+      setError(err.response?.data?.message || "No fue posible conciliar");
     }
   }
-
-  const filteredInvoices = invoices.filter((invoice) => {
-    if (activeTab === "all") return true;
-    return invoice.reconciliationStatus === activeTab.toUpperCase();
-  });
 
   return (
     <MainLayout>
@@ -105,7 +139,7 @@ export default function ReconciliationPage() {
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-bold">Conciliación Bancaria</h2>
-            <p className="text-slate-400">Gestión de facturas y conciliación</p>
+            <p className="text-slate-400">Cruce de movimientos bancarios con facturas</p>
           </div>
           <button
             onClick={() => setModalOpen(true)}
@@ -120,6 +154,39 @@ export default function ReconciliationPage() {
             {error}
           </div>
         )}
+
+        {/* Filtros */}
+        <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <input
+              type="date"
+              value={filters.startDate}
+              onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
+              className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+            />
+            <input
+              type="date"
+              value={filters.endDate}
+              onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+              className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+            />
+            <select
+              value={filters.type}
+              onChange={(e) => setFilters({ ...filters, type: e.target.value as any })}
+              className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+            >
+              <option value="">Todos los tipos</option>
+              <option value="EMITIDA">Emitidas</option>
+              <option value="RECIBIDA">Recibidas</option>
+            </select>
+            <button
+              onClick={() => setFilters({ bankAccountId: "", startDate: "", endDate: "", type: "" })}
+              className="rounded-lg bg-slate-700 p-2 text-white hover:bg-slate-600"
+            >
+              Limpiar Filtros
+            </button>
+          </div>
+        </div>
 
         {loading ? (
           <div className="rounded-xl bg-slate-900 p-6">Cargando datos...</div>
@@ -148,113 +215,144 @@ export default function ReconciliationPage() {
             {/* Tabs */}
             <div className="flex gap-2 border-b border-slate-800">
               <button
-                onClick={() => setActiveTab("all")}
+                onClick={() => setActiveTab("reconciled")}
                 className={`px-4 py-2 text-sm font-medium ${
-                  activeTab === "all" ? "text-blue-400 border-b-2 border-blue-400" : "text-slate-400"
+                  activeTab === "reconciled" ? "text-green-400 border-b-2 border-green-400" : "text-slate-400"
                 }`}
               >
-                Todas
+                Conciliados ({reconciliationData?.reconciled?.length || 0})
               </button>
               <button
-                onClick={() => setActiveTab("conciliadas")}
+                onClick={() => setActiveTab("pending")}
                 className={`px-4 py-2 text-sm font-medium ${
-                  activeTab === "conciliadas" ? "text-green-400 border-b-2 border-green-400" : "text-slate-400"
+                  activeTab === "pending" ? "text-yellow-400 border-b-2 border-yellow-400" : "text-slate-400"
                 }`}
               >
-                Conciliadas
+                Pendientes ({reconciliationData?.pending?.length || 0})
               </button>
               <button
-                onClick={() => setActiveTab("pendientes")}
+                onClick={() => setActiveTab("notReconciled")}
                 className={`px-4 py-2 text-sm font-medium ${
-                  activeTab === "pendientes" ? "text-yellow-400 border-b-2 border-yellow-400" : "text-slate-400"
+                  activeTab === "notReconciled" ? "text-red-400 border-b-2 border-red-400" : "text-slate-400"
                 }`}
               >
-                Pendientes
-              </button>
-              <button
-                onClick={() => setActiveTab("noConciliadas")}
-                className={`px-4 py-2 text-sm font-medium ${
-                  activeTab === "noConciliadas" ? "text-red-400 border-b-2 border-red-400" : "text-slate-400"
-                }`}
-              >
-                No Conciliadas
+                No Conciliados ({reconciliationData?.notReconciled?.length || 0})
               </button>
             </div>
 
-            {/* Tabla de facturas */}
-            <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="text-slate-400">
-                    <tr>
-                      <th className="p-2">Número</th>
-                      <th className="p-2">Tipo</th>
-                      <th className="p-2">Estado</th>
-                      <th className="p-2">Conciliación</th>
-                      <th className="p-2">Monto</th>
-                      <th className="p-2">Vencimiento</th>
-                      <th className="p-2">Concepto</th>
-                      <th className="p-2">Revisión</th>
-                      <th className="p-2">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredInvoices.map((invoice) => (
-                      <tr key={invoice.id} className="border-t border-slate-800">
-                        <td className="p-2">{invoice.invoiceNumber}</td>
-                        <td className="p-2">{invoice.type}</td>
-                        <td className="p-2">{invoice.status}</td>
-                        <td className="p-2">
-                          <span
-                            className={`rounded-full px-2 py-1 text-xs ${
-                              invoice.reconciliationStatus === "CONCILIADA"
-                                ? "bg-green-900/40 text-green-300"
-                                : invoice.reconciliationStatus === "PENDIENTE"
-                                ? "bg-yellow-900/40 text-yellow-300"
-                                : "bg-red-900/40 text-red-300"
-                            }`}
-                          >
-                            {invoice.reconciliationStatus}
-                          </span>
-                        </td>
-                        <td className="p-2">${Number(invoice.amount).toFixed(2)}</td>
-                        <td className="p-2">{new Date(invoice.dueDate).toLocaleDateString()}</td>
-                        <td className="p-2">{invoice.concept || "-"}</td>
-                        <td className="p-2">
-                          {invoice.needsManualReview && (
-                            <span className="rounded-full bg-orange-900/40 px-2 py-1 text-xs text-orange-300">
-                              Revisión Manual
-                            </span>
-                          )}
-                        </td>
-                        <td className="p-2">
-                          <div className="flex gap-1">
-                            <button
-                              onClick={() => handleUpdateStatus(invoice.id, "CONCILIADA")}
-                              className="rounded bg-green-600 px-2 py-1 text-xs text-white hover:bg-green-700"
-                            >
-                              Conciliar
-                            </button>
-                            <button
-                              onClick={() => handleUpdateStatus(invoice.id, "NO_CONCILIADA")}
-                              className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700"
-                            >
-                              Rechazar
-                            </button>
-                            <button
-                              onClick={() => handleManualReview(invoice.id)}
-                              className="rounded bg-orange-600 px-2 py-1 text-xs text-white hover:bg-orange-700"
-                            >
-                              Revisar
-                            </button>
-                          </div>
-                        </td>
+            {/* Tabla de conciliados */}
+            {activeTab === "reconciled" && (
+              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                <h3 className="mb-3 text-lg font-semibold">Conciliados (Factura + Movimiento)</h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-left text-sm">
+                    <thead className="text-slate-400">
+                      <tr>
+                        <th className="p-2">Factura</th>
+                        <th className="p-2">Tipo</th>
+                        <th className="p-2">Monto Factura</th>
+                        <th className="p-2">Movimiento</th>
+                        <th className="p-2">Monto Movimiento</th>
+                        <th className="p-2">Cuenta</th>
+                        <th className="p-2">Fecha</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {reconciliationData?.reconciled?.map((item) => (
+                        <tr key={item.invoice.id} className="border-t border-slate-800">
+                          <td className="p-2">{item.invoice.invoiceNumber}</td>
+                          <td className="p-2">{item.invoice.type}</td>
+                          <td className="p-2">${Number(item.invoice.amount).toFixed(2)}</td>
+                          <td className="p-2">{item.movement.id}</td>
+                          <td className="p-2">${Number(item.movement.amount).toFixed(2)}</td>
+                          <td className="p-2">{item.invoice.bankName || item.movement.bankName}</td>
+                          <td className="p-2">{new Date(item.invoice.dueDate).toLocaleDateString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Tabla de pendientes */}
+            {activeTab === "pending" && (
+              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                <h3 className="mb-3 text-lg font-semibold">Pendientes (Facturas sin movimiento)</h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-left text-sm">
+                    <thead className="text-slate-400">
+                      <tr>
+                        <th className="p-2">Número</th>
+                        <th className="p-2">Tipo</th>
+                        <th className="p-2">Estado</th>
+                        <th className="p-2">Monto</th>
+                        <th className="p-2">Vencimiento</th>
+                        <th className="p-2">Cuenta</th>
+                        <th className="p-2">Concepto</th>
+                        <th className="p-2">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reconciliationData?.pending?.map((invoice) => (
+                        <tr key={invoice.id} className="border-t border-slate-800">
+                          <td className="p-2">{invoice.invoiceNumber}</td>
+                          <td className="p-2">{invoice.type}</td>
+                          <td className="p-2">{invoice.status}</td>
+                          <td className="p-2">${Number(invoice.amount).toFixed(2)}</td>
+                          <td className="p-2">{new Date(invoice.dueDate).toLocaleDateString()}</td>
+                          <td className="p-2">{invoice.bankName || "-"}</td>
+                          <td className="p-2">{invoice.concept || "-"}</td>
+                          <td className="p-2">
+                            <button
+                              onClick={() => handleManualReconciliation(invoice)}
+                              className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700"
+                            >
+                              Conciliar Manual
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Tabla de no conciliados */}
+            {activeTab === "notReconciled" && (
+              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                <h3 className="mb-3 text-lg font-semibold">No Conciliados (Movimientos sin factura)</h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-left text-sm">
+                    <thead className="text-slate-400">
+                      <tr>
+                        <th className="p-2">ID Movimiento</th>
+                        <th className="p-2">Tipo</th>
+                        <th className="p-2">Categoría</th>
+                        <th className="p-2">Monto</th>
+                        <th className="p-2">Cuenta</th>
+                        <th className="p-2">Concepto</th>
+                        <th className="p-2">Fecha</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reconciliationData?.notReconciled?.map((movement) => (
+                        <tr key={movement.id} className="border-t border-slate-800">
+                          <td className="p-2">{movement.id}</td>
+                          <td className="p-2">{movement.type}</td>
+                          <td className="p-2">{movement.category}</td>
+                          <td className="p-2">${Number(movement.amount).toFixed(2)}</td>
+                          <td className="p-2">{movement.bankName}</td>
+                          <td className="p-2">{movement.concept || "-"}</td>
+                          <td className="p-2">{new Date(movement.createdAt).toLocaleDateString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -317,6 +415,12 @@ export default function ReconciliationPage() {
                   className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
                 />
                 <input
+                  value={formData.bankAccountId}
+                  onChange={(e) => setFormData({ ...formData, bankAccountId: e.target.value })}
+                  placeholder="ID Cuenta Bancaria (opcional)"
+                  className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                />
+                <input
                   value={formData.concept}
                   onChange={(e) => setFormData({ ...formData, concept: e.target.value })}
                   placeholder="Concepto"
@@ -329,6 +433,44 @@ export default function ReconciliationPage() {
                   Guardar Factura
                 </button>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de conciliación manual */}
+        {reconcileModalOpen && selectedInvoice && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+            <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <h3 className="text-2xl font-bold text-white">Conciliación Manual</h3>
+                  <p className="text-sm text-slate-400">Factura: {selectedInvoice.invoiceNumber}</p>
+                </div>
+                <button
+                  onClick={() => setReconcileModalOpen(false)}
+                  className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700"
+                >
+                  Cerrar
+                </button>
+              </div>
+              <div className="space-y-4">
+                <p className="text-sm text-slate-400">Seleccione un movimiento para conciliar:</p>
+                <div className="max-h-64 overflow-y-auto space-y-2">
+                  {availableMovements.map((movement) => (
+                    <button
+                      key={movement.id}
+                      onClick={() => confirmReconciliation(movement.id)}
+                      className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-left hover:bg-slate-700"
+                    >
+                      <div className="flex justify-between">
+                        <span className="text-sm text-white">{movement.id}</span>
+                        <span className="text-sm text-slate-400">${Number(movement.amount).toFixed(2)}</span>
+                      </div>
+                      <p className="text-xs text-slate-500">{movement.concept || movement.category}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
