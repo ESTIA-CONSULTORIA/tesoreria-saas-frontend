@@ -22,6 +22,8 @@ const navItems = [
 
 export default function MainLayout({ children }: Props) {
   const location = useLocation();
+  const primaryColor = localStorage.getItem("tenant_primary_color") || "";
+  const sidebarColor = localStorage.getItem("tenant_sidebar_color") || "";
 
   return (
     <div className={`min-h-screen ${theme.colors.background} ${theme.colors.text}`}>
@@ -31,6 +33,7 @@ export default function MainLayout({ children }: Props) {
         {/* Sidebar */}
         <aside
           className={`hidden md:flex ${theme.sidebar.width} min-h-[calc(100vh-64px)] border-r ${theme.colors.border} ${theme.colors.surface} flex-col py-2`}
+          style={sidebarColor ? { backgroundColor: sidebarColor } : undefined}
         >
           <nav className="flex flex-col gap-1 px-2">
             {navItems.map((item) => {
@@ -42,9 +45,10 @@ export default function MainLayout({ children }: Props) {
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                     ${
                       isActive
-                        ? `${theme.colors.primary} ${theme.colors.text}`
+                        ? `${theme.colors.text}`
                         : `${theme.colors.textMuted} ${theme.colors.surfaceHover}`
                     }`}
+                  style={isActive && primaryColor ? { backgroundColor: primaryColor } : undefined}
                 >
                   <span>{item.icon}</span>
                   <span>{item.label}</span>

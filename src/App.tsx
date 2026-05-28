@@ -7,6 +7,7 @@ import BanksPage from "./pages/banks/BanksPage";
 import MovementsPage from "./pages/movements/MovementsPage";
 import TransfersPage from "./pages/transfers/TransfersPage";
 import ReportsPage from "./pages/reports/ReportsPage";
+import SettingsPage from "./pages/settings/SettingsPage";
 
 import LoginPage from "./pages/Login/LoginPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
@@ -94,6 +95,15 @@ function App() {
         element={
           <ProtectedRoute>
             <ReportsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <SettingsPage />
           </ProtectedRoute>
         }
       />

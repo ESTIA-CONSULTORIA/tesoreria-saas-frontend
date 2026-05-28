@@ -2,6 +2,9 @@ import { useAuthStore } from "../store/useAuthStore";
 
 export default function Header() {
   const { user, logout } = useAuthStore();
+  const tenantName = localStorage.getItem("tenant_name") || "Tesorería SaaS";
+  const tenantLogo = localStorage.getItem("tenant_logo_url") || "";
+  const sidebarColor = localStorage.getItem("tenant_sidebar_color") || "";
 
   function handleLogout() {
     logout();
@@ -9,11 +12,10 @@ export default function Header() {
   }
 
   return (
-    <header className="h-16 border-b border-slate-800 bg-slate-900 flex items-center justify-between px-6">
-      <div>
-        <h1 className="text-lg font-bold text-white">
-          Tesorería SaaS
-        </h1>
+    <header className="h-16 border-b border-slate-800 bg-slate-900 flex items-center justify-between px-6" style={sidebarColor ? { backgroundColor: sidebarColor } : undefined}>
+      <div className="flex items-center gap-3">
+        {tenantLogo ? <img src={tenantLogo} alt="Tenant logo" className="h-8 w-8 rounded object-cover" /> : null}
+        <h1 className="text-lg font-bold text-white">{tenantName}</h1>
       </div>
 
       <div className="flex items-center gap-4">
