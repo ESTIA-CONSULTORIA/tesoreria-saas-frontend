@@ -62,69 +62,71 @@ export default function GestionClientes() {
       </div>
 
       <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-slate-800">
-            <tr>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-white">Tenant</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-white">Plan</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-white">Estado</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-white">Módulos</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-white">Fecha Registro</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-white">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-800">
-            {tenants.map((tenant) => (
-              <tr key={tenant.id} className="hover:bg-slate-800/50">
-                <td className="px-6 py-4">
-                  <div className="font-medium text-white">{tenant.name}</div>
-                  <div className="text-sm text-slate-400">{tenant.id}</div>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-sm ${
-                    tenant.plan === "ENTERPRISE" ? "bg-purple-900/40 text-purple-300" :
-                    tenant.plan === "BUSINESS" ? "bg-blue-900/40 text-blue-300" :
-                    tenant.plan === "PRO" ? "bg-green-900/40 text-green-300" :
-                    "bg-slate-700 text-slate-300"
-                  }`}>
-                    {tenant.plan}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-sm ${
-                    tenant.status === "ACTIVE" ? "bg-green-900/40 text-green-300" : "bg-red-900/40 text-red-300"
-                  }`}>
-                    {tenant.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="text-sm text-slate-300">
-                    {tenant.modulosActivos?.length || 0} módulos activos
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-sm text-slate-400">
-                  {new Date(tenant.createdAt).toLocaleDateString()}
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setSelectedTenant(tenant)}
-                      className="px-3 py-1 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
-                    >
-                      Cambiar Plan
-                    </button>
-                    <button
-                      onClick={() => handleImpersonate(tenant.id)}
-                      className="px-3 py-1 rounded bg-purple-600 text-white text-sm hover:bg-purple-700"
-                    >
-                      Impersonar
-                    </button>
-                  </div>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[800px]">
+            <thead className="bg-slate-800">
+              <tr>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-white">Tenant</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-white">Plan</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-white">Estado</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-white">Módulos</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-white">Fecha Registro</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-white">Acciones</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-800">
+              {tenants.map((tenant) => (
+                <tr key={tenant.id} className="hover:bg-slate-800/50">
+                  <td className="px-6 py-4">
+                    <div className="font-medium text-white">{tenant.name}</div>
+                    <div className="text-sm text-slate-400">{tenant.id}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`px-3 py-1 rounded-full text-sm ${
+                      tenant.plan === "ENTERPRISE" ? "bg-purple-900/40 text-purple-300" :
+                      tenant.plan === "BUSINESS" ? "bg-blue-900/40 text-blue-300" :
+                      tenant.plan === "PRO" ? "bg-green-900/40 text-green-300" :
+                      "bg-slate-700 text-slate-300"
+                    }`}>
+                      {tenant.plan}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`px-3 py-1 rounded-full text-sm ${
+                      tenant.status === "ACTIVO" ? "bg-green-900/40 text-green-300" : "bg-red-900/40 text-red-300"
+                    }`}>
+                      {tenant.status === "ACTIVO" ? "Activo" : "Inactivo"}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-slate-300">
+                      {tenant.modulosActivos?.length || 0} módulos activos
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-slate-400">
+                    {new Date(tenant.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setSelectedTenant(tenant)}
+                        className="px-3 py-1 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+                      >
+                        Cambiar Plan
+                      </button>
+                      <button
+                        onClick={() => handleImpersonate(tenant.id)}
+                        className="px-3 py-1 rounded bg-purple-600 text-white text-sm hover:bg-purple-700"
+                      >
+                        Impersonar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Modal cambiar plan */}

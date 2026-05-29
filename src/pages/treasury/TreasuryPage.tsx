@@ -61,7 +61,7 @@ export default function TreasuryPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-slate-800">
+      <div className="flex gap-2 border-b border-slate-800 overflow-x-auto">
         <button
           onClick={() => setActiveTab("executive")}
           className={`px-4 py-2 font-medium transition-colors ${
@@ -283,8 +283,8 @@ export default function TreasuryPage() {
               {/* Tabla de proyección diaria */}
               <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
                 <h3 className="p-4 text-lg font-semibold">Proyección Diaria</h3>
-                <div className="max-h-96 overflow-y-auto">
-                  <table className="w-full">
+                <div className="overflow-x-auto max-h-96">
+                  <table className="w-full min-w-[600px]">
                     <thead className="bg-slate-800 sticky top-0">
                       <tr>
                         <th className="px-4 py-2 text-left text-sm font-semibold text-white">Fecha</th>
@@ -345,43 +345,45 @@ export default function TreasuryPage() {
               {/* Tabla de cuentas */}
               <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
                 <h3 className="p-4 text-lg font-semibold">Todas las Cuentas</h3>
-                <table className="w-full">
-                  <thead className="bg-slate-800">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-sm font-semibold text-white">Cuenta</th>
-                      <th className="px-4 py-2 text-left text-sm font-semibold text-white">Banco</th>
-                      <th className="px-4 py-2 text-right text-sm font-semibold text-white">Saldo</th>
-                      <th className="px-4 py-2 text-center text-sm font-semibold text-white">Movimientos Hoy</th>
-                      <th className="px-4 py-2 text-right text-sm font-semibold text-white">Neto Hoy</th>
-                      <th className="px-4 py-2 text-left text-sm font-semibold text-white">Última Conciliación</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800">
-                    {bankPosition.accounts?.map((account: any) => (
-                      <tr key={account.id} className="hover:bg-slate-800/50">
-                        <td className="px-4 py-3">
-                          <p className="font-medium text-white">{account.name}</p>
-                          <p className="text-sm text-slate-400">{account.accountNumber}</p>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-slate-300">{account.bank}</td>
-                        <td className="px-4 py-3 text-right font-semibold text-white">
-                          ${Number(account.balance).toFixed(2)}
-                        </td>
-                        <td className="px-4 py-3 text-center text-sm text-slate-300">
-                          {account.todayMovements}
-                        </td>
-                        <td className={`px-4 py-3 text-right text-sm font-semibold ${
-                          account.todayNet >= 0 ? "text-green-400" : "text-red-400"
-                        }`}>
-                          ${Number(account.todayNet).toFixed(2)}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-slate-400">
-                          {account.lastReconciliation ? new Date(account.lastReconciliation).toLocaleDateString() : "N/A"}
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[800px]">
+                    <thead className="bg-slate-800">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-white">Cuenta</th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-white">Banco</th>
+                        <th className="px-4 py-2 text-right text-sm font-semibold text-white">Saldo</th>
+                        <th className="px-4 py-2 text-center text-sm font-semibold text-white">Movimientos Hoy</th>
+                        <th className="px-4 py-2 text-right text-sm font-semibold text-white">Neto Hoy</th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-white">Última Conciliación</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800">
+                      {bankPosition.accounts?.map((account: any) => (
+                        <tr key={account.id} className="hover:bg-slate-800/50">
+                          <td className="px-4 py-3">
+                            <p className="font-medium text-white">{account.name}</p>
+                            <p className="text-sm text-slate-400">{account.accountNumber}</p>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-slate-300">{account.bank}</td>
+                          <td className="px-4 py-3 text-right font-semibold text-white">
+                            ${Number(account.balance).toFixed(2)}
+                          </td>
+                          <td className="px-4 py-3 text-center text-sm text-slate-300">
+                            {account.todayMovements}
+                          </td>
+                          <td className={`px-4 py-3 text-right text-sm font-semibold ${
+                            account.todayNet >= 0 ? "text-green-400" : "text-red-400"
+                          }`}>
+                            ${Number(account.todayNet).toFixed(2)}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-slate-400">
+                            {account.lastReconciliation ? new Date(account.lastReconciliation).toLocaleDateString() : "N/A"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}

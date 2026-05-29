@@ -29,7 +29,7 @@ export default function SoporteDashboard() {
   }
 
   const totalTenants = tenants.length;
-  const activeTenants = tenants.filter((t) => t.status === "ACTIVE").length;
+  const activeTenants = tenants.filter((t) => t.status === "ACTIVO").length;
   const tenantsByPlan = tenants.reduce((acc, tenant) => {
     acc[tenant.plan] = (acc[tenant.plan] || 0) + 1;
     return acc;
@@ -53,7 +53,7 @@ export default function SoporteDashboard() {
           {/* KPIs */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-              <div className="text-sm text-slate-400">Total Tenants</div>
+              <div className="text-sm text-slate-400">Total de Tenants</div>
               <div className="text-3xl font-bold text-white mt-2">{totalTenants}</div>
             </div>
             <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
@@ -97,9 +97,9 @@ export default function SoporteDashboard() {
                       <div className="text-sm text-slate-400">{tenant.plan}</div>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-sm ${
-                      tenant.status === "ACTIVE" ? "bg-green-900/40 text-green-300" : "bg-red-900/40 text-red-300"
+                      tenant.status === "ACTIVO" ? "bg-green-900/40 text-green-300" : "bg-red-900/40 text-red-300"
                     }`}>
-                      {tenant.status}
+                      {tenant.status === "ACTIVO" ? "Activo" : "Inactivo"}
                     </span>
                   </div>
                 ))}

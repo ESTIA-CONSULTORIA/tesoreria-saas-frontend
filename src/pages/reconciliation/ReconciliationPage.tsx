@@ -239,7 +239,7 @@ export default function ReconciliationPage() {
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-2 border-b border-slate-800">
+            <div className="flex gap-2 border-b border-slate-800 overflow-x-auto">
               <button
                 onClick={() => setActiveTab("reconciled")}
                 className={`px-4 py-2 text-sm font-medium ${

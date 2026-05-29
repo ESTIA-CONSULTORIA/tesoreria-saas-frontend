@@ -16,6 +16,13 @@ body {
   background: #020617;
 }
 
+/* Prevent iOS zoom on inputs */
+input,
+select,
+textarea {
+  font-size: 16px !important;
+}
+
 /* Print styles for reports */
 @media print {
   body {
