@@ -15,6 +15,7 @@ import PosConfigPage from "./pages/pos-config/PosConfigPage";
 import SuppliersPage from "./pages/suppliers/SuppliersPage";
 import PurchasesPage from "./pages/purchases/PurchasesPage";
 import CostsPage from "./pages/costs/CostsPage";
+import LogsPage from "./pages/administration/LogsPage";
 
 import LoginPage from "./pages/Login/LoginPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
@@ -158,6 +159,17 @@ function App() {
           <ProtectedRoute>
             <ModuloRoute modulo="administracion">
               <AdministrationPage />
+            </ModuloRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/logs"
+        element={
+          <ProtectedRoute>
+            <ModuloRoute modulo="administracion">
+              <LogsPage />
             </ModuloRoute>
           </ProtectedRoute>
         }
