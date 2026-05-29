@@ -4,8 +4,8 @@ export function useModulo(modulo: string): boolean {
   const modulosActivos = useAuthStore((state) => state.modulosActivos);
   const user = useAuthStore((state) => state.user);
 
-  // SUPER_ADMIN tiene acceso a todos los módulos
-  if (user?.rol === "SUPER_ADMIN") {
+  // SOPORTE tiene acceso a todos los módulos
+  if (user?.rol === "SOPORTE") {
     return true;
   }
 

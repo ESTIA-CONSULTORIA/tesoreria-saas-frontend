@@ -38,7 +38,7 @@ export default function MainLayout({ children }: Props) {
   const primaryColor = localStorage.getItem("tenant_primary_color") || "";
   const sidebarColor = localStorage.getItem("tenant_sidebar_color") || "";
   const user = useAuthStore((state) => state.user);
-  const isSuperAdmin = user?.rol === "SUPER_ADMIN";
+  const isSoporte = user?.rol === "SOPORTE";
 
   // Atajos globales
   useKeyboardShortcuts([
@@ -75,8 +75,8 @@ export default function MainLayout({ children }: Props) {
               const isActive = location.pathname === item.to;
               const moduloActivo = useModulo(item.modulo);
 
-              // SUPER_ADMIN ve todos los módulos
-              if (!isSuperAdmin && !moduloActivo) return null;
+              // SOPORTE ve todos los módulos
+              if (!isSoporte && !moduloActivo) return null;
 
               return (
                 <Link
@@ -102,8 +102,8 @@ export default function MainLayout({ children }: Props) {
               );
             })}
 
-            {/* Sección especial para SUPER_ADMIN */}
-            {isSuperAdmin && (
+            {/* Sección especial para SOPORTE */}
+            {isSoporte && (
               <>
                 <div className={`mt-4 px-3 py-2 text-xs font-semibold ${theme.colors.textMuted} border-t ${theme.colors.border}`}>
                   ADMINISTRACIÓN (Todos los módulos)
