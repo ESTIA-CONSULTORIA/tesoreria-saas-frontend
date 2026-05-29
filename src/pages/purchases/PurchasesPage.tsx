@@ -137,6 +137,23 @@ export default function PurchasesPage() {
     return supplier?.nombre || supplierId;
   }
 
+  function getStatusLabel(status: string): string {
+    const statusMap: Record<string, string> = {
+      "BORRADOR": "Borrador",
+      "ENVIADA": "Enviada",
+      "PARCIAL": "Parcial",
+      "RECIBIDA": "Recibida",
+      "CANCELADA": "Cancelada",
+      "PENDIENTE": "Pendiente",
+      "PAGADA": "Pagada",
+      "DRAFT": "Borrador",
+      "PENDING": "Pendiente",
+      "ACTIVE": "Activo",
+      "INACTIVE": "Inactivo",
+    };
+    return statusMap[status] || status;
+  }
+
   function getStatusColor(status: string): string {
     switch (status) {
       case "BORRADOR":
@@ -247,7 +264,7 @@ export default function PurchasesPage() {
                         <th className="p-2">Proveedor</th>
                         <th className="p-2">Fecha</th>
                         <th className="p-2">Total</th>
-                        <th className="p-2">Status</th>
+                        <th className="p-2">Estado</th>
                         <th className="p-2">Acciones</th>
                       </tr>
                     </thead>
@@ -260,7 +277,7 @@ export default function PurchasesPage() {
                           <td className="p-2">{Number(order.total).toFixed(2)}</td>
                           <td className="p-2">
                             <span className={`rounded-full px-2 py-1 text-xs ${getStatusColor(order.status)}`}>
-                              {order.status}
+                              {getStatusLabel(order.status)}
                             </span>
                           </td>
                           <td className="p-2">
@@ -297,7 +314,7 @@ export default function PurchasesPage() {
                       <div className="flex justify-between items-start mb-2">
                         <p className="font-semibold text-white">{order.numero}</p>
                         <span className={`text-xs px-2 py-1 rounded ${getStatusColor(order.status)}`}>
-                          {order.status}
+                          {getStatusLabel(order.status)}
                         </span>
                       </div>
                       <div className="text-xs text-slate-400 space-y-1 mb-3">
@@ -334,7 +351,7 @@ export default function PurchasesPage() {
                         <th className="p-2">Proveedor</th>
                         <th className="p-2">Fecha</th>
                         <th className="p-2">Total</th>
-                        <th className="p-2">Status</th>
+                        <th className="p-2">Estado</th>
                         <th className="p-2">Acciones</th>
                       </tr>
                     </thead>
@@ -347,7 +364,7 @@ export default function PurchasesPage() {
                           <td className="p-2">{Number(order.total).toFixed(2)}</td>
                           <td className="p-2">
                             <span className={`rounded-full px-2 py-1 text-xs ${getStatusColor(order.status)}`}>
-                              {order.status}
+                              {getStatusLabel(order.status)}
                             </span>
                           </td>
                           <td className="p-2">
@@ -366,7 +383,7 @@ export default function PurchasesPage() {
                       <div className="flex justify-between items-start mb-2">
                         <p className="font-semibold text-white">{order.numero}</p>
                         <span className={`text-xs px-2 py-1 rounded ${getStatusColor(order.status)}`}>
-                          {order.status}
+                          {getStatusLabel(order.status)}
                         </span>
                       </div>
                       <div className="text-xs text-slate-400 space-y-1 mb-3">
@@ -400,7 +417,7 @@ export default function PurchasesPage() {
                         <th className="p-2">Fecha</th>
                         <th className="p-2">Vencimiento</th>
                         <th className="p-2">Total</th>
-                        <th className="p-2">Status</th>
+                        <th className="p-2">Estado</th>
                         <th className="p-2">Acciones</th>
                       </tr>
                     </thead>
@@ -414,7 +431,7 @@ export default function PurchasesPage() {
                           <td className="p-2">{Number(invoice.total).toFixed(2)}</td>
                           <td className="p-2">
                             <span className={`rounded-full px-2 py-1 text-xs ${getStatusColor(invoice.status)}`}>
-                              {invoice.status}
+                              {getStatusLabel(invoice.status)}
                             </span>
                           </td>
                           <td className="p-2">
@@ -433,7 +450,7 @@ export default function PurchasesPage() {
                       <div className="flex justify-between items-start mb-2">
                         <p className="font-semibold text-white">{invoice.numero}</p>
                         <span className={`text-xs px-2 py-1 rounded ${getStatusColor(invoice.status)}`}>
-                          {invoice.status}
+                          {getStatusLabel(invoice.status)}
                         </span>
                       </div>
                       <div className="text-xs text-slate-400 space-y-1 mb-3">

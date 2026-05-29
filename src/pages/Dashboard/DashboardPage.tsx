@@ -57,25 +57,25 @@ export default function DashboardPage() {
           <div className="rounded-xl bg-slate-900 p-6">Cargando dashboard...</div>
         ) : (
           <div className="space-y-6">
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-xl bg-slate-900 p-6">
-                <p className="text-sm text-slate-400">Empresas</p>
-                <p className="text-2xl font-bold">{kpis?.totalCompanies || 0}</p>
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-xl bg-slate-900 p-4 md:p-6">
+                <p className="text-xs md:text-sm text-slate-400">Empresas</p>
+                <p className="text-lg md:text-2xl font-bold">{kpis?.totalCompanies || 0}</p>
               </div>
 
-              <div className="rounded-xl bg-slate-900 p-6">
-                <p className="text-sm text-slate-400">Sucursales</p>
-                <p className="text-2xl font-bold">{kpis?.totalBranches || 0}</p>
+              <div className="rounded-xl bg-slate-900 p-4 md:p-6">
+                <p className="text-xs md:text-sm text-slate-400">Sucursales</p>
+                <p className="text-lg md:text-2xl font-bold">{kpis?.totalBranches || 0}</p>
               </div>
 
-              <div className="rounded-xl bg-slate-900 p-6">
-                <p className="text-sm text-slate-400">Saldo total</p>
-                <p className="text-2xl font-bold">{Number(kpis?.totalBalance || 0)}</p>
+              <div className="rounded-xl bg-slate-900 p-4 md:p-6">
+                <p className="text-xs md:text-sm text-slate-400">Saldo total</p>
+                <p className="text-lg md:text-2xl font-bold">{Number(kpis?.totalBalance || 0)}</p>
               </div>
 
-              <div className="rounded-xl bg-slate-900 p-6">
-                <p className="text-sm text-slate-400">Movimientos</p>
-                <p className="text-2xl font-bold">{kpis?.totalMovements || 0}</p>
+              <div className="rounded-xl bg-slate-900 p-4 md:p-6">
+                <p className="text-xs md:text-sm text-slate-400">Movimientos</p>
+                <p className="text-lg md:text-2xl font-bold">{kpis?.totalMovements || 0}</p>
               </div>
             </div>
 

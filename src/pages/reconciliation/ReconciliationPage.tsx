@@ -133,6 +133,32 @@ export default function ReconciliationPage() {
     }
   }
 
+  function getInvoiceTypeLabel(type: string): string {
+    const typeMap: Record<string, string> = {
+      "EMITIDA": "Emitida",
+      "RECIBIDA": "Recibida",
+    };
+    return typeMap[type] || type;
+  }
+
+  function getInvoiceStatusLabel(status: string): string {
+    const statusMap: Record<string, string> = {
+      "PAGADA": "Pagada",
+      "PENDIENTE_COBRO": "Pendiente de Cobro",
+      "PENDIENTE_PAGO": "Pendiente de Pago",
+    };
+    return statusMap[status] || status;
+  }
+
+  function getMovementTypeLabel(type: string): string {
+    const typeMap: Record<string, string> = {
+      "INCOME": "Ingreso",
+      "EXPENSE": "Egreso",
+      "TRANSFER": "Transferencia",
+    };
+    return typeMap[type] || type;
+  }
+
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -297,8 +323,8 @@ export default function ReconciliationPage() {
                       {reconciliationData?.pending?.map((invoice) => (
                         <tr key={invoice.id} className="border-t border-slate-800">
                           <td className="p-2">{invoice.invoiceNumber}</td>
-                          <td className="p-2">{invoice.type}</td>
-                          <td className="p-2">{invoice.status}</td>
+                          <td className="p-2">{getInvoiceTypeLabel(invoice.type)}</td>
+                          <td className="p-2">{getInvoiceStatusLabel(invoice.status)}</td>
                           <td className="p-2">${Number(invoice.amount).toFixed(2)}</td>
                           <td className="p-2">{new Date(invoice.dueDate).toLocaleDateString()}</td>
                           <td className="p-2">{invoice.bankName || "-"}</td>
@@ -340,7 +366,7 @@ export default function ReconciliationPage() {
                       {reconciliationData?.notReconciled?.map((movement) => (
                         <tr key={movement.id} className="border-t border-slate-800">
                           <td className="p-2">{movement.id}</td>
-                          <td className="p-2">{movement.type}</td>
+                          <td className="p-2">{getMovementTypeLabel(movement.type)}</td>
                           <td className="p-2">{movement.category}</td>
                           <td className="p-2">${Number(movement.amount).toFixed(2)}</td>
                           <td className="p-2">{movement.bankName}</td>
