@@ -43,7 +43,7 @@ export default function MainLayout({ children }: Props) {
   // Atajos globales
   useKeyboardShortcuts([
     { key: "k", ctrl: true, action: () => setSearchOpen(true) },
-    { key: "Escape", action: () => setSearchOpen(false) },
+    { key: "Escape", action: () => { if (searchOpen) setSearchOpen(false); } },
     { key: "1", alt: true, action: () => navigate("/dashboard") },
     { key: "2", alt: true, action: () => navigate("/movements") },
     { key: "3", alt: true, action: () => navigate("/transfers") },
