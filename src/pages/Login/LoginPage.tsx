@@ -22,14 +22,16 @@ export default function LoginPage() {
 
       const token = response.data.access_token;
       const modulosActivos = response.data.modulosActivos || [];
+      const user = response.data.user || {};
 
       login(
         token,
         "test-tenant",
         {
-          id: "1",
+          id: user.id || "1",
           email,
-          name: "Administrador",
+          name: user.name || "Administrador",
+          rol: user.roleCode,
         },
         modulosActivos
       );
