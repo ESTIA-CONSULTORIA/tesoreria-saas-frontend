@@ -214,13 +214,13 @@ export default function CreateInvoiceModal({ open, onClose, onCreated, suppliers
 
           <div>
             <div className="flex justify-between items-center mb-2">
-              <h4 className="text-lg font-semibold text-white">Items</h4>
+              <h4 className="text-lg font-semibold text-white">Artículos</h4>
               <button
                 type="button"
                 onClick={addItem}
                 className="rounded-lg bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
               >
-                + Agregar Item
+                + Agregar Artículo
               </button>
             </div>
 
