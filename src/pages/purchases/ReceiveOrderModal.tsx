@@ -55,66 +55,77 @@ export default function ReceiveOrderModal({ open, onClose, onReceived, order }: 
   if (!open || !order) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/70 px-4">
-      <div className="w-full max-w-2xl rounded-t-2xl md:rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl md:h-auto h-[80vh] overflow-y-auto">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h3 className="text-2xl font-bold text-white">Recepción de Mercancía</h3>
-            <p className="text-sm text-slate-400">OC: {order.numero}</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden">
+        {/* Header - flex-shrink-0 */}
+        <div className="flex-shrink-0 p-6 border-b border-slate-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-2xl font-bold text-white">Recepción de Mercancía</h3>
+              <p className="text-sm text-slate-400">OC: {order.numero}</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700"
+            >
+              Cerrar
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700"
-          >
-            Cerrar
-          </button>
         </div>
 
-        {error && (
-          <div className="mb-4 rounded-xl border border-red-700 bg-red-900/30 p-4 text-red-300">
-            {error}
-          </div>
-        )}
+        {/* Body - flex-1 overflow-y-auto */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {error && (
+            <div className="mb-4 rounded-xl border border-red-700 bg-red-900/30 p-4 text-red-300">
+              {error}
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            {receivedItems.map((item, index) => (
-              <div key={index} className="grid gap-2 grid-cols-1 md:grid-cols-3 items-center p-3 rounded-lg bg-slate-800">
-                <div className="md:col-span-2">
-                  <p className="text-sm text-white font-medium">{item.descripcion}</p>
-                  <p className="text-xs text-slate-400">Solicitado: {item.cantidad}</p>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              {receivedItems.map((item, index) => (
+                <div key={index} className="grid gap-2 grid-cols-1 md:grid-cols-3 items-center p-3 rounded-lg bg-slate-800">
+                  <div className="md:col-span-2">
+                    <p className="text-sm text-white font-medium">{item.descripcion}</p>
+                    <p className="text-xs text-slate-400">Solicitado: {item.cantidad}</p>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Recibido</label>
+                    <input
+                      type="number"
+                      value={item.cantidadRecibida}
+                      onChange={(e) => updateReceivedItem(index, Number(e.target.value))}
+                      max={item.cantidad}
+                      className="w-full rounded border border-slate-700 bg-slate-700 p-2 text-white text-sm outline-none focus:border-blue-500"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs text-slate-400 mb-1">Recibido</label>
-                  <input
-                    type="number"
-                    value={item.cantidadRecibida}
-                    onChange={(e) => updateReceivedItem(index, Number(e.target.value))}
-                    max={item.cantidad}
-                    className="w-full rounded border border-slate-700 bg-slate-700 p-2 text-white text-sm outline-none focus:border-blue-500"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
 
-          <div className="flex justify-end gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-40"
-            >
-              {loading ? "Guardando..." : "Registrar Recepción"}
-            </button>
-          </div>
-        </form>
+            <div className="flex justify-end gap-3 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-40"
+              >
+                {loading ? "Guardando..." : "Registrar Recepción"}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Footer - flex-shrink-0 */}
+        <div className="flex-shrink-0 p-4 border-t border-slate-800 text-center text-xs text-slate-500">
+          ESC para cerrar
+        </div>
       </div>
     </div>
   );
