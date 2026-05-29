@@ -64,6 +64,35 @@ const AVAILABLE_ADDONS = [
   { key: "white-label", label: "White Label" },
 ];
 
+const PLAN_MODULES: Record<string, string[]> = {
+  BASIC: ["dashboard", "empresas", "sucursales", "usuarios", "bancos", "movimientos", "transferencias", "reportes", "tesoreria", "conciliacion", "configuracion"],
+  PROFESIONAL: ["dashboard", "empresas", "sucursales", "usuarios", "bancos", "movimientos", "transferencias", "proveedores", "compras", "reportes", "tesoreria", "conciliacion", "configuracion"],
+  BUSINESS: ["dashboard", "empresas", "sucursales", "usuarios", "bancos", "movimientos", "transferencias", "proveedores", "compras", "costos", "reportes", "tesoreria", "conciliacion", "configuracion", "configuracion-pos"],
+  ENTERPRISE: ["dashboard", "empresas", "sucursales", "usuarios", "bancos", "movimientos", "transferencias", "proveedores", "compras", "costos", "reportes", "tesoreria", "conciliacion", "configuracion", "configuracion-pos", "integraciones", "rh", "sat-cfdi", "white-label"],
+};
+
+const MODULE_LABELS: Record<string, string> = {
+  dashboard: "Dashboard",
+  empresas: "Empresas",
+  sucursales: "Sucursales",
+  usuarios: "Usuarios y Roles",
+  bancos: "Bancos",
+  movimientos: "Movimientos",
+  transferencias: "Transferencias",
+  proveedores: "Proveedores",
+  compras: "Compras",
+  costos: "Costos y Producción",
+  reportes: "Reportes",
+  tesoreria: "Tesorería",
+  conciliacion: "Conciliación",
+  configuracion: "Configuración",
+  "configuracion-pos": "Configuración POS",
+  integraciones: "Integraciones",
+  rh: "Recursos Humanos",
+  "sat-cfdi": "SAT CFDI",
+  "white-label": "White Label",
+};
+
 export default function AdministrationPage() {
   const [activeTab, setActiveTab] = useState<"audit" | "tenants" | "sessions" | "config">("audit");
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
@@ -174,7 +203,7 @@ export default function AdministrationPage() {
   async function handleChangePlan() {
     if (!selectedTenantForPlan || !newPlan) return;
     try {
-      await api.put(`/tenants/${selectedTenantForPlan.id}/plan`, { plan: newPlan });
+      await api.put(`/subscriptions/${selectedTenantForPlan.id}/plan`, { planCode: newPlan });
       setPlanModalOpen(false);
       loadData();
     } catch (err: any) {
@@ -665,6 +694,17 @@ export default function AdministrationPage() {
               <div className="mb-4 p-3 rounded-lg bg-slate-800">
                 <p className="text-xs text-slate-400">Plan actual: <span className="text-white font-medium">{selectedTenantForPlan.plan || "BASIC"}</span></p>
                 <p className="text-xs text-slate-400">Nuevo plan: <span className="text-white font-medium">{newPlan}</span></p>
+              </div>
+
+              <div className="mb-4 p-3 rounded-lg bg-slate-800">
+                <p className="text-xs text-slate-400 mb-2">Módulos incluidos en {newPlan}:</p>
+                <div className="flex flex-wrap gap-2">
+                  {PLAN_MODULES[newPlan]?.map((mod) => (
+                    <span key={mod} className="text-xs bg-blue-900/40 text-blue-300 px-2 py-1 rounded">
+                      {MODULE_LABELS[mod] || mod}
+                    </span>
+                  ))}
+                </div>
               </div>
 
               <div className="flex justify-end gap-3">
