@@ -14,28 +14,28 @@ interface Props {
   onClose: () => void;
 }
 
+const pages: SearchResult[] = [
+  { id: "dashboard", type: "page", title: "Dashboard", path: "/dashboard" },
+  { id: "movements", type: "page", title: "Movimientos", path: "/movements" },
+  { id: "transfers", type: "page", title: "Transferencias", path: "/transfers" },
+  { id: "reconciliation", type: "page", title: "Conciliación", path: "/reconciliation" },
+  { id: "purchases", type: "page", title: "Compras", path: "/purchases" },
+  { id: "suppliers", type: "page", title: "Proveedores", path: "/suppliers" },
+  { id: "banks", type: "page", title: "Cuentas Bancarias", path: "/banks" },
+  { id: "companies", type: "page", title: "Empresas", path: "/companies" },
+  { id: "branches", type: "page", title: "Sucursales", path: "/branches" },
+  { id: "costs", type: "page", title: "Costos", path: "/costs" },
+  { id: "reports", type: "page", title: "Reportes", path: "/reports" },
+  { id: "users", type: "page", title: "Usuarios", path: "/users" },
+  { id: "administration", type: "page", title: "Administración", path: "/administration" },
+];
+
 export default function GlobalSearchModal({ open, onClose }: Props) {
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [results, setResults] = useState<SearchResult[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
-
-  const pages: SearchResult[] = [
-    { id: "dashboard", type: "page", title: "Dashboard", path: "/dashboard" },
-    { id: "movements", type: "page", title: "Movimientos", path: "/movements" },
-    { id: "transfers", type: "page", title: "Transferencias", path: "/transfers" },
-    { id: "reconciliation", type: "page", title: "Conciliación", path: "/reconciliation" },
-    { id: "purchases", type: "page", title: "Compras", path: "/purchases" },
-    { id: "suppliers", type: "page", title: "Proveedores", path: "/suppliers" },
-    { id: "banks", type: "page", title: "Cuentas Bancarias", path: "/banks" },
-    { id: "companies", type: "page", title: "Empresas", path: "/companies" },
-    { id: "branches", type: "page", title: "Sucursales", path: "/branches" },
-    { id: "costs", type: "page", title: "Costos", path: "/costs" },
-    { id: "reports", type: "page", title: "Reportes", path: "/reports" },
-    { id: "users", type: "page", title: "Usuarios", path: "/users" },
-    { id: "administration", type: "page", title: "Administración", path: "/administration" },
-  ];
 
   useEffect(() => {
     if (open && inputRef.current) {
@@ -55,7 +55,7 @@ export default function GlobalSearchModal({ open, onClose }: Props) {
     );
     setResults(filtered);
     setSelectedIndex(0);
-  }, [query, pages]);
+  }, [query]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowDown") {
