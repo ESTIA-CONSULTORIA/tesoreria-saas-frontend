@@ -3,6 +3,7 @@ import { useState } from "react";
 import Header from "./Header";
 import { theme } from "../theme/theme";
 import { useModulo } from "../hooks/useModulo";
+import { useAuthStore } from "../store/useAuthStore";
 
 interface Props {
   children: React.ReactNode;
@@ -32,6 +33,8 @@ export default function MainLayout({ children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const primaryColor = localStorage.getItem("tenant_primary_color") || "";
   const sidebarColor = localStorage.getItem("tenant_sidebar_color") || "";
+  const user = useAuthStore((state) => state.user);
+  const isSuperAdmin = user?.rol === "SUPER_ADMIN";
 
   return (
     <div className={`min-h-screen ${theme.colors.background} ${theme.colors.text}`}>
@@ -58,7 +61,8 @@ export default function MainLayout({ children }: Props) {
               const isActive = location.pathname === item.to;
               const moduloActivo = useModulo(item.modulo);
 
-              if (!moduloActivo) return null;
+              // SUPER_ADMIN ve todos los módulos
+              if (!isSuperAdmin && !moduloActivo) return null;
 
               return (
                 <Link
@@ -78,6 +82,35 @@ export default function MainLayout({ children }: Props) {
                 </Link>
               );
             })}
+
+            {/* Sección especial para SUPER_ADMIN */}
+            {isSuperAdmin && (
+              <>
+                <div className={`mt-4 px-3 py-2 text-xs font-semibold ${theme.colors.textMuted} border-t ${theme.colors.border}`}>
+                  ADMINISTRACIÓN (Todos los módulos)
+                </div>
+                {navItems.map((item) => {
+                  const isActive = location.pathname === item.to;
+                  return (
+                    <Link
+                      key={`admin-${item.to}`}
+                      to={item.to}
+                      onClick={() => setSidebarOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                        ${
+                          isActive
+                            ? `${theme.colors.text}`
+                            : `${theme.colors.textMuted} ${theme.colors.surfaceHover}`
+                        }`}
+                      style={isActive && primaryColor ? { backgroundColor: primaryColor } : undefined}
+                    >
+                      <span>{item.icon}</span>
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </>
+            )}
           </nav>
 
           {/* Footer del sidebar */}

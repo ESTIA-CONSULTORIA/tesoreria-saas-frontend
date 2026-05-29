@@ -22,6 +22,7 @@ interface Tenant {
   legalName: string;
   tradeName: string;
   taxId?: string;
+  plan?: string;
   isActive: boolean;
 }
 
@@ -73,6 +74,9 @@ export default function AdministrationPage() {
   const [tenantAddons, setTenantAddons] = useState<AddonSubscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [planModalOpen, setPlanModalOpen] = useState(false);
+  const [selectedTenantForPlan, setSelectedTenantForPlan] = useState<Tenant | null>(null);
+  const [newPlan, setNewPlan] = useState("");
   const [filters, setFilters] = useState({
     userId: "",
     module: "",
@@ -158,6 +162,23 @@ export default function AdministrationPage() {
       loadTenantAddons(tenantId);
     } catch (err: any) {
       setError(err.response?.data?.message || "No fue posible desactivar el módulo");
+    }
+  }
+
+  function handleOpenChangePlanModal(tenant: Tenant) {
+    setSelectedTenantForPlan(tenant);
+    setNewPlan(tenant.plan || "BASIC");
+    setPlanModalOpen(true);
+  }
+
+  async function handleChangePlan() {
+    if (!selectedTenantForPlan || !newPlan) return;
+    try {
+      await api.put(`/tenants/${selectedTenantForPlan.id}/plan`, { plan: newPlan });
+      setPlanModalOpen(false);
+      loadData();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible cambiar el plan");
     }
   }
 
@@ -357,6 +378,7 @@ export default function AdministrationPage() {
                           <th className="p-2">Nombre Legal</th>
                           <th className="p-2">Nombre Comercial</th>
                           <th className="p-2">RUT/NIT</th>
+                          <th className="p-2">Plan Actual</th>
                           <th className="p-2">Estado</th>
                           <th className="p-2">Acciones</th>
                         </tr>
@@ -368,6 +390,11 @@ export default function AdministrationPage() {
                             <td className="p-2">{tenant.legalName}</td>
                             <td className="p-2">{tenant.tradeName}</td>
                             <td className="p-2">{tenant.taxId || "-"}</td>
+                            <td className="p-2">
+                              <span className="rounded-full px-2 py-1 text-xs bg-blue-900/40 text-blue-300">
+                                {tenant.plan || "BASIC"}
+                              </span>
+                            </td>
                             <td className="p-2">
                               <span
                                 className={`rounded-full px-2 py-1 text-xs ${
@@ -389,9 +416,15 @@ export default function AdministrationPage() {
                                   setSelectedTenant(tenant.id);
                                   loadTenantAddons(tenant.id);
                                 }}
-                                className="rounded bg-green-600 px-2 py-1 text-xs text-white hover:bg-green-700"
+                                className="rounded bg-green-600 px-2 py-1 text-xs text-white hover:bg-green-700 mr-2"
                               >
                                 Módulos
+                              </button>
+                              <button
+                                onClick={() => handleOpenChangePlanModal(tenant)}
+                                className="rounded bg-purple-600 px-2 py-1 text-xs text-white hover:bg-purple-700"
+                              >
+                                Cambiar Plan
                               </button>
                             </td>
                           </tr>
@@ -603,6 +636,52 @@ export default function AdministrationPage() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Modal Cambiar Plan */}
+        {planModalOpen && selectedTenantForPlan && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+            <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-6">
+              <div className="mb-4">
+                <h3 className="text-xl font-bold text-white">Cambiar Plan</h3>
+                <p className="text-sm text-slate-400">{selectedTenantForPlan.tradeName}</p>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm text-slate-400 mb-2">Nuevo Plan</label>
+                <select
+                  value={newPlan}
+                  onChange={(e) => setNewPlan(e.target.value)}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                >
+                  <option value="BASIC">BASIC</option>
+                  <option value="PROFESIONAL">PROFESIONAL</option>
+                  <option value="BUSINESS">BUSINESS</option>
+                  <option value="ENTERPRISE">ENTERPRISE</option>
+                </select>
+              </div>
+
+              <div className="mb-4 p-3 rounded-lg bg-slate-800">
+                <p className="text-xs text-slate-400">Plan actual: <span className="text-white font-medium">{selectedTenantForPlan.plan || "BASIC"}</span></p>
+                <p className="text-xs text-slate-400">Nuevo plan: <span className="text-white font-medium">{newPlan}</span></p>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setPlanModalOpen(false)}
+                  className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleChangePlan}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  Cambiar Plan
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
