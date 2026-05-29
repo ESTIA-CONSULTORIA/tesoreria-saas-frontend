@@ -18,14 +18,17 @@ export function useKeyboardShortcuts(
         const shiftMatch = shortcut.shift ? e.shiftKey : !e.shiftKey;
 
         if (keyMatch && ctrlMatch && altMatch && shiftMatch) {
-          e.preventDefault();
+          // Solo prevenir default para Ctrl+K (buscador global)
+          if (shortcut.ctrl && shortcut.key.toLowerCase() === 'k') {
+            e.preventDefault();
+          }
           shortcut.action();
           return;
         }
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown, { passive: false });
+    window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [shortcuts]);
 }

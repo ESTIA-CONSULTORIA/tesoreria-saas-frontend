@@ -1,12 +1,14 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { api } from "../api/api";
 
 interface SearchResult {
   id: string;
-  type: "movement" | "supplier" | "account" | "page";
+  type: "movement" | "supplier" | "account" | "company" | "page";
   title: string;
   subtitle?: string;
   path?: string;
+  icon?: string;
 }
 
 interface Props {
@@ -15,27 +17,45 @@ interface Props {
 }
 
 const pages: SearchResult[] = [
-  { id: "dashboard", type: "page", title: "Dashboard", path: "/dashboard" },
-  { id: "movements", type: "page", title: "Movimientos", path: "/movements" },
-  { id: "transfers", type: "page", title: "Transferencias", path: "/transfers" },
-  { id: "reconciliation", type: "page", title: "Conciliación", path: "/reconciliation" },
-  { id: "purchases", type: "page", title: "Compras", path: "/purchases" },
-  { id: "suppliers", type: "page", title: "Proveedores", path: "/suppliers" },
-  { id: "banks", type: "page", title: "Cuentas Bancarias", path: "/banks" },
-  { id: "companies", type: "page", title: "Empresas", path: "/companies" },
-  { id: "branches", type: "page", title: "Sucursales", path: "/branches" },
-  { id: "costs", type: "page", title: "Costos", path: "/costs" },
-  { id: "reports", type: "page", title: "Reportes", path: "/reports" },
-  { id: "users", type: "page", title: "Usuarios", path: "/users" },
-  { id: "administration", type: "page", title: "Administración", path: "/administration" },
+  { id: "dashboard", type: "page", title: "Dashboard", path: "/dashboard", icon: "📊" },
+  { id: "movements", type: "page", title: "Movimientos", path: "/movements", icon: "🧾" },
+  { id: "transfers", type: "page", title: "Transferencias", path: "/transfers", icon: "🔁" },
+  { id: "reconciliation", type: "page", title: "Conciliación", path: "/reconciliation", icon: "📋" },
+  { id: "purchases", type: "page", title: "Compras", path: "/purchases", icon: "🛒" },
+  { id: "suppliers", type: "page", title: "Proveedores", path: "/suppliers", icon: "🚚" },
+  { id: "banks", type: "page", title: "Cuentas Bancarias", path: "/banks", icon: "🏦" },
+  { id: "companies", type: "page", title: "Empresas", path: "/companies", icon: "🏢" },
+  { id: "branches", type: "page", title: "Sucursales", path: "/branches", icon: "🏪" },
+  { id: "costs", type: "page", title: "Costos", path: "/costs", icon: "🏭" },
+  { id: "reports", type: "page", title: "Reportes", path: "/reports", icon: "📑" },
+  { id: "users", type: "page", title: "Usuarios", path: "/users", icon: "👤" },
+  { id: "administration", type: "page", title: "Administración", path: "/administration", icon: "🔐" },
 ];
+
+const typeIcons: Record<string, string> = {
+  movement: "🧾",
+  supplier: "🚚",
+  account: "🏦",
+  company: "🏢",
+  page: "📄",
+};
+
+const typeLabels: Record<string, string> = {
+  movement: "Movimientos",
+  supplier: "Proveedores",
+  account: "Cuentas",
+  company: "Empresas",
+  page: "Páginas",
+};
 
 export default function GlobalSearchModal({ open, onClose }: Props) {
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [results, setResults] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     if (open && inputRef.current) {
@@ -43,19 +63,94 @@ export default function GlobalSearchModal({ open, onClose }: Props) {
     }
   }, [open]);
 
-  useEffect(() => {
-    if (!query) {
+  const searchAPI = useCallback(async (searchQuery: string) => {
+    if (!searchQuery.trim()) {
       setResults(pages);
       setSelectedIndex(0);
+      setLoading(false);
       return;
     }
 
-    const filtered = pages.filter((page) =>
-      page.title.toLowerCase().includes(query.toLowerCase())
-    );
-    setResults(filtered);
-    setSelectedIndex(0);
-  }, [query]);
+    setLoading(true);
+    try {
+      const [movementsRes, suppliersRes, accountsRes, companiesRes] = await Promise.all([
+        api.get(`/movements?search=${searchQuery}&limit=5`).catch(() => ({ data: [] })),
+        api.get(`/suppliers?search=${searchQuery}&limit=5`).catch(() => ({ data: [] })),
+        api.get(`/accounts?search=${searchQuery}&limit=5`).catch(() => ({ data: [] })),
+        api.get(`/companies?search=${searchQuery}&limit=5`).catch(() => ({ data: [] })),
+      ]);
+
+      const movementResults: SearchResult[] = (movementsRes.data || []).map((m: any) => ({
+        id: `movement-${m.id}`,
+        type: "movement",
+        title: m.description || "Movimiento",
+        subtitle: `$${m.amount?.toFixed(2) || '0.00'}`,
+        icon: typeIcons.movement,
+      }));
+
+      const supplierResults: SearchResult[] = (suppliersRes.data || []).map((s: any) => ({
+        id: `supplier-${s.id}`,
+        type: "supplier",
+        title: s.name || "Proveedor",
+        subtitle: s.email || "",
+        icon: typeIcons.supplier,
+      }));
+
+      const accountResults: SearchResult[] = (accountsRes.data || []).map((a: any) => ({
+        id: `account-${a.id}`,
+        type: "account",
+        title: a.name || "Cuenta",
+        subtitle: a.accountNumber || "",
+        icon: typeIcons.account,
+      }));
+
+      const companyResults: SearchResult[] = (companiesRes.data || []).map((c: any) => ({
+        id: `company-${c.id}`,
+        type: "company",
+        title: c.tradeName || c.legalName || "Empresa",
+        subtitle: c.taxId || "",
+        icon: typeIcons.company,
+      }));
+
+      const pageResults = pages.filter((page) =>
+        page.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+      const allResults = [
+        ...movementResults,
+        ...supplierResults,
+        ...accountResults,
+        ...companyResults,
+        ...pageResults,
+      ];
+
+      setResults(allResults);
+      setSelectedIndex(0);
+    } catch (error) {
+      console.error("Error searching:", error);
+      setResults(pages.filter((page) =>
+        page.title.toLowerCase().includes(searchQuery.toLowerCase())
+      ));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    debounceRef.current = setTimeout(() => {
+      searchAPI(query);
+    }, 300);
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [query, searchAPI]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowDown") {
@@ -77,6 +172,15 @@ export default function GlobalSearchModal({ open, onClose }: Props) {
   };
 
   if (!open) return null;
+
+  // Group results by type
+  const groupedResults = results.reduce((acc, result) => {
+    if (!acc[result.type]) {
+      acc[result.type] = [];
+    }
+    acc[result.type].push(result);
+    return acc;
+  }, {} as Record<string, SearchResult[]>);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -100,30 +204,49 @@ export default function GlobalSearchModal({ open, onClose }: Props) {
 
         {/* Body - flex-1 overflow-y-auto */}
         <div className="flex-1 overflow-y-auto p-4">
-          {results.length === 0 ? (
+          {loading ? (
+            <p className="text-center text-slate-400 py-8">Buscando...</p>
+          ) : results.length === 0 ? (
             <p className="text-center text-slate-400 py-8">No se encontraron resultados</p>
           ) : (
-            <div className="space-y-1">
-              {results.map((result, index) => (
-                <button
-                  key={result.id}
-                  onClick={() => {
-                    if (result.path) {
-                      navigate(result.path);
-                      onClose();
-                    }
-                  }}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
-                    index === selectedIndex
-                      ? "bg-blue-600 text-white"
-                      : "bg-slate-800 text-white hover:bg-slate-700"
-                  }`}
-                >
-                  <div className="font-medium">{result.title}</div>
-                  {result.subtitle && (
-                    <div className="text-sm opacity-70">{result.subtitle}</div>
-                  )}
-                </button>
+            <div className="space-y-4">
+              {Object.entries(groupedResults).map(([type, typeResults]) => (
+                <div key={type}>
+                  <div className="px-4 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    {typeLabels[type] || type}
+                  </div>
+                  <div className="space-y-1">
+                    {typeResults.map((result) => {
+                      const globalIndex = results.indexOf(result);
+                      return (
+                        <button
+                          key={result.id}
+                          onClick={() => {
+                            if (result.path) {
+                              navigate(result.path);
+                              onClose();
+                            }
+                          }}
+                          className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
+                            globalIndex === selectedIndex
+                              ? "bg-blue-600 text-white"
+                              : "bg-slate-800 text-white hover:bg-slate-700"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-xl">{result.icon || typeIcons[result.type]}</span>
+                            <div className="flex-1">
+                              <div className="font-medium">{result.title}</div>
+                              {result.subtitle && (
+                                <div className="text-sm opacity-70">{result.subtitle}</div>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               ))}
             </div>
           )}
