@@ -21,6 +21,13 @@ import DashboardPage from "./pages/Dashboard/DashboardPage";
 import ProtectedRoute from "./core/router/ProtectedRoute";
 import ModuloRoute from "./core/router/ModuloRoute";
 
+// Páginas de SOPORTE
+import SoporteDashboard from "./pages/soporte/SoporteDashboard";
+import GestionClientes from "./pages/soporte/GestionClientes";
+import PlanesModulos from "./pages/soporte/PlanesModulos";
+import Monitoreo from "./pages/soporte/Monitoreo";
+import ConfiguracionGlobal from "./pages/soporte/ConfiguracionGlobal";
+
 function App() {
   return (
     <Routes>
@@ -207,6 +214,52 @@ function App() {
             <ModuloRoute modulo="costos">
               <CostsPage />
             </ModuloRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Rutas de SOPORTE - Solo accesibles para rol SOPORTE */}
+      <Route
+        path="/soporte/dashboard"
+        element={
+          <ProtectedRoute>
+            <SoporteDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/soporte/clientes"
+        element={
+          <ProtectedRoute>
+            <GestionClientes />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/soporte/planes"
+        element={
+          <ProtectedRoute>
+            <PlanesModulos />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/soporte/monitoreo"
+        element={
+          <ProtectedRoute>
+            <Monitoreo />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/soporte/config"
+        element={
+          <ProtectedRoute>
+            <ConfiguracionGlobal />
           </ProtectedRoute>
         }
       />

@@ -30,6 +30,14 @@ const navItems = [
   { label: "Configuración POS", to: "/pos-config", icon: "🖥️", modulo: "configuracion-pos" },
 ];
 
+const soporteNavItems = [
+  { label: "Dashboard Soporte", to: "/soporte/dashboard", icon: "📊", modulo: "soporte-dashboard" },
+  { label: "Gestión de Clientes", to: "/soporte/clientes", icon: "👥", modulo: "soporte-clientes" },
+  { label: "Planes y Módulos", to: "/soporte/planes", icon: "📦", modulo: "soporte-planes" },
+  { label: "Monitoreo", to: "/soporte/monitoreo", icon: "📡", modulo: "soporte-monitoreo" },
+  { label: "Configuración Global", to: "/soporte/config", icon: "⚙️", modulo: "soporte-config" },
+];
+
 export default function MainLayout({ children }: Props) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -71,48 +79,17 @@ export default function MainLayout({ children }: Props) {
           style={sidebarColor ? { backgroundColor: sidebarColor } : undefined}
         >
           <nav className="flex flex-col gap-1 px-2">
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.to;
-              const moduloActivo = useModulo(item.modulo);
-
-              // SOPORTE ve todos los módulos
-              if (!isSoporte && !moduloActivo) return null;
-
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                    ${
-                      isActive
-                        ? `${theme.colors.text}`
-                        : `${theme.colors.textMuted} ${theme.colors.surfaceHover}`
-                    }`}
-                  style={isActive && primaryColor ? { backgroundColor: primaryColor } : undefined}
-                >
-                  <div className="flex items-center gap-3">
-                    <span>{item.icon}</span>
-                    <span>{item.label}</span>
-                  </div>
-                  {item.shortcut && (
-                    <kbd className="text-xs bg-slate-700 px-1.5 py-0.5 rounded text-slate-400">{item.shortcut}</kbd>
-                  )}
-                </Link>
-              );
-            })}
-
-            {/* Sección especial para SOPORTE */}
-            {isSoporte && (
+            {isSoporte ? (
+              // Navegación para SOPORTE
               <>
-                <div className={`mt-4 px-3 py-2 text-xs font-semibold ${theme.colors.textMuted} border-t ${theme.colors.border}`}>
-                  ADMINISTRACIÓN (Todos los módulos)
+                <div className={`px-3 py-2 text-xs font-semibold ${theme.colors.textMuted}`}>
+                  PANEL DE SOPORTE
                 </div>
-                {navItems.map((item) => {
+                {soporteNavItems.map((item) => {
                   const isActive = location.pathname === item.to;
                   return (
                     <Link
-                      key={`admin-${item.to}`}
+                      key={item.to}
                       to={item.to}
                       onClick={() => setSidebarOpen(false)}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
@@ -128,7 +105,66 @@ export default function MainLayout({ children }: Props) {
                     </Link>
                   );
                 })}
+                <div className={`mt-4 px-3 py-2 text-xs font-semibold ${theme.colors.textMuted} border-t ${theme.colors.border}`}>
+                  MÓDULOS DEL SISTEMA
+                </div>
+                {navItems.map((item) => {
+                  const isActive = location.pathname === item.to;
+                  return (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      onClick={() => setSidebarOpen(false)}
+                      className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                        ${
+                          isActive
+                            ? `${theme.colors.text}`
+                            : `${theme.colors.textMuted} ${theme.colors.surfaceHover}`
+                        }`}
+                      style={isActive && primaryColor ? { backgroundColor: primaryColor } : undefined}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span>{item.icon}</span>
+                        <span>{item.label}</span>
+                      </div>
+                      {item.shortcut && (
+                        <kbd className="text-xs bg-slate-700 px-1.5 py-0.5 rounded text-slate-400">{item.shortcut}</kbd>
+                      )}
+                    </Link>
+                  );
+                })}
               </>
+            ) : (
+              // Navegación para CLIENTE (ADMIN)
+              navItems.map((item) => {
+                const isActive = location.pathname === item.to;
+                const moduloActivo = useModulo(item.modulo);
+
+                if (!moduloActivo) return null;
+
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                      ${
+                        isActive
+                          ? `${theme.colors.text}`
+                          : `${theme.colors.textMuted} ${theme.colors.surfaceHover}`
+                      }`}
+                    style={isActive && primaryColor ? { backgroundColor: primaryColor } : undefined}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span>{item.icon}</span>
+                      <span>{item.label}</span>
+                    </div>
+                    {item.shortcut && (
+                      <kbd className="text-xs bg-slate-700 px-1.5 py-0.5 rounded text-slate-400">{item.shortcut}</kbd>
+                    )}
+                  </Link>
+                );
+              })
             )}
           </nav>
 
