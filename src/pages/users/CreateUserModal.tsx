@@ -102,99 +102,110 @@ export default function CreateUserModal({ open, onClose, onCreated }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-      <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h3 className="text-2xl font-bold text-white">Nuevo Usuario</h3>
-            <p className="text-sm text-slate-400">
-              Crea un usuario y asigna un rol
-            </p>
-          </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-lg max-h-[90vh] flex flex-col rounded-xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden">
+        {/* Header - flex-shrink-0 */}
+        <div className="flex-shrink-0 p-6 border-b border-slate-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-2xl font-bold text-white">Nuevo Usuario</h3>
+              <p className="text-sm text-slate-400">
+                Crea un usuario y asigna un rol
+              </p>
+            </div>
 
-          <button
-            onClick={onClose}
-            className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700"
-          >
-            Cerrar
-          </button>
+            <button
+              onClick={onClose}
+              className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700"
+            >
+              Cerrar
+            </button>
+          </div>
         </div>
 
-        {error && (
-          <div className="mb-4 rounded-lg border border-red-700 bg-red-900/30 p-3 text-sm text-red-300">
-            {error}
-          </div>
-        )}
+        {/* Body - flex-1 overflow-y-auto */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {error && (
+            <div className="mb-4 rounded-lg border border-red-700 bg-red-900/30 p-3 text-sm text-red-300">
+              {error}
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <input
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="Nombre"
+                required
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+              />
+              <input
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Apellido"
+                required
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+              />
+            </div>
+
             <input
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              placeholder="Nombre"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Correo electrónico"
               required
               className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
             />
+
             <input
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              placeholder="Apellido"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Contraseña"
               required
               className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
             />
-          </div>
 
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Correo electrónico"
-            required
-            className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
-          />
+            <select
+              value={roleId}
+              onChange={(e) => handleRoleChange(e.target.value)}
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+            >
+              <option value="">Seleccionar rol (opcional)</option>
+              {roles.map((role) => (
+                <option key={role.id} value={role.id}>
+                  {role.name} ({role.code})
+                </option>
+              ))}
+            </select>
 
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Contraseña"
-            required
-            className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
-          />
+            <select
+              value={branchId}
+              onChange={(e) => setBranchId(e.target.value)}
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+            >
+              <option value="">Seleccionar sucursal (opcional)</option>
+              {branches.map((branch) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
+                </option>
+              ))}
+            </select>
 
-          <select
-            value={roleId}
-            onChange={(e) => handleRoleChange(e.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
-          >
-            <option value="">Seleccionar rol (opcional)</option>
-            {roles.map((role) => (
-              <option key={role.id} value={role.id}>
-                {role.name} ({role.code})
-              </option>
-            ))}
-          </select>
+            <button
+              disabled={loading}
+              className="w-full rounded-lg bg-blue-600 p-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+            >
+              {loading ? "Guardando..." : "Guardar usuario"}
+            </button>
+          </form>
+        </div>
 
-          <select
-            value={branchId}
-            onChange={(e) => setBranchId(e.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
-          >
-            <option value="">Seleccionar sucursal (opcional)</option>
-            {branches.map((branch) => (
-              <option key={branch.id} value={branch.id}>
-                {branch.name}
-              </option>
-            ))}
-          </select>
-
-          <button
-            disabled={loading}
-            className="w-full rounded-lg bg-blue-600 p-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
-          >
-            {loading ? "Guardando..." : "Guardar usuario"}
-          </button>
-        </form>
+        {/* Footer - flex-shrink-0 */}
+        <div className="flex-shrink-0 p-4 border-t border-slate-800 text-center text-xs text-slate-500">
+          ESC para cerrar
+        </div>
       </div>
     </div>
   );
