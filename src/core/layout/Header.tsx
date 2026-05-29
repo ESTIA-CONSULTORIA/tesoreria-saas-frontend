@@ -2,9 +2,10 @@ import { useAuthStore } from "../store/useAuthStore";
 
 interface Props {
   onMenuClick?: () => void;
+  onSearchClick?: () => void;
 }
 
-export default function Header({ onMenuClick }: Props) {
+export default function Header({ onMenuClick, onSearchClick }: Props) {
   const { user, logout } = useAuthStore();
   const tenantName = localStorage.getItem("tenant_name") || "Tesorería SaaS";
   const tenantLogo = localStorage.getItem("tenant_logo_url") || "";
@@ -31,6 +32,17 @@ export default function Header({ onMenuClick }: Props) {
       </div>
 
       <div className="flex items-center gap-4">
+        <button
+          onClick={onSearchClick}
+          className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <span className="text-sm">Buscar</span>
+          <kbd className="px-1.5 py-0.5 text-xs bg-slate-700 rounded">Ctrl+K</kbd>
+        </button>
+
         <div className="text-right hidden sm:block">
           <div className="text-sm text-white">
             {user?.name || "Administrador"}

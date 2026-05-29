@@ -1,26 +1,28 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Header from "./Header";
 import { theme } from "../theme/theme";
 import { useModulo } from "../hooks/useModulo";
 import { useAuthStore } from "../store/useAuthStore";
+import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
+import GlobalSearchModal from "../components/GlobalSearchModal";
 
 interface Props {
   children: React.ReactNode;
 }
 
 const navItems = [
-  { label: "Dashboard", to: "/dashboard", icon: "📊", modulo: "dashboard" },
+  { label: "Dashboard", to: "/dashboard", icon: "📊", modulo: "dashboard", shortcut: "Alt+1" },
   { label: "Empresas", to: "/companies", icon: "🏢", modulo: "empresas" },
   { label: "Sucursales", to: "/branches", icon: "🏪", modulo: "sucursales" },
   { label: "Usuarios y Roles", to: "/users", icon: "👤", modulo: "usuarios" },
   { label: "Bancos", to: "/banks", icon: "🏦", modulo: "bancos" },
-  { label: "Movimientos", to: "/movements", icon: "🧾", modulo: "movimientos" },
-  { label: "Transferencias", to: "/transfers", icon: "🔁", modulo: "transferencias" },
+  { label: "Movimientos", to: "/movements", icon: "🧾", modulo: "movimientos", shortcut: "Alt+2" },
+  { label: "Transferencias", to: "/transfers", icon: "🔁", modulo: "transferencias", shortcut: "Alt+3" },
   { label: "Proveedores", to: "/suppliers", icon: "🚚", modulo: "proveedores" },
   { label: "Compras", to: "/purchases", icon: "🛒", modulo: "compras" },
   { label: "Costos y Producción", to: "/costs", icon: "🏭", modulo: "costos" },
-  { label: "Reportes", to: "/reports", icon: "📑", modulo: "reportes" },
+  { label: "Reportes", to: "/reports", icon: "📑", modulo: "reportes", shortcut: "Alt+4" },
   { label: "Tesorería", to: "/treasury", icon: "💰", modulo: "tesoreria" },
   { label: "Conciliación", to: "/reconciliation", icon: "📋", modulo: "conciliacion" },
   { label: "Administración", to: "/administration", icon: "🔐", adminOnly: true, modulo: "administracion" },
@@ -30,15 +32,27 @@ const navItems = [
 
 export default function MainLayout({ children }: Props) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const primaryColor = localStorage.getItem("tenant_primary_color") || "";
   const sidebarColor = localStorage.getItem("tenant_sidebar_color") || "";
   const user = useAuthStore((state) => state.user);
   const isSuperAdmin = user?.rol === "SUPER_ADMIN";
 
+  // Atajos globales
+  useKeyboardShortcuts([
+    { key: "k", ctrl: true, action: () => setSearchOpen(true) },
+    { key: "Escape", action: () => setSearchOpen(false) },
+    { key: "1", alt: true, action: () => navigate("/dashboard") },
+    { key: "2", alt: true, action: () => navigate("/movements") },
+    { key: "3", alt: true, action: () => navigate("/transfers") },
+    { key: "4", alt: true, action: () => navigate("/reports") },
+  ]);
+
   return (
     <div className={`min-h-screen ${theme.colors.background} ${theme.colors.text}`}>
-      <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+      <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} onSearchClick={() => setSearchOpen(true)} />
 
       <div className="flex relative">
         {/* Mobile Overlay */}
@@ -69,7 +83,7 @@ export default function MainLayout({ children }: Props) {
                   key={item.to}
                   to={item.to}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                  className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
                     ${
                       isActive
                         ? `${theme.colors.text}`
@@ -77,8 +91,13 @@ export default function MainLayout({ children }: Props) {
                     }`}
                   style={isActive && primaryColor ? { backgroundColor: primaryColor } : undefined}
                 >
-                  <span>{item.icon}</span>
-                  <span>{item.label}</span>
+                  <div className="flex items-center gap-3">
+                    <span>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </div>
+                  {item.shortcut && (
+                    <kbd className="text-xs bg-slate-700 px-1.5 py-0.5 rounded text-slate-400">{item.shortcut}</kbd>
+                  )}
                 </Link>
               );
             })}
@@ -126,6 +145,9 @@ export default function MainLayout({ children }: Props) {
           {children}
         </main>
       </div>
+
+      {/* Global Search Modal */}
+      <GlobalSearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
 }
