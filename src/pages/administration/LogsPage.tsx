@@ -5,13 +5,16 @@ import { useAuthStore } from "../../core/store/useAuthStore";
 interface AuditLog {
   id: string;
   userId: string;
-  userEmail: string;
-  tenantId: string;
+  userName?: string;
+  userEmail?: string;
+  tenantId?: string;
   action: string;
-  entity: string;
-  details: any;
-  ipAddress: string;
-  userAgent: string;
+  module: string;
+  entityId?: string;
+  oldValue?: any;
+  newValue?: any;
+  ipAddress?: string;
+  userAgent?: string;
   createdAt: string;
 }
 
@@ -20,7 +23,7 @@ export default function LogsPage() {
   const [loading, setLoading] = useState(true);
   const [filterUserId, setFilterUserId] = useState("");
   const [filterAction, setFilterAction] = useState("");
-  const [filterEntity, setFilterEntity] = useState("");
+  const [filterModule, setFilterModule] = useState("");
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
   const user = useAuthStore((state) => state.user);
@@ -35,7 +38,7 @@ export default function LogsPage() {
       const params = new URLSearchParams();
       if (filterUserId) params.append("userId", filterUserId);
       if (filterAction) params.append("action", filterAction);
-      if (filterEntity) params.append("entity", filterEntity);
+      if (filterModule) params.append("entity", filterModule);
       if (filterStartDate) params.append("startDate", filterStartDate);
       if (filterEndDate) params.append("endDate", filterEndDate);
 
@@ -53,7 +56,7 @@ export default function LogsPage() {
       const params = new URLSearchParams();
       if (filterUserId) params.append("userId", filterUserId);
       if (filterAction) params.append("action", filterAction);
-      if (filterEntity) params.append("entity", filterEntity);
+      if (filterModule) params.append("entity", filterModule);
       if (filterStartDate) params.append("startDate", filterStartDate);
       if (filterEndDate) params.append("endDate", filterEndDate);
 
@@ -81,7 +84,7 @@ export default function LogsPage() {
   function handleClearFilters() {
     setFilterUserId("");
     setFilterAction("");
-    setFilterEntity("");
+    setFilterModule("");
     setFilterStartDate("");
     setFilterEndDate("");
     setLoading(true);
@@ -124,11 +127,11 @@ export default function LogsPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm text-slate-400 mb-1">Entidad</label>
+            <label className="block text-sm text-slate-400 mb-1">Módulo</label>
             <input
               type="text"
-              value={filterEntity}
-              onChange={(e) => setFilterEntity(e.target.value)}
+              value={filterModule}
+              onChange={(e) => setFilterModule(e.target.value)}
               className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
             />
           </div>
@@ -182,7 +185,7 @@ export default function LogsPage() {
               <th className="px-6 py-3 text-left text-sm font-semibold text-white">Usuario</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-white">Tenant</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-white">Acción</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-white">Entidad</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-white">Módulo</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-white">IP</th>
             </tr>
           </thead>
@@ -219,7 +222,7 @@ export default function LogsPage() {
                       {log.action}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-300">{log.entity}</td>
+                  <td className="px-6 py-4 text-sm text-slate-300">{log.module}</td>
                   <td className="px-6 py-4 text-sm text-slate-400">{log.ipAddress}</td>
                 </tr>
               ))
