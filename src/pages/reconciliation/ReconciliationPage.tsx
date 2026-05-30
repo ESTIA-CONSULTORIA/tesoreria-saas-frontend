@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
+import ImportModal from "./ImportModal";
 
 interface Invoice {
   id: string;
@@ -43,6 +44,8 @@ export default function ReconciliationPage() {
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<"reconciled" | "pending" | "notReconciled">("reconciled");
   const [modalOpen, setModalOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [modalTab, setModalTab] = useState<"manual" | "import">("manual");
   const [reconcileModalOpen, setReconcileModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [availableMovements, setAvailableMovements] = useState<Movement[]>([]);
@@ -167,12 +170,20 @@ export default function ReconciliationPage() {
             <h2 className="text-3xl font-bold">Conciliación Bancaria</h2>
             <p className="text-slate-400">Cruce de movimientos bancarios con facturas</p>
           </div>
-          <button
-            onClick={() => setModalOpen(true)}
-            className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
-          >
-            + Nueva Factura
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setImportModalOpen(true)}
+              className="rounded-lg bg-slate-700 px-4 py-2 font-medium text-white hover:bg-slate-600"
+            >
+              Importar Facturas
+            </button>
+            <button
+              onClick={() => setModalOpen(true)}
+              className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+            >
+              + Captura Manual
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -392,73 +403,115 @@ export default function ReconciliationPage() {
                   <p className="text-sm text-slate-400">Registro de factura para conciliación</p>
                 </div>
                 <button
-                  onClick={() => setModalOpen(false)}
+                  onClick={() => {
+                    setModalOpen(false);
+                    setModalTab("manual");
+                  }}
                   className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700"
                 >
                   Cerrar
                 </button>
               </div>
-              <form onSubmit={handleCreateInvoice} className="space-y-4">
-                <input
-                  value={formData.invoiceNumber}
-                  onChange={(e) => setFormData({ ...formData, invoiceNumber: e.target.value })}
-                  placeholder="Número de factura"
-                  required
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
-                />
-                <select
-                  value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
-                >
-                  <option value="EMITIDA">Emitida</option>
-                  <option value="RECIBIDA">Recibida</option>
-                </select>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
-                >
-                  <option value="PENDIENTE_PAGO">Pendiente de Pago</option>
-                  <option value="PENDIENTE_COBRO">Pendiente de Cobro</option>
-                  <option value="PAGADA">Pagada</option>
-                </select>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  placeholder="Monto"
-                  required
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
-                />
-                <input
-                  type="date"
-                  value={formData.dueDate}
-                  onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                  placeholder="Fecha de vencimiento"
-                  required
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
-                />
-                <input
-                  value={formData.bankAccountId}
-                  onChange={(e) => setFormData({ ...formData, bankAccountId: e.target.value })}
-                  placeholder="ID Cuenta Bancaria (opcional)"
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
-                />
-                <input
-                  value={formData.concept}
-                  onChange={(e) => setFormData({ ...formData, concept: e.target.value })}
-                  placeholder="Concepto"
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
-                />
+
+              {/* Tabs del modal */}
+              <div className="flex gap-2 border-b border-slate-800 mb-4">
                 <button
-                  type="submit"
-                  className="w-full rounded-lg bg-blue-600 p-3 font-semibold text-white hover:bg-blue-700"
+                  onClick={() => setModalTab("manual")}
+                  className={`px-4 py-2 text-sm font-medium ${
+                    modalTab === "manual" ? "text-blue-400 border-b-2 border-blue-400" : "text-slate-400"
+                  }`}
                 >
-                  Guardar Factura
+                  Captura Manual
                 </button>
-              </form>
+                <button
+                  onClick={() => setModalTab("import")}
+                  className={`px-4 py-2 text-sm font-medium ${
+                    modalTab === "import" ? "text-blue-400 border-b-2 border-blue-400" : "text-slate-400"
+                  }`}
+                >
+                  Importación Masiva
+                </button>
+              </div>
+
+              {modalTab === "manual" && (
+                <form onSubmit={handleCreateInvoice} className="space-y-4">
+                  <input
+                    value={formData.invoiceNumber}
+                    onChange={(e) => setFormData({ ...formData, invoiceNumber: e.target.value })}
+                    placeholder="Número de factura"
+                    required
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                  />
+                  <select
+                    value={formData.type}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                  >
+                    <option value="EMITIDA">Emitida</option>
+                    <option value="RECIBIDA">Recibida</option>
+                  </select>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                  >
+                    <option value="PENDIENTE_PAGO">Pendiente de Pago</option>
+                    <option value="PENDIENTE_COBRO">Pendiente de Cobro</option>
+                    <option value="PAGADA">Pagada</option>
+                  </select>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.amount}
+                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                    placeholder="Monto"
+                    required
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                  />
+                  <input
+                    type="date"
+                    value={formData.dueDate}
+                    onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                    placeholder="Fecha de vencimiento"
+                    required
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                  />
+                  <input
+                    value={formData.bankAccountId}
+                    onChange={(e) => setFormData({ ...formData, bankAccountId: e.target.value })}
+                    placeholder="ID Cuenta Bancaria (opcional)"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                  />
+                  <input
+                    value={formData.concept}
+                    onChange={(e) => setFormData({ ...formData, concept: e.target.value })}
+                    placeholder="Concepto"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                  />
+                  <button
+                    type="submit"
+                    className="w-full rounded-lg bg-blue-600 p-3 font-semibold text-white hover:bg-blue-700"
+                  >
+                    Guardar Factura
+                  </button>
+                </form>
+              )}
+
+              {modalTab === "import" && (
+                <div className="text-center py-8">
+                  <p className="text-slate-400 mb-4">Usa el botón "Importar Facturas" en la página principal para importar múltiples facturas</p>
+                  <button
+                    onClick={() => {
+                      setModalOpen(false);
+                      setModalTab("manual");
+                      setImportModalOpen(true);
+                    }}
+                    className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+                  >
+                    Ir a Importación Masiva
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -500,6 +553,13 @@ export default function ReconciliationPage() {
             </div>
           </div>
         )}
+
+        {/* Modal de importación masiva */}
+        <ImportModal
+          open={importModalOpen}
+          onClose={() => setImportModalOpen(false)}
+          onImported={loadData}
+        />
       </div>
     </MainLayout>
   );
