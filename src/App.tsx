@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import { useState, useEffect } from "react";
 import CompaniesPage from "./pages/companies/CompaniesPage";
 import BranchesPage from "./pages/branches/BranchesPage";
 import UsersPage from "./pages/users/UsersPage";
@@ -16,11 +17,13 @@ import SuppliersPage from "./pages/suppliers/SuppliersPage";
 import PurchasesPage from "./pages/purchases/PurchasesPage";
 import CostsPage from "./pages/costs/CostsPage";
 import LogsPage from "./pages/administration/LogsPage";
+import MobileAnalyticsApp from "./pages/mobile-analytics/MobileAnalyticsApp";
 
 import LoginPage from "./pages/Login/LoginPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
 import ProtectedRoute from "./core/router/ProtectedRoute";
 import ModuloRoute from "./core/router/ModuloRoute";
+import { useAuthStore } from "./core/store/useAuthStore";
 
 // Páginas de SOPORTE
 import SoporteDashboard from "./pages/soporte/SoporteDashboard";
@@ -30,6 +33,35 @@ import Monitoreo from "./pages/soporte/Monitoreo";
 import ConfiguracionGlobal from "./pages/soporte/ConfiguracionGlobal";
 
 function App() {
+  const [isMobile, setIsMobile] = useState(false);
+  const user = useAuthStore((state) => state.user);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Si es móvil y el usuario tiene rol permitido, mostrar MobileAnalyticsApp
+  if (isMobile && user) {
+    const allowedRoles = ['ADMIN', 'SOPORTE', 'GERENTE', 'SUPER_ADMIN'];
+    if (allowedRoles.includes(user.rol || '')) {
+      return <MobileAnalyticsApp />;
+    }
+    // Si el rol no es permitido en móvil, mostrar mensaje
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+        <div className="text-center">
+          <p className="text-white text-lg mb-2">Acceso restringido en móvil</p>
+          <p className="text-slate-400">Accede desde una computadora para usar el sistema</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Routes>
       <Route path="/" element={<LoginPage />} />
