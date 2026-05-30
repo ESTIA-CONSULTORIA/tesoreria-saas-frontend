@@ -3,19 +3,19 @@ import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
 
 interface GlobalConfig {
-  systemName: string;
-  defaultTimezone: string;
-  defaultCurrency: 'MXN' | 'USD' | 'EUR';
-  dateFormat: 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD';
-  maxSimultaneousSessions: number;
+  nombreSistema: string;
+  zonaHoraria: string;
+  monedaDefault: 'MXN' | 'USD' | 'EUR';
+  formatoFecha: 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD';
+  limiteSessiones: number;
 }
 
 const defaultConfig: GlobalConfig = {
-  systemName: 'Tesorería SaaS',
-  defaultTimezone: 'America/Mexico_City',
-  defaultCurrency: 'MXN',
-  dateFormat: 'DD/MM/YYYY',
-  maxSimultaneousSessions: 3,
+  nombreSistema: 'ESTIA Financial Suite',
+  zonaHoraria: 'America/Mexico_City',
+  monedaDefault: 'MXN',
+  formatoFecha: 'DD/MM/YYYY',
+  limiteSessiones: 3,
 };
 
 export default function GlobalConfigPage() {
@@ -34,7 +34,7 @@ export default function GlobalConfigPage() {
   async function loadConfig() {
     try {
       setLoading(true);
-      const response = await api.get('/admin/global-config');
+      const response = await api.get('/administration/global-config');
       if (response.data) {
         setConfig(response.data);
       }
@@ -51,7 +51,7 @@ export default function GlobalConfigPage() {
       setError("");
       setSuccess("");
 
-      await api.post('/admin/global-config', config);
+      await api.put('/administration/global-config', config);
       setSuccess("Configuración guardada correctamente");
       setTimeout(() => setSuccess(""), 3000);
     } catch (err: any) {
@@ -96,18 +96,18 @@ export default function GlobalConfigPage() {
             <label className="block text-sm text-slate-400 mb-2">Nombre del Sistema</label>
             <input
               type="text"
-              value={config.systemName}
-              onChange={(e) => setConfig({ ...config, systemName: e.target.value })}
+              value={config.nombreSistema}
+              onChange={(e) => setConfig({ ...config, nombreSistema: e.target.value })}
               className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
-              placeholder="Tesorería SaaS"
+              placeholder="ESTIA Financial Suite"
             />
           </div>
 
           <div>
             <label className="block text-sm text-slate-400 mb-2">Zona Horaria por Defecto</label>
             <select
-              value={config.defaultTimezone}
-              onChange={(e) => setConfig({ ...config, defaultTimezone: e.target.value })}
+              value={config.zonaHoraria}
+              onChange={(e) => setConfig({ ...config, zonaHoraria: e.target.value })}
               className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
             >
               <option value="America/Mexico_City">Ciudad de México (GMT-6)</option>
@@ -121,8 +121,8 @@ export default function GlobalConfigPage() {
           <div>
             <label className="block text-sm text-slate-400 mb-2">Moneda por Defecto</label>
             <select
-              value={config.defaultCurrency}
-              onChange={(e) => setConfig({ ...config, defaultCurrency: e.target.value as any })}
+              value={config.monedaDefault}
+              onChange={(e) => setConfig({ ...config, monedaDefault: e.target.value as any })}
               className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
             >
               <option value="MXN">Peso Mexicano (MXN)</option>
@@ -134,8 +134,8 @@ export default function GlobalConfigPage() {
           <div>
             <label className="block text-sm text-slate-400 mb-2">Formato de Fecha</label>
             <select
-              value={config.dateFormat}
-              onChange={(e) => setConfig({ ...config, dateFormat: e.target.value as any })}
+              value={config.formatoFecha}
+              onChange={(e) => setConfig({ ...config, formatoFecha: e.target.value as any })}
               className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
             >
               <option value="DD/MM/YYYY">DD/MM/YYYY (29/05/2026)</option>
@@ -157,12 +157,12 @@ export default function GlobalConfigPage() {
               type="number"
               min="1"
               max="10"
-              value={config.maxSimultaneousSessions}
-              onChange={(e) => setConfig({ ...config, maxSimultaneousSessions: Number(e.target.value) })}
+              value={config.limiteSessiones}
+              onChange={(e) => setConfig({ ...config, limiteSessiones: Number(e.target.value) })}
               className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
             />
             <p className="mt-2 text-sm text-slate-400">
-              Máximo de {config.maxSimultaneousSessions} sesiones activas por usuario
+              Máximo de {config.limiteSessiones} sesiones activas por usuario
             </p>
           </div>
 
