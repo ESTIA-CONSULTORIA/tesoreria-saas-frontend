@@ -17,7 +17,7 @@ export default function CreateInvoiceModal({ open, onClose, onCreated, suppliers
     fecha: new Date().toISOString().split('T')[0],
     fechaVencimiento: "",
     metodoPago: "",
-    incluirIVA: true,
+    ivaRate: 16,
   });
   const [items, setItems] = useState<any[]>([{ descripcion: "", cantidad: 1, precioUnitario: 0 }]);
   const [loading, setLoading] = useState(false);
@@ -32,7 +32,7 @@ export default function CreateInvoiceModal({ open, onClose, onCreated, suppliers
         fecha: new Date().toISOString().split('T')[0],
         fechaVencimiento: "",
         metodoPago: "",
-        incluirIVA: true,
+        ivaRate: 16,
       });
       setItems([{ descripcion: "", cantidad: 1, precioUnitario: 0 }]);
     }
@@ -59,7 +59,7 @@ export default function CreateInvoiceModal({ open, onClose, onCreated, suppliers
   }
 
   function getIVA() {
-    return formData.incluirIVA ? getSubtotal() * 0.16 : 0;
+    return getSubtotal() * (formData.ivaRate / 100);
   }
 
   function getTotal() {
@@ -203,17 +203,17 @@ export default function CreateInvoiceModal({ open, onClose, onCreated, suppliers
               </select>
             </div>
 
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="incluirIVA"
-                checked={formData.incluirIVA}
-                onChange={(e) => setFormData({ ...formData, incluirIVA: e.target.checked })}
-                className="rounded border-slate-700 bg-slate-800"
-              />
-              <label htmlFor="incluirIVA" className="text-sm text-slate-400">
-                Incluir IVA (16%)
-              </label>
+            <div>
+              <label className="block text-sm text-slate-400 mb-1">Tasa de IVA</label>
+              <select
+                value={formData.ivaRate}
+                onChange={(e) => setFormData({ ...formData, ivaRate: Number(e.target.value) })}
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+              >
+                <option value={0}>0%</option>
+                <option value={8}>8%</option>
+                <option value={16}>16%</option>
+              </select>
             </div>
           </div>
 
@@ -280,12 +280,10 @@ export default function CreateInvoiceModal({ open, onClose, onCreated, suppliers
               <span className="text-slate-400">Subtotal:</span>
               <span className="text-white">{getSubtotal().toFixed(2)}</span>
             </div>
-            {formData.incluirIVA && (
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-400">IVA (16%):</span>
-                <span className="text-white">{getIVA().toFixed(2)}</span>
-              </div>
-            )}
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-400">IVA ({formData.ivaRate}%):</span>
+              <span className="text-white">{getIVA().toFixed(2)}</span>
+            </div>
             <div className="flex justify-between text-lg font-bold mt-2">
               <span className="text-white">Total:</span>
               <span className="text-white">{getTotal().toFixed(2)}</span>
