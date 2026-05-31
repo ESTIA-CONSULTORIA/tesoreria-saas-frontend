@@ -25,7 +25,7 @@ export default function GlobalConfigPage() {
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
   const user = useAuthStore((state) => state.user);
-  const isSoporte = user?.rol === "SOPORTE";
+  const isSoporte = user?.roleCode === "SOPORTE";
 
   useEffect(() => {
     loadConfig();

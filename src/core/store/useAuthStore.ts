@@ -4,7 +4,7 @@ interface User {
   id: string;
   email: string;
   name?: string;
-  rol?: string;
+  roleCode?: string;
 }
 
 interface AuthState {

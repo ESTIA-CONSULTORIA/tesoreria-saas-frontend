@@ -47,7 +47,7 @@ export default function MainLayout({ children }: Props) {
   const primaryColor = localStorage.getItem("tenant_primary_color") || "";
   const sidebarColor = localStorage.getItem("tenant_sidebar_color") || "";
   const user = useAuthStore((state) => state.user);
-  const isSoporte = user?.rol === "SOPORTE";
+  const isSoporte = user?.roleCode === "SOPORTE";
 
   // Atajos globales
   useKeyboardShortcuts([

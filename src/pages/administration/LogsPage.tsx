@@ -27,7 +27,7 @@ export default function LogsPage() {
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
   const user = useAuthStore((state) => state.user);
-  const isSoporte = user?.rol === "SOPORTE";
+  const isSoporte = user?.roleCode === "SOPORTE";
 
   useEffect(() => {
     loadLogs();

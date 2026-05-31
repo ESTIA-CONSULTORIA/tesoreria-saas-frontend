@@ -37,7 +37,7 @@ export default function ActiveSessionsPage() {
         userId: user?.id || '',
         userName: user?.name || 'Usuario',
         userEmail: user?.email || '',
-        userRole: user?.rol || 'USER',
+        userRole: user?.roleCode || 'USER',
         tenantId: localStorage.getItem('tenant_id') || '',
         ipAddress: '192.168.1.1',
         userAgent: navigator.userAgent,

@@ -31,7 +31,7 @@ export default function LoginPage() {
           id: user.id || "1",
           email,
           name: user.name || "Administrador",
-          rol: user.roleCode,
+          roleCode: user.roleCode,
         },
         modulosActivos
       );

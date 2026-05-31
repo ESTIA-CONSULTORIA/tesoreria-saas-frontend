@@ -48,7 +48,7 @@ function App() {
   // Si es móvil y el usuario tiene rol permitido, mostrar MobileAnalyticsApp
   if (isMobile && user) {
     const allowedRoles = ['ADMIN', 'SOPORTE', 'GERENTE', 'SUPER_ADMIN'];
-    if (allowedRoles.includes(user.rol || '')) {
+    if (allowedRoles.includes(user.roleCode || '')) {
       return <MobileAnalyticsApp />;
     }
     // Si el rol no es permitido en móvil, mostrar mensaje

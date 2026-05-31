@@ -5,7 +5,7 @@ export function useModulo(modulo: string): boolean {
   const user = useAuthStore((state) => state.user);
 
   // SOPORTE tiene acceso a todos los módulos
-  if (user?.rol === "SOPORTE") {
+  if (user?.roleCode === "SOPORTE") {
     return true;
   }
 
