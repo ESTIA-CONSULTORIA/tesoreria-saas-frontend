@@ -20,6 +20,7 @@ interface ParsedInvoice {
 
 export default function ImportModal({ open, onClose, onImported }: Props) {
   const [invoiceType, setInvoiceType] = useState<"EMITIDA" | "RECIBIDA">("EMITIDA");
+  const [importMethod, setImportMethod] = useState<"file" | "sat">("file");
   const [dragActive, setDragActive] = useState(false);
   const [parsedData, setParsedData] = useState<ParsedInvoice[]>([]);
   const [importing, setImporting] = useState(false);
@@ -171,32 +172,91 @@ FAC-002,RECIBIDA,PENDIENTE_PAGO,8500.00,2026-06-20,acct-456,Servicios profesiona
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Selector de tipo */}
+          {/* Selector de método de importación */}
           <div>
-            <label className="block text-sm text-slate-400 mb-2">Tipo de factura</label>
+            <label className="block text-sm text-slate-400 mb-2">Método de importación</label>
             <div className="flex gap-2">
               <button
-                onClick={() => setInvoiceType("EMITIDA")}
+                onClick={() => setImportMethod("file")}
                 className={`flex-1 py-2 rounded-lg font-medium transition-colors ${
-                  invoiceType === "EMITIDA"
+                  importMethod === "file"
                     ? "bg-blue-600 text-white"
                     : "bg-slate-800 text-slate-300 hover:bg-slate-700"
                 }`}
               >
-                Emitidas
+                📁 Archivo (CSV/XML/Excel)
               </button>
               <button
-                onClick={() => setInvoiceType("RECIBIDA")}
+                onClick={() => setImportMethod("sat")}
                 className={`flex-1 py-2 rounded-lg font-medium transition-colors ${
-                  invoiceType === "RECIBIDA"
+                  importMethod === "sat"
                     ? "bg-blue-600 text-white"
                     : "bg-slate-800 text-slate-300 hover:bg-slate-700"
                 }`}
               >
-                Recibidas
+                🏛️ Importar desde SAT (CFDI)
               </button>
             </div>
           </div>
+
+          {/* Panel informativo SAT */}
+          {importMethod === "sat" && (
+            <div className="rounded-xl border border-blue-800 bg-blue-900/20 p-6">
+              <div className="flex items-start gap-4">
+                <div className="text-4xl">🏛️</div>
+                <div className="flex-1">
+                  <h4 className="text-lg font-semibold text-white mb-2">Integración con SAT</h4>
+                  <p className="text-sm text-slate-300 mb-4">
+                    La integración con el SAT para descarga automática de CFDIs está disponible en el plan Enterprise. 
+                    Esta funcionalidad permite importar facturas directamente desde el portal del SAT sin necesidad de cargar archivos manualmente.
+                  </p>
+                  <div className="flex gap-3">
+                    <a
+                      href="mailto:soporte@estia.com?subject=Solicitud%20de%20activación%20Integración%20SAT&body=Hola,%20me%20gustaría%20solicitar%20la%20activación%20de%20la%20integración%20con%20SAT%20para%20mi%20cuenta."
+                      className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                    >
+                      Solicitar activación
+                    </a>
+                    <button
+                      onClick={() => setImportMethod("file")}
+                      className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-600"
+                    >
+                      Usar importación por archivo
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Selector de tipo (solo para importación por archivo) */}
+          {importMethod === "file" && (
+            <div>
+              <label className="block text-sm text-slate-400 mb-2">Tipo de factura</label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setInvoiceType("EMITIDA")}
+                  className={`flex-1 py-2 rounded-lg font-medium transition-colors ${
+                    invoiceType === "EMITIDA"
+                      ? "bg-blue-600 text-white"
+                      : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                  }`}
+                >
+                  Emitidas
+                </button>
+                <button
+                  onClick={() => setInvoiceType("RECIBIDA")}
+                  className={`flex-1 py-2 rounded-lg font-medium transition-colors ${
+                    invoiceType === "RECIBIDA"
+                      ? "bg-blue-600 text-white"
+                      : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                  }`}
+                >
+                  Recibidas
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Drag & Drop */}
           {parsedData.length === 0 && (
