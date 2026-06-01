@@ -1,7 +1,12 @@
 import axios from "axios";
 
+const baseURL = import.meta.env.VITE_API_URL ||
+  (window.location.hostname === 'localhost'
+    ? 'http://localhost:3000'
+    : `http://${window.location.hostname}:3000`);
+
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  baseURL,
   timeout: 30000,
 });
 
@@ -26,8 +31,7 @@ api.interceptors.response.use(
     if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
       error.message = 'Tiempo de espera agotado. El servidor tardó demasiado en responder.';
     } else if (!error.response) {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-      error.message = `No se puede conectar al servidor. Verifica que el backend esté corriendo en ${apiUrl}`;
+      error.message = `No se puede conectar al servidor. Verifica que el backend esté corriendo en ${baseURL}`;
     }
     return Promise.reject(error);
   }
