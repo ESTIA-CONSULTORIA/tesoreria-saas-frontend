@@ -18,7 +18,7 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
-  if (tenantId) {
+  if (tenantId && tenantId !== '') {
     config.headers["tenant-id"] = tenantId;
   }
 

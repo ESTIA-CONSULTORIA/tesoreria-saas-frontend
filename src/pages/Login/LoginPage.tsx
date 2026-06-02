@@ -26,12 +26,13 @@ export default function LoginPage() {
 
       login(
         token,
-        "test-tenant",
+        user.tenantId || '',
         {
           id: user.id || "1",
           email,
           name: user.name || "Administrador",
           roleCode: user.roleCode,
+          tenantId: user.tenantId,
         },
         modulosActivos
       );
