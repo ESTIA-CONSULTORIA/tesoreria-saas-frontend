@@ -5,45 +5,61 @@ import { useAuthStore } from "../../core/store/useAuthStore";
 interface AuditLog {
   id: string;
   userId: string;
-  userName?: string;
-  userEmail?: string;
-  tenantId?: string;
+  userEmail: string;
+  roleCode?: string;
+  tenantId: string;
   action: string;
-  module: string;
-  entityId?: string;
-  oldValue?: any;
-  newValue?: any;
-  ipAddress?: string;
-  userAgent?: string;
+  entity: string;
+  details?: any;
+  ipAddress: string;
+  userAgent: string;
   createdAt: string;
 }
 
+interface PaginatedLogs {
+  data: AuditLog[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+const actionTranslations: Record<string, string> = {
+  CREATE: "Creó",
+  UPDATE: "Actualizó",
+  DELETE: "Eliminó",
+  ACCESS: "Accedió",
+};
+
 export default function LogsPage() {
-  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [logsData, setLogsData] = useState<PaginatedLogs | null>(null);
   const [loading, setLoading] = useState(true);
   const [filterUserId, setFilterUserId] = useState("");
   const [filterAction, setFilterAction] = useState("");
-  const [filterModule, setFilterModule] = useState("");
+  const [filterEntity, setFilterEntity] = useState("");
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const user = useAuthStore((state) => state.user);
   const isSoporte = user?.roleCode === "SOPORTE";
 
   useEffect(() => {
     loadLogs();
-  }, []);
+  }, [currentPage]);
 
   async function loadLogs() {
     try {
       const params = new URLSearchParams();
       if (filterUserId) params.append("userId", filterUserId);
       if (filterAction) params.append("action", filterAction);
-      if (filterModule) params.append("entity", filterModule);
+      if (filterEntity) params.append("entity", filterEntity);
       if (filterStartDate) params.append("startDate", filterStartDate);
       if (filterEndDate) params.append("endDate", filterEndDate);
+      params.append("page", currentPage.toString());
+      params.append("limit", "20");
 
       const response = await api.get(`/audit-logs?${params.toString()}`);
-      setLogs(Array.isArray(response.data) ? response.data : []);
+      setLogsData(response.data);
     } catch (error) {
       console.error("Error loading logs:", error);
     } finally {
@@ -56,7 +72,7 @@ export default function LogsPage() {
       const params = new URLSearchParams();
       if (filterUserId) params.append("userId", filterUserId);
       if (filterAction) params.append("action", filterAction);
-      if (filterModule) params.append("entity", filterModule);
+      if (filterEntity) params.append("entity", filterEntity);
       if (filterStartDate) params.append("startDate", filterStartDate);
       if (filterEndDate) params.append("endDate", filterEndDate);
 
@@ -78,17 +94,28 @@ export default function LogsPage() {
 
   function handleFilter() {
     setLoading(true);
+    setCurrentPage(1);
     loadLogs();
   }
 
   function handleClearFilters() {
     setFilterUserId("");
     setFilterAction("");
-    setFilterModule("");
+    setFilterEntity("");
     setFilterStartDate("");
     setFilterEndDate("");
+    setCurrentPage(1);
     setLoading(true);
     loadLogs();
+  }
+
+  function handlePageChange(newPage: number) {
+    setCurrentPage(newPage);
+    setLoading(true);
+  }
+
+  function translateAction(action: string): string {
+    return actionTranslations[action] || action;
   }
 
   return (
@@ -121,17 +148,18 @@ export default function LogsPage() {
               className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
             >
               <option value="">Todas</option>
-              <option value="CREÓ">CREÓ</option>
-              <option value="ACTUALIZÓ">ACTUALIZÓ</option>
-              <option value="ELIMINÓ">ELIMINÓ</option>
+              <option value="CREATE">Crear</option>
+              <option value="UPDATE">Actualizar</option>
+              <option value="DELETE">Eliminar</option>
+              <option value="ACCESS">Acceder</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm text-slate-400 mb-1">Módulo</label>
+            <label className="block text-sm text-slate-400 mb-1">Módulo/Entidad</label>
             <input
               type="text"
-              value={filterModule}
-              onChange={(e) => setFilterModule(e.target.value)}
+              value={filterEntity}
+              onChange={(e) => setFilterEntity(e.target.value)}
               className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
             />
           </div>
@@ -183,7 +211,7 @@ export default function LogsPage() {
             <tr>
               <th className="px-6 py-3 text-left text-sm font-semibold text-white">Fecha</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-white">Usuario</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-white">Tenant</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-white">Rol</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-white">Acción</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-white">Módulo</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-white">IP</th>
@@ -196,14 +224,14 @@ export default function LogsPage() {
                   Cargando...
                 </td>
               </tr>
-            ) : logs.length === 0 ? (
+            ) : !logsData || logsData.data.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-6 py-4 text-center text-slate-400">
                   No hay logs registrados
                 </td>
               </tr>
             ) : (
-              logs.map((log) => (
+              logsData.data.map((log) => (
                 <tr key={log.id} className="hover:bg-slate-800/50">
                   <td className="px-6 py-4 text-sm text-slate-400">
                     {new Date(log.createdAt).toLocaleString()}
@@ -212,17 +240,18 @@ export default function LogsPage() {
                     <div className="font-medium text-white">{log.userEmail}</div>
                     <div className="text-sm text-slate-400">{log.userId}</div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-300">{log.tenantId}</td>
+                  <td className="px-6 py-4 text-sm text-slate-300">{log.roleCode || '-'}</td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 rounded-full text-sm ${
-                      log.action === "CREÓ" ? "bg-green-900/40 text-green-300" :
-                      log.action === "ACTUALIZÓ" ? "bg-blue-900/40 text-blue-300" :
-                      "bg-red-900/40 text-red-300"
+                      log.action === "CREATE" ? "bg-green-900/40 text-green-300" :
+                      log.action === "UPDATE" ? "bg-blue-900/40 text-blue-300" :
+                      log.action === "DELETE" ? "bg-red-900/40 text-red-300" :
+                      "bg-slate-700/40 text-slate-300"
                     }`}>
-                      {log.action}
+                      {translateAction(log.action)}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-300">{log.module}</td>
+                  <td className="px-6 py-4 text-sm text-slate-300">{log.entity}</td>
                   <td className="px-6 py-4 text-sm text-slate-400">{log.ipAddress}</td>
                 </tr>
               ))
@@ -230,6 +259,34 @@ export default function LogsPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Paginación */}
+      {logsData && logsData.totalPages > 1 && (
+        <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900 p-4">
+          <div className="text-sm text-slate-400">
+            Mostrando {((logsData.page - 1) * logsData.limit) + 1} a {Math.min(logsData.page * logsData.limit, logsData.total)} de {logsData.total} registros
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handlePageChange(logsData.page - 1)}
+              disabled={logsData.page === 1}
+              className="px-4 py-2 rounded-lg bg-slate-700 text-white hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Anterior
+            </button>
+            <span className="px-4 py-2 text-white">
+              Página {logsData.page} de {logsData.totalPages}
+            </span>
+            <button
+              onClick={() => handlePageChange(logsData.page + 1)}
+              disabled={logsData.page === logsData.totalPages}
+              className="px-4 py-2 rounded-lg bg-slate-700 text-white hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
