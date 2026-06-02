@@ -17,6 +17,8 @@ interface PurchaseOrder {
   total: number;
   fechaEntregaEsperada: string;
   notas: string;
+  statusHistory?: any[];
+  motivoCancelacion?: string;
 }
 
 interface Purchase {
@@ -33,6 +35,7 @@ interface Purchase {
   status: string;
   fechaVencimiento: string;
   metodoPago: string;
+  diasCredito?: number;
 }
 
 interface Supplier {
@@ -51,10 +54,16 @@ export default function PurchasesPage() {
   const [orderModalOpen, setOrderModalOpen] = useState(false);
   const [receiveModalOpen, setReceiveModalOpen] = useState(false);
   const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<Purchase | null>(null);
+  const [cancelMotivo, setCancelMotivo] = useState("");
+  const [userRole, setUserRole] = useState("");
 
   useEffect(() => {
     loadSuppliers();
+    loadUserRole();
   }, []);
 
   useEffect(() => {
@@ -63,6 +72,18 @@ export default function PurchasesPage() {
     if (activeTab === "facturas") loadInvoices();
     if (activeTab === "cuentas-pagar") loadAccountsPayable();
   }, [activeTab]);
+
+  function loadUserRole() {
+    const auth = localStorage.getItem("access_token");
+    if (auth) {
+      try {
+        const payload = JSON.parse(atob(auth.split('.')[1]));
+        setUserRole(payload.roleCode || "");
+      } catch {
+        setUserRole("");
+      }
+    }
+  }
 
   async function loadSuppliers() {
     try {
@@ -127,6 +148,56 @@ export default function PurchasesPage() {
     }
   }
 
+  async function requestCancellation(id: string) {
+    try {
+      const auth = localStorage.getItem("access_token");
+      let userId = "";
+      if (auth) {
+        try {
+          const payload = JSON.parse(atob(auth.split('.')[1]));
+          userId = payload.sub || "";
+        } catch {}
+      }
+      await api.post(`/purchases/orders/${id}/request-cancellation`, {
+        motivo: cancelMotivo,
+        userId,
+      });
+      setCancelModalOpen(false);
+      setCancelMotivo("");
+      loadOrders();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible solicitar la cancelación");
+    }
+  }
+
+  async function approveCancellation(id: string) {
+    try {
+      const auth = localStorage.getItem("access_token");
+      let userId = "";
+      if (auth) {
+        try {
+          const payload = JSON.parse(atob(auth.split('.')[1]));
+          userId = payload.sub || "";
+        } catch {}
+      }
+      await api.post(`/purchases/orders/${id}/approve-cancellation`, { userId });
+      loadOrders();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible aprobar la cancelación");
+    }
+  }
+
+  function handleRequestCancellation(order: PurchaseOrder) {
+    setSelectedOrder(order);
+    setCancelMotivo("");
+    setCancelModalOpen(true);
+  }
+
+  function handlePayment(invoice: Purchase) {
+    setSelectedInvoice(invoice);
+    setPaymentModalOpen(true);
+  }
+
   function handleReceiveOrder(order: PurchaseOrder) {
     setSelectedOrder(order);
     setReceiveModalOpen(true);
@@ -143,9 +214,11 @@ export default function PurchasesPage() {
       "ENVIADA": "Enviada",
       "PARCIAL": "Parcial",
       "RECIBIDA": "Recibida",
+      "CANCELACION_PENDIENTE": "Cancelación Pendiente",
       "CANCELADA": "Cancelada",
       "PENDIENTE": "Pendiente",
       "PAGADA": "Pagada",
+      "PARCIAL_PAGADA": "Parcialmente Pagada",
       "DRAFT": "Borrador",
       "PENDING": "Pendiente",
       "ACTIVE": "Activo",
@@ -164,12 +237,16 @@ export default function PurchasesPage() {
         return "bg-yellow-900/40 text-yellow-300";
       case "RECIBIDA":
         return "bg-green-900/40 text-green-300";
+      case "CANCELACION_PENDIENTE":
+        return "bg-orange-900/40 text-orange-300";
       case "CANCELADA":
         return "bg-red-900/40 text-red-300";
       case "PENDIENTE":
         return "bg-red-900/40 text-red-300";
       case "PAGADA":
         return "bg-green-900/40 text-green-300";
+      case "PARCIAL_PAGADA":
+        return "bg-yellow-900/40 text-yellow-300";
       default:
         return "bg-slate-700 text-slate-300";
     }
@@ -295,9 +372,14 @@ export default function PurchasesPage() {
                                   Enviar
                                 </button>
                               )}
-                              {order.status !== "CANCELADA" && (
-                                <button className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700" onClick={() => cancelOrder(order.id)}>
+                              {order.status !== "CANCELADA" && order.status !== "CANCELACION_PENDIENTE" && (
+                                <button className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700" onClick={() => handleRequestCancellation(order)}>
                                   Cancelar
+                                </button>
+                              )}
+                              {(userRole === "ADMIN" || userRole === "SOPORTE") && order.status === "CANCELACION_PENDIENTE" && (
+                                <button className="rounded bg-orange-600 px-2 py-1 text-xs text-white hover:bg-orange-700" onClick={() => approveCancellation(order.id)}>
+                                  Aprobar Cancelación
                                 </button>
                               )}
                             </div>
@@ -329,6 +411,16 @@ export default function PurchasesPage() {
                         {order.status === "BORRADOR" && (
                           <button className="flex-1 rounded bg-green-600 px-2 py-1 text-xs text-white hover:bg-green-700" onClick={() => markOrderAsSent(order.id)}>
                             Enviar
+                          </button>
+                        )}
+                        {order.status !== "CANCELADA" && order.status !== "CANCELACION_PENDIENTE" && (
+                          <button className="flex-1 rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700" onClick={() => handleRequestCancellation(order)}>
+                            Cancelar
+                          </button>
+                        )}
+                        {(userRole === "ADMIN" || userRole === "SOPORTE") && order.status === "CANCELACION_PENDIENTE" && (
+                          <button className="flex-1 rounded bg-orange-600 px-2 py-1 text-xs text-white hover:bg-orange-700" onClick={() => approveCancellation(order.id)}>
+                            Aprobar
                           </button>
                         )}
                       </div>
@@ -489,7 +581,7 @@ export default function PurchasesPage() {
                               <span className={`text-xs px-2 py-1 rounded ${getVencimientoColor(invoice.fechaVencimiento)}`}>
                                 {Number(invoice.total) - Number(invoice.montoPagado)} pendiente
                               </span>
-                              <button className="rounded bg-green-600 px-2 py-1 text-xs text-white hover:bg-green-700">
+                              <button className="rounded bg-green-600 px-2 py-1 text-xs text-white hover:bg-green-700" onClick={() => handlePayment(invoice)}>
                                 Pagar
                               </button>
                             </div>
@@ -526,6 +618,108 @@ export default function PurchasesPage() {
           suppliers={suppliers}
           orders={orders}
         />
+
+        {/* Modal de Solicitud de Cancelación */}
+        {cancelModalOpen && selectedOrder && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-6">
+              <h3 className="text-xl font-bold text-white mb-4">Solicitar Cancelación</h3>
+              <p className="text-slate-400 mb-4">
+                ¿Solicitar cancelación de {selectedOrder.numero}?
+              </p>
+              <div className="mb-4">
+                <label className="block text-sm text-slate-400 mb-1">Motivo de cancelación *</label>
+                <textarea
+                  value={cancelMotivo}
+                  onChange={(e) => setCancelMotivo(e.target.value)}
+                  required
+                  className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                  rows={3}
+                />
+              </div>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => { setCancelModalOpen(false); setCancelMotivo(""); }}
+                  className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => selectedOrder && requestCancellation(selectedOrder.id)}
+                  disabled={!cancelMotivo}
+                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-40"
+                >
+                  Solicitar Cancelación
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Registro de Pago */}
+        {paymentModalOpen && selectedInvoice && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-6">
+              <h3 className="text-xl font-bold text-white mb-4">Registrar Pago</h3>
+              <p className="text-slate-400 mb-4">
+                Factura: {selectedInvoice.numero}
+              </p>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Monto a pagar</label>
+                  <input
+                    type="number"
+                    defaultValue={Number(selectedInvoice.total) - Number(selectedInvoice.montoPagado)}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Cuenta bancaria origen</label>
+                  <select className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500">
+                    <option value="">Seleccionar cuenta</option>
+                    <option value="1">Cuenta Principal</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Fecha de pago</label>
+                  <input
+                    type="date"
+                    defaultValue={new Date().toISOString().split('T')[0]}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Referencia/Número de transferencia</label>
+                  <input
+                    type="text"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Notas (opcional)</label>
+                  <textarea
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                    rows={2}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => { setPaymentModalOpen(false); setSelectedInvoice(null); }}
+                  className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => { setPaymentModalOpen(false); setSelectedInvoice(null); }}
+                  className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+                >
+                  Registrar Pago
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </MainLayout>
   );

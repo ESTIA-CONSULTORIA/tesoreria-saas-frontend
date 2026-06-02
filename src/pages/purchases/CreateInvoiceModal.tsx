@@ -17,6 +17,7 @@ export default function CreateInvoiceModal({ open, onClose, onCreated, suppliers
     fecha: new Date().toISOString().split('T')[0],
     fechaVencimiento: "",
     metodoPago: "",
+    diasCredito: 0,
     ivaRate: 16,
   });
   const [items, setItems] = useState<any[]>([{ descripcion: "", cantidad: 1, precioUnitario: 0 }]);
@@ -32,6 +33,7 @@ export default function CreateInvoiceModal({ open, onClose, onCreated, suppliers
         fecha: new Date().toISOString().split('T')[0],
         fechaVencimiento: "",
         metodoPago: "",
+        diasCredito: 0,
         ivaRate: 16,
       });
       setItems([{ descripcion: "", cantidad: 1, precioUnitario: 0 }]);
@@ -65,6 +67,16 @@ export default function CreateInvoiceModal({ open, onClose, onCreated, suppliers
   function getTotal() {
     return getSubtotal() + getIVA();
   }
+
+  useEffect(() => {
+    if (formData.diasCredito > 0 && formData.fecha) {
+      const fecha = new Date(formData.fecha);
+      fecha.setDate(fecha.getDate() + formData.diasCredito);
+      setFormData({ ...formData, fechaVencimiento: fecha.toISOString().split('T')[0] });
+    } else if (formData.diasCredito === 0) {
+      setFormData({ ...formData, fechaVencimiento: formData.fecha });
+    }
+  }, [formData.diasCredito, formData.fecha]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -192,16 +204,43 @@ export default function CreateInvoiceModal({ open, onClose, onCreated, suppliers
               <label className="block text-sm text-slate-400 mb-1">Método de pago</label>
               <select
                 value={formData.metodoPago}
-                onChange={(e) => setFormData({ ...formData, metodoPago: e.target.value })}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  let dias = 0;
+                  if (value === "CREDITO_7") dias = 7;
+                  else if (value === "CREDITO_15") dias = 15;
+                  else if (value === "CREDITO_30") dias = 30;
+                  else if (value === "CREDITO_45") dias = 45;
+                  else if (value === "CREDITO_60") dias = 60;
+                  setFormData({ ...formData, metodoPago: value, diasCredito: dias });
+                }}
                 className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
               >
                 <option value="">Seleccionar</option>
+                <option value="CONTADO">Contado</option>
+                <option value="CREDITO_7">Crédito 7 días</option>
+                <option value="CREDITO_15">Crédito 15 días</option>
+                <option value="CREDITO_30">Crédito 30 días</option>
+                <option value="CREDITO_45">Crédito 45 días</option>
+                <option value="CREDITO_60">Crédito 60 días</option>
                 <option value="TRANSFERENCIA">Transferencia</option>
                 <option value="EFECTIVO">Efectivo</option>
                 <option value="CHEQUE">Cheque</option>
                 <option value="TARJETA">Tarjeta</option>
               </select>
             </div>
+
+            {formData.metodoPago?.startsWith("CREDITO") && (
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Días de crédito</label>
+                <input
+                  type="number"
+                  value={formData.diasCredito}
+                  onChange={(e) => setFormData({ ...formData, diasCredito: Number(e.target.value) })}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                />
+              </div>
+            )}
 
             <div>
               <label className="block text-sm text-slate-400 mb-1">Tasa de IVA</label>
