@@ -6,8 +6,10 @@ import CreateRecipeModal from "./CreateRecipeModal";
 
 interface Insumo {
   id: string;
+  codigo: string;
   nombre: string;
   descripcion: string;
+  presentacion: string;
   unidadMedida: string;
   costoUnitario: number;
   moneda: string;
@@ -60,6 +62,7 @@ export default function CostsPage() {
   const [error, setError] = useState("");
   const [insumoModalOpen, setInsumoModalOpen] = useState(false);
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
+  const [viewInsumoModalOpen, setViewInsumoModalOpen] = useState(false);
   const [selectedInsumo, setSelectedInsumo] = useState<Insumo | null>(null);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
 
@@ -143,6 +146,17 @@ export default function CostsPage() {
 
   function isLowStock(insumo: Insumo): boolean {
     return Number(insumo.stockActual) <= Number(insumo.stockMinimo);
+  }
+
+  function handleViewInsumo(insumo: Insumo) {
+    setSelectedInsumo(insumo);
+    setViewInsumoModalOpen(true);
+  }
+
+  function getRecipesUsingInsumo(insumoId: string): Recipe[] {
+    return recipes.filter(recipe => 
+      recipe.items?.some((item: any) => item.insumoId === insumoId)
+    );
   }
 
   return (
@@ -247,7 +261,7 @@ export default function CostsPage() {
                           </td>
                           <td className="p-2">
                             <div className="flex gap-2">
-                              <button className="rounded bg-slate-700 px-2 py-1 text-xs text-white hover:bg-slate-600">
+                              <button className="rounded bg-slate-700 px-2 py-1 text-xs text-white hover:bg-slate-600" onClick={() => handleViewInsumo(insumo)}>
                                 Ver
                               </button>
                               <button className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700" onClick={() => { setSelectedInsumo(insumo); setInsumoModalOpen(true); }}>
@@ -278,7 +292,7 @@ export default function CostsPage() {
                         <div className="mb-2 text-xs text-red-400 font-medium">⚠️ Stock bajo</div>
                       )}
                       <div className="flex gap-2">
-                        <button className="flex-1 rounded bg-slate-700 px-2 py-1 text-xs text-white hover:bg-slate-600">
+                        <button className="flex-1 rounded bg-slate-700 px-2 py-1 text-xs text-white hover:bg-slate-600" onClick={() => handleViewInsumo(insumo)}>
                           Ver
                         </button>
                         <button className="flex-1 rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700" onClick={() => { setSelectedInsumo(insumo); setInsumoModalOpen(true); }}>
@@ -513,6 +527,123 @@ export default function CostsPage() {
           insumos={insumos}
           recipe={selectedRecipe}
         />
+
+        {/* Modal de Detalle de Insumo */}
+        {viewInsumoModalOpen && selectedInsumo && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-4xl max-h-[90vh] flex flex-col rounded-xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden">
+              <div className="flex-shrink-0 p-6 border-b border-slate-800">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">{selectedInsumo.nombre}</h3>
+                    <p className="text-sm text-slate-400">{selectedInsumo.codigo || "Sin código"}</p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className={`rounded-full px-3 py-1 text-sm ${selectedInsumo.isActive ? "bg-green-900/40 text-green-300" : "bg-slate-700 text-slate-300"}`}>
+                      {selectedInsumo.isActive ? "Activo" : "Inactivo"}
+                    </span>
+                    <button
+                      onClick={() => { setViewInsumoModalOpen(false); setSelectedInsumo(null); }}
+                      className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700"
+                    >
+                      Cerrar
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                  <div>
+                    <p className="text-xs text-slate-400">Código</p>
+                    <p className="text-white">{selectedInsumo.codigo || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Presentación</p>
+                    <p className="text-white">{selectedInsumo.presentacion || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Unidad de medida</p>
+                    <p className="text-white">{selectedInsumo.unidadMedida}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Costo unitario</p>
+                    <p className="text-white">{Number(selectedInsumo.costoUnitario).toFixed(2)} {selectedInsumo.moneda}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Proveedor</p>
+                    <p className="text-white">{getSupplierName(selectedInsumo.proveedorId)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Stock actual</p>
+                    <p className={`text-white font-bold ${isLowStock(selectedInsumo) ? "text-red-400" : ""}`}>
+                      {Number(selectedInsumo.stockActual).toFixed(2)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Stock mínimo</p>
+                    <p className="text-white">{Number(selectedInsumo.stockMinimo).toFixed(2)}</p>
+                  </div>
+                </div>
+
+                {selectedInsumo.descripcion && (
+                  <div className="mb-6">
+                    <p className="text-xs text-slate-400 mb-1">Descripción</p>
+                    <p className="text-white">{selectedInsumo.descripcion}</p>
+                  </div>
+                )}
+
+                {/* Indicador visual de stock */}
+                <div className={`mb-6 p-4 rounded-lg ${isLowStock(selectedInsumo) ? "bg-red-900/30 border border-red-700" : "bg-green-900/30 border border-green-700"}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full ${isLowStock(selectedInsumo) ? "bg-red-500" : "bg-green-500"}`}></div>
+                    <p className={`text-sm font-medium ${isLowStock(selectedInsumo) ? "text-red-300" : "text-green-300"}`}>
+                      {isLowStock(selectedInsumo) ? "⚠️ Stock bajo - Requiere reabastecimiento" : "✓ Stock adecuado"}
+                    </p>
+                  </div>
+                  <div className="mt-2">
+                    <div className="w-full bg-slate-700 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full ${isLowStock(selectedInsumo) ? "bg-red-500" : "bg-green-500"}`}
+                        style={{ width: `${Math.min(100, (Number(selectedInsumo.stockActual) / Number(selectedInsumo.stockMinimo)) * 100)}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-1">
+                      {((Number(selectedInsumo.stockActual) / Number(selectedInsumo.stockMinimo)) * 100).toFixed(0)}% del stock mínimo
+                    </p>
+                  </div>
+                </div>
+
+                {/* Recetas donde se usa este insumo */}
+                <div className="mb-6">
+                  <h4 className="text-lg font-semibold text-white mb-3">Recetas que usan este insumo</h4>
+                  {(() => {
+                    const recipesUsing = getRecipesUsingInsumo(selectedInsumo.id);
+                    if (recipesUsing.length === 0) {
+                      return <p className="text-slate-400 text-sm">Este insumo no se usa en ninguna receta</p>;
+                    }
+                    return (
+                      <div className="space-y-2">
+                        {recipesUsing.map((recipe) => (
+                          <div key={recipe.id} className="p-3 rounded-lg bg-slate-800">
+                            <p className="text-white font-medium">{recipe.nombre}</p>
+                            <p className="text-xs text-slate-400">{recipe.descripcion || "Sin descripción"}</p>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Historial de movimientos (placeholder - requiere endpoint backend) */}
+                <div>
+                  <h4 className="text-lg font-semibold text-white mb-3">Historial de movimientos</h4>
+                  <p className="text-slate-400 text-sm">El historial de entradas y salidas estará disponible en una próxima versión.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </MainLayout>
   );
