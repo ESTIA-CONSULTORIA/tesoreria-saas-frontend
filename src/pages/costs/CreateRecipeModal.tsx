@@ -126,15 +126,15 @@ export default function CreateRecipeModal({ open, onClose, onCreated, insumos, r
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-3xl max-h-[90vh] flex flex-col rounded-xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden">
         {/* Header - flex-shrink-0 */}
-        <div className="flex-shrink-0 p-6 border-b border-slate-800">
+        <div className="flex-shrink-0 p-4 border-b border-slate-800">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-2xl font-bold text-white">{recipe ? "Editar Receta" : "Nueva Receta"}</h3>
-              <p className="text-sm text-slate-400">Completa los datos de la receta</p>
+              <h3 className="text-xl font-bold text-white">{recipe ? "Editar Receta" : "Nueva Receta"}</h3>
+              <p className="text-xs text-slate-400">Completa los datos de la receta</p>
             </div>
             <button
               onClick={onClose}
-              className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700"
+              className="rounded-lg bg-slate-800 px-2 py-1 text-xs text-white hover:bg-slate-700"
             >
               Cerrar
             </button>
@@ -142,42 +142,42 @@ export default function CreateRecipeModal({ open, onClose, onCreated, insumos, r
         </div>
 
         {/* Body - flex-1 overflow-y-auto */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4">
           {error && (
-            <div className="mb-4 rounded-xl border border-red-700 bg-red-900/30 p-4 text-red-300">
+            <div className="mb-4 rounded-xl border border-red-700 bg-red-900/30 p-3 text-red-300 text-sm">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-sm text-slate-400 mb-1">Nombre *</label>
+            <label className="block text-xs text-slate-400 mb-1">Nombre *</label>
             <input
               type="text"
               value={formData.nombre}
               onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
               required
-              className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white text-sm outline-none focus:border-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-slate-400 mb-1">Descripción</label>
+            <label className="block text-xs text-slate-400 mb-1">Descripción</label>
             <textarea
               value={formData.descripcion}
               onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
-              className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white text-sm outline-none focus:border-blue-500"
               rows={2}
             />
           </div>
 
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+          <div className="grid gap-3 grid-cols-1 md:grid-cols-3">
             <div>
-              <label className="block text-sm text-slate-400 mb-1">Tipo</label>
+              <label className="block text-xs text-slate-400 mb-1">Tipo</label>
               <select
                 value={formData.tipo}
                 onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
-                className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white text-sm outline-none focus:border-blue-500"
               >
                 <option value="PRODUCTO_VENTA">Producto de Venta</option>
                 <option value="INSUMO_ELABORADO">Insumo Elaborado</option>
@@ -185,30 +185,30 @@ export default function CreateRecipeModal({ open, onClose, onCreated, insumos, r
             </div>
 
             <div>
-              <label className="block text-sm text-slate-400 mb-1">Rendimiento</label>
+              <label className="block text-xs text-slate-400 mb-1">Rendimiento</label>
               <input
                 type="number"
                 value={formData.rendimiento}
                 onChange={(e) => setFormData({ ...formData, rendimiento: Number(e.target.value) })}
                 step="0.01"
-                className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white text-sm outline-none focus:border-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-slate-400 mb-1">Unidad Rendimiento</label>
+              <label className="block text-xs text-slate-400 mb-1">Unidad Rendimiento</label>
               <input
                 type="text"
                 value={formData.unidadRendimiento}
                 onChange={(e) => setFormData({ ...formData, unidadRendimiento: e.target.value })}
                 placeholder="kg, litro, unidad, etc."
-                className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white text-sm outline-none focus:border-blue-500"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm text-slate-400 mb-1">Margen Deseado (%)</label>
+            <label className="block text-xs text-slate-400 mb-1">Margen Deseado (%)</label>
             <input
               type="number"
               value={(formData.margenDeseado * 100).toFixed(0)}
@@ -216,33 +216,33 @@ export default function CreateRecipeModal({ open, onClose, onCreated, insumos, r
               step="1"
               min="0"
               max="100"
-              className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white text-sm outline-none focus:border-blue-500"
             />
           </div>
 
           <div>
             <div className="flex justify-between items-center mb-2">
-              <h4 className="text-lg font-semibold text-white">Insumos</h4>
+              <h4 className="text-sm font-semibold text-white">Insumos</h4>
               <button
                 type="button"
                 onClick={addItem}
-                className="rounded-lg bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
+                className="rounded-lg bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700"
               >
-                + Agregar Insumo
+                + Agregar
               </button>
             </div>
 
-            <div className="space-y-2">
+            <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
               {items.map((item, index) => (
-                <div key={index} className="grid gap-2 grid-cols-1 md:grid-cols-5 items-end p-3 rounded-lg bg-slate-800">
+                <div key={index} className="grid gap-2 grid-cols-1 md:grid-cols-5 items-end p-2 rounded-lg bg-slate-800">
                   <div className="md:col-span-2">
                     <label className="block text-xs text-slate-400 mb-1">Insumo</label>
                     <select
                       value={item.insumoId}
                       onChange={(e) => updateItem(index, "insumoId", e.target.value)}
-                      className="w-full rounded border border-slate-700 bg-slate-700 p-2 text-white text-sm outline-none focus:border-blue-500"
+                      className="w-full rounded border border-slate-700 bg-slate-700 p-1.5 text-white text-xs outline-none focus:border-blue-500"
                     >
-                      <option value="">Seleccionar insumo</option>
+                      <option value="">Seleccionar</option>
                       {insumos.map((i) => (
                         <option key={i.id} value={i.id}>{i.nombre}</option>
                       ))}
@@ -254,34 +254,34 @@ export default function CreateRecipeModal({ open, onClose, onCreated, insumos, r
                       type="number"
                       value={item.cantidad}
                       onChange={(e) => updateItem(index, "cantidad", Number(e.target.value))}
-                      className="w-full rounded border border-slate-700 bg-slate-700 p-2 text-white text-sm outline-none focus:border-blue-500"
+                      className="w-full rounded border border-slate-700 bg-slate-700 p-1.5 text-white text-xs outline-none focus:border-blue-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">Costo Unitario</label>
+                    <label className="block text-xs text-slate-400 mb-1">Costo Unit.</label>
                     <input
                       type="number"
                       value={item.costoUnitario}
                       onChange={(e) => updateItem(index, "costoUnitario", Number(e.target.value))}
                       step="0.01"
-                      className="w-full rounded border border-slate-700 bg-slate-700 p-2 text-white text-sm outline-none focus:border-blue-500"
+                      className="w-full rounded border border-slate-700 bg-slate-700 p-1.5 text-white text-xs outline-none focus:border-blue-500"
                     />
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1">
                     <div className="flex-1">
                       <label className="block text-xs text-slate-400 mb-1">Subtotal</label>
                       <input
                         type="text"
                         value={(item.cantidad * item.costoUnitario).toFixed(2)}
                         readOnly
-                        className="w-full rounded border border-slate-700 bg-slate-600 p-2 text-white text-sm outline-none"
+                        className="w-full rounded border border-slate-700 bg-slate-600 p-1.5 text-white text-xs outline-none"
                       />
                     </div>
                     {items.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeItem(index)}
-                        className="rounded bg-red-600 px-2 py-2 text-white hover:bg-red-700"
+                        className="rounded bg-red-600 px-1.5 py-1.5 text-white hover:bg-red-700 text-xs"
                       >
                         ×
                       </button>
@@ -292,16 +292,16 @@ export default function CreateRecipeModal({ open, onClose, onCreated, insumos, r
             </div>
           </div>
 
-          <div className="border-t border-slate-800 pt-4">
-            <div className="flex justify-between text-sm">
+          <div className="border-t border-slate-800 pt-3">
+            <div className="flex justify-between text-xs">
               <span className="text-slate-400">Costo Total:</span>
               <span className="text-white">{getCostoTotal().toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-xs">
               <span className="text-slate-400">Margen:</span>
               <span className="text-white">{(formData.margenDeseado * 100).toFixed(0)}%</span>
             </div>
-            <div className="flex justify-between text-lg font-bold mt-2">
+            <div className="flex justify-between text-sm font-bold mt-1">
               <span className="text-white">Precio Sugerido:</span>
               <span className="text-white">{getPrecioSugerido().toFixed(2)}</span>
             </div>
@@ -315,23 +315,23 @@ export default function CreateRecipeModal({ open, onClose, onCreated, insumos, r
               onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
               className="rounded border-slate-700 bg-slate-800"
             />
-            <label htmlFor="isActive" className="text-sm text-slate-400">
+            <label htmlFor="isActive" className="text-xs text-slate-400">
               Activo
             </label>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex justify-end gap-2 pt-3">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+              className="rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-40"
+              className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-40"
             >
               {loading ? "Guardando..." : recipe ? "Actualizar" : "Crear"}
             </button>
@@ -340,7 +340,7 @@ export default function CreateRecipeModal({ open, onClose, onCreated, insumos, r
         </div>
 
         {/* Footer - flex-shrink-0 */}
-        <div className="flex-shrink-0 p-4 border-t border-slate-800 text-center text-xs text-slate-500">
+        <div className="flex-shrink-0 p-2 border-t border-slate-800 text-center text-xs text-slate-500">
           ESC para cerrar
         </div>
       </div>
