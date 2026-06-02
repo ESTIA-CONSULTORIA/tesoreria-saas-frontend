@@ -368,89 +368,89 @@ export default function CreateInvoiceModal({ open, onClose, onCreated, suppliers
               </button>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
+            <div>
+              <table className="w-full table-fixed text-sm">
                 <thead className="text-slate-400 border-b border-slate-800">
                   <tr>
-                    <th className="p-2">#</th>
-                    <th className="p-2">Código</th>
-                    <th className="p-2">Insumo</th>
-                    <th className="p-2">Presentación</th>
-                    <th className="p-2">Cantidad</th>
-                    <th className="p-2">Costo Unit.</th>
-                    <th className="p-2">IVA%</th>
-                    <th className="p-2">Subtotal</th>
-                    <th className="p-2"></th>
+                    <th className="p-1 w-8">#</th>
+                    <th className="p-1 w-16">Cód</th>
+                    <th className="p-1">Insumo</th>
+                    <th className="p-1 w-20">Pres</th>
+                    <th className="p-1 w-16">Cant</th>
+                    <th className="p-1 w-16">Costo</th>
+                    <th className="p-1 w-12">IVA</th>
+                    <th className="p-1 w-16">Sub</th>
+                    <th className="p-1 w-8"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {items.map((item, index) => (
                     <tr key={index} className="border-t border-slate-800">
-                      <td className="p-2">{index + 1}</td>
-                      <td className="p-2">
+                      <td className="p-1 text-center">{index + 1}</td>
+                      <td className="p-1">
                         <input
                           type="text"
                           value={item.codigo}
                           readOnly
-                          className="w-20 rounded border border-slate-700 bg-slate-700 p-1 text-white text-xs"
+                          className="w-full rounded border border-slate-700 bg-slate-700 p-1 text-white text-xs"
                         />
                       </td>
-                      <td className="p-2">
+                      <td className="p-1">
                         <div className="flex gap-1">
                           <input
                             type="text"
                             value={item.nombre}
                             readOnly
-                            placeholder="Seleccionar insumo..."
+                            placeholder="Seleccionar..."
                             className="flex-1 rounded border border-slate-700 bg-slate-700 p-1 text-white text-xs"
                             onClick={() => openInsumoSearchModal(index)}
                           />
                           <button
                             type="button"
                             onClick={() => openInsumoSearchModal(index)}
-                            className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700"
+                            className="rounded bg-blue-600 px-1 py-1 text-xs text-white hover:bg-blue-700"
                           >
                             🔍
                           </button>
                         </div>
                       </td>
-                      <td className="p-2">
+                      <td className="p-1">
                         <input
                           type="text"
                           value={item.presentacion}
                           readOnly
-                          className="w-24 rounded border border-slate-700 bg-slate-700 p-1 text-white text-xs"
+                          className="w-full rounded border border-slate-700 bg-slate-700 p-1 text-white text-xs"
                         />
                       </td>
-                      <td className="p-2">
+                      <td className="p-1">
                         <input
                           type="number"
                           value={item.cantidad}
                           onChange={(e) => updateItem(index, "cantidad", Number(e.target.value))}
-                          className="w-20 rounded border border-slate-700 bg-slate-700 p-1 text-white text-xs outline-none focus:border-blue-500"
+                          className="w-full rounded border border-slate-700 bg-slate-700 p-1 text-white text-xs outline-none focus:border-blue-500"
                         />
                       </td>
-                      <td className="p-2">
+                      <td className="p-1">
                         <input
                           type="number"
                           value={item.costoUnitario}
                           onChange={(e) => updateItem(index, "costoUnitario", Number(e.target.value))}
-                          className="w-24 rounded border border-slate-700 bg-slate-700 p-1 text-white text-xs outline-none focus:border-blue-500"
+                          className="w-full rounded border border-slate-700 bg-slate-700 p-1 text-white text-xs outline-none focus:border-blue-500"
                         />
                       </td>
-                      <td className="p-2">
+                      <td className="p-1">
                         <select
                           value={item.ivaPercent}
                           onChange={(e) => updateItem(index, "ivaPercent", Number(e.target.value))}
-                          className="w-16 rounded border border-slate-700 bg-slate-700 p-1 text-white text-xs outline-none focus:border-blue-500"
+                          className="w-full rounded border border-slate-700 bg-slate-700 p-1 text-white text-xs outline-none focus:border-blue-500"
                         >
                           <option value={0}>0%</option>
                           <option value={8}>8%</option>
                           <option value={16}>16%</option>
                         </select>
                       </td>
-                      <td className="p-2 text-white">{getItemSubtotal(item).toFixed(2)}</td>
-                      <td className="p-2">
+                      <td className="p-1 text-right text-white">{getItemSubtotal(item).toFixed(2)}</td>
+                      <td className="p-1 text-center">
                         {items.length > 1 && (
                           <button
                             type="button"

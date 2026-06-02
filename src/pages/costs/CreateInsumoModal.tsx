@@ -9,11 +9,46 @@ interface Props {
   insumo?: any;
 }
 
+const FAMILIAS = [
+  { value: 'PROT', label: 'Proteínas (carnes, mariscos, huevo)' },
+  { value: 'SECO', label: 'Secos y abarrotes' },
+  { value: 'FYV', label: 'Frutas y verduras' },
+  { value: 'LACT', label: 'Lácteos' },
+  { value: 'BEB', label: 'Bebidas' },
+  { value: 'LIMP', label: 'Limpieza y sanitización' },
+  { value: 'DESC', label: 'Desechables y empaques' },
+  { value: 'ROPA', label: 'Uniformes y ropa' },
+  { value: 'CALZ', label: 'Calzado' },
+  { value: 'MISC', label: 'Misceláneos' },
+];
+
+const PRESENTACIONES = [
+  'Kilogramo (kg)',
+  'Gramo (g)',
+  'Litro (L)',
+  'Mililitro (ml)',
+  'Pieza (pza)',
+  'Caja (cja)',
+  'Paquete (paq)',
+  'Bolsa (bol)',
+  'Lata (lat)',
+  'Botella (bot)',
+  'Costal (cos)',
+  'Cubeta (cub)',
+  'Rollo (rol)',
+  'Otro',
+];
+
 export default function CreateInsumoModal({ open, onClose, onCreated, suppliers, insumo }: Props) {
   const [formData, setFormData] = useState({
+    codigo: "",
     nombre: "",
     descripcion: "",
+    familia: "",
+    presentacion: "",
     unidadMedida: "",
+    presentacionCompra: "",
+    factorConversion: 1,
     costoUnitario: 0,
     moneda: "MXN",
     proveedorId: "",
@@ -24,14 +59,20 @@ export default function CreateInsumoModal({ open, onClose, onCreated, suppliers,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [generatingCode, setGeneratingCode] = useState(false);
 
   useEffect(() => {
     if (open) {
       if (insumo) {
         setFormData({
+          codigo: insumo.codigo || "",
           nombre: insumo.nombre || "",
           descripcion: insumo.descripcion || "",
+          familia: insumo.familia || "",
+          presentacion: insumo.presentacion || "",
           unidadMedida: insumo.unidadMedida || "",
+          presentacionCompra: insumo.presentacionCompra || "",
+          factorConversion: insumo.factorConversion || 1,
           costoUnitario: insumo.costoUnitario || 0,
           moneda: insumo.moneda || "MXN",
           proveedorId: insumo.proveedorId || "",
@@ -42,9 +83,14 @@ export default function CreateInsumoModal({ open, onClose, onCreated, suppliers,
         });
       } else {
         setFormData({
+          codigo: "",
           nombre: "",
           descripcion: "",
+          familia: "",
+          presentacion: "",
           unidadMedida: "",
+          presentacionCompra: "",
+          factorConversion: 1,
           costoUnitario: 0,
           moneda: "MXN",
           proveedorId: "",
@@ -56,6 +102,24 @@ export default function CreateInsumoModal({ open, onClose, onCreated, suppliers,
       }
     }
   }, [open, insumo]);
+
+  async function generateCode() {
+    if (!formData.familia) {
+      setError("Selecciona una familia primero");
+      return;
+    }
+    try {
+      setGeneratingCode(true);
+      const response = await api.get("/costs/insumos/next-code", {
+        params: { familia: formData.familia },
+      });
+      setFormData({ ...formData, codigo: response.data.codigo });
+    } catch (err: any) {
+      setError("No fue posible generar el código");
+    } finally {
+      setGeneratingCode(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -108,6 +172,45 @@ export default function CreateInsumoModal({ open, onClose, onCreated, suppliers,
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+            <div>
+              <label className="block text-sm text-slate-400 mb-1">Familia *</label>
+              <select
+                value={formData.familia}
+                onChange={(e) => setFormData({ ...formData, familia: e.target.value })}
+                required
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+              >
+                <option value="">Seleccionar familia</option>
+                {FAMILIAS.map((f) => (
+                  <option key={f.value} value={f.value}>{f.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm text-slate-400 mb-1">Código</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={formData.codigo}
+                  onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
+                  className="flex-1 rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                />
+                {!insumo && (
+                  <button
+                    type="button"
+                    onClick={generateCode}
+                    disabled={generatingCode || !formData.familia}
+                    className="rounded-lg bg-green-600 px-3 py-2 text-sm text-white hover:bg-green-700 disabled:opacity-40"
+                  >
+                    {generatingCode ? "..." : "Auto"}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm text-slate-400 mb-1">Nombre *</label>
             <input
@@ -131,6 +234,20 @@ export default function CreateInsumoModal({ open, onClose, onCreated, suppliers,
 
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
             <div>
+              <label className="block text-sm text-slate-400 mb-1">Presentación</label>
+              <select
+                value={formData.presentacion}
+                onChange={(e) => setFormData({ ...formData, presentacion: e.target.value })}
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+              >
+                <option value="">Seleccionar presentación</option>
+                {PRESENTACIONES.map((p) => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
               <label className="block text-sm text-slate-400 mb-1">Unidad de Medida *</label>
               <input
                 type="text"
@@ -138,6 +255,30 @@ export default function CreateInsumoModal({ open, onClose, onCreated, suppliers,
                 onChange={(e) => setFormData({ ...formData, unidadMedida: e.target.value })}
                 required
                 placeholder="kg, litro, unidad, etc."
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm text-slate-400 mb-1">Presentación de Compra</label>
+              <input
+                type="text"
+                value={formData.presentacionCompra}
+                onChange={(e) => setFormData({ ...formData, presentacionCompra: e.target.value })}
+                placeholder="Ej: Caja 24 latas, Costal 25 kg"
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm text-slate-400 mb-1">Factor de Conversión</label>
+              <input
+                type="number"
+                value={formData.factorConversion}
+                onChange={(e) => setFormData({ ...formData, factorConversion: Number(e.target.value) })}
+                step="0.01"
+                min="0"
+                placeholder="Unidades por presentación de compra"
                 className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
               />
             </div>
