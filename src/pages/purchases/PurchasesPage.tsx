@@ -57,10 +57,18 @@ export default function PurchasesPage() {
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [viewOrderModalOpen, setViewOrderModalOpen] = useState(false);
+  const [viewInvoiceModalOpen, setViewInvoiceModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<Purchase | null>(null);
   const [cancelMotivo, setCancelMotivo] = useState("");
   const [userRole, setUserRole] = useState("");
+  const [paymentData, setPaymentData] = useState({
+    amount: 0,
+    accountId: "",
+    fechaPago: new Date().toISOString().split('T')[0],
+    referencia: "",
+    notas: "",
+  });
 
   useEffect(() => {
     loadSuppliers();
@@ -196,12 +204,54 @@ export default function PurchasesPage() {
 
   function handlePayment(invoice: Purchase) {
     setSelectedInvoice(invoice);
+    setPaymentData({
+      amount: Number(invoice.total) - Number(invoice.montoPagado),
+      accountId: "",
+      fechaPago: new Date().toISOString().split('T')[0],
+      referencia: "",
+      notas: "",
+    });
     setPaymentModalOpen(true);
+  }
+
+  async function registerPayment() {
+    if (!selectedInvoice || !paymentData.accountId || paymentData.amount <= 0) {
+      setError("Complete todos los campos requeridos");
+      return;
+    }
+
+    try {
+      const auth = localStorage.getItem("access_token");
+      let userId = "";
+      if (auth) {
+        try {
+          const payload = JSON.parse(atob(auth.split('.')[1]));
+          userId = payload.sub || "";
+        } catch {}
+      }
+
+      await api.post(`/purchases/invoices/${selectedInvoice.id}/register-payment`, {
+        ...paymentData,
+        userId,
+      });
+
+      setPaymentModalOpen(false);
+      setSelectedInvoice(null);
+      setError("");
+      loadAccountsPayable();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible registrar el pago");
+    }
   }
 
   function handleViewOrder(order: PurchaseOrder) {
     setSelectedOrder(order);
     setViewOrderModalOpen(true);
+  }
+
+  function handleViewInvoice(invoice: Purchase) {
+    setSelectedInvoice(invoice);
+    setViewInvoiceModalOpen(true);
   }
 
   function handleReceiveOrder(order: PurchaseOrder) {
@@ -533,7 +583,7 @@ export default function PurchasesPage() {
                             </span>
                           </td>
                           <td className="p-2">
-                            <button className="rounded bg-slate-700 px-2 py-1 text-xs text-white hover:bg-slate-600">
+                            <button className="rounded bg-slate-700 px-2 py-1 text-xs text-white hover:bg-slate-600" onClick={() => handleViewInvoice(invoice)}>
                               Ver
                             </button>
                           </td>
@@ -556,7 +606,7 @@ export default function PurchasesPage() {
                         <p><span className="text-slate-500">Vencimiento:</span> {invoice.fechaVencimiento || "-"}</p>
                         <p><span className="text-slate-500">Total:</span> {Number(invoice.total).toFixed(2)}</p>
                       </div>
-                      <button className="w-full rounded bg-slate-700 px-2 py-1 text-xs text-white hover:bg-slate-600">
+                      <button className="w-full rounded bg-slate-700 px-2 py-1 text-xs text-white hover:bg-slate-600" onClick={() => handleViewInvoice(invoice)}>
                         Ver
                       </button>
                     </div>
@@ -675,13 +725,18 @@ export default function PurchasesPage() {
                   <label className="block text-sm text-slate-400 mb-1">Monto a pagar</label>
                   <input
                     type="number"
-                    defaultValue={Number(selectedInvoice.total) - Number(selectedInvoice.montoPagado)}
+                    value={paymentData.amount}
+                    onChange={(e) => setPaymentData({ ...paymentData, amount: Number(e.target.value) })}
                     className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
                   />
                 </div>
                 <div>
                   <label className="block text-sm text-slate-400 mb-1">Cuenta bancaria origen</label>
-                  <select className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500">
+                  <select 
+                    value={paymentData.accountId}
+                    onChange={(e) => setPaymentData({ ...paymentData, accountId: e.target.value })}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                  >
                     <option value="">Seleccionar cuenta</option>
                     <option value="1">Cuenta Principal</option>
                   </select>
@@ -690,7 +745,8 @@ export default function PurchasesPage() {
                   <label className="block text-sm text-slate-400 mb-1">Fecha de pago</label>
                   <input
                     type="date"
-                    defaultValue={new Date().toISOString().split('T')[0]}
+                    value={paymentData.fechaPago}
+                    onChange={(e) => setPaymentData({ ...paymentData, fechaPago: e.target.value })}
                     className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
                   />
                 </div>
@@ -698,26 +754,31 @@ export default function PurchasesPage() {
                   <label className="block text-sm text-slate-400 mb-1">Referencia/Número de transferencia</label>
                   <input
                     type="text"
+                    value={paymentData.referencia}
+                    onChange={(e) => setPaymentData({ ...paymentData, referencia: e.target.value })}
                     className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
                   />
                 </div>
                 <div>
                   <label className="block text-sm text-slate-400 mb-1">Notas (opcional)</label>
                   <textarea
+                    value={paymentData.notas}
+                    onChange={(e) => setPaymentData({ ...paymentData, notas: e.target.value })}
                     className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
                     rows={2}
                   />
                 </div>
               </div>
+              {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
               <div className="flex justify-end gap-3 mt-6">
                 <button
-                  onClick={() => { setPaymentModalOpen(false); setSelectedInvoice(null); }}
+                  onClick={() => { setPaymentModalOpen(false); setSelectedInvoice(null); setError(""); }}
                   className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
                 >
                   Cancelar
                 </button>
                 <button
-                  onClick={() => { setPaymentModalOpen(false); setSelectedInvoice(null); }}
+                  onClick={registerPayment}
                   className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
                 >
                   Registrar Pago
@@ -822,6 +883,104 @@ export default function PurchasesPage() {
                         </div>
                       ))}
                     </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Detalle de Factura */}
+        {viewInvoiceModalOpen && selectedInvoice && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-4xl max-h-[90vh] flex flex-col rounded-xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden">
+              <div className="flex-shrink-0 p-6 border-b border-slate-800">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">{selectedInvoice.numero}</h3>
+                    <p className="text-sm text-slate-400">{getSupplierName(selectedInvoice.supplierId)}</p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className={`rounded-full px-3 py-1 text-sm ${getStatusColor(selectedInvoice.status)}`}>
+                      {getStatusLabel(selectedInvoice.status)}
+                    </span>
+                    <button
+                      onClick={() => { setViewInvoiceModalOpen(false); setSelectedInvoice(null); }}
+                      className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700"
+                    >
+                      Cerrar
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div>
+                    <p className="text-xs text-slate-400">Fecha</p>
+                    <p className="text-white">{selectedInvoice.fecha}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Vencimiento</p>
+                    <p className="text-white">{selectedInvoice.fechaVencimiento || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Método de pago</p>
+                    <p className="text-white">{selectedInvoice.metodoPago || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Total</p>
+                    <p className="text-white font-bold">{Number(selectedInvoice.total).toFixed(2)}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <p className="text-xs text-slate-400">Subtotal</p>
+                    <p className="text-white">{Number(selectedInvoice.subtotal).toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Impuestos</p>
+                    <p className="text-white">{Number(selectedInvoice.impuestos).toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Pagado</p>
+                    <p className="text-white">{Number(selectedInvoice.montoPagado).toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Saldo pendiente</p>
+                    <p className="text-white font-bold">{(Number(selectedInvoice.total) - Number(selectedInvoice.montoPagado)).toFixed(2)}</p>
+                  </div>
+                </div>
+
+                <h4 className="text-lg font-semibold text-white mb-3">Artículos</h4>
+                <div className="overflow-x-auto mb-6">
+                  <table className="min-w-full text-left text-sm">
+                    <thead className="text-slate-400 border-b border-slate-800">
+                      <tr>
+                        <th className="p-2">Descripción</th>
+                        <th className="p-2">Cantidad</th>
+                        <th className="p-2">Precio Unitario</th>
+                        <th className="p-2">Subtotal</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedInvoice.items?.map((item: any, index: number) => (
+                        <tr key={index} className="border-t border-slate-800">
+                          <td className="p-2">{item.descripcion}</td>
+                          <td className="p-2">{item.cantidad}</td>
+                          <td className="p-2">{Number(item.precioUnitario).toFixed(2)}</td>
+                          <td className="p-2">{Number(item.subtotal || item.cantidad * item.precioUnitario).toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {selectedInvoice.ocId && (
+                  <div className="mb-6">
+                    <p className="text-xs text-slate-400">Orden de compra relacionada</p>
+                    <p className="text-white">{selectedInvoice.ocId}</p>
                   </div>
                 )}
               </div>
