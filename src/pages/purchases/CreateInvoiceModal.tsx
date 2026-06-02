@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "../../core/api/api";
+import InsumoSearchModal from "./InsumoSearchModal";
 
 interface Props {
   open: boolean;
@@ -42,6 +43,8 @@ export default function CreateInvoiceModal({ open, onClose, onCreated, suppliers
   const [error, setError] = useState("");
   const [insumoSearchResults, setInsumoSearchResults] = useState<Insumo[]>([]);
   const [searchIndex, setSearchIndex] = useState<number | null>(null);
+  const [insumoSearchModalOpen, setInsumoSearchModalOpen] = useState(false);
+  const [activeItemIndex, setActiveItemIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -96,6 +99,17 @@ export default function CreateInvoiceModal({ open, onClose, onCreated, suppliers
     setItems(newItems);
     setInsumoSearchResults([]);
     setSearchIndex(null);
+  }
+
+  function openInsumoSearchModal(index: number) {
+    setActiveItemIndex(index);
+    setInsumoSearchModalOpen(true);
+  }
+
+  function handleInsumoSelect(insumo: Insumo) {
+    if (activeItemIndex !== null) {
+      selectInsumo(insumo, activeItemIndex);
+    }
   }
 
   function addItem() {
@@ -381,32 +395,24 @@ export default function CreateInvoiceModal({ open, onClose, onCreated, suppliers
                           className="w-20 rounded border border-slate-700 bg-slate-700 p-1 text-white text-xs"
                         />
                       </td>
-                      <td className="p-2 relative">
-                        <input
-                          type="text"
-                          value={item.nombre}
-                          onChange={(e) => {
-                            updateItem(index, "nombre", e.target.value);
-                            searchInsumos(e.target.value, index);
-                          }}
-                          onBlur={() => { setTimeout(() => { setInsumoSearchResults([]); setSearchIndex(null); }, 200); }}
-                          placeholder="Buscar insumo..."
-                          className="w-48 rounded border border-slate-700 bg-slate-700 p-1 text-white text-xs outline-none focus:border-blue-500"
-                        />
-                        {searchIndex === index && insumoSearchResults.length > 0 && (
-                          <div className="absolute z-10 w-48 mt-1 bg-slate-800 border border-slate-700 rounded shadow-lg max-h-40 overflow-y-auto">
-                            {insumoSearchResults.map((insumo) => (
-                              <div
-                                key={insumo.id}
-                                onClick={() => selectInsumo(insumo, index)}
-                                className="p-2 hover:bg-slate-700 cursor-pointer text-white text-xs"
-                              >
-                                <div className="font-medium">{insumo.nombre}</div>
-                                <div className="text-slate-400">{insumo.codigo} - {insumo.presentacion}</div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                      <td className="p-2">
+                        <div className="flex gap-1">
+                          <input
+                            type="text"
+                            value={item.nombre}
+                            readOnly
+                            placeholder="Seleccionar insumo..."
+                            className="flex-1 rounded border border-slate-700 bg-slate-700 p-1 text-white text-xs"
+                            onClick={() => openInsumoSearchModal(index)}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => openInsumoSearchModal(index)}
+                            className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700"
+                          >
+                            🔍
+                          </button>
+                        </div>
                       </td>
                       <td className="p-2">
                         <input
@@ -501,6 +507,12 @@ export default function CreateInvoiceModal({ open, onClose, onCreated, suppliers
           ESC para cerrar
         </div>
       </div>
+
+      <InsumoSearchModal
+        open={insumoSearchModalOpen}
+        onClose={() => setInsumoSearchModalOpen(false)}
+        onSelect={handleInsumoSelect}
+      />
     </div>
   );
 }
