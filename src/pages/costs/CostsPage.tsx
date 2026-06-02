@@ -9,6 +9,7 @@ interface Insumo {
   codigo: string;
   nombre: string;
   descripcion: string;
+  familia: string;
   presentacion: string;
   unidadMedida: string;
   costoUnitario: number;
@@ -85,15 +86,16 @@ export default function CostsPage() {
   const [insumoModalOpen, setInsumoModalOpen] = useState(false);
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
   const [viewInsumoModalOpen, setViewInsumoModalOpen] = useState(false);
-  const [physicalCountModalOpen, setPhysicalCountModalOpen] = useState(false);
+  const [physicalCountConfigOpen, setPhysicalCountConfigOpen] = useState(false);
+  const [physicalCountSessionOpen, setPhysicalCountSessionOpen] = useState(false);
   const [selectedInsumo, setSelectedInsumo] = useState<Insumo | null>(null);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
-  const [physicalCountData, setPhysicalCountData] = useState({
+  const [physicalCountConfig, setPhysicalCountConfig] = useState({
     fecha: new Date().toISOString().split('T')[0],
-    insumoId: "",
-    existenciaFisica: 0,
-    motivo: "",
+    almacen: "",
+    responsable: "",
   });
+  const [physicalCountItems, setPhysicalCountItems] = useState<any[]>([]);
 
   useEffect(() => {
     loadSuppliers();
@@ -179,18 +181,66 @@ export default function CostsPage() {
     }
   }
 
-  async function createPhysicalCount() {
+  async function startPhysicalCountSession() {
     try {
       setLoading(true);
       setError("");
-      await api.post("/costs/physical-counts", physicalCountData);
-      setPhysicalCountModalOpen(false);
-      setPhysicalCountData({
+      // Load all insumos for the selected almacen
+      const response = await api.get("/costs/insumos");
+      const allInsumos = Array.isArray(response.data) ? response.data : [];
+      
+      // Initialize physical count items with theoretical stock
+      const items = allInsumos.map((insumo: Insumo) => ({
+        insumoId: insumo.id,
+        codigo: insumo.codigo,
+        nombre: insumo.nombre,
+        familia: insumo.familia,
+        unidadMedida: insumo.unidadMedida,
+        existenciaTeorica: insumo.stockActual,
+        conteoFisico: "",
+        diferencia: 0,
+      }));
+      
+      setPhysicalCountItems(items);
+      setPhysicalCountConfigOpen(false);
+      setPhysicalCountSessionOpen(true);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible iniciar el conteo físico");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function savePhysicalCountSession() {
+    try {
+      setLoading(true);
+      setError("");
+      
+      // Only save items with physical count values
+      const itemsToSave = physicalCountItems.filter(item => item.conteoFisico !== "");
+      
+      if (itemsToSave.length === 0) {
+        setError("No hay insumos contados");
+        return;
+      }
+      
+      // Create physical count records for each counted item
+      for (const item of itemsToSave) {
+        await api.post("/costs/physical-counts", {
+          fecha: physicalCountConfig.fecha,
+          insumoId: item.insumoId,
+          existenciaFisica: Number(item.conteoFisico),
+          motivo: `Conteo: ${physicalCountConfig.almacen} - ${physicalCountConfig.responsable}`,
+        });
+      }
+      
+      setPhysicalCountSessionOpen(false);
+      setPhysicalCountConfig({
         fecha: new Date().toISOString().split('T')[0],
-        insumoId: "",
-        existenciaFisica: 0,
-        motivo: "",
+        almacen: "",
+        responsable: "",
       });
+      setPhysicalCountItems([]);
       loadPhysicalCounts();
       loadInsumos();
     } catch (err: any) {
@@ -198,6 +248,15 @@ export default function CostsPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function updatePhysicalCountItem(index: number, conteoFisico: string) {
+    const newItems = [...physicalCountItems];
+    const item = newItems[index];
+    item.conteoFisico = conteoFisico;
+    const fisico = Number(conteoFisico) || 0;
+    item.diferencia = item.existenciaTeorica - fisico;
+    setPhysicalCountItems(newItems);
   }
 
   async function loadJustificables() {
@@ -538,7 +597,7 @@ export default function CostsPage() {
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xl font-semibold">Conteo Físico</h3>
                     <button
-                      onClick={() => setPhysicalCountModalOpen(true)}
+                      onClick={() => setPhysicalCountConfigOpen(true)}
                       className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
                     >
                       + Nuevo Conteo
@@ -859,68 +918,151 @@ export default function CostsPage() {
           </div>
         )}
 
-        {/* Modal de Conteo Físico */}
-        {physicalCountModalOpen && (
+        {/* Modal de Configuración de Conteo Físico */}
+        {physicalCountConfigOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
             <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-6">
-              <h3 className="text-xl font-bold text-white mb-4">Nuevo Conteo Físico</h3>
+              <h3 className="text-xl font-bold text-white mb-4">Configurar Conteo Físico</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">Fecha</label>
+                  <label className="block text-sm text-slate-400 mb-1">Fecha y Hora</label>
                   <input
-                    type="date"
-                    value={physicalCountData.fecha}
-                    onChange={(e) => setPhysicalCountData({ ...physicalCountData, fecha: e.target.value })}
+                    type="datetime-local"
+                    value={physicalCountConfig.fecha}
+                    onChange={(e) => setPhysicalCountConfig({ ...physicalCountConfig, fecha: e.target.value })}
                     className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">Insumo</label>
+                  <label className="block text-sm text-slate-400 mb-1">Almacén/Sucursal</label>
                   <select
-                    value={physicalCountData.insumoId}
-                    onChange={(e) => setPhysicalCountData({ ...physicalCountData, insumoId: e.target.value })}
+                    value={physicalCountConfig.almacen}
+                    onChange={(e) => setPhysicalCountConfig({ ...physicalCountConfig, almacen: e.target.value })}
                     className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
                   >
-                    <option value="">Seleccionar insumo</option>
-                    {insumos.map((i) => (
-                      <option key={i.id} value={i.id}>{i.nombre}</option>
-                    ))}
+                    <option value="">Seleccionar almacén</option>
+                    <option value="principal">Almacén Principal</option>
+                    <option value="sucursal1">Sucursal 1</option>
+                    <option value="sucursal2">Sucursal 2</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">Existencia Física</label>
+                  <label className="block text-sm text-slate-400 mb-1">Responsable</label>
                   <input
-                    type="number"
-                    value={physicalCountData.existenciaFisica}
-                    onChange={(e) => setPhysicalCountData({ ...physicalCountData, existenciaFisica: Number(e.target.value) })}
-                    step="0.01"
+                    type="text"
+                    value={physicalCountConfig.responsable}
+                    onChange={(e) => setPhysicalCountConfig({ ...physicalCountConfig, responsable: e.target.value })}
+                    placeholder="Nombre del responsable"
                     className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-slate-400 mb-1">Motivo (opcional)</label>
-                  <textarea
-                    value={physicalCountData.motivo}
-                    onChange={(e) => setPhysicalCountData({ ...physicalCountData, motivo: e.target.value })}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
-                    rows={2}
                   />
                 </div>
               </div>
               {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
               <div className="flex justify-end gap-3 mt-6">
                 <button
-                  onClick={() => { setPhysicalCountModalOpen(false); setError(""); }}
+                  onClick={() => { setPhysicalCountConfigOpen(false); setError(""); }}
                   className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
                 >
                   Cancelar
                 </button>
                 <button
-                  onClick={createPhysicalCount}
+                  onClick={startPhysicalCountSession}
                   disabled={loading}
                   className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-40"
                 >
-                  {loading ? "Guardando..." : "Guardar"}
+                  {loading ? "Cargando..." : "Iniciar Conteo"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Sesión de Conteo Físico */}
+        {physicalCountSessionOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-6xl max-h-[90vh] flex flex-col rounded-xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden">
+              <div className="flex-shrink-0 p-6 border-b border-slate-800">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">Conteo Físico</h3>
+                    <p className="text-sm text-slate-400">
+                      {physicalCountConfig.almacen} - {physicalCountConfig.responsable}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setPhysicalCountSessionOpen(false)}
+                    className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6">
+                {error && (
+                  <div className="mb-4 rounded-xl border border-red-700 bg-red-900/30 p-4 text-red-300">
+                    {error}
+                  </div>
+                )}
+
+                <div className="overflow-x-auto">
+                  <table className="w-full table-fixed text-sm">
+                    <thead className="text-slate-400 border-b border-slate-800">
+                      <tr>
+                        <th className="p-2 w-16">Código</th>
+                        <th className="p-2">Nombre</th>
+                        <th className="p-2 w-20">Familia</th>
+                        <th className="p-2 w-16">Unidad</th>
+                        <th className="p-2 w-20 text-right">Teórica</th>
+                        <th className="p-2 w-20">Físico</th>
+                        <th className="p-2 w-20 text-right">Diferencia</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {physicalCountItems.map((item, index) => (
+                        <tr key={item.insumoId} className="border-t border-slate-800">
+                          <td className="p-2 text-xs">{item.codigo}</td>
+                          <td className="p-2">{item.nombre}</td>
+                          <td className="p-2 text-xs">{item.familia || '-'}</td>
+                          <td className="p-2 text-xs">{item.unidadMedida}</td>
+                          <td className="p-2 text-right">{item.existenciaTeorica.toFixed(2)}</td>
+                          <td className="p-2">
+                            <input
+                              type="number"
+                              value={item.conteoFisico}
+                              onChange={(e) => updatePhysicalCountItem(index, e.target.value)}
+                              step="0.01"
+                              placeholder="0"
+                              className="w-full rounded border border-slate-700 bg-slate-800 p-1 text-white text-xs outline-none focus:border-blue-500"
+                            />
+                          </td>
+                          <td className={`p-2 text-right text-xs ${
+                            item.diferencia === 0 ? 'text-green-400' :
+                            Math.abs(item.diferencia) < 5 ? 'text-yellow-400' :
+                            'text-red-400'
+                          }`}>
+                            {item.conteoFisico !== "" ? item.diferencia.toFixed(2) : '-'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="flex-shrink-0 p-4 border-t border-slate-800 flex justify-end gap-3">
+                <button
+                  onClick={() => setPhysicalCountSessionOpen(false)}
+                  className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={savePhysicalCountSession}
+                  disabled={loading}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-40"
+                >
+                  {loading ? "Guardando..." : "Guardar Conteo"}
                 </button>
               </div>
             </div>
