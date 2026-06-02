@@ -56,6 +56,7 @@ export default function PurchasesPage() {
   const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [viewOrderModalOpen, setViewOrderModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<Purchase | null>(null);
   const [cancelMotivo, setCancelMotivo] = useState("");
@@ -196,6 +197,11 @@ export default function PurchasesPage() {
   function handlePayment(invoice: Purchase) {
     setSelectedInvoice(invoice);
     setPaymentModalOpen(true);
+  }
+
+  function handleViewOrder(order: PurchaseOrder) {
+    setSelectedOrder(order);
+    setViewOrderModalOpen(true);
   }
 
   function handleReceiveOrder(order: PurchaseOrder) {
@@ -359,7 +365,7 @@ export default function PurchasesPage() {
                           </td>
                           <td className="p-2">
                             <div className="flex gap-2">
-                              <button className="rounded bg-slate-700 px-2 py-1 text-xs text-white hover:bg-slate-600">
+                              <button className="rounded bg-slate-700 px-2 py-1 text-xs text-white hover:bg-slate-600" onClick={() => handleViewOrder(order)}>
                                 Ver
                               </button>
                               {order.status === "BORRADOR" && (
@@ -405,7 +411,7 @@ export default function PurchasesPage() {
                         <p><span className="text-slate-500">Total:</span> {Number(order.total).toFixed(2)}</p>
                       </div>
                       <div className="flex gap-2">
-                        <button className="flex-1 rounded bg-slate-700 px-2 py-1 text-xs text-white hover:bg-slate-600">
+                        <button className="flex-1 rounded bg-slate-700 px-2 py-1 text-xs text-white hover:bg-slate-600" onClick={() => handleViewOrder(order)}>
                           Ver
                         </button>
                         {order.status === "BORRADOR" && (
@@ -716,6 +722,108 @@ export default function PurchasesPage() {
                 >
                   Registrar Pago
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Detalle de OC */}
+        {viewOrderModalOpen && selectedOrder && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-4xl max-h-[90vh] flex flex-col rounded-xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden">
+              <div className="flex-shrink-0 p-6 border-b border-slate-800">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">{selectedOrder.numero}</h3>
+                    <p className="text-sm text-slate-400">{getSupplierName(selectedOrder.supplierId)}</p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className={`rounded-full px-3 py-1 text-sm ${getStatusColor(selectedOrder.status)}`}>
+                      {getStatusLabel(selectedOrder.status)}
+                    </span>
+                    <button
+                      onClick={() => { setViewOrderModalOpen(false); setSelectedOrder(null); }}
+                      className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700"
+                    >
+                      Cerrar
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div>
+                    <p className="text-xs text-slate-400">Fecha</p>
+                    <p className="text-white">{selectedOrder.fecha}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Fecha entrega esperada</p>
+                    <p className="text-white">{selectedOrder.fechaEntregaEsperada || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Subtotal</p>
+                    <p className="text-white">{Number(selectedOrder.subtotal).toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Total</p>
+                    <p className="text-white font-bold">{Number(selectedOrder.total).toFixed(2)}</p>
+                  </div>
+                </div>
+
+                {selectedOrder.notas && (
+                  <div className="mb-6">
+                    <p className="text-xs text-slate-400 mb-1">Notas</p>
+                    <p className="text-white">{selectedOrder.notas}</p>
+                  </div>
+                )}
+
+                <h4 className="text-lg font-semibold text-white mb-3">Artículos</h4>
+                <div className="overflow-x-auto mb-6">
+                  <table className="min-w-full text-left text-sm">
+                    <thead className="text-slate-400 border-b border-slate-800">
+                      <tr>
+                        <th className="p-2">Descripción</th>
+                        <th className="p-2">Cantidad</th>
+                        <th className="p-2">Precio Unitario</th>
+                        <th className="p-2">Subtotal</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedOrder.items?.map((item: any, index: number) => (
+                        <tr key={index} className="border-t border-slate-800">
+                          <td className="p-2">{item.descripcion}</td>
+                          <td className="p-2">{item.cantidad}</td>
+                          <td className="p-2">{Number(item.precioUnitario).toFixed(2)}</td>
+                          <td className="p-2">{Number(item.subtotal || item.cantidad * item.precioUnitario).toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {selectedOrder.statusHistory && selectedOrder.statusHistory.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-white mb-3">Historial de Cambios</h4>
+                    <div className="space-y-2">
+                      {selectedOrder.statusHistory.map((entry: any, index: number) => (
+                        <div key={index} className="p-3 rounded-lg bg-slate-800">
+                          <div className="flex justify-between items-center">
+                            <span className={`text-sm px-2 py-1 rounded ${getStatusColor(entry.status)}`}>
+                              {getStatusLabel(entry.status)}
+                            </span>
+                            <span className="text-xs text-slate-400">
+                              {new Date(entry.fecha).toLocaleString()}
+                            </span>
+                          </div>
+                          {entry.motivo && (
+                            <p className="text-sm text-slate-300 mt-2">{entry.motivo}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
