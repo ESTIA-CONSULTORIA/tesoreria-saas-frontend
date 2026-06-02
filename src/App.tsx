@@ -33,16 +33,13 @@ import Monitoreo from "./pages/soporte/Monitoreo";
 import ConfiguracionGlobal from "./pages/soporte/ConfiguracionGlobal";
 
 function App() {
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // Si es móvil y el usuario tiene rol permitido, mostrar MobileAnalyticsApp

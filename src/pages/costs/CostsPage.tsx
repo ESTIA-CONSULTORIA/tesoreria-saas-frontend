@@ -70,6 +70,26 @@ interface Supplier {
   nombre: string;
 }
 
+interface Almacen {
+  id: string;
+  nombre: string;
+  codigo: string;
+  descripcion: string;
+  sucursalId: string;
+  tipo: string;
+  responsable: string;
+  isActive: boolean;
+}
+
+interface FamiliaInsumo {
+  id: string;
+  nombre: string;
+  prefijo: string;
+  descripcion: string;
+  color: string;
+  isActive: boolean;
+}
+
 export default function CostsPage() {
   const [activeTab, setActiveTab] = useState("insumos");
   const [insumos, setInsumos] = useState<Insumo[]>([]);
@@ -80,16 +100,22 @@ export default function CostsPage() {
   const [justifiableTotals, setJustifiableTotals] = useState<any>(null);
   const [costOfSales, setCostOfSales] = useState<any>(null);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [almacenes, setAlmacenes] = useState<Almacen[]>([]);
+  const [familias, setFamilias] = useState<FamiliaInsumo[]>([]);
   const [periodo, setPeriodo] = useState(new Date().toISOString().slice(0, 7));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [insumoModalOpen, setInsumoModalOpen] = useState(false);
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
   const [viewInsumoModalOpen, setViewInsumoModalOpen] = useState(false);
+  const [almacenModalOpen, setAlmacenModalOpen] = useState(false);
+  const [familiaModalOpen, setFamiliaModalOpen] = useState(false);
   const [physicalCountConfigOpen, setPhysicalCountConfigOpen] = useState(false);
   const [physicalCountSessionOpen, setPhysicalCountSessionOpen] = useState(false);
   const [selectedInsumo, setSelectedInsumo] = useState<Insumo | null>(null);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [selectedAlmacen, setSelectedAlmacen] = useState<Almacen | null>(null);
+  const [selectedFamilia, setSelectedFamilia] = useState<FamiliaInsumo | null>(null);
   const [physicalCountConfig, setPhysicalCountConfig] = useState({
     fecha: new Date().toISOString().split('T')[0],
     almacen: "",
@@ -99,6 +125,8 @@ export default function CostsPage() {
 
   useEffect(() => {
     loadSuppliers();
+    loadAlmacenes();
+    loadFamilias();
   }, []);
 
   useEffect(() => {
@@ -112,6 +140,8 @@ export default function CostsPage() {
       loadCostOfSales();
       loadJustificables();
     }
+    if (activeTab === "almacenes") loadAlmacenes();
+    if (activeTab === "familias") loadFamilias();
   }, [activeTab, periodo]);
 
   async function loadSuppliers() {
@@ -120,6 +150,24 @@ export default function CostsPage() {
       setSuppliers(Array.isArray(response.data) ? response.data : []);
     } catch {
       setSuppliers([]);
+    }
+  }
+
+  async function loadAlmacenes() {
+    try {
+      const response = await api.get("/costs/almacenes");
+      setAlmacenes(Array.isArray(response.data) ? response.data : []);
+    } catch {
+      setAlmacenes([]);
+    }
+  }
+
+  async function loadFamilias() {
+    try {
+      const response = await api.get("/costs/familias");
+      setFamilias(Array.isArray(response.data) ? response.data : []);
+    } catch {
+      setFamilias([]);
     }
   }
 
@@ -259,6 +307,96 @@ export default function CostsPage() {
     setPhysicalCountItems(newItems);
   }
 
+  // Almacenes CRUD
+  async function createAlmacen(data: any) {
+    try {
+      setLoading(true);
+      setError("");
+      await api.post("/costs/almacenes", data);
+      setAlmacenModalOpen(false);
+      setSelectedAlmacen(null);
+      loadAlmacenes();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible guardar el almacén");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function updateAlmacen(id: string, data: any) {
+    try {
+      setLoading(true);
+      setError("");
+      await api.put(`/costs/almacenes/${id}`, data);
+      setAlmacenModalOpen(false);
+      setSelectedAlmacen(null);
+      loadAlmacenes();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible actualizar el almacén");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function deleteAlmacen(id: string) {
+    if (!confirm("¿Estás seguro de eliminar este almacén?")) return;
+    try {
+      setLoading(true);
+      setError("");
+      await api.delete(`/costs/almacenes/${id}`);
+      loadAlmacenes();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible eliminar el almacén");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Familias CRUD
+  async function createFamilia(data: any) {
+    try {
+      setLoading(true);
+      setError("");
+      await api.post("/costs/familias", data);
+      setFamiliaModalOpen(false);
+      setSelectedFamilia(null);
+      loadFamilias();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible guardar la familia");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function updateFamilia(id: string, data: any) {
+    try {
+      setLoading(true);
+      setError("");
+      await api.put(`/costs/familias/${id}`, data);
+      setFamiliaModalOpen(false);
+      setSelectedFamilia(null);
+      loadFamilias();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible actualizar la familia");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function deleteFamilia(id: string) {
+    if (!confirm("¿Estás seguro de eliminar esta familia?")) return;
+    try {
+      setLoading(true);
+      setError("");
+      await api.delete(`/costs/familias/${id}`);
+      loadFamilias();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible eliminar la familia");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function loadJustificables() {
     try {
       const [justificablesRes, totalsRes] = await Promise.all([
@@ -347,6 +485,26 @@ export default function CostsPage() {
             }`}
           >
             Inventario
+          </button>
+          <button
+            onClick={() => setActiveTab("almacenes")}
+            className={`px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
+              activeTab === "almacenes"
+                ? "border-b-2 border-blue-500 text-white"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            Almacenes
+          </button>
+          <button
+            onClick={() => setActiveTab("familias")}
+            className={`px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
+              activeTab === "familias"
+                ? "border-b-2 border-blue-500 text-white"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            Familias
           </button>
           <button
             onClick={() => setActiveTab("costo-venta")}
@@ -653,7 +811,192 @@ export default function CostsPage() {
               </div>
             )}
 
-            {/* TAB 4: Costo de Venta */}
+            {/* TAB 4: Almacenes */}
+            {activeTab === "almacenes" && (
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-semibold">Almacenes</h3>
+                  <button
+                    onClick={() => { setSelectedAlmacen(null); setAlmacenModalOpen(true); }}
+                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  >
+                    + Nuevo Almacén
+                  </button>
+                </div>
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="min-w-full text-left text-sm">
+                    <thead className="text-slate-400">
+                      <tr>
+                        <th className="p-2">Código</th>
+                        <th className="p-2">Nombre</th>
+                        <th className="p-2">Tipo</th>
+                        <th className="p-2">Responsable</th>
+                        <th className="p-2">Estado</th>
+                        <th className="p-2">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {almacenes.map((alm) => (
+                        <tr key={alm.id} className="border-t border-slate-800">
+                          <td className="p-2">{alm.codigo}</td>
+                          <td className="p-2 font-medium">{alm.nombre}</td>
+                          <td className="p-2">{alm.tipo}</td>
+                          <td className="p-2">{alm.responsable || '-'}</td>
+                          <td className="p-2">
+                            <span className={`px-2 py-1 rounded text-xs ${alm.isActive ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}`}>
+                              {alm.isActive ? 'Activo' : 'Inactivo'}
+                            </span>
+                          </td>
+                          <td className="p-2">
+                            <button
+                              onClick={() => { setSelectedAlmacen(alm); setAlmacenModalOpen(true); }}
+                              className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700 mr-2"
+                            >
+                              Editar
+                            </button>
+                            <button
+                              onClick={() => deleteAlmacen(alm.id)}
+                              className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700"
+                            >
+                              Eliminar
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="md:hidden space-y-3">
+                  {almacenes.map((alm) => (
+                    <div key={alm.id} className="rounded-lg border border-slate-800 bg-slate-800 p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <p className="font-semibold text-white">{alm.nombre}</p>
+                        <span className={`px-2 py-1 rounded text-xs ${alm.isActive ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}`}>
+                          {alm.isActive ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-400 space-y-1 mb-3">
+                        <p><span className="text-slate-500">Código:</span> {alm.codigo}</p>
+                        <p><span className="text-slate-500">Tipo:</span> {alm.tipo}</p>
+                        <p><span className="text-slate-500">Responsable:</span> {alm.responsable || '-'}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => { setSelectedAlmacen(alm); setAlmacenModalOpen(true); }}
+                          className="flex-1 rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => deleteAlmacen(alm.id)}
+                          className="flex-1 rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 5: Familias */}
+            {activeTab === "familias" && (
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-semibold">Familias de Insumos</h3>
+                  <button
+                    onClick={() => { setSelectedFamilia(null); setFamiliaModalOpen(true); }}
+                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  >
+                    + Nueva Familia
+                  </button>
+                </div>
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="min-w-full text-left text-sm">
+                    <thead className="text-slate-400">
+                      <tr>
+                        <th className="p-2">Prefijo</th>
+                        <th className="p-2">Nombre</th>
+                        <th className="p-2">Descripción</th>
+                        <th className="p-2">Color</th>
+                        <th className="p-2">Estado</th>
+                        <th className="p-2">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {familias.map((fam) => (
+                        <tr key={fam.id} className="border-t border-slate-800">
+                          <td className="p-2 font-mono">{fam.prefijo}</td>
+                          <td className="p-2 font-medium">{fam.nombre}</td>
+                          <td className="p-2">{fam.descripcion || '-'}</td>
+                          <td className="p-2">
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 rounded" style={{ backgroundColor: fam.color }}></div>
+                              <span className="text-xs">{fam.color}</span>
+                            </div>
+                          </td>
+                          <td className="p-2">
+                            <span className={`px-2 py-1 rounded text-xs ${fam.isActive ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}`}>
+                              {fam.isActive ? 'Activo' : 'Inactivo'}
+                            </span>
+                          </td>
+                          <td className="p-2">
+                            <button
+                              onClick={() => { setSelectedFamilia(fam); setFamiliaModalOpen(true); }}
+                              className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700 mr-2"
+                            >
+                              Editar
+                            </button>
+                            <button
+                              onClick={() => deleteFamilia(fam.id)}
+                              className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700"
+                            >
+                              Eliminar
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="md:hidden space-y-3">
+                  {familias.map((fam) => (
+                    <div key={fam.id} className="rounded-lg border border-slate-800 bg-slate-800 p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded" style={{ backgroundColor: fam.color }}></div>
+                          <p className="font-semibold text-white">{fam.nombre}</p>
+                        </div>
+                        <span className={`px-2 py-1 rounded text-xs ${fam.isActive ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}`}>
+                          {fam.isActive ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-400 space-y-1 mb-3">
+                        <p><span className="text-slate-500">Prefijo:</span> <span className="font-mono">{fam.prefijo}</span></p>
+                        <p><span className="text-slate-500">Descripción:</span> {fam.descripcion || '-'}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => { setSelectedFamilia(fam); setFamiliaModalOpen(true); }}
+                          className="flex-1 rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => deleteFamilia(fam.id)}
+                          className="flex-1 rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 6: Costo de Venta */}
             {activeTab === "costo-venta" && (
               <div>
                 <div className="flex justify-between items-center mb-4">
@@ -941,9 +1284,9 @@ export default function CostsPage() {
                     className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
                   >
                     <option value="">Seleccionar almacén</option>
-                    <option value="principal">Almacén Principal</option>
-                    <option value="sucursal1">Sucursal 1</option>
-                    <option value="sucursal2">Sucursal 2</option>
+                    {almacenes.map((alm) => (
+                      <option key={alm.id} value={alm.id}>{alm.nombre} ({alm.codigo})</option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -1063,6 +1406,205 @@ export default function CostsPage() {
                   className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-40"
                 >
                   {loading ? "Guardando..." : "Guardar Conteo"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Almacen */}
+        {almacenModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-6">
+              <h3 className="text-xl font-bold text-white mb-4">
+                {selectedAlmacen ? 'Editar Almacén' : 'Nuevo Almacén'}
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Código</label>
+                  <input
+                    type="text"
+                    defaultValue={selectedAlmacen?.codigo || ''}
+                    id="almacen-codigo"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Nombre</label>
+                  <input
+                    type="text"
+                    defaultValue={selectedAlmacen?.nombre || ''}
+                    id="almacen-nombre"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Descripción</label>
+                  <textarea
+                    defaultValue={selectedAlmacen?.descripcion || ''}
+                    id="almacen-descripcion"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                    rows={2}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Tipo</label>
+                  <select
+                    defaultValue={selectedAlmacen?.tipo || 'GENERAL'}
+                    id="almacen-tipo"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                  >
+                    <option value="GENERAL">General</option>
+                    <option value="REFRIGERADO">Refrigerado</option>
+                    <option value="SECO">Seco</option>
+                    <option value="CONGELADO">Congelado</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Responsable</label>
+                  <input
+                    type="text"
+                    defaultValue={selectedAlmacen?.responsable || ''}
+                    id="almacen-responsable"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="flex items-center gap-2 text-sm text-slate-400">
+                    <input
+                      type="checkbox"
+                      defaultChecked={selectedAlmacen?.isActive ?? true}
+                      id="almacen-isActive"
+                      className="rounded border-slate-700 bg-slate-800"
+                    />
+                    Activo
+                  </label>
+                </div>
+              </div>
+              {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => { setAlmacenModalOpen(false); setSelectedAlmacen(null); setError(""); }}
+                  className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    const codigo = (document.getElementById('almacen-codigo') as HTMLInputElement).value;
+                    const nombre = (document.getElementById('almacen-nombre') as HTMLInputElement).value;
+                    const descripcion = (document.getElementById('almacen-descripcion') as HTMLTextAreaElement).value;
+                    const tipo = (document.getElementById('almacen-tipo') as HTMLSelectElement).value;
+                    const responsable = (document.getElementById('almacen-responsable') as HTMLInputElement).value;
+                    const isActive = (document.getElementById('almacen-isActive') as HTMLInputElement).checked;
+                    const data = { codigo, nombre, descripcion, tipo, responsable, isActive };
+                    if (selectedAlmacen) {
+                      updateAlmacen(selectedAlmacen.id, data);
+                    } else {
+                      createAlmacen(data);
+                    }
+                  }}
+                  disabled={loading}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-40"
+                >
+                  {loading ? "Guardando..." : "Guardar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Familia */}
+        {familiaModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-6">
+              <h3 className="text-xl font-bold text-white mb-4">
+                {selectedFamilia ? 'Editar Familia' : 'Nueva Familia'}
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Prefijo (3-4 letras)</label>
+                  <input
+                    type="text"
+                    defaultValue={selectedFamilia?.prefijo || ''}
+                    id="familia-prefijo"
+                    maxLength={4}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500 uppercase"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Nombre</label>
+                  <input
+                    type="text"
+                    defaultValue={selectedFamilia?.nombre || ''}
+                    id="familia-nombre"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Descripción</label>
+                  <textarea
+                    defaultValue={selectedFamilia?.descripcion || ''}
+                    id="familia-descripcion"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                    rows={2}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Color</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      defaultValue={selectedFamilia?.color || '#64748B'}
+                      id="familia-color"
+                      className="w-12 h-10 rounded border border-slate-700 bg-slate-800"
+                    />
+                    <input
+                      type="text"
+                      defaultValue={selectedFamilia?.color || '#64748B'}
+                      id="familia-color-text"
+                      className="flex-1 rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="flex items-center gap-2 text-sm text-slate-400">
+                    <input
+                      type="checkbox"
+                      defaultChecked={selectedFamilia?.isActive ?? true}
+                      id="familia-isActive"
+                      className="rounded border-slate-700 bg-slate-800"
+                    />
+                    Activo
+                  </label>
+                </div>
+              </div>
+              {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => { setFamiliaModalOpen(false); setSelectedFamilia(null); setError(""); }}
+                  className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    const prefijo = (document.getElementById('familia-prefijo') as HTMLInputElement).value.toUpperCase();
+                    const nombre = (document.getElementById('familia-nombre') as HTMLInputElement).value;
+                    const descripcion = (document.getElementById('familia-descripcion') as HTMLTextAreaElement).value;
+                    const color = (document.getElementById('familia-color') as HTMLInputElement).value;
+                    const isActive = (document.getElementById('familia-isActive') as HTMLInputElement).checked;
+                    const data = { prefijo, nombre, descripcion, color, isActive };
+                    if (selectedFamilia) {
+                      updateFamilia(selectedFamilia.id, data);
+                    } else {
+                      createFamilia(data);
+                    }
+                  }}
+                  disabled={loading}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-40"
+                >
+                  {loading ? "Guardando..." : "Guardar"}
                 </button>
               </div>
             </div>

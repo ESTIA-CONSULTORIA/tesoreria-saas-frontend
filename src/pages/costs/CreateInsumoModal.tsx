@@ -9,19 +9,6 @@ interface Props {
   insumo?: any;
 }
 
-const FAMILIAS = [
-  { value: 'PROT', label: 'Proteínas (carnes, mariscos, huevo)' },
-  { value: 'SECO', label: 'Secos y abarrotes' },
-  { value: 'FYV', label: 'Frutas y verduras' },
-  { value: 'LACT', label: 'Lácteos' },
-  { value: 'BEB', label: 'Bebidas' },
-  { value: 'LIMP', label: 'Limpieza y sanitización' },
-  { value: 'DESC', label: 'Desechables y empaques' },
-  { value: 'ROPA', label: 'Uniformes y ropa' },
-  { value: 'CALZ', label: 'Calzado' },
-  { value: 'MISC', label: 'Misceláneos' },
-];
-
 const PRESENTACIONES = [
   'Kilogramo (kg)',
   'Gramo (g)',
@@ -40,11 +27,12 @@ const PRESENTACIONES = [
 ];
 
 export default function CreateInsumoModal({ open, onClose, onCreated, suppliers, insumo }: Props) {
+  const [familias, setFamilias] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     codigo: "",
     nombre: "",
     descripcion: "",
-    familia: "",
+    familiaId: "",
     presentacion: "",
     unidadMedida: "",
     presentacionCompra: "",
@@ -62,13 +50,26 @@ export default function CreateInsumoModal({ open, onClose, onCreated, suppliers,
   const [generatingCode, setGeneratingCode] = useState(false);
 
   useEffect(() => {
+    loadFamilias();
+  }, []);
+
+  async function loadFamilias() {
+    try {
+      const response = await api.get("/costs/familias");
+      setFamilias(Array.isArray(response.data) ? response.data : []);
+    } catch {
+      setFamilias([]);
+    }
+  }
+
+  useEffect(() => {
     if (open) {
       if (insumo) {
         setFormData({
           codigo: insumo.codigo || "",
           nombre: insumo.nombre || "",
           descripcion: insumo.descripcion || "",
-          familia: insumo.familia || "",
+          familiaId: insumo.familiaId || insumo.familia || "",
           presentacion: insumo.presentacion || "",
           unidadMedida: insumo.unidadMedida || "",
           presentacionCompra: insumo.presentacionCompra || "",
@@ -86,7 +87,7 @@ export default function CreateInsumoModal({ open, onClose, onCreated, suppliers,
           codigo: "",
           nombre: "",
           descripcion: "",
-          familia: "",
+          familiaId: "",
           presentacion: "",
           unidadMedida: "",
           presentacionCompra: "",
@@ -104,14 +105,14 @@ export default function CreateInsumoModal({ open, onClose, onCreated, suppliers,
   }, [open, insumo]);
 
   async function generateCode() {
-    if (!formData.familia) {
+    if (!formData.familiaId) {
       setError("Selecciona una familia primero");
       return;
     }
     try {
       setGeneratingCode(true);
       const response = await api.get("/costs/insumos/next-code", {
-        params: { familia: formData.familia },
+        params: { familiaId: formData.familiaId },
       });
       setFormData({ ...formData, codigo: response.data.codigo });
     } catch (err: any) {
@@ -176,14 +177,14 @@ export default function CreateInsumoModal({ open, onClose, onCreated, suppliers,
             <div>
               <label className="block text-sm text-slate-400 mb-1">Familia *</label>
               <select
-                value={formData.familia}
-                onChange={(e) => setFormData({ ...formData, familia: e.target.value })}
+                value={formData.familiaId}
+                onChange={(e) => setFormData({ ...formData, familiaId: e.target.value })}
                 required
                 className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
               >
                 <option value="">Seleccionar familia</option>
-                {FAMILIAS.map((f) => (
-                  <option key={f.value} value={f.value}>{f.label}</option>
+                {familias.map((f) => (
+                  <option key={f.id} value={f.id}>{f.nombre} ({f.prefijo})</option>
                 ))}
               </select>
             </div>
@@ -201,7 +202,7 @@ export default function CreateInsumoModal({ open, onClose, onCreated, suppliers,
                   <button
                     type="button"
                     onClick={generateCode}
-                    disabled={generatingCode || !formData.familia}
+                    disabled={generatingCode || !formData.familiaId}
                     className="rounded-lg bg-green-600 px-3 py-2 text-sm text-white hover:bg-green-700 disabled:opacity-40"
                   >
                     {generatingCode ? "..." : "Auto"}
