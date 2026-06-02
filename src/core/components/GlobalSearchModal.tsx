@@ -171,7 +171,11 @@ export default function GlobalSearchModal({ open, onClose }: Props) {
     }
   };
 
-  if (!open) return null;
+  if (!open) {
+    return (
+      <div className="fixed inset-0 pointer-events-none" />
+    );
+  }
 
   // Group results by type
   const groupedResults = results.reduce((acc, result) => {
