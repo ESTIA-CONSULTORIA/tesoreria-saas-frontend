@@ -55,6 +55,15 @@ interface PhysicalCount {
   motivo: string;
 }
 
+interface Justifiable {
+  id: string;
+  periodo: string;
+  categoria: string;
+  descripcion: string;
+  monto: number;
+  detalles: any;
+}
+
 interface Supplier {
   id: string;
   nombre: string;
@@ -66,6 +75,8 @@ export default function CostsPage() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [inventory, setInventory] = useState<Inventory[]>([]);
   const [physicalCounts, setPhysicalCounts] = useState<PhysicalCount[]>([]);
+  const [justificables, setJustificables] = useState<Justifiable[]>([]);
+  const [justifiableTotals, setJustifiableTotals] = useState<any>(null);
   const [costOfSales, setCostOfSales] = useState<any>(null);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [periodo, setPeriodo] = useState(new Date().toISOString().slice(0, 7));
@@ -95,7 +106,10 @@ export default function CostsPage() {
       loadInventory();
       loadPhysicalCounts();
     }
-    if (activeTab === "costo-venta") loadCostOfSales();
+    if (activeTab === "costo-venta") {
+      loadCostOfSales();
+      loadJustificables();
+    }
   }, [activeTab, periodo]);
 
   async function loadSuppliers() {
@@ -186,6 +200,21 @@ export default function CostsPage() {
     }
   }
 
+  async function loadJustificables() {
+    try {
+      const [justificablesRes, totalsRes] = await Promise.all([
+        api.get("/costs/justificables", { params: { periodo } }),
+        api.get("/costs/justificables/totals", { params: { periodo } }),
+      ]);
+      setJustificables(Array.isArray(justificablesRes.data) ? justificablesRes.data : []);
+      setJustifiableTotals(totalsRes.data);
+    } catch (err: any) {
+      console.error("Error loading justificables:", err);
+      setJustificables([]);
+      setJustifiableTotals(null);
+    }
+  }
+
   function getSupplierName(supplierId: string): string {
     const supplier = suppliers.find((s) => s.id === supplierId);
     return supplier?.nombre || supplierId;
@@ -209,6 +238,16 @@ export default function CostsPage() {
     return recipes.filter(recipe => 
       recipe.items?.some((item: any) => item.insumoId === insumoId)
     );
+  }
+
+  function getCategoriaLabel(categoria: string): string {
+    const labels: Record<string, string> = {
+      'ENERGETICOS': 'Energéticos',
+      'INSUMOS_SERVICIO': 'Insumos Servicio',
+      'CORTESIAS_DESCUENTOS': 'Cortesías/Descuentos',
+      'MERMAS_FALTANTES': 'Mermas/Faltantes',
+    };
+    return labels[categoria] || categoria;
   }
 
   return (
@@ -617,6 +656,70 @@ export default function CostsPage() {
                     </div>
                   </div>
                 )}
+
+                {/* Justificables Section */}
+                <div className="mt-8 border-t border-slate-800 pt-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-semibold">Justificables</h3>
+                  </div>
+                  {justifiableTotals && (
+                    <div className="mb-4 p-4 rounded-lg bg-slate-800">
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <div>
+                          <p className="text-xs text-slate-400">Energéticos</p>
+                          <p className="text-white">{Number(justifiableTotals.ENERGETICOS).toFixed(2)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400">Insumos Servicio</p>
+                          <p className="text-white">{Number(justifiableTotals.INSUMOS_SERVICIO).toFixed(2)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400">Cortesías/Descuentos</p>
+                          <p className="text-white">{Number(justifiableTotals.CORTESIAS_DESCUENTOS).toFixed(2)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400">Mermas/Faltantes</p>
+                          <p className="text-white">{Number(justifiableTotals.MERMAS_FALTANTES).toFixed(2)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400">Total Justificables</p>
+                          <p className="text-white font-bold">{Number(justifiableTotals.TOTAL).toFixed(2)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="min-w-full text-left text-sm">
+                      <thead className="text-slate-400">
+                        <tr>
+                          <th className="p-2">Categoría</th>
+                          <th className="p-2">Descripción</th>
+                          <th className="p-2">Monto</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {justificables.map((j) => (
+                          <tr key={j.id} className="border-t border-slate-800">
+                            <td className="p-2">{getCategoriaLabel(j.categoria)}</td>
+                            <td className="p-2">{j.descripcion || '-'}</td>
+                            <td className="p-2">{Number(j.monto).toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="md:hidden space-y-3">
+                    {justificables.map((j) => (
+                      <div key={j.id} className="rounded-lg border border-slate-800 bg-slate-800 p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <p className="font-semibold text-white">{getCategoriaLabel(j.categoria)}</p>
+                          <span className="text-white font-bold">{Number(j.monto).toFixed(2)}</span>
+                        </div>
+                        {j.descripcion && <p className="text-xs text-slate-400">{j.descripcion}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
           </div>
