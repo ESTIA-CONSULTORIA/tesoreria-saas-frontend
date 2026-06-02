@@ -45,6 +45,16 @@ interface Inventory {
   costoPromedio: number;
 }
 
+interface PhysicalCount {
+  id: string;
+  fecha: string;
+  insumoId: string;
+  existenciaTeorica: number;
+  existenciaFisica: number;
+  diferencia: number;
+  motivo: string;
+}
+
 interface Supplier {
   id: string;
   nombre: string;
@@ -55,6 +65,7 @@ export default function CostsPage() {
   const [insumos, setInsumos] = useState<Insumo[]>([]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [inventory, setInventory] = useState<Inventory[]>([]);
+  const [physicalCounts, setPhysicalCounts] = useState<PhysicalCount[]>([]);
   const [costOfSales, setCostOfSales] = useState<any>(null);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [periodo, setPeriodo] = useState(new Date().toISOString().slice(0, 7));
@@ -63,8 +74,15 @@ export default function CostsPage() {
   const [insumoModalOpen, setInsumoModalOpen] = useState(false);
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
   const [viewInsumoModalOpen, setViewInsumoModalOpen] = useState(false);
+  const [physicalCountModalOpen, setPhysicalCountModalOpen] = useState(false);
   const [selectedInsumo, setSelectedInsumo] = useState<Insumo | null>(null);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [physicalCountData, setPhysicalCountData] = useState({
+    fecha: new Date().toISOString().split('T')[0],
+    insumoId: "",
+    existenciaFisica: 0,
+    motivo: "",
+  });
 
   useEffect(() => {
     loadSuppliers();
@@ -73,7 +91,10 @@ export default function CostsPage() {
   useEffect(() => {
     if (activeTab === "insumos") loadInsumos();
     if (activeTab === "recetas") loadRecipes();
-    if (activeTab === "inventario") loadInventory();
+    if (activeTab === "inventario") {
+      loadInventory();
+      loadPhysicalCounts();
+    }
     if (activeTab === "costo-venta") loadCostOfSales();
   }, [activeTab, periodo]);
 
@@ -129,6 +150,37 @@ export default function CostsPage() {
       setCostOfSales(response.data);
     } catch (err: any) {
       setError(err.response?.data?.message || "No fue posible calcular costo de venta");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadPhysicalCounts() {
+    try {
+      const response = await api.get("/costs/physical-counts");
+      setPhysicalCounts(Array.isArray(response.data) ? response.data : []);
+    } catch (err: any) {
+      console.error("Error loading physical counts:", err);
+      setPhysicalCounts([]);
+    }
+  }
+
+  async function createPhysicalCount() {
+    try {
+      setLoading(true);
+      setError("");
+      await api.post("/costs/physical-counts", physicalCountData);
+      setPhysicalCountModalOpen(false);
+      setPhysicalCountData({
+        fecha: new Date().toISOString().split('T')[0],
+        insumoId: "",
+        existenciaFisica: 0,
+        motivo: "",
+      });
+      loadPhysicalCounts();
+      loadInsumos();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible guardar el conteo físico");
     } finally {
       setLoading(false);
     }
@@ -441,6 +493,65 @@ export default function CostsPage() {
                     </div>
                   ))}
                 </div>
+
+                {/* Conteo Físico Section */}
+                <div className="mt-8 border-t border-slate-800 pt-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-semibold">Conteo Físico</h3>
+                    <button
+                      onClick={() => setPhysicalCountModalOpen(true)}
+                      className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                    >
+                      + Nuevo Conteo
+                    </button>
+                  </div>
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="min-w-full text-left text-sm">
+                      <thead className="text-slate-400">
+                        <tr>
+                          <th className="p-2">Fecha</th>
+                          <th className="p-2">Insumo</th>
+                          <th className="p-2">Existencia Teórica</th>
+                          <th className="p-2">Existencia Física</th>
+                          <th className="p-2">Diferencia</th>
+                          <th className="p-2">Motivo</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {physicalCounts.map((pc) => (
+                          <tr key={pc.id} className="border-t border-slate-800">
+                            <td className="p-2">{new Date(pc.fecha).toLocaleDateString()}</td>
+                            <td className="p-2 font-medium">{getInsumoName(pc.insumoId)}</td>
+                            <td className="p-2">{Number(pc.existenciaTeorica).toFixed(2)}</td>
+                            <td className="p-2">{Number(pc.existenciaFisica).toFixed(2)}</td>
+                            <td className={`p-2 font-bold ${pc.diferencia < 0 ? 'text-red-400' : pc.diferencia > 0 ? 'text-green-400' : ''}`}>
+                              {pc.diferencia > 0 ? '+' : ''}{Number(pc.diferencia).toFixed(2)}
+                            </td>
+                            <td className="p-2">{pc.motivo || '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="md:hidden space-y-3">
+                    {physicalCounts.map((pc) => (
+                      <div key={pc.id} className="rounded-lg border border-slate-800 bg-slate-800 p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <p className="font-semibold text-white">{getInsumoName(pc.insumoId)}</p>
+                          <span className="text-xs text-slate-400">{new Date(pc.fecha).toLocaleDateString()}</span>
+                        </div>
+                        <div className="text-xs text-slate-400 space-y-1 mb-3">
+                          <p><span className="text-slate-500">Teórica:</span> {Number(pc.existenciaTeorica).toFixed(2)}</p>
+                          <p><span className="text-slate-500">Física:</span> {Number(pc.existenciaFisica).toFixed(2)}</p>
+                          <p><span className="text-slate-500">Diferencia:</span> <span className={`font-bold ${pc.diferencia < 0 ? 'text-red-400' : pc.diferencia > 0 ? 'text-green-400' : ''}`}>
+                            {pc.diferencia > 0 ? '+' : ''}{Number(pc.diferencia).toFixed(2)}
+                          </span></p>
+                          {pc.motivo && <p><span className="text-slate-500">Motivo:</span> {pc.motivo}</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -640,6 +751,74 @@ export default function CostsPage() {
                   <h4 className="text-lg font-semibold text-white mb-3">Historial de movimientos</h4>
                   <p className="text-slate-400 text-sm">El historial de entradas y salidas estará disponible en una próxima versión.</p>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Conteo Físico */}
+        {physicalCountModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-6">
+              <h3 className="text-xl font-bold text-white mb-4">Nuevo Conteo Físico</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Fecha</label>
+                  <input
+                    type="date"
+                    value={physicalCountData.fecha}
+                    onChange={(e) => setPhysicalCountData({ ...physicalCountData, fecha: e.target.value })}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Insumo</label>
+                  <select
+                    value={physicalCountData.insumoId}
+                    onChange={(e) => setPhysicalCountData({ ...physicalCountData, insumoId: e.target.value })}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                  >
+                    <option value="">Seleccionar insumo</option>
+                    {insumos.map((i) => (
+                      <option key={i.id} value={i.id}>{i.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Existencia Física</label>
+                  <input
+                    type="number"
+                    value={physicalCountData.existenciaFisica}
+                    onChange={(e) => setPhysicalCountData({ ...physicalCountData, existenciaFisica: Number(e.target.value) })}
+                    step="0.01"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Motivo (opcional)</label>
+                  <textarea
+                    value={physicalCountData.motivo}
+                    onChange={(e) => setPhysicalCountData({ ...physicalCountData, motivo: e.target.value })}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                    rows={2}
+                  />
+                </div>
+              </div>
+              {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => { setPhysicalCountModalOpen(false); setError(""); }}
+                  className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={createPhysicalCount}
+                  disabled={loading}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-40"
+                >
+                  {loading ? "Guardando..." : "Guardar"}
+                </button>
               </div>
             </div>
           </div>
