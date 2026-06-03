@@ -46,6 +46,22 @@ interface Sale {
   status: string;
 }
 
+interface PaymentMethod {
+  id: string;
+  tipo: "EFECTIVO" | "TARJETA" | "TRANSFERENCIA" | "CORTESIA";
+  monto: number;
+  // Tarjeta
+  tipoTarjeta?: "DEBITO" | "CREDITO";
+  ultimos4Digitos?: string;
+  folioVoucher?: string;
+  // Transferencia
+  claveRastreo?: string;
+  bancoOrigen?: string;
+  // Cortesía
+  motivo?: string;
+  autorizadoPor?: string;
+}
+
 export default function POSPage() {
   const [activeTab, setActiveTab] = useState<TabType>("terminal");
   const user = useAuthStore((state) => state.user);
@@ -60,12 +76,18 @@ export default function POSPage() {
   const [showSalesHistory, setShowSalesHistory] = useState(false);
   const [salesHistory, setSalesHistory] = useState<Sale[]>([]);
   const [salesFilter, setSalesFilter] = useState<string>("all");
-  const [paymentMethod, setPaymentMethod] = useState<string>("EFECTIVO");
-  const [amountReceived, setAmountReceived] = useState<string>("");
   const [showReceipt, setShowReceipt] = useState(false);
   const [currentSale, setCurrentSale] = useState<Sale | null>(null);
   const [showOpenShiftModal, setShowOpenShiftModal] = useState(false);
   const [initialFund, setInitialFund] = useState<string>("");
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [discountPercent, setDiscountPercent] = useState<string>("");
+  const [showDiscountModal, setShowDiscountModal] = useState(false);
+  const [showCourtesyModal, setShowCourtesyModal] = useState(false);
+  const [courtesyReason, setCourtesyReason] = useState("");
+  const [courtesyAuthorizedBy, setCourtesyAuthorizedBy] = useState("");
+  const [cardValidationError, setCardValidationError] = useState("");
 
   useEffect(() => {
     loadProducts();
@@ -218,9 +240,79 @@ export default function POSPage() {
     return getSubtotal() - getTotalDiscount() + getTaxes();
   }
 
+  function getTotalCovered() {
+    return paymentMethods.reduce((sum, pm) => sum + pm.monto, 0);
+  }
+
+  function getPending() {
+    return getTotal() - getTotalCovered();
+  }
+
   function getChange() {
-    const received = Number(amountReceived) || 0;
-    return received - getTotal();
+    const cashPayment = paymentMethods.find(pm => pm.tipo === "EFECTIVO");
+    if (!cashPayment) return 0;
+    return cashPayment.monto - getTotal();
+  }
+
+  function addPaymentMethod(tipo: "EFECTIVO" | "TARJETA" | "TRANSFERENCIA" | "CORTESIA") {
+    const newMethod: PaymentMethod = {
+      id: Date.now().toString(),
+      tipo,
+      monto: tipo === "CORTESIA" ? getTotal() : getPending(),
+    };
+    setPaymentMethods([...paymentMethods, newMethod]);
+  }
+
+  function updatePaymentMethod(id: string, field: string, value: any) {
+    setPaymentMethods(paymentMethods.map(pm => 
+      pm.id === id ? { ...pm, [field]: value } : pm
+    ));
+  }
+
+  function removePaymentMethod(id: string) {
+    setPaymentMethods(paymentMethods.filter(pm => pm.id !== id));
+  }
+
+  function applyGlobalDiscount() {
+    if (ticket.length > 0) {
+      const discount = Number(discountPercent);
+      setTicket(
+        ticket.map((item) => ({
+          ...item,
+          descuento: discount,
+          subtotal: item.cantidad * item.precioUnitario * (1 - discount / 100),
+        }))
+      );
+      setShowDiscountModal(false);
+      setDiscountPercent("");
+    }
+  }
+
+  function applyCourtesy() {
+    if (ticket.length > 0 && courtesyReason && courtesyAuthorizedBy) {
+      setTicket(
+        ticket.map((item) => ({
+          ...item,
+          descuento: 100,
+          subtotal: 0,
+        }))
+      );
+      setShowCourtesyModal(false);
+      setCourtesyReason("");
+      setCourtesyAuthorizedBy("");
+    }
+  }
+
+  function validateCardPayments(): boolean {
+    setCardValidationError("");
+    const cardPayments = paymentMethods.filter(pm => pm.tipo === "TARJETA");
+    for (const card of cardPayments) {
+      if (!card.ultimos4Digitos && !card.folioVoucher) {
+        setCardValidationError("Ingresa los últimos 4 dígitos o el folio del voucher");
+        return false;
+      }
+    }
+    return true;
   }
 
   async function processPayment() {
@@ -232,6 +324,13 @@ export default function POSPage() {
       alert("No hay turno abierto");
       return;
     }
+    if (getTotalCovered() < getTotal()) {
+      alert("El monto cubierto es insuficiente");
+      return;
+    }
+    if (!validateCardPayments()) {
+      return;
+    }
 
     try {
       const saleData = {
@@ -240,7 +339,7 @@ export default function POSPage() {
         descuento: getTotalDiscount(),
         impuestos: getTaxes(),
         total: getTotal(),
-        metodoPago: paymentMethod,
+        metodosPago: paymentMethods,
         cajero: "current-user-id",
         turnoId: shift.id,
         sucursalId: "default-branch-id",
@@ -249,16 +348,11 @@ export default function POSPage() {
       const response = await api.post("/pos/sales", saleData);
       const sale = response.data;
 
-      await api.put(`/pos/sales/${sale.id}/pay`, {
-        metodoPago: paymentMethod,
-        montoRecibido: Number(amountReceived) || getTotal(),
-        cambio: paymentMethod === "EFECTIVO" ? getChange() : 0,
-      });
-
       setCurrentSale(sale);
       setShowReceipt(true);
+      setShowPaymentModal(false);
       setTicket([]);
-      setAmountReceived("");
+      setPaymentMethods([]);
       loadSalesHistory();
     } catch (error) {
       console.error("Error processing payment:", error);
@@ -531,45 +625,6 @@ export default function POSPage() {
                   <span>TOTAL</span>
                   <span className="text-green-400">${getTotal().toFixed(2)}</span>
                 </div>
-                <button
-                  onClick={() => {
-                    if (ticket.length > 0) {
-                      const discount = prompt("Descuento global (%):", "0");
-                      if (discount !== null) {
-                        const discountPercent = Number(discount);
-                        setTicket(
-                          ticket.map((item) => ({
-                            ...item,
-                            descuento: discountPercent,
-                            subtotal: item.cantidad * item.precioUnitario * (1 - discountPercent / 100),
-                          }))
-                        );
-                      }
-                    }
-                  }}
-                  className="w-full py-2 rounded bg-slate-700 text-sm hover:bg-slate-600"
-                >
-                  Aplicar Descuento Global
-                </button>
-                <button
-                  onClick={() => {
-                    if (ticket.length > 0) {
-                      const motivo = prompt("Motivo de cortesía:");
-                      if (motivo) {
-                        setTicket(
-                          ticket.map((item) => ({
-                            ...item,
-                            descuento: 100,
-                            subtotal: 0,
-                          }))
-                        );
-                      }
-                    }
-                  }}
-                  className="w-full py-2 rounded bg-yellow-600 text-sm hover:bg-yellow-700"
-                >
-                  Cortesía
-                </button>
               </div>
             </div>
 
@@ -579,82 +634,38 @@ export default function POSPage() {
                 <h2 className="text-lg font-semibold">Cobro</h2>
               </div>
 
-              <div className="flex-1 p-4 space-y-4">
-                <div className="text-center py-8">
+              <div className="flex-1 p-4 space-y-4 flex flex-col">
+                <div className="text-center py-4">
                   <p className="text-slate-400 text-sm mb-2">Total a Cobrar</p>
                   <p className="text-5xl font-bold text-green-400">${getTotal().toFixed(2)}</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => setPaymentMethod("EFECTIVO")}
-                    className={`p-4 rounded-lg border-2 text-center transition-colors ${
-                      paymentMethod === "EFECTIVO"
-                        ? "border-green-500 bg-green-900/30"
-                        : "border-slate-700 bg-slate-800 hover:bg-slate-700"
-                    }`}
-                  >
-                    <div className="text-2xl mb-1">💵</div>
-                    <p className="text-sm">Efectivo</p>
-                  </button>
-                  <button
-                    onClick={() => setPaymentMethod("TARJETA")}
-                    className={`p-4 rounded-lg border-2 text-center transition-colors ${
-                      paymentMethod === "TARJETA"
-                        ? "border-green-500 bg-green-900/30"
-                        : "border-slate-700 bg-slate-800 hover:bg-slate-700"
-                    }`}
-                  >
-                    <div className="text-2xl mb-1">💳</div>
-                    <p className="text-sm">Tarjeta</p>
-                  </button>
-                  <button
-                    onClick={() => setPaymentMethod("TRANSFERENCIA")}
-                    className={`p-4 rounded-lg border-2 text-center transition-colors ${
-                      paymentMethod === "TRANSFERENCIA"
-                        ? "border-green-500 bg-green-900/30"
-                        : "border-slate-700 bg-slate-800 hover:bg-slate-700"
-                    }`}
-                  >
-                    <div className="text-2xl mb-1">📱</div>
-                    <p className="text-sm">Transferencia</p>
-                  </button>
-                  <button
-                    onClick={() => setPaymentMethod("CORTESIA")}
-                    className={`p-4 rounded-lg border-2 text-center transition-colors ${
-                      paymentMethod === "CORTESIA"
-                        ? "border-green-500 bg-green-900/30"
-                        : "border-slate-700 bg-slate-800 hover:bg-slate-700"
-                    }`}
-                  >
-                    <div className="text-2xl mb-1">🎁</div>
-                    <p className="text-sm">Cortesía</p>
-                  </button>
-                </div>
-
-                {paymentMethod === "EFECTIVO" && (
-                  <div className="space-y-2">
-                    <label className="text-sm text-slate-400">Recibido</label>
-                    <input
-                      type="number"
-                      value={amountReceived}
-                      onChange={(e) => setAmountReceived(e.target.value)}
-                      placeholder="0.00"
-                      className="w-full px-4 py-3 rounded-lg border border-slate-700 bg-slate-800 text-white text-xl font-bold"
-                    />
-                    {getChange() >= 0 && (
-                      <div className="text-center py-2">
-                        <p className="text-slate-400 text-sm">Cambio</p>
-                        <p className="text-2xl font-bold text-green-400">${getChange().toFixed(2)}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
+                <button
+                  onClick={() => setShowDiscountModal(true)}
+                  className="w-full py-3 rounded-lg bg-slate-700 text-white font-medium hover:bg-slate-600"
+                >
+                  Aplicar Descuento
+                </button>
 
                 <button
-                  onClick={processPayment}
+                  onClick={() => setShowCourtesyModal(true)}
+                  className="w-full py-3 rounded-lg bg-yellow-600 text-white font-medium hover:bg-yellow-700"
+                >
+                  Cortesía
+                </button>
+
+                <div className="flex-1"></div>
+
+                <button
+                  onClick={() => {
+                    if (ticket.length > 0 && shift) {
+                      setShowPaymentModal(true);
+                      setPaymentMethods([]);
+                      setCardValidationError("");
+                    }
+                  }}
                   disabled={ticket.length === 0 || !shift}
-                  className="w-full py-4 rounded-lg bg-green-600 text-white font-bold text-xl hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500"
+                  className="w-full py-6 rounded-lg bg-green-600 text-white font-bold text-2xl hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500"
                 >
                   COBRAR
                 </button>
@@ -848,6 +859,319 @@ export default function POSPage() {
         </div>
       )}
 
+      {/* MODAL DESCUENTO */}
+      {showDiscountModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-xl p-6 w-96">
+            <h3 className="text-lg font-semibold mb-4">Aplicar Descuento Global</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Porcentaje de descuento</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={discountPercent}
+                  onChange={(e) => setDiscountPercent(e.target.value)}
+                  placeholder="0"
+                  className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowDiscountModal(false)}
+                  className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={applyGlobalDiscount}
+                  className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Aplicar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CORTESÍA */}
+      {showCourtesyModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-xl p-6 w-96">
+            <h3 className="text-lg font-semibold mb-4">Cortesía</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Motivo (obligatorio)</label>
+                <input
+                  type="text"
+                  value={courtesyReason}
+                  onChange={(e) => setCourtesyReason(e.target.value)}
+                  placeholder="Motivo de la cortesía"
+                  className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Autorizado por</label>
+                <select
+                  value={courtesyAuthorizedBy}
+                  onChange={(e) => setCourtesyAuthorizedBy(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white"
+                >
+                  <option value="">Seleccionar</option>
+                  <option value="ADMIN">Administrador</option>
+                  <option value="SOPORTE">Soporte</option>
+                </select>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowCourtesyModal(false)}
+                  className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={applyCourtesy}
+                  disabled={!courtesyReason || !courtesyAuthorizedBy}
+                  className="flex-1 py-2 rounded bg-yellow-600 text-white hover:bg-yellow-700 disabled:bg-slate-700 disabled:text-slate-500"
+                >
+                  Aplicar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE COBRO */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-xl p-6 w-[600px] max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="text-xl font-bold">Modal de Cobro</h3>
+                <p className="text-slate-400">Total a pagar: ${getTotal().toFixed(2)}</p>
+              </div>
+              <button
+                onClick={() => setShowPaymentModal(false)}
+                className="text-slate-400 hover:text-white text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-4">
+              {/* Botones para agregar métodos de pago */}
+              <div className="grid grid-cols-4 gap-2">
+                <button
+                  onClick={() => addPaymentMethod("EFECTIVO")}
+                  className="p-3 rounded-lg bg-slate-700 hover:bg-slate-600 text-center"
+                >
+                  <div className="text-2xl mb-1">💵</div>
+                  <p className="text-sm">+ Efectivo</p>
+                </button>
+                <button
+                  onClick={() => addPaymentMethod("TARJETA")}
+                  className="p-3 rounded-lg bg-slate-700 hover:bg-slate-600 text-center"
+                >
+                  <div className="text-2xl mb-1">💳</div>
+                  <p className="text-sm">+ Tarjeta</p>
+                </button>
+                <button
+                  onClick={() => addPaymentMethod("TRANSFERENCIA")}
+                  className="p-3 rounded-lg bg-slate-700 hover:bg-slate-600 text-center"
+                >
+                  <div className="text-2xl mb-1">📱</div>
+                  <p className="text-sm">+ Transferencia</p>
+                </button>
+                <button
+                  onClick={() => addPaymentMethod("CORTESIA")}
+                  className="p-3 rounded-lg bg-slate-700 hover:bg-slate-600 text-center"
+                >
+                  <div className="text-2xl mb-1">🎁</div>
+                  <p className="text-sm">+ Cortesía</p>
+                </button>
+              </div>
+
+              {/* Lista de métodos de pago */}
+              <div className="space-y-3">
+                {paymentMethods.map((pm) => (
+                  <div key={pm.id} className="p-4 rounded-lg bg-slate-900 border border-slate-700">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">
+                          {pm.tipo === "EFECTIVO" ? "💵" : 
+                           pm.tipo === "TARJETA" ? "💳" : 
+                           pm.tipo === "TRANSFERENCIA" ? "📱" : "🎁"}
+                        </span>
+                        <span className="font-medium">{pm.tipo}</span>
+                      </div>
+                      <button
+                        onClick={() => removePaymentMethod(pm.id)}
+                        className="text-red-400 hover:text-red-300"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div>
+                        <label className="text-xs text-slate-400">Monto</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={pm.monto}
+                          onChange={(e) => updatePaymentMethod(pm.id, "monto", Number(e.target.value))}
+                          className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                        />
+                      </div>
+
+                      {pm.tipo === "EFECTIVO" && (
+                        <div className="text-sm text-green-400">
+                          Cambio: ${(pm.monto - getTotal()).toFixed(2)}
+                        </div>
+                      )}
+
+                      {pm.tipo === "TARJETA" && (
+                        <>
+                          <div>
+                            <label className="text-xs text-slate-400">Tipo</label>
+                            <select
+                              value={pm.tipoTarjeta || "DEBITO"}
+                              onChange={(e) => updatePaymentMethod(pm.id, "tipoTarjeta", e.target.value)}
+                              className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                            >
+                              <option value="DEBITO">Débito</option>
+                              <option value="CREDITO">Crédito</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-xs text-slate-400">Últimos 4 dígitos</label>
+                            <input
+                              type="text"
+                              maxLength={4}
+                              value={pm.ultimos4Digitos || ""}
+                              onChange={(e) => updatePaymentMethod(pm.id, "ultimos4Digitos", e.target.value)}
+                              placeholder="****"
+                              className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs text-slate-400">Folio voucher</label>
+                            <input
+                              type="text"
+                              value={pm.folioVoucher || ""}
+                              onChange={(e) => updatePaymentMethod(pm.id, "folioVoucher", e.target.value)}
+                              placeholder="Folio"
+                              className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                            />
+                          </div>
+                        </>
+                      )}
+
+                      {pm.tipo === "TRANSFERENCIA" && (
+                        <>
+                          <div>
+                            <label className="text-xs text-slate-400">Clave de rastreo SPEI</label>
+                            <input
+                              type="text"
+                              value={pm.claveRastreo || ""}
+                              onChange={(e) => updatePaymentMethod(pm.id, "claveRastreo", e.target.value)}
+                              placeholder="Clave de rastreo"
+                              className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs text-slate-400">Banco origen</label>
+                            <input
+                              type="text"
+                              value={pm.bancoOrigen || ""}
+                              onChange={(e) => updatePaymentMethod(pm.id, "bancoOrigen", e.target.value)}
+                              placeholder="Banco"
+                              className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                            />
+                          </div>
+                          <button
+                            onClick={() => window.open("https://www.banxico.org.mx/cep/", "_blank")}
+                            className="w-full py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+                          >
+                            Verificar BANXICO
+                          </button>
+                        </>
+                      )}
+
+                      {pm.tipo === "CORTESIA" && (
+                        <>
+                          <div>
+                            <label className="text-xs text-slate-400">Motivo (obligatorio)</label>
+                            <input
+                              type="text"
+                              value={pm.motivo || ""}
+                              onChange={(e) => updatePaymentMethod(pm.id, "motivo", e.target.value)}
+                              placeholder="Motivo"
+                              className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs text-slate-400">Autorizado por</label>
+                            <select
+                              value={pm.autorizadoPor || ""}
+                              onChange={(e) => updatePaymentMethod(pm.id, "autorizadoPor", e.target.value)}
+                              className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                            >
+                              <option value="">Seleccionar</option>
+                              <option value="ADMIN">Administrador</option>
+                              <option value="SOPORTE">Soporte</option>
+                            </select>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {cardValidationError && (
+                <div className="text-red-400 text-sm">{cardValidationError}</div>
+              )}
+            </div>
+
+            {/* Resumen */}
+            <div className="border-t border-slate-700 pt-4 mt-4 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-400">Total a pagar</span>
+                <span>${getTotal().toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-400">Total cubierto</span>
+                <span>${getTotalCovered().toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-400">Pendiente</span>
+                <span className={getPending() > 0 ? "text-red-400" : "text-green-400"}>
+                  ${getPending().toFixed(2)}
+                </span>
+              </div>
+              {getChange() > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400">Cambio</span>
+                  <span className="text-green-400">${getChange().toFixed(2)}</span>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={processPayment}
+              disabled={getTotalCovered() < getTotal()}
+              className="w-full py-4 rounded-lg bg-green-600 text-white font-bold text-xl hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500 mt-4"
+            >
+              CONFIRMAR COBRO
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* MODAL TICKET DE VENTA */}
       {showReceipt && currentSale && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -868,6 +1192,20 @@ export default function POSPage() {
                   <span>TOTAL</span>
                   <span>${Number(currentSale.total).toFixed(2)}</span>
                 </div>
+              </div>
+              <div className="border-t pt-2 mt-2">
+                <p className="text-sm font-semibold mb-2">Métodos de Pago:</p>
+                {Array.isArray(currentSale.metodoPago) ? currentSale.metodoPago.map((pm: any, idx: number) => (
+                  <div key={idx} className="text-xs flex justify-between">
+                    <span>{pm.tipo}</span>
+                    <span>${pm.monto.toFixed(2)}</span>
+                  </div>
+                )) : (
+                  <div className="text-xs flex justify-between">
+                    <span>{currentSale.metodoPago}</span>
+                    <span>${Number(currentSale.total).toFixed(2)}</span>
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex gap-2">
