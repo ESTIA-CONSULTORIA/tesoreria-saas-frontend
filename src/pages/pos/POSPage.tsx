@@ -243,11 +243,11 @@ export default function POSPage() {
   }, []);
 
   useEffect(() => {
-    // Show login screen if no shift is open
-    if (!shift) {
+    // Show login screen if no shift is open and cashier hasn't been selected
+    if (!shift && !selectedCashier) {
       setShowLoginScreen(true);
     }
-  }, [shift]);
+  }, [shift, selectedCashier]);
 
   // Auto-focus payment input when modal opens
   useEffect(() => {
@@ -459,26 +459,19 @@ export default function POSPage() {
         valesDeclarados: Number(valesDeclarados) || 0,
       });
       setShowPrecutModal(false);
-      // Reload shift to get updated precorteGuardado status, but keep user logged in
-      const updatedShift = await api.get("/pos/shifts/open", {
-        params: {
-          cajero: "current-user-id",
-          sucursalId: "default-branch-id",
-        },
-      });
-      setShift(updatedShift.data ? {
-        ...updatedShift.data,
-        totalVentas: Number(updatedShift.data.totalVentas) || 0,
-        totalEfectivo: Number(updatedShift.data.totalEfectivo) || 0,
-        totalTarjeta: Number(updatedShift.data.totalTarjeta) || 0,
-        totalTransferencia: Number(updatedShift.data.totalTransferencia) || 0,
-        totalCortesia: Number(updatedShift.data.totalCortesia) || 0,
-        totalDevoluciones: Number(updatedShift.data.totalDevoluciones) || 0,
-        totalRetiros: Number(updatedShift.data.totalRetiros) || 0,
-        totalDepositos: Number(updatedShift.data.totalDepositos) || 0,
-        precorteGuardado: updatedShift.data.precorteGuardado || false,
-        precorteDeclaracion: updatedShift.data.precorteDeclaracion || null,
-      } : null);
+      // Update local shift state to mark precorte as saved
+      setShift(prev => prev ? {
+        ...prev,
+        precorteGuardado: true,
+        precorteDeclaracion: {
+          efectivoContado: calculateTotalCash(),
+          efectivoDenominaciones: cashCounts,
+          debitoDeclarado: Number(debitoDeclarado) || 0,
+          creditoDeclarado: Number(creditoDeclarado) || 0,
+          transferenciaDeclarada: Number(transferenciaDeclarada) || 0,
+          valesDeclarados: Number(valesDeclarados) || 0,
+        }
+      } : prev);
       // Reset precorte form state
       setCashCounts({});
       setDebitoDeclarado("");
