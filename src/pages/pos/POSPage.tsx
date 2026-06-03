@@ -88,6 +88,81 @@ export default function POSPage() {
   const [courtesyReason, setCourtesyReason] = useState("");
   const [courtesyAuthorizedBy, setCourtesyAuthorizedBy] = useState("");
   const [cardValidationError, setCardValidationError] = useState("");
+  
+  // Productos tab state
+  const [posProducts, setPosProducts] = useState<any[]>([]);
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [productForm, setProductForm] = useState({
+    codigo: "",
+    nombre: "",
+    descripcion: "",
+    precio: "",
+    categoria: "",
+    imagenUrl: "",
+    impuesto: "16",
+    activo: true
+  });
+
+  // Categorías tab state
+  const [posCategories, setPosCategories] = useState<any[]>([]);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [categoryForm, setCategoryForm] = useState({
+    nombre: "",
+    color: "#3B82F6",
+    descripcion: ""
+  });
+
+  // Áreas y Mesas tab state
+  const [areas, setAreas] = useState<any[]>([]);
+  const [showAreaModal, setShowAreaModal] = useState(false);
+  const [editingArea, setEditingArea] = useState<any>(null);
+  const [areaForm, setAreaForm] = useState({
+    nombre: "",
+    descripcion: ""
+  });
+  const [showMesaModal, setShowMesaModal] = useState(false);
+  const [editingMesa, setEditingMesa] = useState<any>(null);
+  const [mesaForm, setMesaForm] = useState({
+    areaId: "",
+    numero: "",
+    capacidad: "",
+    status: "DISPONIBLE"
+  });
+  const [expandedArea, setExpandedArea] = useState<string | null>(null);
+
+  // Turnos tab state
+  const [shiftConfigs, setShiftConfigs] = useState<any[]>([]);
+  const [showShiftConfigModal, setShowShiftConfigModal] = useState(false);
+  const [editingShiftConfig, setEditingShiftConfig] = useState<any>(null);
+  const [shiftConfigForm, setShiftConfigForm] = useState({
+    nombre: "",
+    horaInicio: "",
+    horaFin: "",
+    diasActivos: ["L", "M", "X", "J", "V", "S", "D"]
+  });
+
+  // Hardware tab state
+  const [hardwareConfig, setHardwareConfig] = useState({
+    impresora: { ip: "", puerto: "9100", modelo: "" },
+    terminal: { modelo: "", serie: "" },
+    lector: { tipo: "USB" },
+    cajon: { puerto: "" }
+  });
+
+  // Parámetros tab state
+  const [posParams, setPosParams] = useState({
+    nombreNegocio: "",
+    rfc: "",
+    mensajePie: "",
+    ivaDefault: "16",
+    propinaSugerida: { activo: false, tipo: "PORCENTAJE", valor: "10" },
+    requerirTurno: true,
+    imprimirAuto: true,
+    copiasTicket: "1",
+    moneda: "MXN"
+  });
 
   useEffect(() => {
     loadProducts();
@@ -507,8 +582,8 @@ export default function POSPage() {
 
           {/* MAIN CONTENT - 2 ZONES */}
           <div className="flex-1 flex overflow-hidden">
-            {/* ZONA IZQUIERDA - PRODUCTOS (60%) */}
-            <div className="w-[60%] flex flex-col border-r border-slate-700">
+            {/* ZONA IZQUIERDA - PRODUCTOS (75%) */}
+            <div className="w-[75%] flex flex-col border-r border-slate-700">
               <div className="p-4 border-b border-slate-700 space-y-3">
                 <input
                   type="text"
@@ -553,8 +628,8 @@ export default function POSPage() {
               </div>
             </div>
 
-            {/* ZONA DERECHA - TICKET + COBRO (40%) */}
-            <div className="w-[40%] flex flex-col">
+            {/* ZONA DERECHA - TICKET + COBRO (25%) */}
+            <div className="w-[25%] flex flex-col">
               {/* TICKET */}
               <div className="flex-1 flex flex-col border-b border-slate-700">
                 <div className="p-4 border-b border-slate-700">
@@ -673,40 +748,412 @@ export default function POSPage() {
       {/* CONFIGURATION TABS */}
       {activeTab === "productos" && (
         <div className="p-6">
-          <h2 className="text-2xl font-bold mb-4">Productos</h2>
-          <p className="text-slate-400">Gestión de productos del POS</p>
-          <div className="mt-4 p-4 rounded-lg bg-slate-800">
-            <p className="text-sm text-slate-300">Funcionalidad en desarrollo...</p>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">Productos</h2>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setEditingProduct(null);
+                  setProductForm({
+                    codigo: "",
+                    nombre: "",
+                    descripcion: "",
+                    precio: "",
+                    categoria: "",
+                    imagenUrl: "",
+                    impuesto: "16",
+                    activo: true
+                  });
+                  setShowProductModal(true);
+                }}
+                className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+              >
+                + Nuevo Producto
+              </button>
+              <button
+                onClick={() => alert("Funcionalidad para importar insumos como productos")}
+                className="px-4 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+              >
+                Importar Insumos
+              </button>
+            </div>
+          </div>
+          <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-slate-800">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm">Código</th>
+                  <th className="px-4 py-3 text-left text-sm">Nombre</th>
+                  <th className="px-4 py-3 text-left text-sm">Categoría</th>
+                  <th className="px-4 py-3 text-right text-sm">Precio</th>
+                  <th className="px-4 py-3 text-center text-sm">Status</th>
+                  <th className="px-4 py-3 text-center text-sm">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800">
+                {posProducts.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
+                      No hay productos registrados
+                    </td>
+                  </tr>
+                ) : (
+                  posProducts.map((product) => (
+                    <tr key={product.id} className="hover:bg-slate-800/50">
+                      <td className="px-4 py-3 text-sm">{product.codigo || "-"}</td>
+                      <td className="px-4 py-3 text-sm font-medium">{product.nombre}</td>
+                      <td className="px-4 py-3 text-sm">{product.categoria || "-"}</td>
+                      <td className="px-4 py-3 text-sm text-right">${Number(product.precio).toFixed(2)}</td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`px-2 py-1 rounded text-xs ${
+                          product.activo ? "bg-green-900/40 text-green-300" : "bg-red-900/40 text-red-300"
+                        }`}>
+                          {product.activo ? "Activo" : "Inactivo"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          onClick={() => {
+                            setEditingProduct(product);
+                            setProductForm({
+                              codigo: product.codigo || "",
+                              nombre: product.nombre,
+                              descripcion: product.descripcion || "",
+                              precio: product.precio,
+                              categoria: product.categoria || "",
+                              imagenUrl: product.imagenUrl || "",
+                              impuesto: product.impuesto || "16",
+                              activo: product.activo
+                            });
+                            setShowProductModal(true);
+                          }}
+                          className="px-2 py-1 rounded bg-blue-600 text-xs hover:bg-blue-700 mr-1"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm("¿Eliminar este producto?")) {
+                              setPosProducts(posProducts.filter(p => p.id !== product.id));
+                            }
+                          }}
+                          className="px-2 py-1 rounded bg-red-600 text-xs hover:bg-red-700"
+                        >
+                          Eliminar
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
 
       {activeTab === "categorias" && (
         <div className="p-6">
-          <h2 className="text-2xl font-bold mb-4">Categorías</h2>
-          <p className="text-slate-400">Gestión de categorías de productos</p>
-          <div className="mt-4 p-4 rounded-lg bg-slate-800">
-            <p className="text-sm text-slate-300">Funcionalidad en desarrollo...</p>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">Categorías</h2>
+            <button
+              onClick={() => {
+                setEditingCategory(null);
+                setCategoryForm({ nombre: "", color: "#3B82F6", descripcion: "" });
+                setShowCategoryModal(true);
+              }}
+              className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+            >
+              + Nueva Categoría
+            </button>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            {posCategories.length === 0 ? (
+              <div className="col-span-3 p-8 text-center text-slate-400 rounded-xl bg-slate-900 border border-slate-800">
+                No hay categorías registradas
+              </div>
+            ) : (
+              posCategories.map((cat) => (
+                <div key={cat.id} className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded" style={{ backgroundColor: cat.color }}></div>
+                      <h3 className="font-semibold">{cat.nombre}</h3>
+                    </div>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => {
+                          setEditingCategory(cat);
+                          setCategoryForm({
+                            nombre: cat.nombre,
+                            color: cat.color,
+                            descripcion: cat.descripcion || ""
+                          });
+                          setShowCategoryModal(true);
+                        }}
+                        className="px-2 py-1 rounded bg-blue-600 text-xs hover:bg-blue-700"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm("¿Eliminar esta categoría?")) {
+                            setPosCategories(posCategories.filter(c => c.id !== cat.id));
+                          }
+                        }}
+                        className="px-2 py-1 rounded bg-red-600 text-xs hover:bg-red-700"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-sm text-slate-400">{cat.descripcion || "Sin descripción"}</p>
+                  <p className="text-xs text-slate-500 mt-2">{cat.productCount || 0} productos</p>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
 
       {activeTab === "areas" && (
         <div className="p-6">
-          <h2 className="text-2xl font-bold mb-4">Áreas y Mesas</h2>
-          <p className="text-slate-400">Configuración de áreas y mesas por sucursal</p>
-          <div className="mt-4 p-4 rounded-lg bg-slate-800">
-            <p className="text-sm text-slate-300">Funcionalidad en desarrollo...</p>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">Áreas y Mesas</h2>
+            <button
+              onClick={() => {
+                setEditingArea(null);
+                setAreaForm({ nombre: "", descripcion: "" });
+                setShowAreaModal(true);
+              }}
+              className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+            >
+              + Nueva Área
+            </button>
+          </div>
+          <div className="space-y-4">
+            {areas.length === 0 ? (
+              <div className="p-8 text-center text-slate-400 rounded-xl bg-slate-900 border border-slate-800">
+                No hay áreas registradas
+              </div>
+            ) : (
+              areas.map((area) => (
+                <div key={area.id} className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
+                  <div className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-800/50" onClick={() => setExpandedArea(expandedArea === area.id ? null : area.id)}>
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{expandedArea === area.id ? "▼" : "▶"}</span>
+                      <div>
+                        <h3 className="font-semibold">{area.nombre}</h3>
+                        <p className="text-sm text-slate-400">{area.descripcion || "Sin descripción"}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-slate-400">{area.mesas?.length || 0} mesas</span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingArea(area);
+                          setAreaForm({ nombre: area.nombre, descripcion: area.descripcion || "" });
+                          setShowAreaModal(true);
+                        }}
+                        className="px-2 py-1 rounded bg-blue-600 text-xs hover:bg-blue-700"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm("¿Eliminar esta área?")) {
+                            setAreas(areas.filter(a => a.id !== area.id));
+                          }
+                        }}
+                        className="px-2 py-1 rounded bg-red-600 text-xs hover:bg-red-700"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                  {expandedArea === area.id && (
+                    <div className="p-4 border-t border-slate-800 bg-slate-800/50">
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="font-medium">Mesas</h4>
+                        <button
+                          onClick={() => {
+                            setEditingMesa(null);
+                            setMesaForm({ areaId: area.id, numero: "", capacidad: "", status: "DISPONIBLE" });
+                            setShowMesaModal(true);
+                          }}
+                          className="px-3 py-1 rounded bg-green-600 text-xs hover:bg-green-700"
+                        >
+                          + Nueva Mesa
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-4 gap-2">
+                        {area.mesas?.length === 0 ? (
+                          <p className="col-span-4 text-sm text-slate-400">No hay mesas en esta área</p>
+                        ) : (
+                          area.mesas.map((mesa: any) => (
+                            <div key={mesa.id} className="p-3 rounded-lg bg-slate-900 border border-slate-700">
+                              <div className="flex justify-between items-start mb-1">
+                                <span className="font-semibold">Mesa {mesa.numero}</span>
+                                <span className={`px-2 py-0.5 rounded text-xs ${
+                                  mesa.status === "DISPONIBLE" ? "bg-green-900/40 text-green-300" :
+                                  mesa.status === "OCUPADA" ? "bg-red-900/40 text-red-300" :
+                                  "bg-yellow-900/40 text-yellow-300"
+                                }`}>
+                                  {mesa.status}
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-400">Capacidad: {mesa.capacidad}</p>
+                              <button
+                                onClick={() => {
+                                  if (confirm("¿Eliminar esta mesa?")) {
+                                    setAreas(areas.map(a => 
+                                      a.id === area.id 
+                                        ? { ...a, mesas: a.mesas.filter((m: any) => m.id !== mesa.id) }
+                                        : a
+                                    ));
+                                  }
+                                }}
+                                className="mt-2 text-xs text-red-400 hover:text-red-300"
+                              >
+                                Eliminar
+                              </button>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
 
       {activeTab === "turnos" && (
         <div className="p-6">
-          <h2 className="text-2xl font-bold mb-4">Turnos</h2>
-          <p className="text-slate-400">Gestión de turnos y cajeros</p>
-          <div className="mt-4 p-4 rounded-lg bg-slate-800">
-            <p className="text-sm text-slate-300">Funcionalidad en desarrollo...</p>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">Turnos</h2>
+            <button
+              onClick={() => {
+                setEditingShiftConfig(null);
+                setShiftConfigForm({
+                  nombre: "",
+                  horaInicio: "",
+                  horaFin: "",
+                  diasActivos: ["L", "M", "X", "J", "V", "S", "D"]
+                });
+                setShowShiftConfigModal(true);
+              }}
+              className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+            >
+              + Nuevo Turno
+            </button>
+          </div>
+          
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-3">Configuración de Turnos</h3>
+            <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-slate-800">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm">Nombre</th>
+                    <th className="px-4 py-3 text-left text-sm">Hora Inicio</th>
+                    <th className="px-4 py-3 text-left text-sm">Hora Fin</th>
+                    <th className="px-4 py-3 text-left text-sm">Días Activos</th>
+                    <th className="px-4 py-3 text-center text-sm">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800">
+                  {shiftConfigs.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
+                        No hay turnos configurados
+                      </td>
+                    </tr>
+                  ) : (
+                    shiftConfigs.map((config) => (
+                      <tr key={config.id} className="hover:bg-slate-800/50">
+                        <td className="px-4 py-3 text-sm font-medium">{config.nombre}</td>
+                        <td className="px-4 py-3 text-sm">{config.horaInicio}</td>
+                        <td className="px-4 py-3 text-sm">{config.horaFin}</td>
+                        <td className="px-4 py-3 text-sm">{config.diasActivos?.join(", ") || "-"}</td>
+                        <td className="px-4 py-3 text-center">
+                          <button
+                            onClick={() => {
+                              setEditingShiftConfig(config);
+                              setShiftConfigForm({
+                                nombre: config.nombre,
+                                horaInicio: config.horaInicio,
+                                horaFin: config.horaFin,
+                                diasActivos: config.diasActivos || []
+                              });
+                              setShowShiftConfigModal(true);
+                            }}
+                            className="px-2 py-1 rounded bg-blue-600 text-xs hover:bg-blue-700 mr-1"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm("¿Eliminar este turno?")) {
+                                setShiftConfigs(shiftConfigs.filter(c => c.id !== config.id));
+                              }
+                            }}
+                            className="px-2 py-1 rounded bg-red-600 text-xs hover:bg-red-700"
+                          >
+                            Eliminar
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold mb-3">Historial de Turnos</h3>
+            <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-slate-800">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm">Fecha</th>
+                    <th className="px-4 py-3 text-left text-sm">Cajero</th>
+                    <th className="px-4 py-3 text-right text-sm">Ventas</th>
+                    <th className="px-4 py-3 text-right text-sm">Total Cobrado</th>
+                    <th className="px-4 py-3 text-center text-sm">Estado</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800">
+                  {salesHistory.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
+                        No hay historial de turnos
+                      </td>
+                    </tr>
+                  ) : (
+                    salesHistory.slice(0, 10).map((sale) => (
+                      <tr key={sale.id} className="hover:bg-slate-800/50">
+                        <td className="px-4 py-3 text-sm">{sale.fecha}</td>
+                        <td className="px-4 py-3 text-sm">Usuario Demo</td>
+                        <td className="px-4 py-3 text-sm text-right">{sale.items?.length || 0}</td>
+                        <td className="px-4 py-3 text-sm text-right">${Number(sale.total).toFixed(2)}</td>
+                        <td className="px-4 py-3 text-center">
+                          <span className={`px-2 py-1 rounded text-xs ${
+                            sale.status === "PAGADA" ? "bg-green-900/40 text-green-300" : "bg-red-900/40 text-red-300"
+                          }`}>
+                            {sale.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -714,9 +1161,146 @@ export default function POSPage() {
       {activeTab === "hardware" && (
         <div className="p-6">
           <h2 className="text-2xl font-bold mb-4">Hardware</h2>
-          <p className="text-slate-400">Configuración de impresoras, terminales y cajones</p>
-          <div className="mt-4 p-4 rounded-lg bg-slate-800">
-            <p className="text-sm text-slate-300">Funcionalidad en desarrollo...</p>
+          <div className="space-y-6">
+            {/* Impresora Térmica */}
+            <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+              <h3 className="text-lg font-semibold mb-3">Impresora Térmica</h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">IP</label>
+                  <input
+                    type="text"
+                    value={hardwareConfig.impresora.ip}
+                    onChange={(e) => setHardwareConfig({
+                      ...hardwareConfig,
+                      impresora: { ...hardwareConfig.impresora, ip: e.target.value }
+                    })}
+                    placeholder="192.168.1.100"
+                    className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Puerto</label>
+                  <input
+                    type="text"
+                    value={hardwareConfig.impresora.puerto}
+                    onChange={(e) => setHardwareConfig({
+                      ...hardwareConfig,
+                      impresora: { ...hardwareConfig.impresora, puerto: e.target.value }
+                    })}
+                    placeholder="9100"
+                    className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Modelo</label>
+                  <input
+                    type="text"
+                    value={hardwareConfig.impresora.modelo}
+                    onChange={(e) => setHardwareConfig({
+                      ...hardwareConfig,
+                      impresora: { ...hardwareConfig.impresora, modelo: e.target.value }
+                    })}
+                    placeholder="Ej: EPSON TM-T20"
+                    className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                  />
+                </div>
+              </div>
+              <button
+                onClick={() => alert("Probando conexión con impresora...")}
+                className="mt-3 px-4 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+              >
+                Probar Conexión
+              </button>
+            </div>
+
+            {/* Terminal Bancaria */}
+            <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+              <h3 className="text-lg font-semibold mb-3">Terminal Bancaria</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Modelo</label>
+                  <input
+                    type="text"
+                    value={hardwareConfig.terminal.modelo}
+                    onChange={(e) => setHardwareConfig({
+                      ...hardwareConfig,
+                      terminal: { ...hardwareConfig.terminal, modelo: e.target.value }
+                    })}
+                    placeholder="Ej: Verifone VX520"
+                    className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Número de Serie</label>
+                  <input
+                    type="text"
+                    value={hardwareConfig.terminal.serie}
+                    onChange={(e) => setHardwareConfig({
+                      ...hardwareConfig,
+                      terminal: { ...hardwareConfig.terminal, serie: e.target.value }
+                    })}
+                    placeholder="Serie del equipo"
+                    className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                  />
+                </div>
+              </div>
+              <button
+                onClick={() => alert("Probando conexión con terminal...")}
+                className="mt-3 px-4 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+              >
+                Probar Conexión
+              </button>
+            </div>
+
+            {/* Lector Código de Barras */}
+            <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+              <h3 className="text-lg font-semibold mb-3">Lector Código de Barras</h3>
+              <div className="w-1/2">
+                <label className="block text-sm text-slate-400 mb-1">Tipo</label>
+                <select
+                  value={hardwareConfig.lector.tipo}
+                  onChange={(e) => setHardwareConfig({
+                    ...hardwareConfig,
+                    lector: { ...hardwareConfig.lector, tipo: e.target.value }
+                  })}
+                  className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                >
+                  <option value="USB">USB</option>
+                  <option value="BLUETOOTH">Bluetooth</option>
+                </select>
+              </div>
+              <button
+                onClick={() => alert("Probando conexión con lector...")}
+                className="mt-3 px-4 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+              >
+                Probar Conexión
+              </button>
+            </div>
+
+            {/* Cajón de Dinero */}
+            <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+              <h3 className="text-lg font-semibold mb-3">Cajón de Dinero</h3>
+              <div className="w-1/2">
+                <label className="block text-sm text-slate-400 mb-1">Puerto</label>
+                <input
+                  type="text"
+                  value={hardwareConfig.cajon.puerto}
+                  onChange={(e) => setHardwareConfig({
+                    ...hardwareConfig,
+                    cajon: { ...hardwareConfig.cajon, puerto: e.target.value }
+                  })}
+                  placeholder="COM1, USB, etc."
+                  className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                />
+              </div>
+              <button
+                onClick={() => alert("Probando conexión con cajón...")}
+                className="mt-3 px-4 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+              >
+                Probar Conexión
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -724,9 +1308,158 @@ export default function POSPage() {
       {activeTab === "parametros" && (
         <div className="p-6">
           <h2 className="text-2xl font-bold mb-4">Parámetros</h2>
-          <p className="text-slate-400">Configuración de parámetros de operación del POS</p>
-          <div className="mt-4 p-4 rounded-lg bg-slate-800">
-            <p className="text-sm text-slate-300">Funcionalidad en desarrollo...</p>
+          <div className="max-w-2xl space-y-6">
+            <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+              <h3 className="text-lg font-semibold mb-3">Información del Negocio</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Nombre del Negocio</label>
+                  <input
+                    type="text"
+                    value={posParams.nombreNegocio}
+                    onChange={(e) => setPosParams({ ...posParams, nombreNegocio: e.target.value })}
+                    placeholder="Mi Negocio"
+                    className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">RFC</label>
+                  <input
+                    type="text"
+                    value={posParams.rfc}
+                    onChange={(e) => setPosParams({ ...posParams, rfc: e.target.value })}
+                    placeholder="RFC del negocio"
+                    className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Mensaje Pie de Ticket</label>
+                  <input
+                    type="text"
+                    value={posParams.mensajePie}
+                    onChange={(e) => setPosParams({ ...posParams, mensajePie: e.target.value })}
+                    placeholder="¡Gracias por su compra!"
+                    className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+              <h3 className="text-lg font-semibold mb-3">Impuestos</h3>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">IVA por Defecto</label>
+                <select
+                  value={posParams.ivaDefault}
+                  onChange={(e) => setPosParams({ ...posParams, ivaDefault: e.target.value })}
+                  className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                >
+                  <option value="0">0%</option>
+                  <option value="8">8%</option>
+                  <option value="16">16%</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+              <h3 className="text-lg font-semibold mb-3">Propina Sugerida</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={posParams.propinaSugerida.activo}
+                    onChange={(e) => setPosParams({
+                      ...posParams,
+                      propinaSugerida: { ...posParams.propinaSugerida, activo: e.target.checked }
+                    })}
+                    className="rounded"
+                  />
+                  <label className="text-sm text-slate-400">Activar propina sugerida</label>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">Tipo</label>
+                    <select
+                      value={posParams.propinaSugerida.tipo}
+                      onChange={(e) => setPosParams({
+                        ...posParams,
+                        propinaSugerida: { ...posParams.propinaSugerida, tipo: e.target.value }
+                      })}
+                      className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                    >
+                      <option value="PORCENTAJE">Porcentaje</option>
+                      <option value="MONTO">Monto Fijo</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">Valor</label>
+                    <input
+                      type="text"
+                      value={posParams.propinaSugerida.valor}
+                      onChange={(e) => setPosParams({
+                        ...posParams,
+                        propinaSugerida: { ...posParams.propinaSugerida, valor: e.target.value }
+                      })}
+                      placeholder="10"
+                      className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+              <h3 className="text-lg font-semibold mb-3">Operación</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm text-slate-400">Requerir apertura de turno para vender</label>
+                  <input
+                    type="checkbox"
+                    checked={posParams.requerirTurno}
+                    onChange={(e) => setPosParams({ ...posParams, requerirTurno: e.target.checked })}
+                    className="rounded"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm text-slate-400">Imprimir ticket automáticamente al cobrar</label>
+                  <input
+                    type="checkbox"
+                    checked={posParams.imprimirAuto}
+                    onChange={(e) => setPosParams({ ...posParams, imprimirAuto: e.target.checked })}
+                    className="rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Número de copias del ticket</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={posParams.copiasTicket}
+                    onChange={(e) => setPosParams({ ...posParams, copiasTicket: e.target.value })}
+                    className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Moneda</label>
+                  <select
+                    value={posParams.moneda}
+                    onChange={(e) => setPosParams({ ...posParams, moneda: e.target.value })}
+                    className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                  >
+                    <option value="MXN">MXN - Peso Mexicano</option>
+                    <option value="USD">USD - Dólar Americano</option>
+                    <option value="EUR">EUR - Euro</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => alert("Parámetros guardados")}
+              className="w-full py-3 rounded bg-green-600 text-white font-medium hover:bg-green-700"
+            >
+              Guardar Parámetros
+            </button>
           </div>
         </div>
       )}
@@ -1219,6 +1952,381 @@ export default function POSPage() {
               >
                 Imprimir
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL PRODUCTO */}
+      {showProductModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-xl p-6 w-[500px] max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-semibold mb-4">{editingProduct ? "Editar Producto" : "Nuevo Producto"}</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Código</label>
+                <input
+                  type="text"
+                  value={productForm.codigo}
+                  onChange={(e) => setProductForm({ ...productForm, codigo: e.target.value })}
+                  placeholder="Código del producto"
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Nombre *</label>
+                <input
+                  type="text"
+                  value={productForm.nombre}
+                  onChange={(e) => setProductForm({ ...productForm, nombre: e.target.value })}
+                  placeholder="Nombre del producto"
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Descripción</label>
+                <textarea
+                  value={productForm.descripcion}
+                  onChange={(e) => setProductForm({ ...productForm, descripcion: e.target.value })}
+                  placeholder="Descripción del producto"
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                  rows={2}
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Precio *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={productForm.precio}
+                  onChange={(e) => setProductForm({ ...productForm, precio: e.target.value })}
+                  placeholder="0.00"
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Categoría</label>
+                <input
+                  type="text"
+                  value={productForm.categoria}
+                  onChange={(e) => setProductForm({ ...productForm, categoria: e.target.value })}
+                  placeholder="Categoría"
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">URL Imagen</label>
+                <input
+                  type="text"
+                  value={productForm.imagenUrl}
+                  onChange={(e) => setProductForm({ ...productForm, imagenUrl: e.target.value })}
+                  placeholder="https://..."
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Impuesto (%)</label>
+                <select
+                  value={productForm.impuesto}
+                  onChange={(e) => setProductForm({ ...productForm, impuesto: e.target.value })}
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                >
+                  <option value="0">0%</option>
+                  <option value="8">8%</option>
+                  <option value="16">16%</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={productForm.activo}
+                  onChange={(e) => setProductForm({ ...productForm, activo: e.target.checked })}
+                  className="rounded"
+                />
+                <label className="text-sm text-slate-400">Activo</label>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowProductModal(false)}
+                  className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    if (editingProduct) {
+                      setPosProducts(posProducts.map(p => p.id === editingProduct.id ? { ...editingProduct, ...productForm } : p));
+                    } else {
+                      setPosProducts([...posProducts, { id: Date.now().toString(), ...productForm }]);
+                    }
+                    setShowProductModal(false);
+                  }}
+                  className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Guardar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CATEGORÍA */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-xl p-6 w-96">
+            <h3 className="text-lg font-semibold mb-4">{editingCategory ? "Editar Categoría" : "Nueva Categoría"}</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Nombre *</label>
+                <input
+                  type="text"
+                  value={categoryForm.nombre}
+                  onChange={(e) => setCategoryForm({ ...categoryForm, nombre: e.target.value })}
+                  placeholder="Nombre de la categoría"
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Color</label>
+                <input
+                  type="color"
+                  value={categoryForm.color}
+                  onChange={(e) => setCategoryForm({ ...categoryForm, color: e.target.value })}
+                  className="w-full h-10 rounded bg-slate-900"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Descripción</label>
+                <textarea
+                  value={categoryForm.descripcion}
+                  onChange={(e) => setCategoryForm({ ...categoryForm, descripcion: e.target.value })}
+                  placeholder="Descripción"
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                  rows={2}
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowCategoryModal(false)}
+                  className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    if (editingCategory) {
+                      setPosCategories(posCategories.map(c => c.id === editingCategory.id ? { ...editingCategory, ...categoryForm } : c));
+                    } else {
+                      setPosCategories([...posCategories, { id: Date.now().toString(), ...categoryForm, productCount: 0 }]);
+                    }
+                    setShowCategoryModal(false);
+                  }}
+                  className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Guardar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL ÁREA */}
+      {showAreaModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-xl p-6 w-96">
+            <h3 className="text-lg font-semibold mb-4">{editingArea ? "Editar Área" : "Nueva Área"}</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Nombre *</label>
+                <input
+                  type="text"
+                  value={areaForm.nombre}
+                  onChange={(e) => setAreaForm({ ...areaForm, nombre: e.target.value })}
+                  placeholder="Nombre del área"
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Descripción</label>
+                <textarea
+                  value={areaForm.descripcion}
+                  onChange={(e) => setAreaForm({ ...areaForm, descripcion: e.target.value })}
+                  placeholder="Descripción"
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                  rows={2}
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowAreaModal(false)}
+                  className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    if (editingArea) {
+                      setAreas(areas.map(a => a.id === editingArea.id ? { ...editingArea, ...areaForm } : a));
+                    } else {
+                      setAreas([...areas, { id: Date.now().toString(), ...areaForm, mesas: [] }]);
+                    }
+                    setShowAreaModal(false);
+                  }}
+                  className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Guardar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL MESA */}
+      {showMesaModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-xl p-6 w-96">
+            <h3 className="text-lg font-semibold mb-4">{editingMesa ? "Editar Mesa" : "Nueva Mesa"}</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Número *</label>
+                <input
+                  type="text"
+                  value={mesaForm.numero}
+                  onChange={(e) => setMesaForm({ ...mesaForm, numero: e.target.value })}
+                  placeholder="Número de mesa"
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Capacidad *</label>
+                <input
+                  type="number"
+                  value={mesaForm.capacidad}
+                  onChange={(e) => setMesaForm({ ...mesaForm, capacidad: e.target.value })}
+                  placeholder="Capacidad de personas"
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Status</label>
+                <select
+                  value={mesaForm.status}
+                  onChange={(e) => setMesaForm({ ...mesaForm, status: e.target.value })}
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                >
+                  <option value="DISPONIBLE">Disponible</option>
+                  <option value="OCUPADA">Ocupada</option>
+                  <option value="RESERVADA">Reservada</option>
+                </select>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowMesaModal(false)}
+                  className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    const newMesa = { id: Date.now().toString(), ...mesaForm };
+                    setAreas(areas.map(a => 
+                      a.id === mesaForm.areaId 
+                        ? { ...a, mesas: [...(a.mesas || []), newMesa] }
+                        : a
+                    ));
+                    setShowMesaModal(false);
+                  }}
+                  className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Guardar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CONFIGURACIÓN TURNO */}
+      {showShiftConfigModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-xl p-6 w-96">
+            <h3 className="text-lg font-semibold mb-4">{editingShiftConfig ? "Editar Turno" : "Nuevo Turno"}</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Nombre *</label>
+                <input
+                  type="text"
+                  value={shiftConfigForm.nombre}
+                  onChange={(e) => setShiftConfigForm({ ...shiftConfigForm, nombre: e.target.value })}
+                  placeholder="Ej: Matutino"
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Hora Inicio *</label>
+                <input
+                  type="time"
+                  value={shiftConfigForm.horaInicio}
+                  onChange={(e) => setShiftConfigForm({ ...shiftConfigForm, horaInicio: e.target.value })}
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Hora Fin *</label>
+                <input
+                  type="time"
+                  value={shiftConfigForm.horaFin}
+                  onChange={(e) => setShiftConfigForm({ ...shiftConfigForm, horaFin: e.target.value })}
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Días Activos</label>
+                <div className="flex gap-2 flex-wrap">
+                  {["L", "M", "X", "J", "V", "S", "D"].map((dia) => (
+                    <button
+                      key={dia}
+                      onClick={() => {
+                        const nuevosDias = shiftConfigForm.diasActivos.includes(dia)
+                          ? shiftConfigForm.diasActivos.filter(d => d !== dia)
+                          : [...shiftConfigForm.diasActivos, dia];
+                        setShiftConfigForm({ ...shiftConfigForm, diasActivos: nuevosDias });
+                      }}
+                      className={`px-3 py-1 rounded text-sm ${
+                        shiftConfigForm.diasActivos.includes(dia)
+                          ? "bg-blue-600 text-white"
+                          : "bg-slate-700 text-slate-300"
+                      }`}
+                    >
+                      {dia}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowShiftConfigModal(false)}
+                  className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    if (editingShiftConfig) {
+                      setShiftConfigs(shiftConfigs.map(s => s.id === editingShiftConfig.id ? { ...editingShiftConfig, ...shiftConfigForm } : s));
+                    } else {
+                      setShiftConfigs([...shiftConfigs, { id: Date.now().toString(), ...shiftConfigForm }]);
+                    }
+                    setShowShiftConfigModal(false);
+                  }}
+                  className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Guardar
+                </button>
+              </div>
             </div>
           </div>
         </div>
