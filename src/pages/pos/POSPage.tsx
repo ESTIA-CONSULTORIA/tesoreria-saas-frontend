@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
 
@@ -75,6 +76,7 @@ interface PaymentForm {
 }
 
 export default function POSPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>("terminal");
   const user = useAuthStore((state) => state.user);
   const isAdminOrSoporte = user?.roleCode === "ADMIN" || user?.roleCode === "SOPORTE";
@@ -134,6 +136,8 @@ export default function POSPage() {
   // Precorte/Corte modals
   const [showPrecutModal, setShowPrecutModal] = useState(false);
   const [showCloseShiftModal, setShowCloseShiftModal] = useState(false);
+  const [shiftSummary, setShiftSummary] = useState<any>(null);
+  const [showExitConfirmModal, setShowExitConfirmModal] = useState(false);
   const [cashCounts, setCashCounts] = useState<Record<string, number>>({});
   const [efectivoContado, setEfectivoContado] = useState<string>("");
   
@@ -916,6 +920,18 @@ export default function POSPage() {
           {/* TERMINAL HEADER */}
           <header className="h-16 border-b border-slate-700 flex items-center justify-between px-4 bg-slate-800">
             <div className="flex items-center gap-4">
+              <button
+                onClick={() => {
+                  if (shift && salesHistory.length > 0) {
+                    setShowExitConfirmModal(true);
+                  } else {
+                    navigate('/dashboard');
+                  }
+                }}
+                className="text-sm text-slate-400 hover:text-white flex items-center gap-1"
+              >
+                ← Salir
+              </button>
               <div className="text-sm text-slate-400">
                 Cajero: <span className="text-white">Usuario Demo</span>
               </div>
@@ -955,7 +971,17 @@ export default function POSPage() {
                     {shift?.precorteGuardado ? '✓ Precorte realizado' : '📊 Precorte'}
                   </button>
                   <button
-                    onClick={() => setShowCloseShiftModal(true)}
+                    onClick={async () => {
+                      if (!shift) return;
+                      try {
+                        const response = await api.get(`/pos/shifts/${shift.id}/summary`);
+                        setShiftSummary(response.data);
+                        setShowCloseShiftModal(true);
+                      } catch (error) {
+                        console.error("Error loading shift summary:", error);
+                        alert("Error al cargar resumen del turno");
+                      }
+                    }}
                     disabled={!shift?.precorteGuardado}
                     className="px-4 py-2 rounded bg-red-600 text-white text-sm hover:bg-red-700 disabled:bg-slate-700 disabled:text-slate-500"
                   >
@@ -2347,7 +2373,7 @@ export default function POSPage() {
                   }`}
                 >
                   <span className="text-xl">▣</span>
-                  <span className="font-medium">Débito</span>
+                  <span className="font-medium">Tarjeta Débito</span>
                 </button>
                 <button
                   onClick={() => {
@@ -2362,7 +2388,7 @@ export default function POSPage() {
                   }`}
                 >
                   <span className="text-xl">◉</span>
-                  <span className="font-medium">Crédito</span>
+                  <span className="font-medium">Tarjeta Crédito</span>
                 </button>
                 <button
                   onClick={() => {
@@ -3102,37 +3128,32 @@ export default function POSPage() {
                   <tbody>
                     {(() => {
                       const declaracion = shift.precorteDeclaracion || {};
-                      const efectivoSistema = Number(shift.fondoInicial) + Number(shift.totalEfectivo) + Number(shift.totalDepositos || 0) - Number(shift.totalRetiros || 0);
+                      const totals = shiftSummary?.calculatedTotals || {};
+                      
+                      const efectivoSistema = totals.efectivoEsperado || (Number(shift.fondoInicial) + Number(shift.totalEfectivo) + Number(shift.totalDepositos || 0) - Number(shift.totalRetiros || 0));
                       const efectivoDeclarado = Number(declaracion.efectivoContado) || 0;
                       const efectivoDif = efectivoSistema - efectivoDeclarado;
                       
-                      const debitoSistema = Number(shift.totalTarjeta) * 0.5; // Assuming split for demo
+                      const debitoSistema = totals.totalVentasDebito || 0;
                       const debitoDeclarado = Number(declaracion.debitoDeclarado) || 0;
                       const debitoDif = debitoSistema - debitoDeclarado;
                       
-                      const creditoSistema = Number(shift.totalTarjeta) * 0.5;
+                      const creditoSistema = totals.totalVentasCredito || 0;
                       const creditoDeclarado = Number(declaracion.creditoDeclarado) || 0;
                       const creditoDif = creditoSistema - creditoDeclarado;
                       
-                      const transferenciaSistema = Number(shift.totalTransferencia);
+                      const transferenciaSistema = totals.totalVentasSPEI || Number(shift.totalTransferencia);
                       const transferenciaDeclarada = Number(declaracion.transferenciaDeclarada) || 0;
                       const transferenciaDif = transferenciaSistema - transferenciaDeclarada;
                       
-                      const valesSistema = Number(shift.totalCortesia);
-                      const valesDeclarados = Number(declaracion.valesDeclarados) || 0;
-                      const valesDif = valesSistema - valesDeclarados;
-                      
-                      const totalSistema = efectivoSistema + debitoSistema + creditoSistema + transferenciaSistema + valesSistema;
-                      const totalDeclarado = efectivoDeclarado + debitoDeclarado + creditoDeclarado + transferenciaDeclarada + valesDeclarados;
-                      const totalDif = totalSistema - totalDeclarado;
+                      const cortesiaSistema = totals.totalVentasCortesia || Number(shift.totalCortesia);
                       
                       const rows = [
                         { name: 'Efectivo', sistema: efectivoSistema, declarado: efectivoDeclarado, dif: efectivoDif },
-                        { name: 'Débito', sistema: debitoSistema, declarado: debitoDeclarado, dif: debitoDif },
-                        { name: 'Crédito', sistema: creditoSistema, declarado: creditoDeclarado, dif: creditoDif },
-                        { name: 'Transferencia', sistema: transferenciaSistema, declarado: transferenciaDeclarada, dif: transferenciaDif },
-                        { name: 'Vales/Cupones', sistema: valesSistema, declarado: valesDeclarados, dif: valesDif },
-                        { name: 'Cortesías', sistema: valesSistema, declarado: 0, dif: 0, noDeclarado: true },
+                        { name: 'Tarjeta Débito', sistema: debitoSistema, declarado: debitoDeclarado, dif: debitoDif },
+                        { name: 'Tarjeta Crédito', sistema: creditoSistema, declarado: creditoDeclarado, dif: creditoDif },
+                        { name: 'SPEI', sistema: transferenciaSistema, declarado: transferenciaDeclarada, dif: transferenciaDif },
+                        { name: 'Cortesía', sistema: cortesiaSistema, declarado: 0, dif: 0, noDeclarado: true },
                       ];
                       
                       return rows.map((row, i) => (
@@ -3150,9 +3171,64 @@ export default function POSPage() {
                     })()}
                     <tr className="border-t border-slate-700 font-bold">
                       <td className="py-2">TOTAL</td>
-                      <td className="text-right py-2">${(Number(shift.fondoInicial) + Number(shift.totalVentas) + Number(shift.totalDepositos || 0) - Number(shift.totalRetiros || 0)).toFixed(2)}</td>
-                      <td className="text-right py-2">${(shift.precorteDeclaracion?.efectivoContado || 0 + Number(shift.precorteDeclaracion?.debitoDeclarado || 0) + Number(shift.precorteDeclaracion?.creditoDeclarado || 0) + Number(shift.precorteDeclaracion?.transferenciaDeclarada || 0) + Number(shift.precorteDeclaracion?.valesDeclarados || 0)).toFixed(2)}</td>
-                      <td className="text-right py-2">$0.00</td>
+                      <td className="text-right py-2">${(() => {
+                        const totals = shiftSummary?.calculatedTotals || {};
+                        const efectivoSistema = totals.efectivoEsperado || (Number(shift.fondoInicial) + Number(shift.totalEfectivo) + Number(shift.totalDepositos || 0) - Number(shift.totalRetiros || 0));
+                        const debitoSistema = totals.totalVentasDebito || 0;
+                        const creditoSistema = totals.totalVentasCredito || 0;
+                        const transferenciaSistema = totals.totalVentasSPEI || Number(shift.totalTransferencia);
+                        const cortesiaSistema = totals.totalVentasCortesia || Number(shift.totalCortesia);
+                        return (efectivoSistema + debitoSistema + creditoSistema + transferenciaSistema + cortesiaSistema).toFixed(2);
+                      })()}</td>
+                      <td className="text-right py-2">${(() => {
+                        const declaracion = shift.precorteDeclaracion || {};
+                        const efectivoDeclarado = Number(declaracion.efectivoContado) || 0;
+                        const debitoDeclarado = Number(declaracion.debitoDeclarado) || 0;
+                        const creditoDeclarado = Number(declaracion.creditoDeclarado) || 0;
+                        const transferenciaDeclarada = Number(declaracion.transferenciaDeclarada) || 0;
+                        return (efectivoDeclarado + debitoDeclarado + creditoDeclarado + transferenciaDeclarada).toFixed(2);
+                      })()}</td>
+                      <td className={`text-right py-2 ${
+                        (() => {
+                          const totals = shiftSummary?.calculatedTotals || {};
+                          const efectivoSistema = totals.efectivoEsperado || (Number(shift.fondoInicial) + Number(shift.totalEfectivo) + Number(shift.totalDepositos || 0) - Number(shift.totalRetiros || 0));
+                          const debitoSistema = totals.totalVentasDebito || 0;
+                          const creditoSistema = totals.totalVentasCredito || 0;
+                          const transferenciaSistema = totals.totalVentasSPEI || Number(shift.totalTransferencia);
+                          const cortesiaSistema = totals.totalVentasCortesia || Number(shift.totalCortesia);
+                          const totalSistema = efectivoSistema + debitoSistema + creditoSistema + transferenciaSistema + cortesiaSistema;
+                          
+                          const declaracion = shift.precorteDeclaracion || {};
+                          const efectivoDeclarado = Number(declaracion.efectivoContado) || 0;
+                          const debitoDeclarado = Number(declaracion.debitoDeclarado) || 0;
+                          const creditoDeclarado = Number(declaracion.creditoDeclarado) || 0;
+                          const transferenciaDeclarada = Number(declaracion.transferenciaDeclarada) || 0;
+                          const totalDeclarado = efectivoDeclarado + debitoDeclarado + creditoDeclarado + transferenciaDeclarada;
+                          const totalDif = totalSistema - totalDeclarado;
+                          
+                          return totalDif === 0 ? '' : totalDif < 0 ? 'text-red-400' : 'text-green-400';
+                        })()
+                      }`}>
+                        ${(() => {
+                          const totals = shiftSummary?.calculatedTotals || {};
+                          const efectivoSistema = totals.efectivoEsperado || (Number(shift.fondoInicial) + Number(shift.totalEfectivo) + Number(shift.totalDepositos || 0) - Number(shift.totalRetiros || 0));
+                          const debitoSistema = totals.totalVentasDebito || 0;
+                          const creditoSistema = totals.totalVentasCredito || 0;
+                          const transferenciaSistema = totals.totalVentasSPEI || Number(shift.totalTransferencia);
+                          const cortesiaSistema = totals.totalVentasCortesia || Number(shift.totalCortesia);
+                          const totalSistema = efectivoSistema + debitoSistema + creditoSistema + transferenciaSistema + cortesiaSistema;
+                          
+                          const declaracion = shift.precorteDeclaracion || {};
+                          const efectivoDeclarado = Number(declaracion.efectivoContado) || 0;
+                          const debitoDeclarado = Number(declaracion.debitoDeclarado) || 0;
+                          const creditoDeclarado = Number(declaracion.creditoDeclarado) || 0;
+                          const transferenciaDeclarada = Number(declaracion.transferenciaDeclarada) || 0;
+                          const totalDeclarado = efectivoDeclarado + debitoDeclarado + creditoDeclarado + transferenciaDeclarada;
+                          const totalDif = totalSistema - totalDeclarado;
+                          
+                          return totalDif.toFixed(2);
+                        })()}
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -3172,6 +3248,32 @@ export default function POSPage() {
                   Cerrar Turno Definitivamente
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CONFIRMACIÓN SALIR */}
+      {showExitConfirmModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-xl p-6 w-96">
+            <h3 className="text-lg font-semibold mb-4">¿Salir del POS?</h3>
+            <p className="text-sm text-slate-400 mb-6">
+              ¿Seguro que deseas salir? El turno quedará activo y podrás continuar después.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowExitConfirmModal(false)}
+                className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+              >
+                Salir
+              </button>
             </div>
           </div>
         </div>
