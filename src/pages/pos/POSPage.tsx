@@ -94,6 +94,20 @@ export default function POSPage() {
   const [courtesyAuthorizedBy, setCourtesyAuthorizedBy] = useState("");
   const [cardValidationError, setCardValidationError] = useState("");
   
+  // Enhanced discount modal state
+  const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
+  const [customDiscountValue, setCustomDiscountValue] = useState<string>("");
+  const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
+  const [selectAllProducts, setSelectAllProducts] = useState(true);
+  const [discountReason, setDiscountReason] = useState<string>("");
+  const [predefinedDiscounts, setPredefinedDiscounts] = useState<number[]>([5, 10, 15, 20, 25, 50]);
+  
+  // Enhanced courtesy modal state
+  const [courtesyProductIds, setCourtesyProductIds] = useState<Set<string>>(new Set());
+  const [selectAllCourtesy, setSelectAllCourtesy] = useState(true);
+  const [courtesyAuthUser, setCourtesyAuthUser] = useState<string>("");
+  const [courtesyAuthPin, setCourtesyAuthPin] = useState<string>("");
+  
   // Retiro/Depósito modals
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
   const [showDepositModal, setShowDepositModal] = useState(false);
@@ -292,16 +306,26 @@ export default function POSPage() {
       return;
     }
     try {
-      await api.post("/pos/shifts", {
+      const response = await api.post("/pos/shifts", {
         cajero: selectedCashier || "current-user-id",
         sucursalId: "default-branch-id",
         fondoInicial: Number(initialFund) || 0,
         notas: shiftNotes,
       });
+      console.log('Turno creado:', response.data);
       setShowOpenShiftModal(false);
       setInitialFund("");
       setShiftNotes("");
-      loadOpenShift();
+      // Set shift directly from response instead of reloading
+      setShift({
+        ...response.data,
+        totalVentas: Number(response.data.totalVentas) || 0,
+        totalEfectivo: Number(response.data.totalEfectivo) || 0,
+        totalTarjeta: Number(response.data.totalTarjeta) || 0,
+        totalTransferencia: Number(response.data.totalTransferencia) || 0,
+        totalCortesia: Number(response.data.totalCortesia) || 0,
+        totalDevoluciones: Number(response.data.totalDevoluciones) || 0,
+      });
     } catch (error) {
       console.error("Error opening shift:", error);
       alert("Error al abrir turno");
@@ -500,32 +524,74 @@ export default function POSPage() {
   }
 
   function applyGlobalDiscount() {
-    if (ticket.length > 0) {
-      const discount = Number(discountPercent);
+    if (ticket.length > 0 && discountReason) {
+      const discount = Number(customDiscountValue) || Number(discountPercent);
+      const targetIds = selectAllProducts ? new Set(ticket.map(t => t.productoId)) : selectedProductIds;
+      
       setTicket(
-        ticket.map((item) => ({
-          ...item,
-          descuento: discount,
-          subtotal: item.cantidad * Number(item.precioUnitario) * (1 - discount / 100),
-        }))
+        ticket.map((item) => {
+          if (targetIds.has(item.productoId)) {
+            if (discountType === 'percentage') {
+              return {
+                ...item,
+                descuento: discount,
+                subtotal: item.cantidad * Number(item.precioUnitario) * (1 - discount / 100),
+              };
+            } else {
+              const discountAmount = discount;
+              const newSubtotal = Math.max(0, item.cantidad * Number(item.precioUnitario) - discountAmount);
+              return {
+                ...item,
+                descuento: (discountAmount / (item.cantidad * Number(item.precioUnitario))) * 100,
+                subtotal: newSubtotal,
+              };
+            }
+          }
+          return item;
+        })
       );
       setShowDiscountModal(false);
       setDiscountPercent("");
+      setCustomDiscountValue("");
+      setDiscountReason("");
+      setSelectedProductIds(new Set());
+      setSelectAllProducts(true);
+    } else {
+      alert("Debe ingresar un motivo para el descuento");
     }
   }
 
   function applyCourtesy() {
-    if (ticket.length > 0 && courtesyReason && courtesyAuthorizedBy) {
+    if (ticket.length > 0 && courtesyReason && courtesyAuthUser && courtesyAuthPin) {
+      // Simple PIN validation (in production, validate against backend)
+      if (courtesyAuthPin.length < 4) {
+        alert("El PIN debe tener al menos 4 dígitos");
+        return;
+      }
+      
+      const targetIds = selectAllCourtesy ? new Set(ticket.map(t => t.productoId)) : courtesyProductIds;
+      
       setTicket(
-        ticket.map((item) => ({
-          ...item,
-          descuento: 100,
-          subtotal: 0,
-        }))
+        ticket.map((item) => {
+          if (targetIds.has(item.productoId)) {
+            return {
+              ...item,
+              descuento: 100,
+              subtotal: 0,
+              esCortesia: true,
+            };
+          }
+          return item;
+        })
       );
       setShowCourtesyModal(false);
       setCourtesyReason("");
-      setCourtesyAuthorizedBy("");
+      setCourtesyAuthUser("");
+      setCourtesyAuthPin("");
+      setCourtesyProductIds(new Set());
+      setSelectAllCourtesy(true);
+    } else {
+      alert("Debe completar todos los campos obligatorios");
     }
   }
 
@@ -570,6 +636,8 @@ export default function POSPage() {
         turnoId: shift.id,
         sucursalId: "default-branch-id",
       };
+      console.log('turnoActivo:', shift);
+      console.log('body venta:', saleData);
 
       const response = await api.post("/pos/sales", saleData);
       const sale = response.data;
@@ -944,17 +1012,6 @@ export default function POSPage() {
                             </button>
                           </div>
                           <p className="font-semibold">${item.subtotal.toFixed(2)}</p>
-                        </div>
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className="text-xs text-slate-400">Descuento %:</span>
-                          <input
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={item.descuento}
-                            onChange={(e) => updateItemDiscount(item.productoId, Number(e.target.value))}
-                            className="w-16 px-2 py-1 rounded bg-slate-700 text-xs text-white"
-                          />
                         </div>
                       </div>
                     ))
@@ -1938,21 +1995,115 @@ export default function POSPage() {
       {/* MODAL DESCUENTO */}
       {showDiscountModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-xl p-6 w-96">
-            <h3 className="text-lg font-semibold mb-4">Aplicar Descuento Global</h3>
+          <div className="bg-slate-800 rounded-xl p-6 w-[500px] max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-semibold mb-4">Aplicar Descuento</h3>
             <div className="space-y-4">
+              {/* Sección 1: Descuentos predefinidos */}
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Porcentaje de descuento</label>
+                <label className="block text-sm text-slate-400 mb-2">Descuentos predefinidos</label>
+                <div className="flex flex-wrap gap-2">
+                  {predefinedDiscounts.map((percent) => (
+                    <button
+                      key={percent}
+                      onClick={() => {
+                        setDiscountType('percentage');
+                        setCustomDiscountValue(percent.toString());
+                      }}
+                      className="px-3 py-2 rounded bg-slate-700 text-white hover:bg-slate-600 text-sm"
+                    >
+                      {percent}%
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sección 2: Descuento personalizado */}
+              <div>
+                <label className="block text-sm text-slate-400 mb-2">Descuento personalizado</label>
+                <div className="flex gap-2 mb-2">
+                  <button
+                    onClick={() => setDiscountType('percentage')}
+                    className={`flex-1 py-2 rounded ${discountType === 'percentage' ? 'bg-blue-600' : 'bg-slate-700'} text-white`}
+                  >
+                    Porcentaje
+                  </button>
+                  <button
+                    onClick={() => setDiscountType('fixed')}
+                    className={`flex-1 py-2 rounded ${discountType === 'fixed' ? 'bg-blue-600' : 'bg-slate-700'} text-white`}
+                  >
+                    Monto fijo
+                  </button>
+                </div>
                 <input
                   type="number"
                   min="0"
-                  max="100"
-                  value={discountPercent}
-                  onChange={(e) => setDiscountPercent(e.target.value)}
-                  placeholder="0"
+                  value={customDiscountValue || discountPercent}
+                  onChange={(e) => setCustomDiscountValue(e.target.value)}
+                  placeholder={discountType === 'percentage' ? '0' : '0.00'}
                   className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white"
                 />
               </div>
+
+              {/* Sección 3: Selección de productos */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <input
+                    type="checkbox"
+                    checked={selectAllProducts}
+                    onChange={(e) => {
+                      setSelectAllProducts(e.target.checked);
+                      if (e.target.checked) {
+                        setSelectedProductIds(new Set(ticket.map(t => t.productoId)));
+                      } else {
+                        setSelectedProductIds(new Set());
+                      }
+                    }}
+                    className="rounded"
+                  />
+                  <label className="text-sm text-slate-400">Aplicar a todo el ticket</label>
+                </div>
+                {!selectAllProducts && (
+                  <div className="max-h-32 overflow-y-auto space-y-1">
+                    {ticket.map((item) => (
+                      <div key={item.productoId} className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedProductIds.has(item.productoId)}
+                          onChange={(e) => {
+                            const newSet = new Set(selectedProductIds);
+                            if (e.target.checked) {
+                              newSet.add(item.productoId);
+                            } else {
+                              newSet.delete(item.productoId);
+                            }
+                            setSelectedProductIds(newSet);
+                          }}
+                          className="rounded"
+                        />
+                        <span className="text-sm text-white">{item.nombre}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Sección 4: Motivo */}
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Motivo *</label>
+                <select
+                  value={discountReason}
+                  onChange={(e) => setDiscountReason(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white"
+                >
+                  <option value="">Seleccionar motivo...</option>
+                  <option value="promocion">Promoción</option>
+                  <option value="cliente_frecuente">Cliente frecuente</option>
+                  <option value="error_cobro">Error de cobro</option>
+                  <option value="autorizacion_gerencia">Autorización gerencia</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowDiscountModal(false)}
@@ -1964,7 +2115,7 @@ export default function POSPage() {
                   onClick={applyGlobalDiscount}
                   className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
                 >
-                  Aplicar
+                  Aplicar descuento
                 </button>
               </div>
             </div>
@@ -1975,31 +2126,92 @@ export default function POSPage() {
       {/* MODAL CORTESÍA */}
       {showCourtesyModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-xl p-6 w-96">
+          <div className="bg-slate-800 rounded-xl p-6 w-[500px] max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold mb-4">Cortesía</h3>
             <div className="space-y-4">
+              {/* Sección 1: Selección de productos */}
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Motivo (obligatorio)</label>
-                <input
-                  type="text"
+                <div className="flex items-center gap-2 mb-2">
+                  <input
+                    type="checkbox"
+                    checked={selectAllCourtesy}
+                    onChange={(e) => {
+                      setSelectAllCourtesy(e.target.checked);
+                      if (e.target.checked) {
+                        setCourtesyProductIds(new Set(ticket.map(t => t.productoId)));
+                      } else {
+                        setCourtesyProductIds(new Set());
+                      }
+                    }}
+                    className="rounded"
+                  />
+                  <label className="text-sm text-slate-400">Cortesía total del ticket</label>
+                </div>
+                {!selectAllCourtesy && (
+                  <div className="max-h-32 overflow-y-auto space-y-1">
+                    {ticket.map((item) => (
+                      <div key={item.productoId} className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={courtesyProductIds.has(item.productoId)}
+                          onChange={(e) => {
+                            const newSet = new Set(courtesyProductIds);
+                            if (e.target.checked) {
+                              newSet.add(item.productoId);
+                            } else {
+                              newSet.delete(item.productoId);
+                            }
+                            setCourtesyProductIds(newSet);
+                          }}
+                          className="rounded"
+                        />
+                        <span className="text-sm text-white">{item.nombre}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Sección 2: Motivo */}
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Motivo *</label>
+                <select
                   value={courtesyReason}
                   onChange={(e) => setCourtesyReason(e.target.value)}
-                  placeholder="Motivo de la cortesía"
-                  className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-slate-400 mb-1">Autorizado por</label>
-                <select
-                  value={courtesyAuthorizedBy}
-                  onChange={(e) => setCourtesyAuthorizedBy(e.target.value)}
                   className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white"
                 >
-                  <option value="">Seleccionar</option>
-                  <option value="ADMIN">Administrador</option>
-                  <option value="SOPORTE">Soporte</option>
+                  <option value="">Seleccionar motivo...</option>
+                  <option value="cortesia_ejecutiva">Cortesía ejecutiva</option>
+                  <option value="error_pedido">Error en pedido</option>
+                  <option value="cliente_vip">Cliente VIP</option>
+                  <option value="cumpleanos">Cumpleaños</option>
+                  <option value="compensacion_queja">Compensación por queja</option>
+                  <option value="otro">Otro</option>
                 </select>
               </div>
+
+              {/* Sección 3: Autorización */}
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Autorización *</label>
+                <select
+                  value={courtesyAuthUser}
+                  onChange={(e) => setCourtesyAuthUser(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white mb-2"
+                >
+                  <option value="">Seleccionar autorizador...</option>
+                  <option value="admin">Administrador</option>
+                  <option value="soporte">Soporte</option>
+                </select>
+                <input
+                  type="password"
+                  maxLength={4}
+                  value={courtesyAuthPin}
+                  onChange={(e) => setCourtesyAuthPin(e.target.value)}
+                  placeholder="PIN de autorización (4 dígitos)"
+                  className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white text-center"
+                />
+              </div>
+
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowCourtesyModal(false)}
@@ -2009,10 +2221,10 @@ export default function POSPage() {
                 </button>
                 <button
                   onClick={applyCourtesy}
-                  disabled={!courtesyReason || !courtesyAuthorizedBy}
-                  className="flex-1 py-2 rounded bg-yellow-600 text-white hover:bg-yellow-700 disabled:bg-slate-700 disabled:text-slate-500"
+                  disabled={!courtesyReason || !courtesyAuthUser || !courtesyAuthPin}
+                  className="flex-1 py-2 rounded bg-purple-600 text-white hover:bg-purple-700 disabled:bg-slate-700 disabled:text-slate-500"
                 >
-                  Aplicar
+                  Aplicar cortesía
                 </button>
               </div>
             </div>
