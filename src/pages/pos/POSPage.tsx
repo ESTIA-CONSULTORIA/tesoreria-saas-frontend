@@ -183,7 +183,10 @@ export default function POSPage() {
   async function loadProducts() {
     try {
       const response = await api.get("/pos/products");
-      setProducts(Array.isArray(response.data) ? response.data : []);
+      setProducts(Array.isArray(response.data) ? response.data.map((p: any) => ({
+        ...p,
+        price: Number(p.price) || 0
+      })) : []);
     } catch (error) {
       console.error("Error loading products:", error);
     }
@@ -207,7 +210,15 @@ export default function POSPage() {
           sucursalId: "default-branch-id",
         },
       });
-      setShift(response.data || null);
+      setShift(response.data ? {
+        ...response.data,
+        totalVentas: Number(response.data.totalVentas) || 0,
+        totalEfectivo: Number(response.data.totalEfectivo) || 0,
+        totalTarjeta: Number(response.data.totalTarjeta) || 0,
+        totalTransferencia: Number(response.data.totalTransferencia) || 0,
+        totalCortesia: Number(response.data.totalCortesia) || 0,
+        totalDevoluciones: Number(response.data.totalDevoluciones) || 0,
+      } : null);
     } catch (error) {
       console.error("Error loading open shift:", error);
     }
@@ -223,7 +234,19 @@ export default function POSPage() {
         filters.turnoId = shift.id;
       }
       const response = await api.get("/pos/sales", { params: filters });
-      setSalesHistory(Array.isArray(response.data) ? response.data : []);
+      setSalesHistory(Array.isArray(response.data) ? response.data.map((s: any) => ({
+        ...s,
+        total: Number(s.total) || 0,
+        subtotal: Number(s.subtotal) || 0,
+        descuento: Number(s.descuento) || 0,
+        impuestos: Number(s.impuestos) || 0,
+        items: Array.isArray(s.items) ? s.items.map((item: any) => ({
+          ...item,
+          subtotal: Number(item.subtotal) || 0,
+          precioUnitario: Number(item.precioUnitario) || 0,
+          descuento: Number(item.descuento) || 0
+        })) : []
+      })) : []);
     } catch (error) {
       console.error("Error loading sales history:", error);
     }
@@ -267,15 +290,16 @@ export default function POSPage() {
     if (existingItem) {
       updateQuantity(product.id, existingItem.cantidad + 1);
     } else {
+      const price = Number(product.price) || 0;
       setTicket([
         ...ticket,
         {
           productoId: product.id,
           nombre: product.name,
           cantidad: 1,
-          precioUnitario: product.price,
+          precioUnitario: price,
           descuento: 0,
-          subtotal: product.price,
+          subtotal: price,
         },
       ]);
     }
@@ -289,7 +313,7 @@ export default function POSPage() {
     setTicket(
       ticket.map((item) =>
         item.productoId === productId
-          ? { ...item, cantidad, subtotal: cantidad * item.precioUnitario * (1 - item.descuento / 100) }
+          ? { ...item, cantidad, subtotal: cantidad * Number(item.precioUnitario) * (1 - Number(item.descuento) / 100) }
           : item
       )
     );
@@ -303,18 +327,18 @@ export default function POSPage() {
     setTicket(
       ticket.map((item) =>
         item.productoId === productId
-          ? { ...item, descuento, subtotal: item.cantidad * item.precioUnitario * (1 - descuento / 100) }
+          ? { ...item, descuento, subtotal: item.cantidad * Number(item.precioUnitario) * (1 - descuento / 100) }
           : item
       )
     );
   }
 
   function getSubtotal() {
-    return ticket.reduce((sum, item) => sum + item.cantidad * item.precioUnitario, 0);
+    return ticket.reduce((sum, item) => sum + item.cantidad * Number(item.precioUnitario), 0);
   }
 
   function getTotalDiscount() {
-    return ticket.reduce((sum, item) => sum + (item.cantidad * item.precioUnitario * item.descuento) / 100, 0);
+    return ticket.reduce((sum, item) => sum + (item.cantidad * Number(item.precioUnitario) * Number(item.descuento)) / 100, 0);
   }
 
   function getTaxes() {
@@ -365,7 +389,7 @@ export default function POSPage() {
         ticket.map((item) => ({
           ...item,
           descuento: discount,
-          subtotal: item.cantidad * item.precioUnitario * (1 - discount / 100),
+          subtotal: item.cantidad * Number(item.precioUnitario) * (1 - discount / 100),
         }))
       );
       setShowDiscountModal(false);
