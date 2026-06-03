@@ -18,6 +18,7 @@ import PurchasesPage from "./pages/purchases/PurchasesPage";
 import CostsPage from "./pages/costs/CostsPage";
 import LogsPage from "./pages/administration/LogsPage";
 import MobileAnalyticsApp from "./pages/mobile-analytics/MobileAnalyticsApp";
+import POSPage from "./pages/pos/POSPage";
 
 import LoginPage from "./pages/Login/LoginPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
@@ -255,6 +256,15 @@ function App() {
             <ModuloRoute modulo="costos">
               <CostsPage />
             </ModuloRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/pos"
+        element={
+          <ProtectedRoute>
+            <POSPage />
           </ProtectedRoute>
         }
       />
