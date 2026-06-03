@@ -18,7 +18,7 @@ interface Product {
   name: string;
   price: number;
   category: string;
-  image?: string;
+  imageUrl?: string;
 }
 
 interface Shift {
@@ -734,18 +734,22 @@ export default function POSPage() {
               </div>
 
               <div className="flex-1 overflow-y-auto p-4">
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                   {filteredProducts.map((product) => (
                     <button
                       key={product.id}
                       onClick={() => addToTicket(product)}
-                      className="p-4 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left transition-colors"
+                      className="max-w-[120px] max-h-[120px] p-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left transition-colors flex flex-col"
                     >
-                      <div className="aspect-square bg-slate-700 rounded mb-2 flex items-center justify-center text-3xl">
-                        📦
+                      <div className="w-full aspect-square bg-slate-700 rounded mb-2 flex items-center justify-center overflow-hidden">
+                        {product.imageUrl ? (
+                          <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-3xl">🛒</span>
+                        )}
                       </div>
-                      <p className="font-medium text-sm truncate">{product.name}</p>
-                      <p className="text-green-400 font-bold">${product.price.toFixed(2)}</p>
+                      <p className="font-medium text-xs line-clamp-2 h-8 overflow-hidden">{product.name}</p>
+                      <p className="text-green-400 font-bold text-sm">${product.price.toFixed(2)}</p>
                     </button>
                   ))}
                 </div>
@@ -838,14 +842,16 @@ export default function POSPage() {
 
                 <button
                   onClick={() => setShowDiscountModal(true)}
-                  className="w-full py-2 rounded-lg bg-slate-700 text-white font-medium hover:bg-slate-600"
+                  disabled={!ticket || ticket.length === 0}
+                  className="w-full py-2 rounded-lg bg-slate-700 text-white font-medium hover:bg-slate-600 disabled:bg-slate-800 disabled:text-slate-500"
                 >
                   Aplicar Descuento
                 </button>
 
                 <button
                   onClick={() => setShowCourtesyModal(true)}
-                  className="w-full py-2 rounded-lg bg-yellow-600 text-white font-medium hover:bg-yellow-700"
+                  disabled={!ticket || ticket.length === 0}
+                  className="w-full py-2 rounded-lg bg-yellow-600 text-white font-medium hover:bg-yellow-700 disabled:bg-slate-800 disabled:text-slate-500"
                 >
                   Cortesía
                 </button>
@@ -858,7 +864,7 @@ export default function POSPage() {
                       setCardValidationError("");
                     }
                   }}
-                  disabled={ticket.length === 0 || !shift}
+                  disabled={!ticket || ticket.length === 0}
                   className="w-full py-4 rounded-lg bg-green-600 text-white font-bold text-xl hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500"
                 >
                   COBRAR
@@ -2153,6 +2159,16 @@ export default function POSPage() {
                   placeholder="https://..."
                   className="w-full px-3 py-2 rounded bg-slate-900 text-white"
                 />
+                {productForm.imagenUrl && (
+                  <div className="mt-2 w-24 h-24 rounded bg-slate-700 overflow-hidden">
+                    <img 
+                      src={productForm.imagenUrl} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => (e.currentTarget.style.display = 'none')}
+                    />
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm text-slate-400 mb-1">Tipo</label>
