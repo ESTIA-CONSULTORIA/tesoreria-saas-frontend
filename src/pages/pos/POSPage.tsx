@@ -101,6 +101,9 @@ export default function POSPage() {
     categoria: "",
     imagenUrl: "",
     impuesto: "16",
+    tipo: "SIMPLE",
+    recipeId: "",
+    insumoId: "",
     activo: true
   });
 
@@ -859,6 +862,9 @@ export default function POSPage() {
                     categoria: "",
                     imagenUrl: "",
                     impuesto: "16",
+                    tipo: "SIMPLE",
+                    recipeId: "",
+                    insumoId: "",
                     activo: true
                   });
                   setShowProductModal(true);
@@ -920,6 +926,9 @@ export default function POSPage() {
                               categoria: product.categoria || "",
                               imagenUrl: product.imagenUrl || "",
                               impuesto: product.impuesto || "16",
+                              tipo: product.tipo || "SIMPLE",
+                              recipeId: product.recipeId || "",
+                              insumoId: product.insumoId || "",
                               activo: product.activo
                             });
                             setShowProductModal(true);
@@ -2121,6 +2130,48 @@ export default function POSPage() {
                   className="w-full px-3 py-2 rounded bg-slate-900 text-white"
                 />
               </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Tipo</label>
+                <select
+                  value={productForm.tipo}
+                  onChange={(e) => setProductForm({ ...productForm, tipo: e.target.value, recipeId: "", insumoId: "" })}
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                >
+                  <option value="SIMPLE">Simple (retail)</option>
+                  <option value="PREPARADO">Preparado (receta)</option>
+                </select>
+              </div>
+              {productForm.tipo === "PREPARADO" && (
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Receta</label>
+                  <select
+                    value={productForm.recipeId}
+                    onChange={(e) => setProductForm({ ...productForm, recipeId: e.target.value })}
+                    className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                  >
+                    <option value="">Seleccionar receta</option>
+                    <option value="receta-1">Hamburguesa clásica</option>
+                    <option value="receta-2">Hot Dog</option>
+                    <option value="receta-3">Pizza personal</option>
+                  </select>
+                </div>
+              )}
+              {productForm.tipo === "SIMPLE" && (
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Insumo</label>
+                  <select
+                    value={productForm.insumoId}
+                    onChange={(e) => setProductForm({ ...productForm, insumoId: e.target.value })}
+                    className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                  >
+                    <option value="">Seleccionar insumo</option>
+                    <option value="insumo-1">Refresco lata</option>
+                    <option value="insumo-2">Agua embotellada</option>
+                    <option value="insumo-3">Cerveza</option>
+                    <option value="insumo-4">Jugo natural</option>
+                  </select>
+                </div>
+              )}
               <div>
                 <label className="block text-sm text-slate-400 mb-1">Impuesto (%)</label>
                 <select
