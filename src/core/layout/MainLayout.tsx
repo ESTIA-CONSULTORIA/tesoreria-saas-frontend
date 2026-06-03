@@ -26,7 +26,6 @@ const navItems = [
   { label: "Tesorería", to: "/treasury", icon: "💰", modulo: "tesoreria" },
   { label: "Conciliación", to: "/reconciliation", icon: "📋", modulo: "conciliacion" },
   { label: "Administración", to: "/administration", icon: "🔐", adminOnly: true, modulo: "administracion" },
-  { label: "Logs de Auditoría", to: "/logs", icon: "📝", modulo: "administracion" },
   { label: "Configuración", to: "/settings", icon: "⚙️", modulo: "configuracion" },
   { label: "Configuración POS", to: "/pos-config", icon: "🖥️", modulo: "configuracion-pos" },
 ];
