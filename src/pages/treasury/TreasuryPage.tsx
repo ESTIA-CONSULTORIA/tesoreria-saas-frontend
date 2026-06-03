@@ -1,26 +1,31 @@
 import { useEffect, useState } from "react";
 import { api } from "../../core/api/api";
+import MainLayout from "../../core/layout/MainLayout";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 
 type TabType = "executive" | "cashflow" | "bank" | "alerts";
+type PeriodType = "week" | "month" | "quarter";
 
 export default function TreasuryPage() {
   const [activeTab, setActiveTab] = useState<TabType>("executive");
+  const [period, setPeriod] = useState<PeriodType>("month");
   const [executiveSummary, setExecutiveSummary] = useState<any>(null);
   const [cashFlow, setCashFlow] = useState<any>(null);
   const [bankPosition, setBankPosition] = useState<any>(null);
   const [alerts, setAlerts] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [forecastDays, setForecastDays] = useState(30);
 
   useEffect(() => {
     loadData();
-  }, [activeTab, forecastDays]);
+  }, [activeTab, period]);
 
   async function loadData() {
     try {
       setLoading(true);
       setError("");
+
+      const days = period === "week" ? 7 : period === "month" ? 30 : 90;
 
       switch (activeTab) {
         case "executive":
@@ -28,7 +33,7 @@ export default function TreasuryPage() {
           setExecutiveSummary(execResponse.data);
           break;
         case "cashflow":
-          const cashResponse = await api.get(`/treasury/cash-flow-forecast?days=${forecastDays}`);
+          const cashResponse = await api.get(`/treasury/cash-flow-forecast?days=${days}`);
           setCashFlow(cashResponse.data);
           break;
         case "bank":
@@ -47,12 +52,37 @@ export default function TreasuryPage() {
     }
   }
 
+  function getDaysUntilPayment(date: string | Date): number {
+    const paymentDate = new Date(date);
+    const now = new Date();
+    const diffTime = paymentDate.getTime() - now.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+  function getPaymentColor(days: number): string {
+    if (days < 7) return "bg-red-500";
+    if (days < 15) return "bg-yellow-500";
+    return "bg-green-500";
+  }
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Tesorería</h1>
-        <p className="text-slate-400">Gestión financiera integral</p>
-      </div>
+    <MainLayout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Tesorería</h1>
+            <p className="text-slate-400">Gestión financiera integral</p>
+          </div>
+          <select
+            value={period}
+            onChange={(e) => setPeriod(e.target.value as PeriodType)}
+            className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-white"
+          >
+            <option value="week">Semana</option>
+            <option value="month">Mes</option>
+            <option value="quarter">Trimestre</option>
+          </select>
+        </div>
 
       {error && (
         <div className="rounded-xl border border-red-700 bg-red-900/30 p-4 text-red-300">
@@ -108,32 +138,39 @@ export default function TreasuryPage() {
         <div className="rounded-xl bg-slate-900 p-6">Cargando...</div>
       ) : (
         <>
-          {/* TAB 1: Resumen Ejecutivo */}
+          {/* TAB 1: Resumen Ejecutivo - 4 KPIs */}
           {activeTab === "executive" && executiveSummary && (
             <div className="space-y-6">
-              {/* KPIs principales */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* 4 KPIs principales */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
                   <h3 className="mb-2 text-sm text-slate-400">Saldo Total</h3>
-                  <p className="text-3xl font-bold text-green-400">
+                  <p className="text-3xl font-bold text-white">
                     ${Number(executiveSummary.totalBalance || 0).toFixed(2)}
+                  </p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    {executiveSummary.comparison?.netChangePercent >= 0 ? "+" : ""}
+                    {Number(executiveSummary.comparison?.netChangePercent || 0).toFixed(1)}% vs mes anterior
                   </p>
                 </div>
                 <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                  <h3 className="mb-2 text-sm text-slate-400">Flujo Neto del Mes</h3>
+                  <h3 className="mb-2 text-sm text-slate-400">Ingresos del Período</h3>
+                  <p className="text-3xl font-bold text-green-400">
+                    ${Number(executiveSummary.monthlyFlow?.income || 0).toFixed(2)}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+                  <h3 className="mb-2 text-sm text-slate-400">Egresos del Período</h3>
+                  <p className="text-3xl font-bold text-red-400">
+                    ${Number(executiveSummary.monthlyFlow?.expense || 0).toFixed(2)}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+                  <h3 className="mb-2 text-sm text-slate-400">Flujo Neto</h3>
                   <p className={`text-3xl font-bold ${
                     executiveSummary.monthlyFlow?.net >= 0 ? "text-green-400" : "text-red-400"
                   }`}>
                     ${Number(executiveSummary.monthlyFlow?.net || 0).toFixed(2)}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                  <h3 className="mb-2 text-sm text-slate-400">Comparativo Mes Anterior</h3>
-                  <p className={`text-3xl font-bold ${
-                    executiveSummary.comparison?.netChange >= 0 ? "text-green-400" : "text-red-400"
-                  }`}>
-                    {executiveSummary.comparison?.netChangePercent >= 0 ? "+" : ""}
-                    {Number(executiveSummary.comparison?.netChangePercent || 0).toFixed(1)}%
                   </p>
                 </div>
               </div>
@@ -234,22 +271,9 @@ export default function TreasuryPage() {
             </div>
           )}
 
-          {/* TAB 2: Flujo de Caja Proyectado */}
+          {/* TAB 2: Flujo de Caja Proyectado - Gráfica Recharts */}
           {activeTab === "cashflow" && cashFlow && (
             <div className="space-y-6">
-              <div className="flex gap-4 items-center">
-                <label className="text-slate-400">Proyección a:</label>
-                <select
-                  value={forecastDays}
-                  onChange={(e) => setForecastDays(Number(e.target.value))}
-                  className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-white"
-                >
-                  <option value={30}>30 días</option>
-                  <option value={60}>60 días</option>
-                  <option value={90}>90 días</option>
-                </select>
-              </div>
-
               {/* Resumen de proyección */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
@@ -259,15 +283,15 @@ export default function TreasuryPage() {
                   </p>
                 </div>
                 <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                  <h3 className="mb-2 text-sm text-slate-400">Ingresos Esperados</h3>
+                  <h3 className="mb-2 text-sm text-slate-400">Promedio Diario Ingresos</h3>
                   <p className="text-2xl font-bold text-green-400">
-                    ${Number(cashFlow.totalExpectedIncome || 0).toFixed(2)}
+                    ${Number(cashFlow.avgDailyIncome || 0).toFixed(2)}
                   </p>
                 </div>
                 <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                  <h3 className="mb-2 text-sm text-slate-400">Egresos Esperados</h3>
+                  <h3 className="mb-2 text-sm text-slate-400">Promedio Diario Egresos</h3>
                   <p className="text-2xl font-bold text-red-400">
-                    ${Number(cashFlow.totalExpectedExpense || 0).toFixed(2)}
+                    ${Number(cashFlow.avgDailyExpense || 0).toFixed(2)}
                   </p>
                 </div>
                 <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
@@ -278,6 +302,59 @@ export default function TreasuryPage() {
                     ${Number(cashFlow.projectedBalance || 0).toFixed(2)}
                   </p>
                 </div>
+              </div>
+
+              {/* Gráfica de flujo proyectado */}
+              <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+                <h3 className="mb-4 text-lg font-semibold">Flujo de Caja Proyectado</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={cashFlow.dailyForecast}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                    <XAxis 
+                      dataKey="date" 
+                      stroke="#94a3b8"
+                      tick={{ fill: '#94a3b8' }}
+                      tickFormatter={(value) => new Date(value).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}
+                    />
+                    <YAxis 
+                      stroke="#94a3b8"
+                      tick={{ fill: '#94a3b8' }}
+                      tickFormatter={(value) => `$${value}`}
+                    />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
+                      labelStyle={{ color: '#fff' }}
+                      formatter={(value: number) => `$${value.toFixed(2)}`}
+                      labelFormatter={(value) => new Date(value).toLocaleDateString('es-ES')}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="income" 
+                      stackId="1"
+                      stroke="#3b82f6" 
+                      fill="#3b82f6" 
+                      fillOpacity={0.3}
+                      name="Ingresos"
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="expense" 
+                      stackId="2"
+                      stroke="#ef4444" 
+                      fill="#ef4444" 
+                      fillOpacity={0.3}
+                      name="Egresos"
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="balance" 
+                      stroke="#22c55e" 
+                      strokeWidth={2}
+                      name="Saldo"
+                      dot={false}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
 
               {/* Tabla de proyección diaria */}
@@ -317,44 +394,28 @@ export default function TreasuryPage() {
             </div>
           )}
 
-          {/* TAB 3: Posición Bancaria */}
+          {/* TAB 3: Posición Bancaria - Tabla compacta */}
           {activeTab === "bank" && bankPosition && (
             <div className="space-y-6">
               {/* Resumen */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                  <h3 className="mb-2 text-sm text-slate-400">Saldo Total</h3>
-                  <p className="text-2xl font-bold text-green-400">
-                    ${Number(bankPosition.totalBalance || 0).toFixed(2)}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                  <h3 className="mb-2 text-sm text-slate-400">Ingresos del Día</h3>
-                  <p className="text-2xl font-bold text-green-400">
-                    ${Number(bankPosition.totalTodayIncome || 0).toFixed(2)}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                  <h3 className="mb-2 text-sm text-slate-400">Egresos del Día</h3>
-                  <p className="text-2xl font-bold text-red-400">
-                    ${Number(bankPosition.totalTodayExpense || 0).toFixed(2)}
-                  </p>
-                </div>
+              <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+                <h3 className="mb-2 text-sm text-slate-400">Total Consolidado</h3>
+                <p className="text-4xl font-bold text-white">
+                  ${Number(bankPosition.totalBalance || 0).toFixed(2)}
+                </p>
               </div>
 
-              {/* Tabla de cuentas */}
+              {/* Tabla de cuentas compacta */}
               <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
-                <h3 className="p-4 text-lg font-semibold">Todas las Cuentas</h3>
+                <h3 className="p-4 text-lg font-semibold">Posición por Cuenta</h3>
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[800px]">
+                  <table className="w-full min-w-[600px]">
                     <thead className="bg-slate-800">
                       <tr>
                         <th className="px-4 py-2 text-left text-sm font-semibold text-white">Cuenta</th>
                         <th className="px-4 py-2 text-left text-sm font-semibold text-white">Banco</th>
                         <th className="px-4 py-2 text-right text-sm font-semibold text-white">Saldo</th>
-                        <th className="px-4 py-2 text-center text-sm font-semibold text-white">Movimientos Hoy</th>
-                        <th className="px-4 py-2 text-right text-sm font-semibold text-white">Neto Hoy</th>
-                        <th className="px-4 py-2 text-left text-sm font-semibold text-white">Última Conciliación</th>
+                        <th className="px-4 py-2 text-right text-sm font-semibold text-white">Variación Hoy</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800">
@@ -368,46 +429,82 @@ export default function TreasuryPage() {
                           <td className="px-4 py-3 text-right font-semibold text-white">
                             ${Number(account.balance).toFixed(2)}
                           </td>
-                          <td className="px-4 py-3 text-center text-sm text-slate-300">
-                            {account.todayMovements}
-                          </td>
                           <td className={`px-4 py-3 text-right text-sm font-semibold ${
                             account.todayNet >= 0 ? "text-green-400" : "text-red-400"
                           }`}>
-                            ${Number(account.todayNet).toFixed(2)}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-slate-400">
-                            {account.lastReconciliation ? new Date(account.lastReconciliation).toLocaleDateString() : "N/A"}
+                            {account.todayNet >= 0 ? "+" : ""}${Number(account.todayNet).toFixed(2)}
                           </td>
                         </tr>
                       ))}
                     </tbody>
+                    <tfoot className="bg-slate-800">
+                      <tr>
+                        <td colSpan={2} className="px-4 py-3 font-semibold text-white">Total</td>
+                        <td className="px-4 py-3 text-right font-bold text-white">
+                          ${Number(bankPosition.totalBalance || 0).toFixed(2)}
+                        </td>
+                        <td className={`px-4 py-3 text-right font-bold ${
+                          (bankPosition.totalTodayIncome - bankPosition.totalTodayExpense) >= 0 ? "text-green-400" : "text-red-400"
+                        }`}>
+                          ${(bankPosition.totalTodayIncome - bankPosition.totalTodayExpense).toFixed(2)}
+                        </td>
+                      </tr>
+                    </tfoot>
                   </table>
                 </div>
               </div>
             </div>
           )}
 
-          {/* TAB 4: Alertas */}
+          {/* TAB 4: Alertas - Cards con iconos y urgencia */}
           {activeTab === "alerts" && alerts && (
             <div className="space-y-6">
-              <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                <h3 className="mb-4 text-lg font-semibold">Total de Alertas</h3>
-                <p className="text-4xl font-bold text-white">{alerts.totalAlerts || 0}</p>
-              </div>
+              {/* Próximos Vencimientos CxP con semáforo */}
+              {alerts.upcomingAlerts?.length > 0 && (
+                <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+                  <h3 className="mb-4 text-lg font-semibold">Próximos Vencimientos (CxP)</h3>
+                  <div className="space-y-2">
+                    {alerts.upcomingAlerts
+                      .sort((a: any, b: any) => a.daysUntil - b.daysUntil)
+                      .map((alert: any, index: number) => (
+                        <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-slate-800">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-3 h-3 rounded-full ${getPaymentColor(alert.daysUntil)}`} />
+                            <div>
+                              <p className="font-medium text-white">{alert.concept || alert.message}</p>
+                              <p className="text-sm text-slate-400">
+                                ${Number(alert.amount).toFixed(2)} - En {alert.daysUntil} días
+                              </p>
+                            </div>
+                          </div>
+                          <span className={`text-xs font-semibold px-2 py-1 rounded ${
+                            alert.daysUntil < 7 ? "bg-red-900 text-red-300" :
+                            alert.daysUntil < 15 ? "bg-yellow-900 text-yellow-300" :
+                            "bg-green-900 text-green-300"
+                          }`}>
+                            {alert.daysUntil < 7 ? "URGENTE" : alert.daysUntil < 15 ? "PRONTO" : "PROGRAMADO"}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
 
               {/* Cuentas con saldo bajo */}
               {alerts.lowBalanceAccounts?.length > 0 && (
-                <div className="rounded-xl border border-yellow-700 bg-yellow-900/30 p-6">
-                  <h3 className="mb-4 text-lg font-semibold text-yellow-300">⚠️ Cuentas con Saldo Bajo</h3>
-                  <div className="space-y-2">
+                <div className="rounded-xl border border-red-700 bg-red-900/30 p-6">
+                  <h3 className="mb-4 text-lg font-semibold text-red-300">⚠️ Cuentas con Saldo Bajo</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {alerts.lowBalanceAccounts.map((alert: any, index: number) => (
-                      <div key={index} className="flex justify-between p-3 rounded-lg bg-yellow-900/50">
-                        <div>
-                          <p className="font-medium text-white">{alert.message}</p>
-                          <p className="text-sm text-yellow-300">Saldo: ${Number(alert.balance).toFixed(2)}</p>
+                      <div key={index} className="p-4 rounded-lg bg-red-900/50 border border-red-700">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="text-2xl">🏦</span>
+                          <div>
+                            <p className="font-medium text-white">{alert.account}</p>
+                            <p className="text-sm text-red-300">Saldo: ${Number(alert.balance).toFixed(2)}</p>
+                          </div>
                         </div>
-                        <span className="text-red-400 font-semibold">ALERTA</span>
+                        <span className="text-xs font-semibold text-red-400">ALTA URGENCIA</span>
                       </div>
                     ))}
                   </div>
@@ -417,41 +514,18 @@ export default function TreasuryPage() {
               {/* Facturas vencidas */}
               {alerts.overdueAlerts?.length > 0 && (
                 <div className="rounded-xl border border-red-700 bg-red-900/30 p-6">
-                  <h3 className="mb-4 text-lg font-semibold text-red-300">🚨 Facturas Vencidas</h3>
-                  <div className="space-y-2">
+                  <h3 className="mb-4 text-lg font-semibold text-red-300">� Facturas Vencidas</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {alerts.overdueAlerts.map((alert: any, index: number) => (
-                      <div key={index} className="flex justify-between p-3 rounded-lg bg-red-900/50">
-                        <div>
-                          <p className="font-medium text-white">{alert.message}</p>
-                          <p className="text-sm text-red-300">Monto: ${Number(alert.amount).toFixed(2)}</p>
+                      <div key={index} className="p-4 rounded-lg bg-red-900/50 border border-red-700">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="text-2xl">📄</span>
+                          <div>
+                            <p className="font-medium text-white">{alert.concept}</p>
+                            <p className="text-sm text-red-300">Monto: ${Number(alert.amount).toFixed(2)}</p>
+                          </div>
                         </div>
-                        <span className="text-red-400 font-semibold">VENCIDO</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Próximos vencimientos */}
-              {alerts.upcomingAlerts?.length > 0 && (
-                <div className="rounded-xl border border-blue-700 bg-blue-900/30 p-6">
-                  <h3 className="mb-4 text-lg font-semibold text-blue-300">📅 Próximos Vencimientos</h3>
-                  <div className="space-y-2">
-                    {alerts.upcomingAlerts.map((alert: any, index: number) => (
-                      <div key={index} className="flex justify-between p-3 rounded-lg bg-blue-900/50">
-                        <div>
-                          <p className="font-medium text-white">{alert.message}</p>
-                          <p className="text-sm text-blue-300">
-                            ${Number(alert.amount).toFixed(2)} - En {alert.daysUntil} días
-                          </p>
-                        </div>
-                        <span className={`font-semibold ${
-                          alert.severity === "ERROR" ? "text-red-400" :
-                          alert.severity === "WARNING" ? "text-yellow-400" :
-                          "text-blue-400"
-                        }`}>
-                          {alert.daysUntil <= 3 ? "URGENTE" : alert.daysUntil <= 7 ? "PRONTO" : "PROGRAMADO"}
-                        </span>
+                        <span className="text-xs font-semibold text-red-400">VENCIDO</span>
                       </div>
                     ))}
                   </div>
@@ -460,16 +534,19 @@ export default function TreasuryPage() {
 
               {/* Transferencias pendientes */}
               {alerts.pendingAlerts?.length > 0 && (
-                <div className="rounded-xl border border-slate-700 bg-slate-800 p-6">
-                  <h3 className="mb-4 text-lg font-semibold text-slate-300">🔄 Transferencias Pendientes</h3>
-                  <div className="space-y-2">
+                <div className="rounded-xl border border-blue-700 bg-blue-900/30 p-6">
+                  <h3 className="mb-4 text-lg font-semibold text-blue-300">🔄 Transferencias Pendientes</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {alerts.pendingAlerts.map((alert: any, index: number) => (
-                      <div key={index} className="flex justify-between p-3 rounded-lg bg-slate-700">
-                        <div>
-                          <p className="font-medium text-white">{alert.message}</p>
-                          <p className="text-sm text-slate-400">Monto: ${Number(alert.amount).toFixed(2)}</p>
+                      <div key={index} className="p-4 rounded-lg bg-blue-900/50 border border-blue-700">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="text-2xl">💸</span>
+                          <div>
+                            <p className="font-medium text-white">{alert.concept}</p>
+                            <p className="text-sm text-blue-300">Monto: ${Number(alert.amount).toFixed(2)}</p>
+                          </div>
                         </div>
-                        <span className="text-slate-400 font-semibold">PENDIENTE</span>
+                        <span className="text-xs font-semibold text-blue-400">PENDIENTE</span>
                       </div>
                     ))}
                   </div>
@@ -486,5 +563,6 @@ export default function TreasuryPage() {
         </>
       )}
     </div>
+    </MainLayout>
   );
 }
