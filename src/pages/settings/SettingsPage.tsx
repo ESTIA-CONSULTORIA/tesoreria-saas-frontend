@@ -99,8 +99,8 @@ export default function SettingsPage() {
     root.style.setProperty('--button-secondary', s.secondaryButtonColor);
     
     const borderRadius = s.buttonBorderRadius === 'square' ? '0' : 
-                        s.buttonBorderRadius === 'rounded' ? '8px' : '9999px';
-    root.style.setProperty('--button-radius', borderRadius);
+                        s.buttonBorderRadius === 'rounded' ? '0.375rem' : '9999px';
+    root.style.setProperty('--btn-radius', borderRadius);
   }
 
   async function saveSettings() {

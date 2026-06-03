@@ -43,8 +43,6 @@ export default function MainLayout({ children }: Props) {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const primaryColor = localStorage.getItem("tenant_primary_color") || "";
-  const sidebarColor = localStorage.getItem("tenant_sidebar_color") || "";
   const user = useAuthStore((state) => state.user);
   const isSoporte = user?.roleCode === "SOPORTE";
 
@@ -76,7 +74,7 @@ export default function MainLayout({ children }: Props) {
           className={`fixed lg:static z-50 lg:z-auto w-64 min-h-[calc(100vh-64px)] border-r ${theme.colors.border} ${theme.colors.surface} flex-col py-2 transition-transform duration-300
             ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
             ${sidebarOpen ? "flex" : "hidden lg:flex"}`}
-          style={sidebarColor ? { backgroundColor: sidebarColor } : undefined}
+          style={{ backgroundColor: 'var(--sidebar-bg)' }}
         >
           <nav className="flex flex-col gap-1 px-2">
             {isSoporte ? (
@@ -98,7 +96,7 @@ export default function MainLayout({ children }: Props) {
                             ? `${theme.colors.text}`
                             : `${theme.colors.textMuted} ${theme.colors.surfaceHover}`
                         }`}
-                      style={isActive && primaryColor ? { backgroundColor: primaryColor } : undefined}
+                      style={isActive ? { backgroundColor: 'var(--sidebar-active)', color: 'var(--sidebar-text)' } : { color: 'var(--sidebar-text)' }}
                     >
                       <span>{item.icon}</span>
                       <span>{item.label}</span>
@@ -121,7 +119,7 @@ export default function MainLayout({ children }: Props) {
                             ? `${theme.colors.text}`
                             : `${theme.colors.textMuted} ${theme.colors.surfaceHover}`
                         }`}
-                      style={isActive && primaryColor ? { backgroundColor: primaryColor } : undefined}
+                      style={isActive ? { backgroundColor: 'var(--sidebar-active)', color: 'var(--sidebar-text)' } : { color: 'var(--sidebar-text)' }}
                     >
                       <div className="flex items-center gap-3">
                         <span>{item.icon}</span>
@@ -153,7 +151,7 @@ export default function MainLayout({ children }: Props) {
                           ? `${theme.colors.text}`
                           : `${theme.colors.textMuted} ${theme.colors.surfaceHover}`
                       }`}
-                    style={isActive && primaryColor ? { backgroundColor: primaryColor } : undefined}
+                    style={isActive ? { backgroundColor: 'var(--sidebar-active)', color: 'var(--sidebar-text)' } : { color: 'var(--sidebar-text)' }}
                   >
                     <div className="flex items-center gap-3">
                       <span>{item.icon}</span>
