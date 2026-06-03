@@ -55,7 +55,7 @@ interface Sale {
 
 interface PaymentMethod {
   id: string;
-  tipo: "EFECTIVO" | "TARJETA" | "TRANSFERENCIA" | "CORTESIA";
+  tipo: "EFECTIVO" | "TARJETA" | "DEBITO" | "CREDITO" | "TRANSFERENCIA" | "CORTESIA";
   monto: number;
   // Tarjeta
   tipoTarjeta?: "DEBITO" | "CREDITO";
@@ -139,13 +139,11 @@ export default function POSPage() {
   const [valesDeclarados, setValesDeclarados] = useState<string>("");
   
   // Premium payment modal state
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"EFECTIVO" | "TARJETA" | "DEBITO" | "CREDITO" | "TRANSFERENCIA" | "CORTESIA" | null>(null);
   const [paymentAmount, setPaymentAmount] = useState<string>("");
   const [cardLast4, setCardLast4] = useState<string>("");
   const [cardBank, setCardBank] = useState<string>("");
   const [speiKey, setSpeiKey] = useState<string>("");
-  const [courtesyReason, setCourtesyReason] = useState<string>("");
-  const [courtesyAuthUser, setCourtesyAuthUser] = useState<string>("");
   
   // Productos tab state
   const [posProducts, setPosProducts] = useState<any[]>([]);
@@ -564,7 +562,7 @@ export default function POSPage() {
     return cashPayment.monto - getTotal();
   }
 
-  function addPaymentMethod(tipo: string, monto?: number) {
+  function addPaymentMethod(tipo: "EFECTIVO" | "TARJETA" | "DEBITO" | "CREDITO" | "TRANSFERENCIA" | "CORTESIA", monto?: number) {
     const newMethod: PaymentMethod = {
       id: Date.now().toString(),
       tipo,
@@ -2565,7 +2563,7 @@ export default function POSPage() {
               <button
                 onClick={() => {
                   setShowPaymentModal(false);
-                  setSelectedPaymentMethod("");
+                  setSelectedPaymentMethod(null);
                   setPaymentAmount("");
                   setCardLast4("");
                   setCardBank("");
