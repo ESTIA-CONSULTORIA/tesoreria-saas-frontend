@@ -12,7 +12,6 @@ import TreasuryPage from "./pages/treasury/TreasuryPage";
 import ReconciliationPage from "./pages/reconciliation/ReconciliationPage";
 import AdministrationPage from "./pages/administration/AdministrationPage";
 import SettingsPage from "./pages/settings/SettingsPage";
-import PosConfigPage from "./pages/pos-config/PosConfigPage";
 import SuppliersPage from "./pages/suppliers/SuppliersPage";
 import PurchasesPage from "./pages/purchases/PurchasesPage";
 import CostsPage from "./pages/costs/CostsPage";
@@ -217,12 +216,10 @@ function App() {
       />
 
       <Route
-        path="/pos-config"
+        path="/pos"
         element={
           <ProtectedRoute>
-            <ModuloRoute modulo="configuracion-pos">
-              <PosConfigPage />
-            </ModuloRoute>
+            <POSPage />
           </ProtectedRoute>
         }
       />

@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import { api } from "../../core/api/api";
+import { useAuthStore } from "../../core/store/useAuthStore";
+
+type TabType = "terminal" | "productos" | "categorias" | "areas" | "turnos" | "hardware" | "parametros";
 
 interface TicketItem {
   productoId: string;
@@ -44,6 +47,10 @@ interface Sale {
 }
 
 export default function POSPage() {
+  const [activeTab, setActiveTab] = useState<TabType>("terminal");
+  const user = useAuthStore((state) => state.user);
+  const isAdminOrSoporte = user?.roleCode === "ADMIN" || user?.roleCode === "SOPORTE";
+
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -89,8 +96,8 @@ export default function POSPage() {
     try {
       const response = await api.get("/pos/shifts/open", {
         params: {
-          cajero: "current-user-id", // TODO: Get from auth
-          sucursalId: "default-branch-id", // TODO: Get from context
+          cajero: "current-user-id",
+          sucursalId: "default-branch-id",
         },
       });
       setShift(response.data || null);
@@ -118,8 +125,8 @@ export default function POSPage() {
   async function openShift() {
     try {
       await api.post("/pos/shifts", {
-        cajero: "current-user-id", // TODO: Get from auth
-        sucursalId: "default-branch-id", // TODO: Get from context
+        cajero: "current-user-id",
+        sucursalId: "default-branch-id",
         fondoInicial: Number(initialFund) || 0,
       });
       setShowOpenShiftModal(false);
@@ -204,7 +211,7 @@ export default function POSPage() {
   }
 
   function getTaxes() {
-    return getSubtotal() * 0.16; // 16% IVA
+    return getSubtotal() * 0.16;
   }
 
   function getTotal() {
@@ -234,9 +241,9 @@ export default function POSPage() {
         impuestos: getTaxes(),
         total: getTotal(),
         metodoPago: paymentMethod,
-        cajero: "current-user-id", // TODO: Get from auth
+        cajero: "current-user-id",
         turnoId: shift.id,
-        sucursalId: "default-branch-id", // TODO: Get from context
+        sucursalId: "default-branch-id",
       };
 
       const response = await api.post("/pos/sales", saleData);
@@ -279,306 +286,444 @@ export default function POSPage() {
   });
 
   return (
-    <div className="h-screen flex flex-col bg-slate-900 text-white">
-      {/* HEADER */}
-      <header className="h-16 border-b border-slate-700 flex items-center justify-between px-4 bg-slate-800">
-        <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold">POS</h1>
-          <div className="text-sm text-slate-400">
-            Cajero: <span className="text-white">Usuario Demo</span>
-          </div>
-          {shift && (
-            <div className="text-sm text-slate-400">
-              Turno: <span className="text-green-400">Abierto</span> ({shift.horaApertura})
-            </div>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {!shift ? (
-            <button
-              onClick={() => setShowOpenShiftModal(true)}
-              className="px-4 py-2 rounded bg-green-600 text-white text-sm hover:bg-green-700"
-            >
-              Abrir Turno
-            </button>
-          ) : (
-            <button
-              onClick={closeShift}
-              className="px-4 py-2 rounded bg-red-600 text-white text-sm hover:bg-red-700"
-            >
-              Cerrar Turno
-            </button>
-          )}
+    <div className="min-h-screen bg-slate-950 text-white">
+      {/* HEADER - Tabs */}
+      <div className="h-16 border-b border-slate-800 flex items-center px-4 bg-slate-900">
+        <h1 className="text-xl font-bold mr-8">POS</h1>
+        <div className="flex gap-2">
           <button
-            onClick={() => {
-              loadSalesHistory();
-              setShowSalesHistory(true);
-            }}
-            className="px-4 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+            onClick={() => setActiveTab("terminal")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === "terminal"
+                ? "bg-blue-600 text-white"
+                : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+            }`}
           >
-            Historial de Ventas
+            Terminal
           </button>
-        </div>
-      </header>
-
-      {/* MAIN CONTENT - 3 ZONES */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* ZONA IZQUIERDA - PRODUCTOS (40%) */}
-        <div className="w-[40%] flex flex-col border-r border-slate-700">
-          {/* Search and Filter */}
-          <div className="p-4 border-b border-slate-700 space-y-3">
-            <input
-              type="text"
-              placeholder="Buscar producto..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border border-slate-600 bg-slate-800 text-white"
-            />
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-3 py-1 rounded text-sm whitespace-nowrap ${
-                    selectedCategory === category
-                      ? "bg-blue-600 text-white"
-                      : "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                  }`}
-                >
-                  {category === "all" ? "Todos" : category}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Products Grid */}
-          <div className="flex-1 overflow-y-auto p-4">
-            <div className="grid grid-cols-2 gap-3">
-              {filteredProducts.map((product) => (
-                <button
-                  key={product.id}
-                  onClick={() => addToTicket(product)}
-                  className="p-4 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left transition-colors"
-                >
-                  <div className="aspect-square bg-slate-700 rounded mb-2 flex items-center justify-center text-3xl">
-                    📦
-                  </div>
-                  <p className="font-medium text-sm truncate">{product.name}</p>
-                  <p className="text-green-400 font-bold">${product.price.toFixed(2)}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* ZONA CENTRAL - TICKET (35%) */}
-        <div className="w-[35%] flex flex-col border-r border-slate-700">
-          <div className="p-4 border-b border-slate-700">
-            <h2 className="text-lg font-semibold">Ticket Actual</h2>
-          </div>
-
-          {/* Ticket Items */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-2">
-            {ticket.length === 0 ? (
-              <p className="text-slate-400 text-center py-8">Ticket vacío</p>
-            ) : (
-              ticket.map((item) => (
-                <div key={item.productoId} className="p-3 rounded-lg bg-slate-800 border border-slate-700">
-                  <div className="flex justify-between items-start mb-2">
-                    <p className="font-medium text-sm flex-1">{item.nombre}</p>
-                    <button
-                      onClick={() => removeFromTicket(item.productoId)}
-                      className="text-red-400 hover:text-red-300 text-xs ml-2"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => updateQuantity(item.productoId, item.cantidad - 1)}
-                        className="w-6 h-6 rounded bg-slate-700 hover:bg-slate-600 text-sm"
-                      >
-                        -
-                      </button>
-                      <span className="w-8 text-center">{item.cantidad}</span>
-                      <button
-                        onClick={() => updateQuantity(item.productoId, item.cantidad + 1)}
-                        className="w-6 h-6 rounded bg-slate-700 hover:bg-slate-600 text-sm"
-                      >
-                        +
-                      </button>
-                    </div>
-                    <p className="font-semibold">${item.subtotal.toFixed(2)}</p>
-                  </div>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="text-xs text-slate-400">Descuento %:</span>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={item.descuento}
-                      onChange={(e) => updateItemDiscount(item.productoId, Number(e.target.value))}
-                      className="w-16 px-2 py-1 rounded bg-slate-700 text-xs text-white"
-                    />
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Totals */}
-          <div className="p-4 border-t border-slate-700 space-y-2 bg-slate-800">
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-400">Subtotal</span>
-              <span>${getSubtotal().toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-400">Descuento</span>
-              <span className="text-red-400">-${getTotalDiscount().toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-400">Impuestos (16%)</span>
-              <span>${getTaxes().toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-xl font-bold pt-2 border-t border-slate-700">
-              <span>TOTAL</span>
-              <span className="text-green-400">${getTotal().toFixed(2)}</span>
-            </div>
-            <button
-              onClick={() => {
-                if (ticket.length > 0) {
-                  const discount = prompt("Descuento global (%):", "0");
-                  if (discount !== null) {
-                    const discountPercent = Number(discount);
-                    setTicket(
-                      ticket.map((item) => ({
-                        ...item,
-                        descuento: discountPercent,
-                        subtotal: item.cantidad * item.precioUnitario * (1 - discountPercent / 100),
-                      }))
-                    );
-                  }
-                }
-              }}
-              className="w-full py-2 rounded bg-slate-700 text-sm hover:bg-slate-600"
-            >
-              Aplicar Descuento Global
-            </button>
-            <button
-              onClick={() => {
-                if (ticket.length > 0) {
-                  const motivo = prompt("Motivo de cortesía:");
-                  if (motivo) {
-                    setTicket(
-                      ticket.map((item) => ({
-                        ...item,
-                        descuento: 100,
-                        subtotal: 0,
-                      }))
-                    );
-                  }
-                }
-              }}
-              className="w-full py-2 rounded bg-yellow-600 text-sm hover:bg-yellow-700"
-            >
-              Cortesía
-            </button>
-          </div>
-        </div>
-
-        {/* ZONA DERECHA - COBRO (25%) */}
-        <div className="w-[25%] flex flex-col">
-          <div className="p-4 border-b border-slate-700">
-            <h2 className="text-lg font-semibold">Cobro</h2>
-          </div>
-
-          <div className="flex-1 p-4 space-y-4">
-            {/* Total a cobrar */}
-            <div className="text-center py-8">
-              <p className="text-slate-400 text-sm mb-2">Total a Cobrar</p>
-              <p className="text-5xl font-bold text-green-400">${getTotal().toFixed(2)}</p>
-            </div>
-
-            {/* Métodos de pago */}
-            <div className="grid grid-cols-2 gap-2">
+          {isAdminOrSoporte && (
+            <>
               <button
-                onClick={() => setPaymentMethod("EFECTIVO")}
-                className={`p-4 rounded-lg border-2 text-center transition-colors ${
-                  paymentMethod === "EFECTIVO"
-                    ? "border-green-500 bg-green-900/30"
-                    : "border-slate-700 bg-slate-800 hover:bg-slate-700"
+                onClick={() => setActiveTab("productos")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === "productos"
+                    ? "bg-blue-600 text-white"
+                    : "bg-slate-800 text-slate-400 hover:bg-slate-700"
                 }`}
               >
-                <div className="text-2xl mb-1">💵</div>
-                <p className="text-sm">Efectivo</p>
+                Productos
               </button>
               <button
-                onClick={() => setPaymentMethod("TARJETA")}
-                className={`p-4 rounded-lg border-2 text-center transition-colors ${
-                  paymentMethod === "TARJETA"
-                    ? "border-green-500 bg-green-900/30"
-                    : "border-slate-700 bg-slate-800 hover:bg-slate-700"
+                onClick={() => setActiveTab("categorias")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === "categorias"
+                    ? "bg-blue-600 text-white"
+                    : "bg-slate-800 text-slate-400 hover:bg-slate-700"
                 }`}
               >
-                <div className="text-2xl mb-1">💳</div>
-                <p className="text-sm">Tarjeta</p>
+                Categorías
               </button>
               <button
-                onClick={() => setPaymentMethod("TRANSFERENCIA")}
-                className={`p-4 rounded-lg border-2 text-center transition-colors ${
-                  paymentMethod === "TRANSFERENCIA"
-                    ? "border-green-500 bg-green-900/30"
-                    : "border-slate-700 bg-slate-800 hover:bg-slate-700"
+                onClick={() => setActiveTab("areas")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === "areas"
+                    ? "bg-blue-600 text-white"
+                    : "bg-slate-800 text-slate-400 hover:bg-slate-700"
                 }`}
               >
-                <div className="text-2xl mb-1">📱</div>
-                <p className="text-sm">Transferencia</p>
+                Áreas y Mesas
               </button>
               <button
-                onClick={() => setPaymentMethod("CORTESIA")}
-                className={`p-4 rounded-lg border-2 text-center transition-colors ${
-                  paymentMethod === "CORTESIA"
-                    ? "border-green-500 bg-green-900/30"
-                    : "border-slate-700 bg-slate-800 hover:bg-slate-700"
+                onClick={() => setActiveTab("turnos")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === "turnos"
+                    ? "bg-blue-600 text-white"
+                    : "bg-slate-800 text-slate-400 hover:bg-slate-700"
                 }`}
               >
-                <div className="text-2xl mb-1">🎁</div>
-                <p className="text-sm">Cortesía</p>
+                Turnos
               </button>
-            </div>
-
-            {/* Campo recibido (solo efectivo) */}
-            {paymentMethod === "EFECTIVO" && (
-              <div className="space-y-2">
-                <label className="text-sm text-slate-400">Recibido</label>
-                <input
-                  type="number"
-                  value={amountReceived}
-                  onChange={(e) => setAmountReceived(e.target.value)}
-                  placeholder="0.00"
-                  className="w-full px-4 py-3 rounded-lg border border-slate-700 bg-slate-800 text-white text-xl font-bold"
-                />
-                {getChange() >= 0 && (
-                  <div className="text-center py-2">
-                    <p className="text-slate-400 text-sm">Cambio</p>
-                    <p className="text-2xl font-bold text-green-400">${getChange().toFixed(2)}</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Botón cobrar */}
-            <button
-              onClick={processPayment}
-              disabled={ticket.length === 0 || !shift}
-              className="w-full py-4 rounded-lg bg-green-600 text-white font-bold text-xl hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500"
-            >
-              COBRAR
-            </button>
-          </div>
+              <button
+                onClick={() => setActiveTab("hardware")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === "hardware"
+                    ? "bg-blue-600 text-white"
+                    : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                }`}
+              >
+                Hardware
+              </button>
+              <button
+                onClick={() => setActiveTab("parametros")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === "parametros"
+                    ? "bg-blue-600 text-white"
+                    : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                }`}
+              >
+                Parámetros
+              </button>
+            </>
+          )}
         </div>
       </div>
+
+      {/* TAB CONTENT */}
+      {activeTab === "terminal" && (
+        <div className="h-[calc(100vh-64px)] flex flex-col">
+          {/* TERMINAL HEADER */}
+          <header className="h-16 border-b border-slate-700 flex items-center justify-between px-4 bg-slate-800">
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-slate-400">
+                Cajero: <span className="text-white">Usuario Demo</span>
+              </div>
+              {shift && (
+                <div className="text-sm text-slate-400">
+                  Turno: <span className="text-green-400">Abierto</span> ({shift.horaApertura})
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {!shift ? (
+                <button
+                  onClick={() => setShowOpenShiftModal(true)}
+                  className="px-4 py-2 rounded bg-green-600 text-white text-sm hover:bg-green-700"
+                >
+                  Abrir Turno
+                </button>
+              ) : (
+                <button
+                  onClick={closeShift}
+                  className="px-4 py-2 rounded bg-red-600 text-white text-sm hover:bg-red-700"
+                >
+                  Cerrar Turno
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  loadSalesHistory();
+                  setShowSalesHistory(true);
+                }}
+                className="px-4 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+              >
+                Historial de Ventas
+              </button>
+            </div>
+          </header>
+
+          {/* MAIN CONTENT - 3 ZONES */}
+          <div className="flex-1 flex overflow-hidden">
+            {/* ZONA IZQUIERDA - PRODUCTOS (40%) */}
+            <div className="w-[40%] flex flex-col border-r border-slate-700">
+              <div className="p-4 border-b border-slate-700 space-y-3">
+                <input
+                  type="text"
+                  placeholder="Buscar producto..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-slate-600 bg-slate-800 text-white"
+                />
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {categories.map((category) => (
+                    <button
+                      key={category}
+                      onClick={() => setSelectedCategory(category)}
+                      className={`px-3 py-1 rounded text-sm whitespace-nowrap ${
+                        selectedCategory === category
+                          ? "bg-blue-600 text-white"
+                          : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                      }`}
+                    >
+                      {category === "all" ? "Todos" : category}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4">
+                <div className="grid grid-cols-2 gap-3">
+                  {filteredProducts.map((product) => (
+                    <button
+                      key={product.id}
+                      onClick={() => addToTicket(product)}
+                      className="p-4 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left transition-colors"
+                    >
+                      <div className="aspect-square bg-slate-700 rounded mb-2 flex items-center justify-center text-3xl">
+                        📦
+                      </div>
+                      <p className="font-medium text-sm truncate">{product.name}</p>
+                      <p className="text-green-400 font-bold">${product.price.toFixed(2)}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* ZONA CENTRAL - TICKET (35%) */}
+            <div className="w-[35%] flex flex-col border-r border-slate-700">
+              <div className="p-4 border-b border-slate-700">
+                <h2 className="text-lg font-semibold">Ticket Actual</h2>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                {ticket.length === 0 ? (
+                  <p className="text-slate-400 text-center py-8">Ticket vacío</p>
+                ) : (
+                  ticket.map((item) => (
+                    <div key={item.productoId} className="p-3 rounded-lg bg-slate-800 border border-slate-700">
+                      <div className="flex justify-between items-start mb-2">
+                        <p className="font-medium text-sm flex-1">{item.nombre}</p>
+                        <button
+                          onClick={() => removeFromTicket(item.productoId)}
+                          className="text-red-400 hover:text-red-300 text-xs ml-2"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => updateQuantity(item.productoId, item.cantidad - 1)}
+                            className="w-6 h-6 rounded bg-slate-700 hover:bg-slate-600 text-sm"
+                          >
+                            -
+                          </button>
+                          <span className="w-8 text-center">{item.cantidad}</span>
+                          <button
+                            onClick={() => updateQuantity(item.productoId, item.cantidad + 1)}
+                            className="w-6 h-6 rounded bg-slate-700 hover:bg-slate-600 text-sm"
+                          >
+                            +
+                          </button>
+                        </div>
+                        <p className="font-semibold">${item.subtotal.toFixed(2)}</p>
+                      </div>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-xs text-slate-400">Descuento %:</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={item.descuento}
+                          onChange={(e) => updateItemDiscount(item.productoId, Number(e.target.value))}
+                          className="w-16 px-2 py-1 rounded bg-slate-700 text-xs text-white"
+                        />
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="p-4 border-t border-slate-700 space-y-2 bg-slate-800">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400">Subtotal</span>
+                  <span>${getSubtotal().toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400">Descuento</span>
+                  <span className="text-red-400">-${getTotalDiscount().toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400">Impuestos (16%)</span>
+                  <span>${getTaxes().toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-xl font-bold pt-2 border-t border-slate-700">
+                  <span>TOTAL</span>
+                  <span className="text-green-400">${getTotal().toFixed(2)}</span>
+                </div>
+                <button
+                  onClick={() => {
+                    if (ticket.length > 0) {
+                      const discount = prompt("Descuento global (%):", "0");
+                      if (discount !== null) {
+                        const discountPercent = Number(discount);
+                        setTicket(
+                          ticket.map((item) => ({
+                            ...item,
+                            descuento: discountPercent,
+                            subtotal: item.cantidad * item.precioUnitario * (1 - discountPercent / 100),
+                          }))
+                        );
+                      }
+                    }
+                  }}
+                  className="w-full py-2 rounded bg-slate-700 text-sm hover:bg-slate-600"
+                >
+                  Aplicar Descuento Global
+                </button>
+                <button
+                  onClick={() => {
+                    if (ticket.length > 0) {
+                      const motivo = prompt("Motivo de cortesía:");
+                      if (motivo) {
+                        setTicket(
+                          ticket.map((item) => ({
+                            ...item,
+                            descuento: 100,
+                            subtotal: 0,
+                          }))
+                        );
+                      }
+                    }
+                  }}
+                  className="w-full py-2 rounded bg-yellow-600 text-sm hover:bg-yellow-700"
+                >
+                  Cortesía
+                </button>
+              </div>
+            </div>
+
+            {/* ZONA DERECHA - COBRO (25%) */}
+            <div className="w-[25%] flex flex-col">
+              <div className="p-4 border-b border-slate-700">
+                <h2 className="text-lg font-semibold">Cobro</h2>
+              </div>
+
+              <div className="flex-1 p-4 space-y-4">
+                <div className="text-center py-8">
+                  <p className="text-slate-400 text-sm mb-2">Total a Cobrar</p>
+                  <p className="text-5xl font-bold text-green-400">${getTotal().toFixed(2)}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setPaymentMethod("EFECTIVO")}
+                    className={`p-4 rounded-lg border-2 text-center transition-colors ${
+                      paymentMethod === "EFECTIVO"
+                        ? "border-green-500 bg-green-900/30"
+                        : "border-slate-700 bg-slate-800 hover:bg-slate-700"
+                    }`}
+                  >
+                    <div className="text-2xl mb-1">💵</div>
+                    <p className="text-sm">Efectivo</p>
+                  </button>
+                  <button
+                    onClick={() => setPaymentMethod("TARJETA")}
+                    className={`p-4 rounded-lg border-2 text-center transition-colors ${
+                      paymentMethod === "TARJETA"
+                        ? "border-green-500 bg-green-900/30"
+                        : "border-slate-700 bg-slate-800 hover:bg-slate-700"
+                    }`}
+                  >
+                    <div className="text-2xl mb-1">💳</div>
+                    <p className="text-sm">Tarjeta</p>
+                  </button>
+                  <button
+                    onClick={() => setPaymentMethod("TRANSFERENCIA")}
+                    className={`p-4 rounded-lg border-2 text-center transition-colors ${
+                      paymentMethod === "TRANSFERENCIA"
+                        ? "border-green-500 bg-green-900/30"
+                        : "border-slate-700 bg-slate-800 hover:bg-slate-700"
+                    }`}
+                  >
+                    <div className="text-2xl mb-1">📱</div>
+                    <p className="text-sm">Transferencia</p>
+                  </button>
+                  <button
+                    onClick={() => setPaymentMethod("CORTESIA")}
+                    className={`p-4 rounded-lg border-2 text-center transition-colors ${
+                      paymentMethod === "CORTESIA"
+                        ? "border-green-500 bg-green-900/30"
+                        : "border-slate-700 bg-slate-800 hover:bg-slate-700"
+                    }`}
+                  >
+                    <div className="text-2xl mb-1">🎁</div>
+                    <p className="text-sm">Cortesía</p>
+                  </button>
+                </div>
+
+                {paymentMethod === "EFECTIVO" && (
+                  <div className="space-y-2">
+                    <label className="text-sm text-slate-400">Recibido</label>
+                    <input
+                      type="number"
+                      value={amountReceived}
+                      onChange={(e) => setAmountReceived(e.target.value)}
+                      placeholder="0.00"
+                      className="w-full px-4 py-3 rounded-lg border border-slate-700 bg-slate-800 text-white text-xl font-bold"
+                    />
+                    {getChange() >= 0 && (
+                      <div className="text-center py-2">
+                        <p className="text-slate-400 text-sm">Cambio</p>
+                        <p className="text-2xl font-bold text-green-400">${getChange().toFixed(2)}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <button
+                  onClick={processPayment}
+                  disabled={ticket.length === 0 || !shift}
+                  className="w-full py-4 rounded-lg bg-green-600 text-white font-bold text-xl hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500"
+                >
+                  COBRAR
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CONFIGURATION TABS */}
+      {activeTab === "productos" && (
+        <div className="p-6">
+          <h2 className="text-2xl font-bold mb-4">Productos</h2>
+          <p className="text-slate-400">Gestión de productos del POS</p>
+          <div className="mt-4 p-4 rounded-lg bg-slate-800">
+            <p className="text-sm text-slate-300">Funcionalidad en desarrollo...</p>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "categorias" && (
+        <div className="p-6">
+          <h2 className="text-2xl font-bold mb-4">Categorías</h2>
+          <p className="text-slate-400">Gestión de categorías de productos</p>
+          <div className="mt-4 p-4 rounded-lg bg-slate-800">
+            <p className="text-sm text-slate-300">Funcionalidad en desarrollo...</p>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "areas" && (
+        <div className="p-6">
+          <h2 className="text-2xl font-bold mb-4">Áreas y Mesas</h2>
+          <p className="text-slate-400">Configuración de áreas y mesas por sucursal</p>
+          <div className="mt-4 p-4 rounded-lg bg-slate-800">
+            <p className="text-sm text-slate-300">Funcionalidad en desarrollo...</p>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "turnos" && (
+        <div className="p-6">
+          <h2 className="text-2xl font-bold mb-4">Turnos</h2>
+          <p className="text-slate-400">Gestión de turnos y cajeros</p>
+          <div className="mt-4 p-4 rounded-lg bg-slate-800">
+            <p className="text-sm text-slate-300">Funcionalidad en desarrollo...</p>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "hardware" && (
+        <div className="p-6">
+          <h2 className="text-2xl font-bold mb-4">Hardware</h2>
+          <p className="text-slate-400">Configuración de impresoras, terminales y cajones</p>
+          <div className="mt-4 p-4 rounded-lg bg-slate-800">
+            <p className="text-sm text-slate-300">Funcionalidad en desarrollo...</p>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "parametros" && (
+        <div className="p-6">
+          <h2 className="text-2xl font-bold mb-4">Parámetros</h2>
+          <p className="text-slate-400">Configuración de parámetros de operación del POS</p>
+          <div className="mt-4 p-4 rounded-lg bg-slate-800">
+            <p className="text-sm text-slate-300">Funcionalidad en desarrollo...</p>
+          </div>
+        </div>
+      )}
 
       {/* MODAL ABRIR TURNO */}
       {showOpenShiftModal && (

@@ -25,9 +25,9 @@ const navItems = [
   { label: "Reportes", to: "/reports", icon: "📑", modulo: "reportes", shortcut: "Alt+4" },
   { label: "Tesorería", to: "/treasury", icon: "💰", modulo: "tesoreria" },
   { label: "Conciliación", to: "/reconciliation", icon: "📋", modulo: "conciliacion" },
+  { label: "POS", to: "/pos", icon: "�️", modulo: "pos" },
   { label: "Administración", to: "/administration", icon: "🔐", adminOnly: true, modulo: "administracion" },
   { label: "Configuración", to: "/settings", icon: "⚙️", modulo: "configuracion" },
-  { label: "Configuración POS", to: "/pos-config", icon: "🖥️", modulo: "configuracion-pos" },
 ];
 
 const soporteNavItems = [
