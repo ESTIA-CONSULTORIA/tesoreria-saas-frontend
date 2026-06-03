@@ -49,13 +49,18 @@ interface Sale {
   hora: string;
   items: TicketItem[];
   total: number;
-  metodoPago: string;
+  formaPago: string;
+  formasPago?: Array<{
+    forma: string;
+    monto: number;
+    ultimos4Digitos?: string;
+  }>;
   status: string;
 }
 
-interface PaymentMethod {
+interface PaymentForm {
   id: string;
-  tipo: "EFECTIVO" | "TARJETA" | "DEBITO" | "CREDITO" | "TRANSFERENCIA" | "CORTESIA";
+  forma: "EFECTIVO" | "TARJETA" | "DEBITO" | "CREDITO" | "TRANSFERENCIA" | "CORTESIA";
   monto: number;
   // Tarjeta
   tipoTarjeta?: "DEBITO" | "CREDITO";
@@ -88,7 +93,7 @@ export default function POSPage() {
   const [showOpenShiftModal, setShowOpenShiftModal] = useState(false);
   const [initialFund, setInitialFund] = useState<string>("");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [paymentForms, setPaymentForms] = useState<PaymentForm[]>([]);
   const [discountPercent, setDiscountPercent] = useState<string>("");
   const [showDiscountModal, setShowDiscountModal] = useState(false);
   const [showCourtesyModal, setShowCourtesyModal] = useState(false);
@@ -139,7 +144,7 @@ export default function POSPage() {
   const [valesDeclarados, setValesDeclarados] = useState<string>("");
   
   // Premium payment modal state
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"EFECTIVO" | "TARJETA" | "DEBITO" | "CREDITO" | "TRANSFERENCIA" | "CORTESIA" | null>(null);
+  const [selectedPaymentForm, setSelectedPaymentForm] = useState<"EFECTIVO" | "TARJETA" | "DEBITO" | "CREDITO" | "TRANSFERENCIA" | "CORTESIA" | null>(null);
   const [paymentAmount, setPaymentAmount] = useState<string>("");
   const [cardLast4, setCardLast4] = useState<string>("");
   const [cardBank, setCardBank] = useState<string>("");
@@ -549,7 +554,7 @@ export default function POSPage() {
   }
 
   function getTotalCovered() {
-    return paymentMethods.reduce((sum, pm) => sum + pm.monto, 0);
+    return paymentForms.reduce((sum, pf) => sum + pf.monto, 0);
   }
 
   function getPending() {
@@ -557,28 +562,28 @@ export default function POSPage() {
   }
 
   function getChange() {
-    const cashPayment = paymentMethods.find(pm => pm.tipo === "EFECTIVO");
+    const cashPayment = paymentForms.find(pf => pf.forma === "EFECTIVO");
     if (!cashPayment) return 0;
     return cashPayment.monto - getTotal();
   }
 
-  function addPaymentMethod(tipo: "EFECTIVO" | "TARJETA" | "DEBITO" | "CREDITO" | "TRANSFERENCIA" | "CORTESIA", monto?: number) {
-    const newMethod: PaymentMethod = {
+  function addPaymentForm(forma: "EFECTIVO" | "TARJETA" | "DEBITO" | "CREDITO" | "TRANSFERENCIA" | "CORTESIA", monto?: number) {
+    const newForm: PaymentForm = {
       id: Date.now().toString(),
-      tipo,
-      monto: monto || (tipo === "CORTESIA" ? getTotal() : getPending()),
+      forma,
+      monto: monto || (forma === "CORTESIA" ? getTotal() : getPending()),
     };
-    setPaymentMethods([...paymentMethods, newMethod]);
+    setPaymentForms([...paymentForms, newForm]);
   }
 
-  function updatePaymentMethod(id: string, field: string, value: any) {
-    setPaymentMethods(paymentMethods.map(pm => 
-      pm.id === id ? { ...pm, [field]: value } : pm
+  function updatePaymentForm(id: string, field: string, value: any) {
+    setPaymentForms(paymentForms.map(pf => 
+      pf.id === id ? { ...pf, [field]: value } : pf
     ));
   }
 
-  function removePaymentMethod(id: string) {
-    setPaymentMethods(paymentMethods.filter(pm => pm.id !== id));
+  function removePaymentForm(id: string) {
+    setPaymentForms(paymentForms.filter(pf => pf.id !== id));
   }
 
   function applyGlobalDiscount() {
@@ -655,7 +660,7 @@ export default function POSPage() {
 
   function validateCardPayments(): boolean {
     setCardValidationError("");
-    const cardPayments = paymentMethods.filter(pm => pm.tipo === "TARJETA");
+    const cardPayments = paymentForms.filter(pf => pf.forma === "TARJETA");
     for (const card of cardPayments) {
       if (!card.ultimos4Digitos && !card.folioVoucher) {
         setCardValidationError("Ingresa los últimos 4 dígitos o el folio del voucher");
@@ -689,7 +694,7 @@ export default function POSPage() {
         descuento: getTotalDiscount(),
         impuestos: getTaxes(),
         total: getTotal(),
-        metodosPago: paymentMethods,
+        formasPago: paymentForms,
         cajero: "current-user-id",
         turnoId: shift.id,
         sucursalId: "default-branch-id",
@@ -704,7 +709,7 @@ export default function POSPage() {
       setShowReceipt(true);
       setShowPaymentModal(false);
       setTicket([]);
-      setPaymentMethods([]);
+      setPaymentForms([]);
       loadSalesHistory();
     } catch (error) {
       console.error("Error processing payment:", error);
@@ -1121,7 +1126,7 @@ export default function POSPage() {
                   onClick={() => {
                     if (ticket.length > 0) {
                       setShowPaymentModal(true);
-                      setPaymentMethods([]);
+                      setPaymentForms([]);
                       setCardValidationError("");
                     }
                   }}
@@ -2298,7 +2303,7 @@ export default function POSPage() {
               <div className="mb-4">
                 <p className="text-xs text-slate-400 mb-1">TOTAL</p>
                 <p className="text-4xl font-bold text-green-400">${getTotal().toFixed(2)}</p>
-                {paymentMethods.length > 0 && (
+                {paymentForms.length > 0 && (
                   <div className="mt-2 space-y-1 text-sm">
                     <div className="text-green-400">Pagado: ${getTotalCovered().toFixed(2)}</div>
                     {getPending() > 0 && (
@@ -2311,12 +2316,12 @@ export default function POSPage() {
                 )}
               </div>
 
-              {/* Botones de método de pago */}
+              {/* Botones de forma de pago */}
               <div className="space-y-2 mb-4">
                 <button
-                  onClick={() => setSelectedPaymentMethod("EFECTIVO")}
+                  onClick={() => setSelectedPaymentForm("EFECTIVO")}
                   className={`w-full h-12 rounded-lg flex items-center gap-3 px-4 transition-colors ${
-                    selectedPaymentMethod === "EFECTIVO" 
+                    selectedPaymentForm === "EFECTIVO" 
                       ? "bg-blue-600 border-2 border-blue-400" 
                       : "bg-slate-700 border border-slate-600 hover:bg-slate-600"
                   }`}
@@ -2325,9 +2330,9 @@ export default function POSPage() {
                   <span className="font-medium">Efectivo</span>
                 </button>
                 <button
-                  onClick={() => setSelectedPaymentMethod("DEBITO")}
+                  onClick={() => setSelectedPaymentForm("DEBITO")}
                   className={`w-full h-12 rounded-lg flex items-center gap-3 px-4 transition-colors ${
-                    selectedPaymentMethod === "DEBITO" 
+                    selectedPaymentForm === "DEBITO" 
                       ? "bg-blue-600 border-2 border-blue-400" 
                       : "bg-slate-700 border border-slate-600 hover:bg-slate-600"
                   }`}
@@ -2336,9 +2341,9 @@ export default function POSPage() {
                   <span className="font-medium">Débito</span>
                 </button>
                 <button
-                  onClick={() => setSelectedPaymentMethod("CREDITO")}
+                  onClick={() => setSelectedPaymentForm("CREDITO")}
                   className={`w-full h-12 rounded-lg flex items-center gap-3 px-4 transition-colors ${
-                    selectedPaymentMethod === "CREDITO" 
+                    selectedPaymentForm === "CREDITO" 
                       ? "bg-blue-600 border-2 border-blue-400" 
                       : "bg-slate-700 border border-slate-600 hover:bg-slate-600"
                   }`}
@@ -2347,9 +2352,9 @@ export default function POSPage() {
                   <span className="font-medium">Crédito</span>
                 </button>
                 <button
-                  onClick={() => setSelectedPaymentMethod("TRANSFERENCIA")}
+                  onClick={() => setSelectedPaymentForm("TRANSFERENCIA")}
                   className={`w-full h-12 rounded-lg flex items-center gap-3 px-4 transition-colors ${
-                    selectedPaymentMethod === "TRANSFERENCIA" 
+                    selectedPaymentForm === "TRANSFERENCIA" 
                       ? "bg-blue-600 border-2 border-blue-400" 
                       : "bg-slate-700 border border-slate-600 hover:bg-slate-600"
                   }`}
@@ -2358,9 +2363,9 @@ export default function POSPage() {
                   <span className="font-medium">SPEI</span>
                 </button>
                 <button
-                  onClick={() => setSelectedPaymentMethod("CORTESIA")}
+                  onClick={() => setSelectedPaymentForm("CORTESIA")}
                   className={`w-full h-12 rounded-lg flex items-center gap-3 px-4 transition-colors ${
-                    selectedPaymentMethod === "CORTESIA" 
+                    selectedPaymentForm === "CORTESIA" 
                       ? "bg-blue-600 border-2 border-blue-400" 
                       : "bg-slate-700 border border-slate-600 hover:bg-slate-600"
                   }`}
@@ -2372,19 +2377,19 @@ export default function POSPage() {
 
               {/* Lista de pagos agregados */}
               <div className="flex-1 overflow-y-auto space-y-2 mb-4">
-                {paymentMethods.map((pm) => (
-                  <div key={pm.id} className="flex items-center justify-between p-2 rounded bg-slate-900 border border-slate-700">
+                {paymentForms.map((pf) => (
+                  <div key={pf.id} className="flex items-center justify-between p-2 rounded bg-slate-900 border border-slate-700">
                     <div className="flex items-center gap-2">
                       <span className="text-lg">
-                        {pm.tipo === "EFECTIVO" ? "◈" : 
-                         pm.tipo === "DEBITO" ? "▣" : 
-                         pm.tipo === "CREDITO" ? "◉" : 
-                         pm.tipo === "TRANSFERENCIA" ? "⇄" : "✦"}
+                        {pf.forma === "EFECTIVO" ? "◈" : 
+                         pf.forma === "DEBITO" ? "▣" : 
+                         pf.forma === "CREDITO" ? "◉" : 
+                         pf.forma === "TRANSFERENCIA" ? "⇄" : "✦"}
                       </span>
-                      <span className="text-sm">${pm.monto.toFixed(2)}</span>
+                      <span className="text-sm">${pf.monto.toFixed(2)}</span>
                     </div>
                     <button
-                      onClick={() => removePaymentMethod(pm.id)}
+                      onClick={() => removePaymentForm(pf.id)}
                       className="text-red-400 hover:text-red-300 text-lg"
                     >
                       ×
@@ -2408,7 +2413,7 @@ export default function POSPage() {
               {/* Campo monto activo */}
               <div className="mb-4">
                 <p className="text-sm text-slate-400 mb-2">
-                  {selectedPaymentMethod || "Seleccionar método"}
+                  {selectedPaymentForm || "Seleccionar forma de pago"}
                 </p>
                 <div className="bg-slate-900 rounded-lg p-4 border border-slate-700">
                   <input
@@ -2443,19 +2448,19 @@ export default function POSPage() {
               {/* Botón agregar pago */}
               <button
                 onClick={() => {
-                  if (selectedPaymentMethod && Number(paymentAmount) > 0) {
-                    addPaymentMethod(selectedPaymentMethod, Number(paymentAmount));
+                  if (selectedPaymentForm && Number(paymentAmount) > 0) {
+                    addPaymentForm(selectedPaymentForm, Number(paymentAmount));
                     setPaymentAmount("");
                   }
                 }}
-                disabled={!selectedPaymentMethod || Number(paymentAmount) <= 0}
+                disabled={!selectedPaymentForm || Number(paymentAmount) <= 0}
                 className="w-full py-3 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 mb-4"
               >
                 + Agregar pago
               </button>
 
-              {/* Campos adicionales según método */}
-              {selectedPaymentMethod === "DEBITO" && (
+              {/* Campos adicionales según forma de pago */}
+              {selectedPaymentForm === "DEBITO" && (
                 <div className="space-y-3">
                   <div>
                     <label className="text-sm text-slate-400 mb-1 block">Últimos 4 dígitos o folio voucher *</label>
@@ -2480,7 +2485,7 @@ export default function POSPage() {
                 </div>
               )}
 
-              {selectedPaymentMethod === "CREDITO" && (
+              {selectedPaymentForm === "CREDITO" && (
                 <div className="space-y-3">
                   <div>
                     <label className="text-sm text-slate-400 mb-1 block">Últimos 4 dígitos o folio voucher *</label>
@@ -2505,7 +2510,7 @@ export default function POSPage() {
                 </div>
               )}
 
-              {selectedPaymentMethod === "TRANSFERENCIA" && (
+              {selectedPaymentForm === "TRANSFERENCIA" && (
                 <div className="space-y-3">
                   <div>
                     <label className="text-sm text-slate-400 mb-1 block">Clave de rastreo SPEI *</label>
@@ -2526,7 +2531,7 @@ export default function POSPage() {
                 </div>
               )}
 
-              {selectedPaymentMethod === "CORTESIA" && (
+              {selectedPaymentForm === "CORTESIA" && (
                 <div className="space-y-3">
                   <div>
                     <label className="text-sm text-slate-400 mb-1 block">Motivo *</label>
@@ -2563,7 +2568,7 @@ export default function POSPage() {
               <button
                 onClick={() => {
                   setShowPaymentModal(false);
-                  setSelectedPaymentMethod(null);
+                  setSelectedPaymentForm(null);
                   setPaymentAmount("");
                   setCardLast4("");
                   setCardBank("");
@@ -2602,15 +2607,15 @@ export default function POSPage() {
                 </div>
               </div>
               <div className="border-t pt-2 mt-2">
-                <p className="text-sm font-semibold mb-2">Métodos de Pago:</p>
-                {Array.isArray(currentSale.metodoPago) ? currentSale.metodoPago.map((pm: any, idx: number) => (
+                <p className="text-sm font-semibold mb-2">Formas de Pago:</p>
+                {Array.isArray(currentSale.formaPago) ? currentSale.formaPago.map((pf: any, idx: number) => (
                   <div key={idx} className="text-xs flex justify-between">
-                    <span>{pm.tipo}</span>
-                    <span>${pm.monto.toFixed(2)}</span>
+                    <span>{pf.forma}{pf.ultimos4Digitos ? ` ****${pf.ultimos4Digitos}` : ''}</span>
+                    <span>${pf.monto.toFixed(2)}</span>
                   </div>
                 )) : (
                   <div className="text-xs flex justify-between">
-                    <span>{currentSale.metodoPago}</span>
+                    <span>{currentSale.formaPago}</span>
                     <span>${Number(currentSale.total).toFixed(2)}</span>
                   </div>
                 )}
@@ -2932,8 +2937,8 @@ export default function POSPage() {
                   <div>Total Ventas: ${Number(shift.totalVentas).toFixed(2)}</div>
                   <div>Tickets: {salesHistory.length}</div>
                   <div>Efectivo: ${Number(shift.totalEfectivo).toFixed(2)}</div>
-                  <div>Tarjeta: ${Number(shift.totalTarjeta).toFixed(2)}</div>
-                  <div>Transferencia: ${Number(shift.totalTransferencia).toFixed(2)}</div>
+                  <div>Tarjeta (Débito/Crédito): ${Number(shift.totalTarjeta).toFixed(2)}</div>
+                  <div>Transferencia SPEI: ${Number(shift.totalTransferencia).toFixed(2)}</div>
                   <div>Cortesía: ${Number(shift.totalCortesia).toFixed(2)}</div>
                 </div>
               </div>
