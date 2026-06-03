@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
 
@@ -149,6 +149,7 @@ export default function POSPage() {
   const [cardLast4, setCardLast4] = useState<string>("");
   const [cardBank, setCardBank] = useState<string>("");
   const [speiKey, setSpeiKey] = useState<string>("");
+  const paymentInputRef = useRef<HTMLInputElement>(null);
   
   // Productos tab state
   const [posProducts, setPosProducts] = useState<any[]>([]);
@@ -247,6 +248,13 @@ export default function POSPage() {
       setShowLoginScreen(true);
     }
   }, [shift]);
+
+  // Auto-focus payment input when modal opens
+  useEffect(() => {
+    if (showPaymentModal && paymentInputRef.current) {
+      paymentInputRef.current.focus();
+    }
+  }, [showPaymentModal]);
 
   async function loadProducts() {
     try {
@@ -2319,7 +2327,11 @@ export default function POSPage() {
               {/* Botones de forma de pago */}
               <div className="space-y-2 mb-4">
                 <button
-                  onClick={() => setSelectedPaymentForm("EFECTIVO")}
+                  onClick={() => {
+                    setSelectedPaymentForm("EFECTIVO");
+                    setPaymentAmount("");
+                    setTimeout(() => paymentInputRef.current?.focus(), 0);
+                  }}
                   className={`w-full h-12 rounded-lg flex items-center gap-3 px-4 transition-colors ${
                     selectedPaymentForm === "EFECTIVO" 
                       ? "bg-blue-600 border-2 border-blue-400" 
@@ -2330,7 +2342,11 @@ export default function POSPage() {
                   <span className="font-medium">Efectivo</span>
                 </button>
                 <button
-                  onClick={() => setSelectedPaymentForm("DEBITO")}
+                  onClick={() => {
+                    setSelectedPaymentForm("DEBITO");
+                    setPaymentAmount("");
+                    setTimeout(() => paymentInputRef.current?.focus(), 0);
+                  }}
                   className={`w-full h-12 rounded-lg flex items-center gap-3 px-4 transition-colors ${
                     selectedPaymentForm === "DEBITO" 
                       ? "bg-blue-600 border-2 border-blue-400" 
@@ -2341,7 +2357,11 @@ export default function POSPage() {
                   <span className="font-medium">Débito</span>
                 </button>
                 <button
-                  onClick={() => setSelectedPaymentForm("CREDITO")}
+                  onClick={() => {
+                    setSelectedPaymentForm("CREDITO");
+                    setPaymentAmount("");
+                    setTimeout(() => paymentInputRef.current?.focus(), 0);
+                  }}
                   className={`w-full h-12 rounded-lg flex items-center gap-3 px-4 transition-colors ${
                     selectedPaymentForm === "CREDITO" 
                       ? "bg-blue-600 border-2 border-blue-400" 
@@ -2352,7 +2372,11 @@ export default function POSPage() {
                   <span className="font-medium">Crédito</span>
                 </button>
                 <button
-                  onClick={() => setSelectedPaymentForm("TRANSFERENCIA")}
+                  onClick={() => {
+                    setSelectedPaymentForm("TRANSFERENCIA");
+                    setPaymentAmount("");
+                    setTimeout(() => paymentInputRef.current?.focus(), 0);
+                  }}
                   className={`w-full h-12 rounded-lg flex items-center gap-3 px-4 transition-colors ${
                     selectedPaymentForm === "TRANSFERENCIA" 
                       ? "bg-blue-600 border-2 border-blue-400" 
@@ -2363,7 +2387,11 @@ export default function POSPage() {
                   <span className="font-medium">SPEI</span>
                 </button>
                 <button
-                  onClick={() => setSelectedPaymentForm("CORTESIA")}
+                  onClick={() => {
+                    setSelectedPaymentForm("CORTESIA");
+                    setPaymentAmount("");
+                    setTimeout(() => paymentInputRef.current?.focus(), 0);
+                  }}
                   className={`w-full h-12 rounded-lg flex items-center gap-3 px-4 transition-colors ${
                     selectedPaymentForm === "CORTESIA" 
                       ? "bg-blue-600 border-2 border-blue-400" 
@@ -2417,9 +2445,27 @@ export default function POSPage() {
                 </p>
                 <div className="bg-slate-900 rounded-lg p-4 border border-slate-700">
                   <input
+                    ref={paymentInputRef}
                     type="text"
                     value={paymentAmount}
-                    readOnly
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Solo permitir dígitos y un punto decimal
+                      if (/^\d*\.?\d*$/.test(value)) {
+                        setPaymentAmount(value);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        if (selectedPaymentForm && Number(paymentAmount) > 0) {
+                          addPaymentForm(selectedPaymentForm, Number(paymentAmount));
+                          setPaymentAmount("");
+                          setTimeout(() => paymentInputRef.current?.focus(), 0);
+                        }
+                      } else if (e.key === 'Backspace') {
+                        setPaymentAmount(paymentAmount.slice(0, -1));
+                      }
+                    }}
                     placeholder="0.00"
                     className="w-full bg-transparent text-4xl font-bold text-white text-right outline-none"
                   />
@@ -2608,7 +2654,7 @@ export default function POSPage() {
               </div>
               <div className="border-t pt-2 mt-2">
                 <p className="text-sm font-semibold mb-2">Formas de Pago:</p>
-                {Array.isArray(currentSale.formaPago) ? currentSale.formaPago.map((pf: any, idx: number) => (
+                {Array.isArray(currentSale.formasPago) ? currentSale.formasPago.map((pf: any, idx: number) => (
                   <div key={idx} className="text-xs flex justify-between">
                     <span>{pf.forma}{pf.ultimos4Digitos ? ` ****${pf.ultimos4Digitos}` : ''}</span>
                     <span>${pf.monto.toFixed(2)}</span>
