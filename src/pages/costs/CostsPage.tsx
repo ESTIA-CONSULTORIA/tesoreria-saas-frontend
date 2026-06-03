@@ -123,6 +123,14 @@ export default function CostsPage() {
   });
   const [physicalCountItems, setPhysicalCountItems] = useState<any[]>([]);
 
+  // CSV Import states
+  const [insumoImportModalOpen, setInsumoImportModalOpen] = useState(false);
+  const [recipeImportModalOpen, setRecipeImportModalOpen] = useState(false);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [csvPreview, setCsvPreview] = useState<any[]>([]);
+  const [csvImportResult, setCsvImportResult] = useState<{ success: number; errors: any[] } | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+
   useEffect(() => {
     loadSuppliers();
     loadAlmacenes();
@@ -447,6 +455,142 @@ export default function CostsPage() {
     return labels[categoria] || categoria;
   }
 
+  // CSV Import functions
+  function parseCSV(text: string): string[] {
+    const lines: string[] = [];
+    let currentLine = "";
+    let inQuotes = false;
+    
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        lines.push(currentLine);
+        currentLine = "";
+      } else if (char === '\n' && !inQuotes) {
+        lines.push(currentLine);
+        currentLine = "";
+      } else {
+        currentLine += char;
+      }
+    }
+    if (currentLine) lines.push(currentLine);
+    
+    return lines;
+  }
+
+  function downloadCSVTemplate(type: "insumos" | "recetas" | "productos") {
+    let content = "";
+    let filename = "";
+    
+    if (type === "insumos") {
+      content = "nombre,familia,presentacion,presentacionCompra,unidadMedida,costoUnitario,stockMinimo,proveedorNombre\n";
+      content += "Harina de trigo,ALI,1 kg,50 kg,kg,25.50,10,Proveedor A\n";
+      content += "Azúcar,ALI,1 kg,50 kg,kg,18.00,15,Proveedor B\n";
+      filename = "plantilla_insumos.csv";
+    } else if (type === "recetas") {
+      content = "nombreReceta,porciones,nombreInsumo,cantidad,unidadMedida\n";
+      content += "Pastel de Chocolate,8,Harina de trigo,500,g\n";
+      content += "Pastel de Chocolate,8,Azúcar,300,g\n";
+      content += "Pastel de Chocolate,8,Huevos,4,pieza\n";
+      content += "Pastel de Chocolate,8,Chocolate,200,g\n";
+      filename = "plantilla_recetas.csv";
+    } else if (type === "productos") {
+      content = "nombre,categoria,precio,impuesto,descripcion\n";
+      content += "Hamburguesa Clásica,Comida,85.00,16,Hamburguesa con carne de res\n";
+      content += "Refresco Cola,Bebidas,25.00,16,Refresco de cola 355ml\n";
+      filename = "plantilla_productos.csv";
+    }
+    
+    const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+  }
+
+  function handleFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    setCsvFile(file);
+    setCsvImportResult(null);
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const lines = parseCSV(text);
+      const headers = lines[0].split(',').map(h => h.trim());
+      const data = lines.slice(1).map(line => {
+        const values = line.split(',').map(v => v.trim());
+        const obj: any = {};
+        headers.forEach((h, i) => obj[h] = values[i] || "");
+        return obj;
+      });
+      setCsvPreview(data.slice(0, 5));
+    };
+    reader.readAsText(file);
+  }
+
+  async function importInsumosFromCSV() {
+    if (!csvFile) return;
+    
+    try {
+      setIsImporting(true);
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const text = e.target?.result as string;
+        const lines = parseCSV(text);
+        const headers = lines[0].split(',').map(h => h.trim());
+        const data = lines.slice(1).map(line => {
+          const values = line.split(',').map(v => v.trim());
+          const obj: any = {};
+          headers.forEach((h, i) => obj[h] = values[i] || "");
+          return obj;
+        });
+        
+        const response = await api.post("/costs/insumos/import", { insumos: data });
+        setCsvImportResult(response.data);
+        loadInsumos();
+      };
+      reader.readAsText(csvFile);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Error al importar insumos");
+    } finally {
+      setIsImporting(false);
+    }
+  }
+
+  async function importRecipesFromCSV() {
+    if (!csvFile) return;
+    
+    try {
+      setIsImporting(true);
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const text = e.target?.result as string;
+        const lines = parseCSV(text);
+        const headers = lines[0].split(',').map(h => h.trim());
+        const data = lines.slice(1).map(line => {
+          const values = line.split(',').map(v => v.trim());
+          const obj: any = {};
+          headers.forEach((h, i) => obj[h] = values[i] || "");
+          return obj;
+        });
+        
+        const response = await api.post("/costs/recipes/import", { recetas: data });
+        setCsvImportResult(response.data);
+        loadRecipes();
+      };
+      reader.readAsText(csvFile);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Error al importar recetas");
+    } finally {
+      setIsImporting(false);
+    }
+  }
+
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -533,9 +677,14 @@ export default function CostsPage() {
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-semibold">Insumos</h3>
-                  <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700" onClick={() => { setSelectedInsumo(null); setInsumoModalOpen(true); }}>
-                    + Nuevo Insumo
-                  </button>
+                  <div className="flex gap-2">
+                    <button className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-600" onClick={() => { setInsumoImportModalOpen(true); }}>
+                      Importar CSV
+                    </button>
+                    <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700" onClick={() => { setSelectedInsumo(null); setInsumoModalOpen(true); }}>
+                      + Nuevo Insumo
+                    </button>
+                  </div>
                 </div>
                 <div className="hidden md:block overflow-x-auto">
                   <table className="min-w-full text-left text-sm">
@@ -618,9 +767,14 @@ export default function CostsPage() {
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-semibold">Recetas</h3>
-                  <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700" onClick={() => { setSelectedRecipe(null); setRecipeModalOpen(true); }}>
-                    + Nueva Receta
-                  </button>
+                  <div className="flex gap-2">
+                    <button className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-600" onClick={() => { setRecipeImportModalOpen(true); }}>
+                      Importar CSV
+                    </button>
+                    <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700" onClick={() => { setSelectedRecipe(null); setRecipeModalOpen(true); }}>
+                      + Nueva Receta
+                    </button>
+                  </div>
                 </div>
                 <div className="hidden md:block overflow-x-auto">
                   <table className="min-w-full text-left text-sm">
@@ -1605,6 +1759,217 @@ export default function CostsPage() {
                   className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-40"
                 >
                   {loading ? "Guardando..." : "Guardar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Importación CSV Insumos */}
+        {insumoImportModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-2xl rounded-xl border border-slate-800 bg-slate-900 p-6 max-h-[90vh] overflow-y-auto">
+              <h3 className="text-xl font-bold text-white mb-4">Importar Insumos desde CSV</h3>
+              
+              <div className="space-y-4">
+                <button
+                  onClick={() => downloadCSVTemplate("insumos")}
+                  className="w-full rounded-lg bg-slate-800 px-4 py-3 text-sm font-medium text-white hover:bg-slate-700 border border-slate-700"
+                >
+                  📥 Descargar Plantilla CSV
+                </button>
+
+                <div className="border-2 border-dashed border-slate-700 rounded-lg p-8 text-center">
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="csv-upload"
+                  />
+                  <label
+                    htmlFor="csv-upload"
+                    className="cursor-pointer"
+                  >
+                    <div className="text-slate-400 mb-2">
+                      Arrastra tu archivo CSV aquí o haz clic para seleccionar
+                    </div>
+                    <div className="text-sm text-slate-500">
+                      Formato: nombre, familia, presentacion, presentacionCompra, unidadMedida, costoUnitario, stockMinimo, proveedorNombre
+                    </div>
+                  </label>
+                </div>
+
+                {csvPreview.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-white mb-2">Vista Previa (primeras 5 filas):</h4>
+                    <div className="rounded-lg border border-slate-800 bg-slate-800 overflow-x-auto">
+                      <table className="min-w-full text-xs">
+                        <thead className="text-slate-400">
+                          <tr>
+                            {Object.keys(csvPreview[0]).map(key => (
+                              <th key={key} className="p-2 text-left">{key}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {csvPreview.map((row, i) => (
+                            <tr key={i} className="border-t border-slate-700">
+                              {Object.values(row).map((val: any, j) => (
+                                <td key={j} className="p-2">{val}</td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {csvImportResult && (
+                  <div className={`rounded-lg p-4 ${csvImportResult.success > 0 ? 'bg-green-900/30 border border-green-700' : 'bg-red-900/30 border border-red-700'}`}>
+                    <p className="text-white font-semibold">
+                      {csvImportResult.success} insumos importados correctamente
+                    </p>
+                    {csvImportResult.errors.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-red-300 text-sm">{csvImportResult.errors.length} errores:</p>
+                        <ul className="text-xs text-red-300 mt-1 space-y-1">
+                          {csvImportResult.errors.map((err: any, i) => (
+                            <li key={i}>Fila {err.row}: {err.message}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setInsumoImportModalOpen(false);
+                    setCsvFile(null);
+                    setCsvPreview([]);
+                    setCsvImportResult(null);
+                  }}
+                  className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={importInsumosFromCSV}
+                  disabled={!csvFile || isImporting}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-40"
+                >
+                  {isImporting ? "Importando..." : "Importar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Importación CSV Recetas */}
+        {recipeImportModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-2xl rounded-xl border border-slate-800 bg-slate-900 p-6 max-h-[90vh] overflow-y-auto">
+              <h3 className="text-xl font-bold text-white mb-4">Importar Recetas desde CSV</h3>
+              
+              <div className="space-y-4">
+                <button
+                  onClick={() => downloadCSVTemplate("recetas")}
+                  className="w-full rounded-lg bg-slate-800 px-4 py-3 text-sm font-medium text-white hover:bg-slate-700 border border-slate-700"
+                >
+                  📥 Descargar Plantilla CSV
+                </button>
+
+                <div className="border-2 border-dashed border-slate-700 rounded-lg p-8 text-center">
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="csv-upload-recipes"
+                  />
+                  <label
+                    htmlFor="csv-upload-recipes"
+                    className="cursor-pointer"
+                  >
+                    <div className="text-slate-400 mb-2">
+                      Arrastra tu archivo CSV aquí o haz clic para seleccionar
+                    </div>
+                    <div className="text-sm text-slate-500">
+                      Formato: nombreReceta, porciones, nombreInsumo, cantidad, unidadMedida
+                    </div>
+                    <div className="text-xs text-slate-600 mt-1">
+                      Una fila por insumo de la receta. El sistema agrupa por nombreReceta.
+                    </div>
+                  </label>
+                </div>
+
+                {csvPreview.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-white mb-2">Vista Previa (primeras 5 filas):</h4>
+                    <div className="rounded-lg border border-slate-800 bg-slate-800 overflow-x-auto">
+                      <table className="min-w-full text-xs">
+                        <thead className="text-slate-400">
+                          <tr>
+                            {Object.keys(csvPreview[0]).map(key => (
+                              <th key={key} className="p-2 text-left">{key}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {csvPreview.map((row, i) => (
+                            <tr key={i} className="border-t border-slate-700">
+                              {Object.values(row).map((val: any, j) => (
+                                <td key={j} className="p-2">{val}</td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {csvImportResult && (
+                  <div className={`rounded-lg p-4 ${csvImportResult.success > 0 ? 'bg-green-900/30 border border-green-700' : 'bg-red-900/30 border border-red-700'}`}>
+                    <p className="text-white font-semibold">
+                      {csvImportResult.success} recetas importadas correctamente
+                    </p>
+                    {csvImportResult.errors.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-red-300 text-sm">{csvImportResult.errors.length} errores:</p>
+                        <ul className="text-xs text-red-300 mt-1 space-y-1">
+                          {csvImportResult.errors.map((err: any, i) => (
+                            <li key={i}>Fila {err.row}: {err.message}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setRecipeImportModalOpen(false);
+                    setCsvFile(null);
+                    setCsvPreview([]);
+                    setCsvImportResult(null);
+                  }}
+                  className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={importRecipesFromCSV}
+                  disabled={!csvFile || isImporting}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-40"
+                >
+                  {isImporting ? "Importando..." : "Importar"}
                 </button>
               </div>
             </div>

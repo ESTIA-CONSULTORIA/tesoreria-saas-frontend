@@ -104,6 +104,13 @@ export default function POSPage() {
     activo: true
   });
 
+  // CSV Import state for POS products
+  const [posProductImportModalOpen, setPosProductImportModalOpen] = useState(false);
+  const [posCsvFile, setPosCsvFile] = useState<File | null>(null);
+  const [posCsvPreview, setPosCsvPreview] = useState<any[]>([]);
+  const [posCsvImportResult, setPosCsvImportResult] = useState<{ success: number; errors: any[] } | null>(null);
+  const [isPosImporting, setIsPosImporting] = useState(false);
+
   // Categorías tab state
   const [posCategories, setPosCategories] = useState<any[]>([]);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -448,6 +455,96 @@ export default function POSPage() {
     }
   }
 
+  // CSV Import functions for POS
+  function parsePOSCSV(text: string): string[] {
+    const lines: string[] = [];
+    let currentLine = "";
+    let inQuotes = false;
+    
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        lines.push(currentLine);
+        currentLine = "";
+      } else if (char === '\n' && !inQuotes) {
+        lines.push(currentLine);
+        currentLine = "";
+      } else {
+        currentLine += char;
+      }
+    }
+    if (currentLine) lines.push(currentLine);
+    
+    return lines;
+  }
+
+  function downloadPOSCSVTemplate() {
+    const content = "nombre,categoria,precio,impuesto,descripcion\n";
+    const content2 = "Hamburguesa Clásica,Comida,85.00,16,Hamburguesa con carne de res\n";
+    const content3 = "Refresco Cola,Bebidas,25.00,16,Refresco de cola 355ml\n";
+    const fullContent = content + content2 + content3;
+    
+    const blob = new Blob([fullContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "plantilla_productos_pos.csv";
+    link.click();
+  }
+
+  function handlePosFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    setPosCsvFile(file);
+    setPosCsvImportResult(null);
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const lines = parsePOSCSV(text);
+      const headers = lines[0].split(',').map(h => h.trim());
+      const data = lines.slice(1).map(line => {
+        const values = line.split(',').map(v => v.trim());
+        const obj: any = {};
+        headers.forEach((h, i) => obj[h] = values[i] || "");
+        return obj;
+      });
+      setPosCsvPreview(data.slice(0, 5));
+    };
+    reader.readAsText(file);
+  }
+
+  async function importPosProductsFromCSV() {
+    if (!posCsvFile) return;
+    
+    try {
+      setIsPosImporting(true);
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const text = e.target?.result as string;
+        const lines = parsePOSCSV(text);
+        const headers = lines[0].split(',').map(h => h.trim());
+        const data = lines.slice(1).map(line => {
+          const values = line.split(',').map(v => v.trim());
+          const obj: any = {};
+          headers.forEach((h, i) => obj[h] = values[i] || "");
+          return obj;
+        });
+        
+        const response = await api.post("/pos/products/import", { productos: data });
+        setPosCsvImportResult(response.data);
+        loadProducts();
+      };
+      reader.readAsText(posCsvFile);
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Error al importar productos");
+    } finally {
+      setIsPosImporting(false);
+    }
+  }
+
   const filteredProducts = products.filter((product) => {
     const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -771,7 +868,7 @@ export default function POSPage() {
                 + Nuevo Producto
               </button>
               <button
-                onClick={() => alert("Funcionalidad para importar insumos como productos")}
+                onClick={() => setPosProductImportModalOpen(true)}
                 className="px-4 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
               >
                 Importar Insumos
@@ -2327,6 +2424,110 @@ export default function POSPage() {
                   Guardar
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL IMPORTACIÓN CSV PRODUCTOS POS */}
+      {posProductImportModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-xl p-6 w-[500px] max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-semibold mb-4">Importar Productos desde CSV</h3>
+            
+            <div className="space-y-4">
+              <button
+                onClick={downloadPOSCSVTemplate}
+                className="w-full px-4 py-3 rounded bg-slate-700 text-white hover:bg-slate-600 border border-slate-600"
+              >
+                📥 Descargar Plantilla CSV
+              </button>
+
+              <div className="border-2 border-dashed border-slate-700 rounded-lg p-8 text-center">
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={handlePosFileUpload}
+                  className="hidden"
+                  id="pos-csv-upload"
+                />
+                <label
+                  htmlFor="pos-csv-upload"
+                  className="cursor-pointer"
+                >
+                  <div className="text-slate-400 mb-2">
+                    Arrastra tu archivo CSV aquí o haz clic para seleccionar
+                  </div>
+                  <div className="text-sm text-slate-500">
+                    Formato: nombre, categoria, precio, impuesto, descripcion
+                  </div>
+                </label>
+              </div>
+
+              {posCsvPreview.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold mb-2">Vista Previa (primeras 5 filas):</h4>
+                  <div className="rounded-lg border border-slate-700 bg-slate-900 overflow-x-auto">
+                    <table className="min-w-full text-xs">
+                      <thead className="text-slate-400">
+                        <tr>
+                          {Object.keys(posCsvPreview[0]).map(key => (
+                            <th key={key} className="p-2 text-left">{key}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {posCsvPreview.map((row, i) => (
+                          <tr key={i} className="border-t border-slate-700">
+                            {Object.values(row).map((val: any, j) => (
+                              <td key={j} className="p-2">{val}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {posCsvImportResult && (
+                <div className={`rounded-lg p-4 ${posCsvImportResult.success > 0 ? 'bg-green-900/30 border border-green-700' : 'bg-red-900/30 border border-red-700'}`}>
+                  <p className="text-white font-semibold">
+                    {posCsvImportResult.success} productos importados correctamente
+                  </p>
+                  {posCsvImportResult.errors.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-red-300 text-sm">{posCsvImportResult.errors.length} errores:</p>
+                      <ul className="text-xs text-red-300 mt-1 space-y-1">
+                        {posCsvImportResult.errors.map((err: any, i) => (
+                          <li key={i}>Fila {err.row}: {err.message}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => {
+                  setPosProductImportModalOpen(false);
+                  setPosCsvFile(null);
+                  setPosCsvPreview([]);
+                  setPosCsvImportResult(null);
+                }}
+                className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={importPosProductsFromCSV}
+                disabled={!posCsvFile || isPosImporting}
+                className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40"
+              >
+                {isPosImporting ? "Importando..." : "Importar"}
+              </button>
             </div>
           </div>
         </div>
