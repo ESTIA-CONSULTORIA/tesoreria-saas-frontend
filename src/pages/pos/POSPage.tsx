@@ -19,6 +19,8 @@ interface Product {
   price: number;
   category: string;
   imageUrl?: string;
+  stock?: number | null;
+  stockMinimo?: number;
 }
 
 interface Shift {
@@ -32,6 +34,9 @@ interface Shift {
   totalTransferencia: number;
   totalCortesia: number;
   totalDevoluciones: number;
+  totalRetiros?: number;
+  totalDepositos?: number;
+  efectivoContado?: number;
   status: string;
 }
 
@@ -88,6 +93,28 @@ export default function POSPage() {
   const [courtesyReason, setCourtesyReason] = useState("");
   const [courtesyAuthorizedBy, setCourtesyAuthorizedBy] = useState("");
   const [cardValidationError, setCardValidationError] = useState("");
+  
+  // Retiro/Depósito modals
+  const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
+  const [showDepositModal, setShowDepositModal] = useState(false);
+  const [withdrawalAmount, setWithdrawalAmount] = useState<string>("");
+  const [withdrawalReason, setWithdrawalReason] = useState<string>("");
+  const [withdrawalAuthorizedBy, setWithdrawalAuthorizedBy] = useState<string>("");
+  const [depositAmount, setDepositAmount] = useState<string>("");
+  const [depositOrigin, setDepositOrigin] = useState<string>("");
+  const [depositAuthorizedBy, setDepositAuthorizedBy] = useState<string>("");
+  
+  // Login/Shift opening screens
+  const [showLoginScreen, setShowLoginScreen] = useState(false);
+  const [cashierPin, setCashierPin] = useState<string>("");
+  const [selectedCashier, setSelectedCashier] = useState<string>("");
+  const [shiftNotes, setShiftNotes] = useState<string>("");
+  
+  // Precorte/Corte modals
+  const [showPrecutModal, setShowPrecutModal] = useState(false);
+  const [showCloseShiftModal, setShowCloseShiftModal] = useState(false);
+  const [cashCounts, setCashCounts] = useState<Record<string, number>>({});
+  const [efectivoContado, setEfectivoContado] = useState<string>("");
   
   // Productos tab state
   const [posProducts, setPosProducts] = useState<any[]>([]);
@@ -180,6 +207,13 @@ export default function POSPage() {
     loadOpenShift();
   }, []);
 
+  useEffect(() => {
+    // Show login screen if no shift is open
+    if (!shift) {
+      setShowLoginScreen(true);
+    }
+  }, [shift]);
+
   async function loadProducts() {
     try {
       const response = await api.get("/pos/products");
@@ -253,17 +287,35 @@ export default function POSPage() {
   }
 
   async function openShift() {
+    if (!initialFund || Number(initialFund) <= 0) {
+      alert("El fondo de caja es obligatorio");
+      return;
+    }
     try {
       await api.post("/pos/shifts", {
-        cajero: "current-user-id",
+        cajero: selectedCashier || "current-user-id",
         sucursalId: "default-branch-id",
         fondoInicial: Number(initialFund) || 0,
+        notas: shiftNotes,
       });
       setShowOpenShiftModal(false);
+      setInitialFund("");
+      setShiftNotes("");
       loadOpenShift();
     } catch (error) {
       console.error("Error opening shift:", error);
       alert("Error al abrir turno");
+    }
+  }
+
+  function handleLogin() {
+    // Simple PIN validation (in production, this would validate against backend)
+    if (cashierPin.length >= 4) {
+      setShowLoginScreen(false);
+      setShowOpenShiftModal(true);
+      setCashierPin("");
+    } else {
+      alert("PIN debe tener al menos 4 dígitos");
     }
   }
 
@@ -277,12 +329,77 @@ export default function POSPage() {
         totalTransferencia: shift.totalTransferencia || 0,
         totalCortesia: shift.totalCortesia || 0,
         totalDevoluciones: shift.totalDevoluciones || 0,
+        totalRetiros: shift.totalRetiros || 0,
+        totalDepositos: shift.totalDepositos || 0,
+        efectivoContado: Number(efectivoContado) || 0,
       });
       setShift(null);
+      setShowCloseShiftModal(false);
     } catch (error) {
       console.error("Error closing shift:", error);
       alert("Error al cerrar turno");
     }
+  }
+
+  async function handleWithdrawal() {
+    if (!shift || !withdrawalAmount || !withdrawalReason || !withdrawalAuthorizedBy) {
+      alert("Todos los campos son obligatorios");
+      return;
+    }
+    try {
+      await api.post(`/pos/shifts/${shift.id}/withdrawal`, {
+        monto: Number(withdrawalAmount),
+        motivo: withdrawalReason,
+        autorizadoPor: withdrawalAuthorizedBy,
+      });
+      setShowWithdrawalModal(false);
+      setWithdrawalAmount("");
+      setWithdrawalReason("");
+      setWithdrawalAuthorizedBy("");
+      loadOpenShift();
+    } catch (error) {
+      console.error("Error processing withdrawal:", error);
+      alert("Error al procesar retiro");
+    }
+  }
+
+  async function handleDeposit() {
+    if (!shift || !depositAmount || !depositOrigin || !depositAuthorizedBy) {
+      alert("Todos los campos son obligatorios");
+      return;
+    }
+    try {
+      await api.post(`/pos/shifts/${shift.id}/deposit`, {
+        monto: Number(depositAmount),
+        origen: depositOrigin,
+        autorizadoPor: depositAuthorizedBy,
+      });
+      setShowDepositModal(false);
+      setDepositAmount("");
+      setDepositOrigin("");
+      setDepositAuthorizedBy("");
+      loadOpenShift();
+    } catch (error) {
+      console.error("Error processing deposit:", error);
+      alert("Error al procesar depósito");
+    }
+  }
+
+  async function handlePrecut() {
+    if (!shift) return;
+    try {
+      await api.post(`/pos/shifts/${shift.id}/precut`);
+      // Show precorte report
+      alert("Precorte generado. Imprimiendo reporte...");
+    } catch (error) {
+      console.error("Error generating precut:", error);
+      alert("Error al generar precorte");
+    }
+  }
+
+  function calculateTotalCash() {
+    const denominations = [1000, 500, 200, 100, 50, 20, 10, 5, 2, 1];
+    return denominations.reduce((sum, denom) => sum + (cashCounts[denom] || 0) * denom, 0);
   }
 
   function addToTicket(product: Product) {
@@ -685,12 +802,32 @@ export default function POSPage() {
                   Abrir Turno
                 </button>
               ) : (
-                <button
-                  onClick={closeShift}
-                  className="px-4 py-2 rounded bg-red-600 text-white text-sm hover:bg-red-700"
-                >
-                  Cerrar Turno
-                </button>
+                <>
+                  <button
+                    onClick={() => setShowWithdrawalModal(true)}
+                    className="px-3 py-2 rounded bg-yellow-600 text-white text-sm hover:bg-yellow-700"
+                  >
+                    💰 Retiro
+                  </button>
+                  <button
+                    onClick={() => setShowDepositModal(true)}
+                    className="px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+                  >
+                    💵 Depósito
+                  </button>
+                  <button
+                    onClick={() => setShowPrecutModal(true)}
+                    className="px-3 py-2 rounded bg-purple-600 text-white text-sm hover:bg-purple-700"
+                  >
+                    📊 Precorte
+                  </button>
+                  <button
+                    onClick={() => setShowCloseShiftModal(true)}
+                    className="px-4 py-2 rounded bg-red-600 text-white text-sm hover:bg-red-700"
+                  >
+                    Cerrar Turno
+                  </button>
+                </>
               )}
               <button
                 onClick={() => {
@@ -739,7 +876,7 @@ export default function POSPage() {
                     <button
                       key={product.id}
                       onClick={() => addToTicket(product)}
-                      className="max-w-[120px] max-h-[120px] p-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left transition-colors flex flex-col"
+                      className="max-w-[120px] max-h-[120px] p-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left transition-colors flex flex-col relative"
                     >
                       <div className="w-full aspect-square bg-slate-700 rounded mb-2 flex items-center justify-center overflow-hidden">
                         {product.imageUrl ? (
@@ -750,6 +887,17 @@ export default function POSPage() {
                       </div>
                       <p className="font-medium text-xs line-clamp-2 h-8 overflow-hidden">{product.name}</p>
                       <p className="text-green-400 font-bold text-sm">${product.price.toFixed(2)}</p>
+                      {product.stock !== null && product.stock !== undefined && (
+                        <div className={`absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                          product.stock === 0
+                            ? 'bg-red-600 text-white'
+                            : product.stock <= (product.stockMinimo || 0)
+                            ? 'bg-yellow-600 text-white'
+                            : 'bg-green-600 text-white'
+                        }`}>
+                          {product.stock}
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -858,7 +1006,7 @@ export default function POSPage() {
 
                 <button
                   onClick={() => {
-                    if (ticket.length > 0 && shift) {
+                    if (ticket.length > 0) {
                       setShowPaymentModal(true);
                       setPaymentMethods([]);
                       setCardValidationError("");
@@ -1604,16 +1752,35 @@ export default function POSPage() {
       {showOpenShiftModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-slate-800 rounded-xl p-6 w-96">
-            <h3 className="text-lg font-semibold mb-4">Abrir Turno</h3>
+            <h3 className="text-lg font-semibold mb-4">Apertura de Turno</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Fondo Inicial</label>
+                <label className="block text-sm text-slate-400 mb-1">Cajero</label>
+                <div className="text-white font-medium">{selectedCashier || "Usuario Demo"}</div>
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Fecha y Hora</label>
+                <div className="text-white">{new Date().toLocaleString()}</div>
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Fondo de Caja *</label>
                 <input
                   type="number"
+                  step="0.01"
                   value={initialFund}
                   onChange={(e) => setInitialFund(e.target.value)}
                   placeholder="0.00"
                   className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Notas (opcional)</label>
+                <textarea
+                  value={shiftNotes}
+                  onChange={(e) => setShiftNotes(e.target.value)}
+                  placeholder="Notas del turno..."
+                  className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white"
+                  rows={2}
                 />
               </div>
               <div className="flex gap-2">
@@ -1627,9 +1794,54 @@ export default function POSPage() {
                   onClick={openShift}
                   className="flex-1 py-2 rounded bg-green-600 text-white hover:bg-green-700"
                 >
-                  Abrir
+                  Abrir Turno
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PANTALLA LOGIN CAJERO */}
+      {showLoginScreen && (
+        <div className="fixed inset-0 bg-slate-950 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-xl p-8 w-96">
+            <div className="text-center mb-6">
+              <div className="text-4xl mb-2">🏪</div>
+              <h2 className="text-2xl font-bold">POS Sistema</h2>
+              <p className="text-slate-400">Inicio de Cajero</p>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Seleccionar Cajero</label>
+                <select
+                  value={selectedCashier}
+                  onChange={(e) => setSelectedCashier(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white"
+                >
+                  <option value="">Seleccionar...</option>
+                  <option value="cajero1">Juan Pérez</option>
+                  <option value="cajero2">María García</option>
+                  <option value="cajero3">Carlos López</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">PIN de Cajero</label>
+                <input
+                  type="password"
+                  maxLength={6}
+                  value={cashierPin}
+                  onChange={(e) => setCashierPin(e.target.value)}
+                  placeholder="****"
+                  className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white text-center text-2xl tracking-widest"
+                />
+              </div>
+              <button
+                onClick={handleLogin}
+                className="w-full py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700"
+              >
+                Continuar
+              </button>
             </div>
           </div>
         </div>
@@ -2252,6 +2464,264 @@ export default function POSPage() {
                   className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
                 >
                   Guardar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL RETIRO */}
+      {showWithdrawalModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-xl p-6 w-96">
+            <h3 className="text-lg font-semibold mb-4">💰 Retiro de Efectivo</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Monto *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={withdrawalAmount}
+                  onChange={(e) => setWithdrawalAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Motivo *</label>
+                <input
+                  type="text"
+                  value={withdrawalReason}
+                  onChange={(e) => setWithdrawalReason(e.target.value)}
+                  placeholder="Motivo del retiro"
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Autorizado por *</label>
+                <select
+                  value={withdrawalAuthorizedBy}
+                  onChange={(e) => setWithdrawalAuthorizedBy(e.target.value)}
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                >
+                  <option value="">Seleccionar autorizador</option>
+                  <option value="admin">Administrador</option>
+                  <option value="soporte">Soporte</option>
+                </select>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowWithdrawalModal(false)}
+                  className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleWithdrawal}
+                  className="flex-1 py-2 rounded bg-yellow-600 text-white hover:bg-yellow-700"
+                >
+                  Retirar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DEPÓSITO */}
+      {showDepositModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-xl p-6 w-96">
+            <h3 className="text-lg font-semibold mb-4">💵 Depósito de Efectivo</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Monto *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Origen *</label>
+                <input
+                  type="text"
+                  value={depositOrigin}
+                  onChange={(e) => setDepositOrigin(e.target.value)}
+                  placeholder="Origen del depósito"
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Autorizado por *</label>
+                <select
+                  value={depositAuthorizedBy}
+                  onChange={(e) => setDepositAuthorizedBy(e.target.value)}
+                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                >
+                  <option value="">Seleccionar autorizador</option>
+                  <option value="admin">Administrador</option>
+                  <option value="soporte">Soporte</option>
+                </select>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowDepositModal(false)}
+                  className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDeposit}
+                  className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Depositar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL PRECORTE X */}
+      {showPrecutModal && shift && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-xl p-6 w-[600px] max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-semibold mb-4">📊 Precorte X</h3>
+            <div className="space-y-4">
+              <div className="bg-slate-900 rounded-lg p-4">
+                <h4 className="font-semibold mb-2">Resumen de Ventas</h4>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>Total Ventas: ${Number(shift.totalVentas).toFixed(2)}</div>
+                  <div>Tickets: {salesHistory.length}</div>
+                  <div>Efectivo: ${Number(shift.totalEfectivo).toFixed(2)}</div>
+                  <div>Tarjeta: ${Number(shift.totalTarjeta).toFixed(2)}</div>
+                  <div>Transferencia: ${Number(shift.totalTransferencia).toFixed(2)}</div>
+                  <div>Cortesía: ${Number(shift.totalCortesia).toFixed(2)}</div>
+                </div>
+              </div>
+
+              <div className="bg-slate-900 rounded-lg p-4">
+                <h4 className="font-semibold mb-2">Conteo de Efectivo</h4>
+                {[1000, 500, 200, 100, 50, 20, 10, 5, 2, 1].map(denom => (
+                  <div key={denom} className="flex items-center gap-2 mb-2">
+                    <span className="w-20 text-sm">${denom} ×</span>
+                    <input
+                      type="number"
+                      value={cashCounts[denom] || 0}
+                      onChange={(e) => setCashCounts({ ...cashCounts, [denom]: Number(e.target.value) })}
+                      className="w-20 px-2 py-1 rounded bg-slate-700 text-white text-sm"
+                    />
+                    <span className="text-sm text-slate-400">= ${(cashCounts[denom] || 0) * denom}</span>
+                  </div>
+                ))}
+                <div className="mt-3 pt-3 border-t border-slate-700 font-semibold">
+                  TOTAL EFECTIVO CONTADO: ${calculateTotalCash().toFixed(2)}
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowPrecutModal(false)}
+                  className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+                >
+                  Cerrar
+                </button>
+                <button
+                  onClick={handlePrecut}
+                  className="flex-1 py-2 rounded bg-purple-600 text-white hover:bg-purple-700"
+                >
+                  Imprimir Precorte
+                </button>
+                <button
+                  onClick={() => {
+                    setShowPrecutModal(false);
+                    setShowCloseShiftModal(true);
+                  }}
+                  className="flex-1 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+                >
+                  Proceder a Corte Z
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CORTE Z */}
+      {showCloseShiftModal && shift && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-xl p-6 w-[600px] max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-semibold mb-4">🔒 Corte Z - Cierre de Turno</h3>
+            <div className="space-y-4">
+              <div className="bg-slate-900 rounded-lg p-4">
+                <h4 className="font-semibold mb-2">Resumen del Turno</h4>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>Fondo Inicial: ${Number(shift.fondoInicial).toFixed(2)}</div>
+                  <div>Total Ventas: ${Number(shift.totalVentas).toFixed(2)}</div>
+                  <div>Ventas Efectivo: ${Number(shift.totalEfectivo).toFixed(2)}</div>
+                  <div>Ventas Tarjeta: ${Number(shift.totalTarjeta).toFixed(2)}</div>
+                  <div>Transferencias: ${Number(shift.totalTransferencia).toFixed(2)}</div>
+                  <div>Cortesías: ${Number(shift.totalCortesia).toFixed(2)}</div>
+                  <div>Retiros: ${Number(shift.totalRetiros || 0).toFixed(2)}</div>
+                  <div>Depósitos: ${Number(shift.totalDepositos || 0).toFixed(2)}</div>
+                </div>
+              </div>
+
+              <div className="bg-slate-900 rounded-lg p-4">
+                <h4 className="font-semibold mb-2">Cálculo de Efectivo</h4>
+                <div className="text-sm space-y-1">
+                  <div>Efectivo Esperado = Fondo Inicial + Ventas Efectivo + Depósitos - Retiros</div>
+                  <div className="font-semibold">
+                    ${Number(shift.fondoInicial).toFixed(2)} + ${Number(shift.totalEfectivo).toFixed(2)} + ${Number(shift.totalDepositos || 0).toFixed(2)} - ${Number(shift.totalRetiros || 0).toFixed(2)} = ${(Number(shift.fondoInicial) + Number(shift.totalEfectivo) + Number(shift.totalDepositos || 0) - Number(shift.totalRetiros || 0)).toFixed(2)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-900 rounded-lg p-4">
+                <h4 className="font-semibold mb-2">Efectivo Contado</h4>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={efectivoContado}
+                  onChange={(e) => setEfectivoContado(e.target.value)}
+                  placeholder="Ingrese el efectivo contado del precorte"
+                  className="w-full px-3 py-2 rounded bg-slate-700 text-white"
+                />
+              </div>
+
+              <div className="bg-slate-900 rounded-lg p-4">
+                <h4 className="font-semibold mb-2">Diferencia</h4>
+                {(() => {
+                  const esperado = Number(shift.fondoInicial) + Number(shift.totalEfectivo) + Number(shift.totalDepositos || 0) - Number(shift.totalRetiros || 0);
+                  const contado = Number(efectivoContado) || 0;
+                  const diferencia = esperado - contado;
+                  return (
+                    <div className={`text-xl font-bold ${
+                      diferencia === 0 ? 'text-green-400' : diferencia < 0 ? 'text-red-400' : 'text-yellow-400'
+                    }`}>
+                      ${diferencia.toFixed(2)}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowCloseShiftModal(false)}
+                  className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={closeShift}
+                  className="flex-1 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+                >
+                  Cerrar Turno Definitivamente
                 </button>
               </div>
             </div>
