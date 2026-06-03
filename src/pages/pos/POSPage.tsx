@@ -505,10 +505,10 @@ export default function POSPage() {
             </div>
           </header>
 
-          {/* MAIN CONTENT - 3 ZONES */}
+          {/* MAIN CONTENT - 2 ZONES */}
           <div className="flex-1 flex overflow-hidden">
-            {/* ZONA IZQUIERDA - PRODUCTOS (40%) */}
-            <div className="w-[40%] flex flex-col border-r border-slate-700">
+            {/* ZONA IZQUIERDA - PRODUCTOS (60%) */}
+            <div className="w-[60%] flex flex-col border-r border-slate-700">
               <div className="p-4 border-b border-slate-700 space-y-3">
                 <input
                   type="text"
@@ -535,7 +535,7 @@ export default function POSPage() {
               </div>
 
               <div className="flex-1 overflow-y-auto p-4">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   {filteredProducts.map((product) => (
                     <button
                       key={product.id}
@@ -553,108 +553,103 @@ export default function POSPage() {
               </div>
             </div>
 
-            {/* ZONA CENTRAL - TICKET (35%) */}
-            <div className="w-[35%] flex flex-col border-r border-slate-700">
-              <div className="p-4 border-b border-slate-700">
-                <h2 className="text-lg font-semibold">Ticket Actual</h2>
-              </div>
+            {/* ZONA DERECHA - TICKET + COBRO (40%) */}
+            <div className="w-[40%] flex flex-col">
+              {/* TICKET */}
+              <div className="flex-1 flex flex-col border-b border-slate-700">
+                <div className="p-4 border-b border-slate-700">
+                  <h2 className="text-lg font-semibold">Ticket Actual</h2>
+                </div>
 
-              <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                {ticket.length === 0 ? (
-                  <p className="text-slate-400 text-center py-8">Ticket vacío</p>
-                ) : (
-                  ticket.map((item) => (
-                    <div key={item.productoId} className="p-3 rounded-lg bg-slate-800 border border-slate-700">
-                      <div className="flex justify-between items-start mb-2">
-                        <p className="font-medium text-sm flex-1">{item.nombre}</p>
-                        <button
-                          onClick={() => removeFromTicket(item.productoId)}
-                          className="text-red-400 hover:text-red-300 text-xs ml-2"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                  {ticket.length === 0 ? (
+                    <p className="text-slate-400 text-center py-8">Ticket vacío</p>
+                  ) : (
+                    ticket.map((item) => (
+                      <div key={item.productoId} className="p-3 rounded-lg bg-slate-800 border border-slate-700">
+                        <div className="flex justify-between items-start mb-2">
+                          <p className="font-medium text-sm flex-1">{item.nombre}</p>
                           <button
-                            onClick={() => updateQuantity(item.productoId, item.cantidad - 1)}
-                            className="w-6 h-6 rounded bg-slate-700 hover:bg-slate-600 text-sm"
+                            onClick={() => removeFromTicket(item.productoId)}
+                            className="text-red-400 hover:text-red-300 text-xs ml-2"
                           >
-                            -
-                          </button>
-                          <span className="w-8 text-center">{item.cantidad}</span>
-                          <button
-                            onClick={() => updateQuantity(item.productoId, item.cantidad + 1)}
-                            className="w-6 h-6 rounded bg-slate-700 hover:bg-slate-600 text-sm"
-                          >
-                            +
+                            ✕
                           </button>
                         </div>
-                        <p className="font-semibold">${item.subtotal.toFixed(2)}</p>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => updateQuantity(item.productoId, item.cantidad - 1)}
+                              className="w-6 h-6 rounded bg-slate-700 hover:bg-slate-600 text-sm"
+                            >
+                              -
+                            </button>
+                            <span className="w-8 text-center">{item.cantidad}</span>
+                            <button
+                              onClick={() => updateQuantity(item.productoId, item.cantidad + 1)}
+                              className="w-6 h-6 rounded bg-slate-700 hover:bg-slate-600 text-sm"
+                            >
+                              +
+                            </button>
+                          </div>
+                          <p className="font-semibold">${item.subtotal.toFixed(2)}</p>
+                        </div>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-xs text-slate-400">Descuento %:</span>
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={item.descuento}
+                            onChange={(e) => updateItemDiscount(item.productoId, Number(e.target.value))}
+                            className="w-16 px-2 py-1 rounded bg-slate-700 text-xs text-white"
+                          />
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="text-xs text-slate-400">Descuento %:</span>
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={item.descuento}
-                          onChange={(e) => updateItemDiscount(item.productoId, Number(e.target.value))}
-                          className="w-16 px-2 py-1 rounded bg-slate-700 text-xs text-white"
-                        />
-                      </div>
-                    </div>
-                  ))
-                )}
+                    ))
+                  )}
+                </div>
+
+                <div className="p-4 border-t border-slate-700 space-y-2 bg-slate-800">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400">Subtotal</span>
+                    <span>${getSubtotal().toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400">Descuento</span>
+                    <span className="text-red-400">-${getTotalDiscount().toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400">Impuestos (16%)</span>
+                    <span>${getTaxes().toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-xl font-bold pt-2 border-t border-slate-700">
+                    <span>TOTAL</span>
+                    <span className="text-green-400">${getTotal().toFixed(2)}</span>
+                  </div>
+                </div>
               </div>
 
-              <div className="p-4 border-t border-slate-700 space-y-2 bg-slate-800">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Subtotal</span>
-                  <span>${getSubtotal().toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Descuento</span>
-                  <span className="text-red-400">-${getTotalDiscount().toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Impuestos (16%)</span>
-                  <span>${getTaxes().toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-xl font-bold pt-2 border-t border-slate-700">
-                  <span>TOTAL</span>
-                  <span className="text-green-400">${getTotal().toFixed(2)}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* ZONA DERECHA - COBRO (25%) */}
-            <div className="w-[25%] flex flex-col">
-              <div className="p-4 border-b border-slate-700">
-                <h2 className="text-lg font-semibold">Cobro</h2>
-              </div>
-
-              <div className="flex-1 p-4 space-y-4 flex flex-col">
-                <div className="text-center py-4">
-                  <p className="text-slate-400 text-sm mb-2">Total a Cobrar</p>
-                  <p className="text-5xl font-bold text-green-400">${getTotal().toFixed(2)}</p>
+              {/* COBRO */}
+              <div className="p-4 space-y-3 bg-slate-900">
+                <div className="text-center py-2">
+                  <p className="text-slate-400 text-sm mb-1">Total a Cobrar</p>
+                  <p className="text-4xl font-bold text-green-400">${getTotal().toFixed(2)}</p>
                 </div>
 
                 <button
                   onClick={() => setShowDiscountModal(true)}
-                  className="w-full py-3 rounded-lg bg-slate-700 text-white font-medium hover:bg-slate-600"
+                  className="w-full py-2 rounded-lg bg-slate-700 text-white font-medium hover:bg-slate-600"
                 >
                   Aplicar Descuento
                 </button>
 
                 <button
                   onClick={() => setShowCourtesyModal(true)}
-                  className="w-full py-3 rounded-lg bg-yellow-600 text-white font-medium hover:bg-yellow-700"
+                  className="w-full py-2 rounded-lg bg-yellow-600 text-white font-medium hover:bg-yellow-700"
                 >
                   Cortesía
                 </button>
-
-                <div className="flex-1"></div>
 
                 <button
                   onClick={() => {
@@ -665,7 +660,7 @@ export default function POSPage() {
                     }
                   }}
                   disabled={ticket.length === 0 || !shift}
-                  className="w-full py-6 rounded-lg bg-green-600 text-white font-bold text-2xl hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500"
+                  className="w-full py-4 rounded-lg bg-green-600 text-white font-bold text-xl hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500"
                 >
                   COBRAR
                 </button>
