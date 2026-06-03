@@ -261,7 +261,7 @@ export default function UsersPage() {
     ROLES: "Roles",
     BANKS: "Bancos",
     MOVEMENTS: "Movimientos",
-    TRANSFERS: "Transferencias",
+    TRANSFERS: "Traslado de Fondos",
     REPORTS: "Reportes",
     POS: "POS",
     TREASURY: "Tesorería",

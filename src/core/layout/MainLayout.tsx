@@ -18,7 +18,7 @@ const navItems = [
   { label: "Usuarios y Roles", to: "/users", icon: "👤", modulo: "usuarios" },
   { label: "Bancos", to: "/banks", icon: "🏦", modulo: "bancos" },
   { label: "Movimientos", to: "/movements", icon: "🧾", modulo: "movimientos", shortcut: "Alt+2" },
-  { label: "Transferencias", to: "/transfers", icon: "🔁", modulo: "transferencias", shortcut: "Alt+3" },
+  { label: "Traslado de Fondos", to: "/transfers", icon: "🔁", modulo: "transferencias", shortcut: "Alt+3" },
   { label: "Proveedores", to: "/suppliers", icon: "🚚", modulo: "proveedores" },
   { label: "Compras", to: "/purchases", icon: "🛒", modulo: "compras" },
   { label: "Costos y Producción", to: "/costs", icon: "🏭", modulo: "costos" },

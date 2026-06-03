@@ -36,10 +36,10 @@ const AVAILABLE_ADDONS = [
 ];
 
 const PLAN_MODULES: Record<string, string[]> = {
-  BASIC: ["dashboard", "empresas", "sucursales", "usuarios", "bancos", "movimientos", "transferencias", "reportes", "tesoreria", "conciliacion", "configuracion"],
-  PROFESIONAL: ["dashboard", "empresas", "sucursales", "usuarios", "bancos", "movimientos", "transferencias", "proveedores", "compras", "reportes", "tesoreria", "conciliacion", "configuracion"],
-  BUSINESS: ["dashboard", "empresas", "sucursales", "usuarios", "bancos", "movimientos", "transferencias", "proveedores", "compras", "costos", "reportes", "tesoreria", "conciliacion", "configuracion", "configuracion-pos"],
-  ENTERPRISE: ["dashboard", "empresas", "sucursales", "usuarios", "bancos", "movimientos", "transferencias", "proveedores", "compras", "costos", "reportes", "tesoreria", "conciliacion", "configuracion", "configuracion-pos", "integraciones", "rh", "sat-cfdi", "white-label"],
+  BASIC: ["dashboard", "empresas", "sucursales", "usuarios", "bancos", "movimientos", "traslados", "reportes", "tesoreria", "conciliacion", "configuracion"],
+  PROFESIONAL: ["dashboard", "empresas", "sucursales", "usuarios", "bancos", "movimientos", "traslados", "proveedores", "compras", "reportes", "tesoreria", "conciliacion", "configuracion"],
+  BUSINESS: ["dashboard", "empresas", "sucursales", "usuarios", "bancos", "movimientos", "traslados", "proveedores", "compras", "costos", "reportes", "tesoreria", "conciliacion", "configuracion", "configuracion-pos"],
+  ENTERPRISE: ["dashboard", "empresas", "sucursales", "usuarios", "bancos", "movimientos", "traslados", "proveedores", "compras", "costos", "reportes", "tesoreria", "conciliacion", "configuracion", "configuracion-pos", "integraciones", "rh", "sat-cfdi", "white-label"],
 };
 
 const MODULE_LABELS: Record<string, string> = {
@@ -49,7 +49,7 @@ const MODULE_LABELS: Record<string, string> = {
   usuarios: "Usuarios y Roles",
   bancos: "Bancos",
   movimientos: "Movimientos",
-  transferencias: "Transferencias",
+  transferencias: "Traslado de Fondos",
   proveedores: "Proveedores",
   compras: "Compras",
   costos: "Costos y Producción",

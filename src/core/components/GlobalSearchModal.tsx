@@ -19,7 +19,7 @@ interface Props {
 const pages: SearchResult[] = [
   { id: "dashboard", type: "page", title: "Dashboard", path: "/dashboard", icon: "📊" },
   { id: "movements", type: "page", title: "Movimientos", path: "/movements", icon: "🧾" },
-  { id: "transfers", type: "page", title: "Transferencias", path: "/transfers", icon: "🔁" },
+  { id: "transfers", type: "page", title: "Traslado de Fondos", path: "/transfers", icon: "🔁" },
   { id: "reconciliation", type: "page", title: "Conciliación", path: "/reconciliation", icon: "📋" },
   { id: "purchases", type: "page", title: "Compras", path: "/purchases", icon: "🛒" },
   { id: "suppliers", type: "page", title: "Proveedores", path: "/suppliers", icon: "🚚" },

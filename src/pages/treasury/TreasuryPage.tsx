@@ -3,7 +3,7 @@ import { api } from "../../core/api/api";
 import MainLayout from "../../core/layout/MainLayout";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 
-type TabType = "resumen" | "posicion" | "transferencias" | "programar" | "cxp" | "cxc" | "alertas";
+type TabType = "resumen" | "posicion" | "traslados" | "cxp" | "cxc" | "alertas";
 type PeriodType = "week" | "month" | "quarter";
 
 export default function TreasuryPage() {
@@ -45,15 +45,9 @@ export default function TreasuryPage() {
           const bankResponse = await api.get("/treasury/bank-position");
           setBankPosition(bankResponse.data);
           break;
-        case "transferencias":
+        case "traslados":
           const banksRes = await api.get("/banks");
           setBanks(Array.isArray(banksRes.data) ? banksRes.data : []);
-          break;
-        case "programar":
-          const scheduledRes = await api.get("/treasury/scheduled-payments");
-          setScheduledPayments(Array.isArray(scheduledRes.data) ? scheduledRes.data : []);
-          const banksForSchedule = await api.get("/banks");
-          setBanks(Array.isArray(banksForSchedule.data) ? banksForSchedule.data : []);
           break;
         case "cxp":
           const cxpRes = await api.get("/treasury/accounts-payable");
@@ -138,24 +132,14 @@ export default function TreasuryPage() {
           Posición Bancaria
         </button>
         <button
-          onClick={() => setActiveTab("transferencias")}
+          onClick={() => setActiveTab("traslados")}
           className={`px-4 py-2 font-medium transition-colors ${
-            activeTab === "transferencias"
+            activeTab === "traslados"
               ? "border-b-2 border-blue-500 text-blue-400"
               : "text-slate-400 hover:text-white"
           }`}
         >
-          Transferencias
-        </button>
-        <button
-          onClick={() => setActiveTab("programar")}
-          className={`px-4 py-2 font-medium transition-colors ${
-            activeTab === "programar"
-              ? "border-b-2 border-blue-500 text-blue-400"
-              : "text-slate-400 hover:text-white"
-          }`}
-        >
-          Programar Pagos
+          Traslado de Fondos
         </button>
         <button
           onClick={() => setActiveTab("cxp")}
@@ -397,7 +381,7 @@ export default function TreasuryPage() {
                           </td>
                           <td className="px-4 py-3 text-center">
                             <button
-                              onClick={() => setActiveTab("transferencias")}
+                              onClick={() => setActiveTab("traslados")}
                               className="px-3 py-1 rounded bg-blue-600 text-white text-xs hover:bg-blue-700"
                             >
                               Transferir
@@ -426,14 +410,21 @@ export default function TreasuryPage() {
             </div>
           )}
 
-          {/* TAB 3: Transferencias - Form e historial */}
-          {activeTab === "transferencias" && (
+          {/* TAB 3: Traslado de Fondos - Form e historial */}
+          {activeTab === "traslados" && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Formulario de transferencia */}
+                {/* Formulario de traslado */}
                 <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                  <h3 className="mb-4 text-lg font-semibold">Nueva Transferencia</h3>
+                  <h3 className="mb-4 text-lg font-semibold">Nuevo Traslado</h3>
                   <form className="space-y-4">
+                    <div>
+                      <label className="block text-sm text-slate-400 mb-1">Tipo de Traslado</label>
+                      <select className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white">
+                        <option value="INTERNA">Traslado Interno</option>
+                        <option value="INTERCOMPAÑIA">Traslado Intercompañía</option>
+                      </select>
+                    </div>
                     <div>
                       <label className="block text-sm text-slate-400 mb-1">Cuenta Origen</label>
                       <select className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white">
@@ -469,7 +460,7 @@ export default function TreasuryPage() {
                       <label className="block text-sm text-slate-400 mb-1">Concepto</label>
                       <input
                         type="text"
-                        placeholder="Descripción de la transferencia"
+                        placeholder="Descripción del traslado"
                         className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white"
                       />
                     </div>
@@ -485,140 +476,97 @@ export default function TreasuryPage() {
                       type="submit"
                       className="w-full py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700"
                     >
-                      Realizar Transferencia
+                      Realizar Traslado
                     </button>
                   </form>
                 </div>
 
                 {/* Historial reciente */}
                 <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                  <h3 className="mb-4 text-lg font-semibold">Transferencias Recientes</h3>
+                  <h3 className="mb-4 text-lg font-semibold">Historial de Traslados</h3>
                   <div className="space-y-2">
-                    <p className="text-slate-400 text-center py-8">No hay transferencias recientes</p>
+                    <p className="text-slate-400 text-center py-8">No hay traslados recientes</p>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* TAB 4: Programar Pagos - Lista con botón agregar */}
-          {activeTab === "programar" && (
+          {/* TAB 4: CxP - Facturas por pagar con sub-secciones */}
+          {activeTab === "cxp" && (
             <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Pagos Programados</h3>
-                <button className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700">
-                  + Programar Pago
+              <div className="flex gap-4 border-b border-slate-800">
+                <button className="px-4 py-2 border-b-2 border-blue-500 text-blue-400 font-medium">
+                  Pendientes de pagar
+                </button>
+                <button className="px-4 py-2 text-slate-400 hover:text-white font-medium">
+                  Pagos programados
                 </button>
               </div>
 
-              {scheduledPayments.length === 0 ? (
+              {/* SECCIÓN 1: Pendientes de pagar */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Pendientes de pagar</h3>
+                {accountsPayable.length === 0 ? (
+                  <div className="rounded-xl border border-slate-800 bg-slate-900 p-8 text-center">
+                    <p className="text-slate-400">No hay cuentas por pagar pendientes</p>
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
+                    <table className="w-full">
+                      <thead className="bg-slate-800">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-sm font-semibold text-white">Proveedor</th>
+                          <th className="px-4 py-2 text-left text-sm font-semibold text-white">Concepto</th>
+                          <th className="px-4 py-2 text-right text-sm font-semibold text-white">Monto</th>
+                          <th className="px-4 py-2 text-left text-sm font-semibold text-white">Vencimiento</th>
+                          <th className="px-4 py-2 text-center text-sm font-semibold text-white">Días restantes</th>
+                          <th className="px-4 py-2 text-center text-sm font-semibold text-white">Status</th>
+                          <th className="px-4 py-2 text-center text-sm font-semibold text-white">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800">
+                        {accountsPayable.map((cxp: any) => {
+                          const daysRemaining = cxp.diasHastaVencimiento || 0;
+                          const urgencyColor = daysRemaining < 7 ? 'bg-red-900/40 text-red-300' : daysRemaining < 15 ? 'bg-yellow-900/40 text-yellow-300' : 'bg-green-900/40 text-green-300';
+                          return (
+                            <tr key={cxp.id} className="hover:bg-slate-800/50">
+                              <td className="px-4 py-3 text-white">{cxp.proveedor || 'N/A'}</td>
+                              <td className="px-4 py-3 text-white">{cxp.concepto}</td>
+                              <td className="px-4 py-3 text-right font-semibold text-white">${Number(cxp.monto).toFixed(2)}</td>
+                              <td className="px-4 py-3 text-sm text-slate-300">{new Date(cxp.fechaVencimiento).toLocaleDateString()}</td>
+                              <td className="px-4 py-3 text-center">
+                                <span className={`px-2 py-1 rounded text-xs ${urgencyColor}`}>
+                                  {daysRemaining} días
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-center">
+                                <span className="px-2 py-1 rounded text-xs bg-slate-700 text-slate-300">{cxp.status}</span>
+                              </td>
+                              <td className="px-4 py-3 text-center">
+                                <button className="px-2 py-1 rounded bg-blue-600 text-white text-xs hover:bg-blue-700 mr-1">
+                                  Programar pago
+                                </button>
+                                <button className="px-2 py-1 rounded bg-green-600 text-white text-xs hover:bg-green-700">
+                                  Pagar ahora
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* SECCIÓN 2: Pagos programados */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Pagos programados</h3>
                 <div className="rounded-xl border border-slate-800 bg-slate-900 p-8 text-center">
                   <p className="text-slate-400">No hay pagos programados</p>
                 </div>
-              ) : (
-                <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-slate-800">
-                      <tr>
-                        <th className="px-4 py-2 text-left text-sm font-semibold text-white">Concepto</th>
-                        <th className="px-4 py-2 text-right text-sm font-semibold text-white">Monto</th>
-                        <th className="px-4 py-2 text-left text-sm font-semibold text-white">Fecha</th>
-                        <th className="px-4 py-2 text-left text-sm font-semibold text-white">Tipo</th>
-                        <th className="px-4 py-2 text-center text-sm font-semibold text-white">Status</th>
-                        <th className="px-4 py-2 text-center text-sm font-semibold text-white">Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800">
-                      {scheduledPayments.map((payment: any) => (
-                        <tr key={payment.id} className="hover:bg-slate-800/50">
-                          <td className="px-4 py-3 text-white">{payment.concept}</td>
-                          <td className="px-4 py-3 text-right font-semibold text-white">
-                            ${Number(payment.monto).toFixed(2)}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-slate-300">
-                            {new Date(payment.fechaProgramada).toLocaleDateString()}
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className={`px-2 py-1 rounded text-xs ${
-                              payment.tipo === 'INGRESO' ? 'bg-green-900/40 text-green-300' : 'bg-red-900/40 text-red-300'
-                            }`}>
-                              {payment.tipo}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <span className={`px-2 py-1 rounded text-xs ${
-                              payment.status === 'PAGADO' ? 'bg-green-900/40 text-green-300' :
-                              payment.status === 'CANCELADO' ? 'bg-red-900/40 text-red-300' :
-                              'bg-yellow-900/40 text-yellow-300'
-                            }`}>
-                              {payment.status}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <button className="px-2 py-1 rounded bg-slate-700 text-white text-xs hover:bg-slate-600">
-                              Editar
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* TAB 5: CxP - Facturas por pagar */}
-          {activeTab === "cxp" && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold">Cuentas por Pagar (CxP)</h3>
-
-              {accountsPayable.length === 0 ? (
-                <div className="rounded-xl border border-slate-800 bg-slate-900 p-8 text-center">
-                  <p className="text-slate-400">No hay cuentas por pagar</p>
-                </div>
-              ) : (
-                <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-slate-800">
-                      <tr>
-                        <th className="px-4 py-2 text-left text-sm font-semibold text-white">Concepto</th>
-                        <th className="px-4 py-2 text-right text-sm font-semibold text-white">Monto</th>
-                        <th className="px-4 py-2 text-left text-sm font-semibold text-white">Vencimiento</th>
-                        <th className="px-4 py-2 text-center text-sm font-semibold text-white">Días</th>
-                        <th className="px-4 py-2 text-center text-sm font-semibold text-white">Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800">
-                      {accountsPayable.map((cxp: any) => (
-                        <tr key={cxp.id} className="hover:bg-slate-800/50">
-                          <td className="px-4 py-3 text-white">{cxp.concepto}</td>
-                          <td className="px-4 py-3 text-right font-semibold text-white">
-                            ${Number(cxp.monto).toFixed(2)}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-slate-300">
-                            {new Date(cxp.fechaVencimiento).toLocaleDateString()}
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <span className={`px-2 py-1 rounded text-xs ${
-                              cxp.diasHastaVencimiento < 7 ? 'bg-red-900/40 text-red-300' :
-                              cxp.diasHastaVencimiento < 15 ? 'bg-yellow-900/40 text-yellow-300' :
-                              'bg-green-900/40 text-green-300'
-                            }`}>
-                              {cxp.diasHastaVencimiento} días
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <button className="px-3 py-1 rounded bg-green-600 text-white text-xs hover:bg-green-700">
-                              Pagar
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+              </div>
             </div>
           )}
 
