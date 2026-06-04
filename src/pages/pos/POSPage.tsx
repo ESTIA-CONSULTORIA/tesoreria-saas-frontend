@@ -270,10 +270,6 @@ export default function POSPage() {
         price: Number(p.price) || 0,
         category: cats.find(c => c.id === p.categoryId)?.name || 'Sin categoría'
       })) : [];
-      console.log('productos cargados:', mappedProducts.length, mappedProducts);
-      if (mappedProducts.length > 0) {
-        console.log('primer producto mapeado:', mappedProducts[0]);
-      }
       setProducts(mappedProducts);
     } catch (error) {
       console.error("Error loading products:", error);
@@ -283,7 +279,6 @@ export default function POSPage() {
   async function loadCategories() {
     try {
       const response = await api.get("/pos/categories");
-      console.log('categorías del backend:', response.data);
       const cats = Array.isArray(response.data) ? response.data : [];
       setCategories([{ id: "all", name: "Todos" }, ...cats]);
       return cats;
@@ -839,7 +834,6 @@ export default function POSPage() {
   const filteredProducts = products.filter((product) => {
     const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-    console.log('Filtrando producto:', product.name, 'category:', product.category, 'selectedCategory:', selectedCategory, 'matchesCategory:', matchesCategory);
     return matchesCategory && matchesSearch;
   });
 
@@ -1029,9 +1023,9 @@ export default function POSPage() {
                   {categories.map((category) => (
                     <button
                       key={category.id}
-                      onClick={() => setSelectedCategory(category.name)}
+                      onClick={() => setSelectedCategory(category.id === "all" ? "all" : category.name)}
                       className={`px-3 py-1 rounded text-sm whitespace-nowrap ${
-                        selectedCategory === category.name
+                        selectedCategory === (category.id === "all" ? "all" : category.name)
                           ? "bg-blue-600 text-white"
                           : "bg-slate-700 text-slate-300 hover:bg-slate-600"
                       }`}
