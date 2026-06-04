@@ -53,7 +53,11 @@ export default function TreasuryPage() {
           break;
         case "cxp":
           const cxpRes = await api.get("/treasury/accounts-payable");
-          setAccountsPayable(Array.isArray(cxpRes.data) ? cxpRes.data : []);
+          const cxpData = Array.isArray(cxpRes.data) ? cxpRes.data : [];
+          setAccountsPayable(cxpData);
+          if (cxpData.length > 0) {
+            console.log('Primera CxP:', JSON.stringify(cxpData[0]));
+          }
           const suppliersRes = await api.get("/suppliers");
           setSuppliers(Array.isArray(suppliersRes.data) ? suppliersRes.data : []);
           break;
@@ -536,7 +540,7 @@ export default function TreasuryPage() {
                         {accountsPayable.map((cxp: any) => {
                           const daysRemaining = cxp.diasHastaVencimiento || 0;
                           const urgencyColor = daysRemaining < 0 ? 'bg-red-900/40 text-red-300' : daysRemaining < 7 ? 'bg-red-900/40 text-red-300' : daysRemaining < 15 ? 'bg-yellow-900/40 text-yellow-300' : 'bg-green-900/40 text-green-300';
-                          const saldoPendiente = (Number(cxp.total || 0) - Number(cxp.montoPagado || 0)).toFixed(2);
+                          const saldoPendiente = Number(cxp.saldoPendiente || 0).toFixed(2);
                           return (
                             <tr key={cxp.id} className="hover:bg-slate-800/50">
                               <td className="px-4 py-3 text-white">{cxp.supplierName || 'N/A'}</td>
