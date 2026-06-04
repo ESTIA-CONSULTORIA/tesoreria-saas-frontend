@@ -536,10 +536,9 @@ export default function TreasuryPage() {
                         {accountsPayable.map((cxp: any) => {
                           const daysRemaining = cxp.diasHastaVencimiento || 0;
                           const urgencyColor = daysRemaining < 0 ? 'bg-red-900/40 text-red-300' : daysRemaining < 7 ? 'bg-red-900/40 text-red-300' : daysRemaining < 15 ? 'bg-yellow-900/40 text-yellow-300' : 'bg-green-900/40 text-green-300';
-                          const supplier = suppliers.find((s: any) => s.id === cxp.supplierId);
                           return (
                             <tr key={cxp.id} className="hover:bg-slate-800/50">
-                              <td className="px-4 py-3 text-white">{supplier?.nombre || 'N/A'}</td>
+                              <td className="px-4 py-3 text-white">{cxp.supplierName || 'N/A'}</td>
                               <td className="px-4 py-3 text-white">{cxp.numero || 'N/A'}</td>
                               <td className="px-4 py-3 text-right font-semibold text-white">${Number(cxp.saldoPendiente).toFixed(2)}</td>
                               <td className="px-4 py-3 text-sm text-slate-300">{cxp.fechaVencimiento ? new Date(cxp.fechaVencimiento).toLocaleDateString() : 'N/A'}</td>
