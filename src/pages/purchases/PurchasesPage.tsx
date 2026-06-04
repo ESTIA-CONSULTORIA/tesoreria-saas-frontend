@@ -48,6 +48,7 @@ export default function PurchasesPage() {
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [invoices, setInvoices] = useState<Purchase[]>([]);
   const [accountsPayable, setAccountsPayable] = useState<any[]>([]);
+  const [bankAccounts, setBankAccounts] = useState<any[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -72,6 +73,7 @@ export default function PurchasesPage() {
 
   useEffect(() => {
     loadSuppliers();
+    loadBankAccounts();
     loadUserRole();
   }, []);
 
@@ -100,6 +102,15 @@ export default function PurchasesPage() {
       setSuppliers(Array.isArray(response.data) ? response.data : []);
     } catch {
       setSuppliers([]);
+    }
+  }
+
+  async function loadBankAccounts() {
+    try {
+      const response = await api.get("/banks");
+      setBankAccounts(Array.isArray(response.data) ? response.data : []);
+    } catch {
+      setBankAccounts([]);
     }
   }
 
@@ -738,7 +749,11 @@ export default function PurchasesPage() {
                     className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
                   >
                     <option value="">Seleccionar cuenta</option>
-                    <option value="1">Cuenta Principal</option>
+                    {bankAccounts.map((account) => (
+                      <option key={account.id} value={account.id}>
+                        {account.name} - ${account.balance}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
