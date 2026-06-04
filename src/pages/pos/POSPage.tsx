@@ -272,7 +272,7 @@ export default function POSPage() {
       })) : [];
       console.log('productos cargados:', mappedProducts.length, mappedProducts);
       if (mappedProducts.length > 0) {
-        console.log('categoryId del producto:', mappedProducts[0]);
+        console.log('primer producto mapeado:', mappedProducts[0]);
       }
       setProducts(mappedProducts);
     } catch (error) {
@@ -283,6 +283,7 @@ export default function POSPage() {
   async function loadCategories() {
     try {
       const response = await api.get("/pos/categories");
+      console.log('categorías del backend:', response.data);
       const cats = Array.isArray(response.data) ? response.data : [];
       setCategories([{ id: "all", name: "Todos" }, ...cats]);
     } catch (error) {
