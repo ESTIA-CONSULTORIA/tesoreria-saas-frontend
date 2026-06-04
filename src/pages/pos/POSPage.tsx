@@ -22,6 +22,7 @@ interface Product {
   imageUrl?: string;
   stock?: number | null;
   stockMinimo?: number;
+  isActive?: boolean;
 }
 
 interface Shift {
@@ -82,7 +83,7 @@ export default function POSPage() {
   const isAdminOrSoporte = user?.roleCode === "ADMIN" || user?.roleCode === "SOPORTE";
 
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [ticket, setTicket] = useState<TicketItem[]>([]);
@@ -241,8 +242,9 @@ export default function POSPage() {
   });
 
   useEffect(() => {
-    loadProducts();
-    loadCategories();
+    loadCategories().then(() => {
+      loadProducts();
+    });
     loadOpenShift();
   }, []);
 
@@ -263,10 +265,16 @@ export default function POSPage() {
   async function loadProducts() {
     try {
       const response = await api.get("/pos/products");
-      setProducts(Array.isArray(response.data) ? response.data.map((p: any) => ({
+      const mappedProducts = Array.isArray(response.data) ? response.data.map((p: any) => ({
         ...p,
-        price: Number(p.price) || 0
-      })) : []);
+        price: Number(p.price) || 0,
+        category: categories.find(c => c.id === p.categoryId)?.name || 'Sin categoría'
+      })) : [];
+      console.log('productos cargados:', mappedProducts.length, mappedProducts);
+      if (mappedProducts.length > 0) {
+        console.log('categoryId del producto:', mappedProducts[0]);
+      }
+      setProducts(mappedProducts);
     } catch (error) {
       console.error("Error loading products:", error);
     }
@@ -275,8 +283,8 @@ export default function POSPage() {
   async function loadCategories() {
     try {
       const response = await api.get("/pos/categories");
-      const cats = Array.isArray(response.data) ? response.data.map((c: any) => c.name) : [];
-      setCategories(["all", ...cats]);
+      const cats = Array.isArray(response.data) ? response.data : [];
+      setCategories([{ id: "all", name: "Todos" }, ...cats]);
     } catch (error) {
       console.error("Error loading categories:", error);
     }
@@ -828,6 +836,7 @@ export default function POSPage() {
   const filteredProducts = products.filter((product) => {
     const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+    console.log('Filtrando producto:', product.name, 'category:', product.category, 'selectedCategory:', selectedCategory, 'matchesCategory:', matchesCategory);
     return matchesCategory && matchesSearch;
   });
 
@@ -1016,15 +1025,15 @@ export default function POSPage() {
                 <div className="flex gap-2 overflow-x-auto pb-1">
                   {categories.map((category) => (
                     <button
-                      key={category}
-                      onClick={() => setSelectedCategory(category)}
+                      key={category.id}
+                      onClick={() => setSelectedCategory(category.name)}
                       className={`px-3 py-1 rounded text-sm whitespace-nowrap ${
-                        selectedCategory === category
+                        selectedCategory === category.name
                           ? "bg-blue-600 text-white"
                           : "bg-slate-700 text-slate-300 hover:bg-slate-600"
                       }`}
                     >
-                      {category === "all" ? "Todos" : category}
+                      {category.name}
                     </button>
                   ))}
                 </div>
@@ -1217,24 +1226,24 @@ export default function POSPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
-                {posProducts.length === 0 ? (
+                {products.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
                       No hay productos registrados
                     </td>
                   </tr>
                 ) : (
-                  posProducts.map((product) => (
+                  products.map((product) => (
                     <tr key={product.id} className="hover:bg-slate-800/50">
-                      <td className="px-4 py-3 text-sm">{product.codigo || "-"}</td>
-                      <td className="px-4 py-3 text-sm font-medium">{product.nombre}</td>
-                      <td className="px-4 py-3 text-sm">{product.categoria || "-"}</td>
-                      <td className="px-4 py-3 text-sm text-right">${Number(product.precio).toFixed(2)}</td>
+                      <td className="px-4 py-3 text-sm">{product.id || "-"}</td>
+                      <td className="px-4 py-3 text-sm font-medium">{product.name}</td>
+                      <td className="px-4 py-3 text-sm">{product.category || "-"}</td>
+                      <td className="px-4 py-3 text-sm text-right">${Number(product.price).toFixed(2)}</td>
                       <td className="px-4 py-3 text-center">
                         <span className={`px-2 py-1 rounded text-xs ${
-                          product.activo ? "bg-green-900/40 text-green-300" : "bg-red-900/40 text-red-300"
+                          product.isActive ? "bg-green-900/40 text-green-300" : "bg-red-900/40 text-red-300"
                         }`}>
-                          {product.activo ? "Activo" : "Inactivo"}
+                          {product.isActive ? "Activo" : "Inactivo"}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center">
@@ -1242,17 +1251,17 @@ export default function POSPage() {
                           onClick={() => {
                             setEditingProduct(product);
                             setProductForm({
-                              codigo: product.codigo || "",
-                              nombre: product.nombre,
-                              descripcion: product.descripcion || "",
-                              precio: product.precio,
-                              categoria: product.categoria || "",
-                              imagenUrl: product.imagenUrl || "",
-                              impuesto: product.impuesto || "16",
-                              tipo: product.tipo || "SIMPLE",
-                              recipeId: product.recipeId || "",
-                              insumoId: product.insumoId || "",
-                              activo: product.activo
+                              codigo: product.id || "",
+                              nombre: product.name,
+                              descripcion: "",
+                              precio: String(product.price),
+                              categoria: product.category || "",
+                              imagenUrl: product.imageUrl || "",
+                              impuesto: "16",
+                              tipo: "SIMPLE",
+                              recipeId: "",
+                              insumoId: "",
+                              activo: product.isActive !== false
                             });
                             setShowProductModal(true);
                           }}
@@ -1263,7 +1272,7 @@ export default function POSPage() {
                         <button
                           onClick={() => {
                             if (confirm("¿Eliminar este producto?")) {
-                              setPosProducts(posProducts.filter(p => p.id !== product.id));
+                              setProducts(products.filter(p => p.id !== product.id));
                             }
                           }}
                           className="px-2 py-1 rounded bg-red-600 text-xs hover:bg-red-700"

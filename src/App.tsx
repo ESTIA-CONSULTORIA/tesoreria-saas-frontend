@@ -21,6 +21,7 @@ import POSPage from "./pages/pos/POSPage";
 
 import LoginPage from "./pages/Login/LoginPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
+import LoginConfigPage from "./pages/settings/LoginConfigPage";
 import ProtectedRoute from "./core/router/ProtectedRoute";
 import ModuloRoute from "./core/router/ModuloRoute";
 import { useAuthStore } from "./core/store/useAuthStore";
@@ -210,6 +211,17 @@ function App() {
           <ProtectedRoute>
             <ModuloRoute modulo="configuracion">
               <SettingsPage />
+            </ModuloRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/settings/login-config"
+        element={
+          <ProtectedRoute>
+            <ModuloRoute modulo="configuracion">
+              <LoginConfigPage />
             </ModuloRoute>
           </ProtectedRoute>
         }

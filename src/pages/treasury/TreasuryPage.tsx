@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../../core/api/api";
 import MainLayout from "../../core/layout/MainLayout";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
+import ExecutiveKPI from "../../components/ExecutiveKPI";
 
 type TabType = "resumen" | "posicion" | "traslados" | "cxp" | "cxc" | "alertas";
 type PeriodType = "week" | "month" | "quarter";
@@ -97,13 +98,19 @@ export default function TreasuryPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Tesorería</h1>
-            <p className="text-slate-400">Gestión financiera integral</p>
+            <h1 className="text-3xl font-bold" style={{ color: '#F5F5F5' }}>Tesorería</h1>
+            <p style={{ color: '#A3A3A3', fontSize: '14px' }}>Gestión financiera integral</p>
           </div>
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value as PeriodType)}
-            className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-white"
+            className="px-4 py-2 text-sm font-medium"
+            style={{
+              backgroundColor: '#2D2D2D',
+              color: '#F5F5F5',
+              borderRadius: '4px',
+              border: '1px solid #2D2D2D',
+            }}
           >
             <option value="week">Semana</option>
             <option value="month">Mes</option>
@@ -112,137 +119,96 @@ export default function TreasuryPage() {
         </div>
 
       {error && (
-        <div className="rounded-xl border border-red-700 bg-red-900/30 p-4 text-red-300">
+        <div style={{ backgroundColor: '#2D2D2D', border: '1px solid #C53030', borderRadius: '6px', padding: '16px', color: '#F5F5F5' }}>
           {error}
         </div>
       )}
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-slate-800 overflow-x-auto">
-        <button
-          onClick={() => setActiveTab("resumen")}
-          className={`px-4 py-2 font-medium transition-colors ${
-            activeTab === "resumen"
-              ? "border-b-2 border-blue-500 text-blue-400"
-              : "text-slate-400 hover:text-white"
-          }`}
-        >
-          Resumen
-        </button>
-        <button
-          onClick={() => setActiveTab("posicion")}
-          className={`px-4 py-2 font-medium transition-colors ${
-            activeTab === "posicion"
-              ? "border-b-2 border-blue-500 text-blue-400"
-              : "text-slate-400 hover:text-white"
-          }`}
-        >
-          Posición Bancaria
-        </button>
-        <button
-          onClick={() => setActiveTab("traslados")}
-          className={`px-4 py-2 font-medium transition-colors ${
-            activeTab === "traslados"
-              ? "border-b-2 border-blue-500 text-blue-400"
-              : "text-slate-400 hover:text-white"
-          }`}
-        >
-          Traslado de Fondos
-        </button>
-        <button
-          onClick={() => setActiveTab("cxp")}
-          className={`px-4 py-2 font-medium transition-colors ${
-            activeTab === "cxp"
-              ? "border-b-2 border-blue-500 text-blue-400"
-              : "text-slate-400 hover:text-white"
-          }`}
-        >
-          CxP
-        </button>
-        <button
-          onClick={() => setActiveTab("cxc")}
-          className={`px-4 py-2 font-medium transition-colors ${
-            activeTab === "cxc"
-              ? "border-b-2 border-blue-500 text-blue-400"
-              : "text-slate-400 hover:text-white"
-          }`}
-        >
-          CxC
-        </button>
-        <button
-          onClick={() => setActiveTab("alertas")}
-          className={`px-4 py-2 font-medium transition-colors ${
-            activeTab === "alertas"
-              ? "border-b-2 border-blue-500 text-blue-400"
-              : "text-slate-400 hover:text-white"
-          }`}
-        >
-          Alertas
-        </button>
+      <div className="flex gap-2 border-b overflow-x-auto" style={{ borderColor: '#2D2D2D' }}>
+        {[
+          { id: 'resumen', label: 'Resumen' },
+          { id: 'posicion', label: 'Posición Bancaria' },
+          { id: 'traslados', label: 'Traslado de Fondos' },
+          { id: 'cxp', label: 'CxP' },
+          { id: 'cxc', label: 'CxC' },
+          { id: 'alertas', label: 'Alertas' },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as TabType)}
+            className="px-4 py-2 font-medium transition-colors text-sm"
+            style={{
+              color: activeTab === tab.id ? '#C0C0C0' : '#A3A3A3',
+              borderBottom: activeTab === tab.id ? '2px solid #C0C0C0' : '2px solid transparent',
+              backgroundColor: 'transparent',
+            }}
+            onMouseEnter={(e) => { if (activeTab !== tab.id) e.currentTarget.style.color = '#F5F5F5'; }}
+            onMouseLeave={(e) => { if (activeTab !== tab.id) e.currentTarget.style.color = '#A3A3A3'; }}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {loading ? (
-        <div className="rounded-xl bg-slate-900 p-6">Cargando...</div>
+        <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '24px', color: '#A3A3A3' }}>
+          Cargando...
+        </div>
       ) : (
         <>
           {/* TAB 1: Resumen - 4 KPIs + Gráfica + Próximos vencimientos + Alertas */}
           {activeTab === "resumen" && executiveSummary && (
             <div className="space-y-6">
-              {/* 4 KPIs principales */}
+              {/* Executive KPIs */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                  <h3 className="mb-2 text-sm text-slate-400">Saldo Total</h3>
-                  <p className="text-3xl font-bold text-white">
-                    ${Number(executiveSummary.totalBalance || 0).toFixed(2)}
-                  </p>
-                  <p className="text-xs text-slate-400 mt-1">
-                    {executiveSummary.comparison?.netChangePercent >= 0 ? "+" : ""}
-                    {Number(executiveSummary.comparison?.netChangePercent || 0).toFixed(1)}% vs mes anterior
-                  </p>
-                </div>
-                <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                  <h3 className="mb-2 text-sm text-slate-400">Ingresos del Período</h3>
-                  <p className="text-3xl font-bold text-green-400">
-                    ${Number(executiveSummary.monthlyFlow?.income || 0).toFixed(2)}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                  <h3 className="mb-2 text-sm text-slate-400">Egresos del Período</h3>
-                  <p className="text-3xl font-bold text-red-400">
-                    ${Number(executiveSummary.monthlyFlow?.expense || 0).toFixed(2)}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                  <h3 className="mb-2 text-sm text-slate-400">Flujo Neto</h3>
-                  <p className={`text-3xl font-bold ${
-                    executiveSummary.monthlyFlow?.net >= 0 ? "text-green-400" : "text-red-400"
-                  }`}>
-                    ${Number(executiveSummary.monthlyFlow?.net || 0).toFixed(2)}
-                  </p>
-                </div>
+                <ExecutiveKPI
+                  label="Saldo Total"
+                  value={Number(executiveSummary.totalBalance || 0)}
+                  secondary={executiveSummary.comparison?.netChangePercent || 0}
+                  context="Liquidez total consolidada"
+                  trend={executiveSummary.comparison?.netChangePercent >= 0 ? 'up' : 'down'}
+                  trendValue={`${executiveSummary.comparison?.netChangePercent >= 0 ? '+' : ''}${Number(executiveSummary.comparison?.netChangePercent || 0).toFixed(1)}% vs mes anterior`}
+                />
+                <ExecutiveKPI
+                  label="Ingresos del Período"
+                  value={Number(executiveSummary.monthlyFlow?.income || 0)}
+                  context="Total ingresos del período"
+                />
+                <ExecutiveKPI
+                  label="Egresos del Período"
+                  value={Number(executiveSummary.monthlyFlow?.expense || 0)}
+                  context="Total egresos del período"
+                />
+                <ExecutiveKPI
+                  label="Flujo Neto"
+                  value={Number(executiveSummary.monthlyFlow?.net || 0)}
+                  context="Diferencia ingresos - egresos"
+                  trend={executiveSummary.monthlyFlow?.net >= 0 ? 'up' : 'down'}
+                />
               </div>
 
               {/* Gráfica flujo proyectado */}
               {cashFlow && (
-                <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                  <h3 className="mb-4 text-lg font-semibold">Flujo de Caja Proyectado (30 días)</h3>
+                <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '24px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '16px' }}>Flujo de Caja Proyectado (30 días)</h3>
                   <ResponsiveContainer width="100%" height={300}>
                     <AreaChart data={cashFlow.dailyForecast}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#2D2D2D" />
                       <XAxis 
                         dataKey="date" 
-                        stroke="#94a3b8"
-                        tick={{ fill: '#94a3b8' }}
+                        stroke="#A3A3A3"
+                        tick={{ fill: '#A3A3A3' }}
                         tickFormatter={(value) => new Date(value).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}
                       />
                       <YAxis 
-                        stroke="#94a3b8"
-                        tick={{ fill: '#94a3b8' }}
+                        stroke="#A3A3A3"
+                        tick={{ fill: '#A3A3A3' }}
                         tickFormatter={(value) => `$${value}`}
                       />
                       <Tooltip 
-                        contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
-                        labelStyle={{ color: '#fff' }}
+                        contentStyle={{ backgroundColor: '#1F1F1F', border: '1px solid #2D2D2D', borderRadius: '4px', color: '#F5F5F5' }}
+                        labelStyle={{ color: '#F5F5F5' }}
                         formatter={(value: number) => `$${value.toFixed(2)}`}
                         labelFormatter={(value) => new Date(value).toLocaleDateString('es-ES')}
                       />
@@ -250,24 +216,24 @@ export default function TreasuryPage() {
                         type="monotone" 
                         dataKey="income" 
                         stackId="1"
-                        stroke="#3b82f6" 
-                        fill="#3b82f6" 
-                        fillOpacity={0.3}
+                        stroke="#C0C0C0" 
+                        fill="#C0C0C0" 
+                        fillOpacity={0.2}
                         name="Ingresos"
                       />
                       <Area 
                         type="monotone" 
                         dataKey="expense" 
                         stackId="2"
-                        stroke="#ef4444" 
-                        fill="#ef4444" 
-                        fillOpacity={0.3}
+                        stroke="#C53030" 
+                        fill="#C53030" 
+                        fillOpacity={0.2}
                         name="Egresos"
                       />
                       <Line 
                         type="monotone" 
                         dataKey="balance" 
-                        stroke="#22c55e" 
+                        stroke="#2F855A" 
                         strokeWidth={2}
                         name="Saldo"
                         dot={false}
@@ -279,29 +245,43 @@ export default function TreasuryPage() {
 
               {/* Próximos 5 vencimientos CxP */}
               {alerts?.upcomingAlerts?.length > 0 && (
-                <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                  <h3 className="mb-4 text-lg font-semibold">Próximos 5 Vencimientos (CxP)</h3>
+                <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '24px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '16px' }}>Próximos 5 Vencimientos (CxP)</h3>
                   <div className="space-y-2">
                     {alerts.upcomingAlerts
                       .sort((a: any, b: any) => a.daysUntil - b.daysUntil)
                       .slice(0, 5)
                       .map((alert: any, index: number) => (
-                        <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-slate-800">
+                        <div 
+                          key={index} 
+                          className="flex items-center justify-between p-3 transition-colors"
+                          style={{ backgroundColor: '#0F0F0F', borderRadius: '4px', border: '1px solid #2D2D2D' }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1F1F1F'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0F0F0F'}
+                        >
                           <div className="flex items-center gap-3">
-                            <div className={`w-3 h-3 rounded-full ${getPaymentColor(alert.daysUntil)}`} />
+                            <div style={{
+                              width: '12px',
+                              height: '12px',
+                              borderRadius: '50%',
+                              backgroundColor: alert.daysUntil < 7 ? '#C53030' : alert.daysUntil < 15 ? '#B7791F' : '#2F855A'
+                            }} />
                             <div>
-                              <p className="font-medium text-white">{alert.concept || alert.message}</p>
-                              <p className="text-sm text-slate-400">
+                              <p style={{ fontWeight: 500, color: '#F5F5F5' }}>{alert.concept || alert.message}</p>
+                              <p style={{ fontSize: '13px', color: '#A3A3A3' }}>
                                 ${Number(alert.amount).toFixed(2)} - En {alert.daysUntil} días
                               </p>
                             </div>
                           </div>
-                          <span className={`text-xs font-semibold px-2 py-1 rounded ${
-                            alert.daysUntil < 7 ? "bg-red-900 text-red-300" :
-                            alert.daysUntil < 15 ? "bg-yellow-900 text-yellow-300" :
-                            "bg-green-900 text-green-300"
-                          }`}>
-                            {alert.daysUntil < 7 ? "URGENTE" : alert.daysUntil < 15 ? "PRONTO" : "PROGRAMADO"}
+                          <span style={{
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            backgroundColor: alert.daysUntil < 7 ? '#2D2D2D' : alert.daysUntil < 15 ? '#2D2D2D' : '#2D2D2D',
+                            color: alert.daysUntil < 7 ? '#C53030' : alert.daysUntil < 15 ? '#B7791F' : '#2F855A',
+                          }}>
+                            {alert.daysUntil < 7 ? "CRÍTICO" : alert.daysUntil < 15 ? "ADVERTENCIA" : "PROGRAMADO"}
                           </span>
                         </div>
                       ))}
@@ -311,27 +291,27 @@ export default function TreasuryPage() {
 
               {/* Alertas activas */}
               {alerts && (
-                <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                  <h3 className="mb-4 text-lg font-semibold">Alertas Activas</h3>
+                <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '24px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '16px' }}>Alertas Activas</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {alerts.lowBalanceAccounts?.length > 0 && (
-                      <div className="p-4 rounded-lg bg-red-900/30 border border-red-700">
-                        <p className="text-red-300 font-semibold">🏦 Saldo Bajo: {alerts.lowBalanceAccounts.length}</p>
+                      <div style={{ padding: '16px', borderRadius: '4px', backgroundColor: '#0F0F0F', border: '1px solid #C53030' }}>
+                        <p style={{ color: '#C53030', fontWeight: 600 }}>🏦 Saldo Bajo: {alerts.lowBalanceAccounts.length}</p>
                       </div>
                     )}
                     {alerts.overdueAlerts?.length > 0 && (
-                      <div className="p-4 rounded-lg bg-red-900/30 border border-red-700">
-                        <p className="text-red-300 font-semibold">📄 Vencidos: {alerts.overdueAlerts.length}</p>
+                      <div style={{ padding: '16px', borderRadius: '4px', backgroundColor: '#0F0F0F', border: '1px solid #C53030' }}>
+                        <p style={{ color: '#C53030', fontWeight: 600 }}>📄 Vencidos: {alerts.overdueAlerts.length}</p>
                       </div>
                     )}
                     {alerts.pendingAlerts?.length > 0 && (
-                      <div className="p-4 rounded-lg bg-blue-900/30 border border-blue-700">
-                        <p className="text-blue-300 font-semibold">💸 Pendientes: {alerts.pendingAlerts.length}</p>
+                      <div style={{ padding: '16px', borderRadius: '4px', backgroundColor: '#0F0F0F', border: '1px solid #B7791F' }}>
+                        <p style={{ color: '#B7791F', fontWeight: 600 }}>💸 Pendientes: {alerts.pendingAlerts.length}</p>
                       </div>
                     )}
                   </div>
                   {alerts.totalAlerts === 0 && (
-                    <p className="text-green-300 text-center py-4">✅ No hay alertas activas</p>
+                    <p style={{ color: '#2F855A', textAlign: 'center', padding: '16px' }}>✅ No hay alertas activas</p>
                   )}
                 </div>
               )}
@@ -342,55 +322,83 @@ export default function TreasuryPage() {
           {activeTab === "posicion" && bankPosition && (
             <div className="space-y-6">
               {/* Resumen */}
-              <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                <h3 className="mb-2 text-sm text-slate-400">Total Consolidado</h3>
-                <p className="text-4xl font-bold text-white">
-                  ${Number(bankPosition.totalBalance || 0).toFixed(2)}
+              <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '24px' }}>
+                <p style={{ fontSize: '12px', color: '#7E7E7E', marginBottom: '8px', letterSpacing: '0.05em' }}>TOTAL CONSOLIDADO</p>
+                <p style={{ fontSize: '36px', fontWeight: 600, color: '#F5F5F5', fontFamily: 'monospace' }}>
+                  ${Number(bankPosition.totalBalance || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
 
               {/* Tabla de cuentas */}
-              <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
-                <h3 className="p-4 text-lg font-semibold">Posición por Cuenta</h3>
+              <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', overflow: 'hidden' }}>
+                <h3 style={{ padding: '16px 24px', fontSize: '16px', fontWeight: 600, color: '#F5F5F5' }}>Posición por Cuenta</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[700px]">
-                    <thead className="bg-slate-800">
+                    <thead style={{ backgroundColor: '#0F0F0F', borderBottom: '1px solid #2D2D2D' }}>
                       <tr>
-                        <th className="px-4 py-2 text-left text-sm font-semibold text-white">Cuenta</th>
-                        <th className="px-4 py-2 text-left text-sm font-semibold text-white">Banco</th>
-                        <th className="px-4 py-2 text-right text-sm font-semibold text-white">Saldo</th>
-                        <th className="px-4 py-2 text-right text-sm font-semibold text-white">Variación Hoy</th>
-                        <th className="px-4 py-2 text-center text-sm font-semibold text-white">Status</th>
-                        <th className="px-4 py-2 text-center text-sm font-semibold text-white">Acciones</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Cuenta</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Banco</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Saldo</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Variación Hoy</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Status</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Acciones</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800">
-                      {bankPosition.accounts?.map((account: any) => (
-                        <tr key={account.id} className="hover:bg-slate-800/50">
-                          <td className="px-4 py-3">
-                            <p className="font-medium text-white">{account.name}</p>
-                            <p className="text-sm text-slate-400">{account.accountNumber}</p>
+                    <tbody>
+                      {bankPosition.accounts?.map((account: any, index: number) => (
+                        <tr 
+                          key={account.id} 
+                          style={{ 
+                            backgroundColor: index % 2 === 0 ? '#0A0A0A' : '#0F0F0F',
+                            borderBottom: index < bankPosition.accounts.length - 1 ? '1px solid #2D2D2D' : 'none',
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1F1F1F'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = index % 2 === 0 ? '#0A0A0A' : '#0F0F0F'}
+                        >
+                          <td style={{ padding: '12px 16px' }}>
+                            <p style={{ fontWeight: 500, color: '#F5F5F5', fontSize: '13px' }}>{account.name}</p>
+                            <p style={{ fontSize: '12px', color: '#7E7E7E' }}>{account.accountNumber}</p>
                           </td>
-                          <td className="px-4 py-3 text-sm text-slate-300">{account.bank}</td>
-                          <td className="px-4 py-3 text-right font-semibold text-white">
+                          <td style={{ padding: '12px 16px', fontSize: '13px', color: '#A3A3A3' }}>{account.bank}</td>
+                          <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: '#F5F5F5', fontSize: '13px' }}>
                             ${Number(account.balance).toFixed(2)}
                           </td>
-                          <td className={`px-4 py-3 text-right text-sm font-semibold ${
-                            account.todayNet >= 0 ? "text-green-400" : "text-red-400"
-                          }`}>
+                          <td style={{ 
+                            padding: '12px 16px', 
+                            textAlign: 'right', 
+                            fontSize: '13px', 
+                            fontWeight: 600,
+                            color: account.todayNet >= 0 ? '#2F855A' : '#C53030'
+                          }}>
                             {account.todayNet >= 0 ? "+" : ""}${Number(account.todayNet).toFixed(2)}
                           </td>
-                          <td className="px-4 py-3 text-center">
-                            <span className={`px-2 py-1 rounded-full text-xs ${
-                              account.balance >= 0 ? "bg-green-900/40 text-green-300" : "bg-red-900/40 text-red-300"
-                            }`}>
-                              {account.balance >= 0 ? "Activo" : "Negativo"}
+                          <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                            <span style={{
+                              padding: '4px 8px',
+                              borderRadius: '4px',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              backgroundColor: account.balance >= 0 ? '#0F0F0F' : '#0F0F0F',
+                              color: account.balance >= 0 ? '#2F855A' : '#C53030',
+                              border: `1px solid ${account.balance >= 0 ? '#2F855A' : '#C53030'}`
+                            }}>
+                              {account.balance >= 0 ? "ACTIVO" : "NEGATIVO"}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-center">
+                          <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                             <button
                               onClick={() => setActiveTab("traslados")}
-                              className="px-3 py-1 rounded bg-blue-600 text-white text-xs hover:bg-blue-700"
+                              style={{
+                                padding: '6px 12px',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                backgroundColor: '#C0C0C0',
+                                color: '#0A0A0A',
+                                border: '1px solid #C0C0C0',
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E8E8E8'}
+                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#C0C0C0'}
                             >
                               Transferir
                             </button>
@@ -398,15 +406,19 @@ export default function TreasuryPage() {
                         </tr>
                       ))}
                     </tbody>
-                    <tfoot className="bg-slate-800">
+                    <tfoot style={{ backgroundColor: '#0F0F0F', borderTop: '1px solid #2D2D2D' }}>
                       <tr>
-                        <td colSpan={2} className="px-4 py-3 font-semibold text-white">Total</td>
-                        <td className="px-4 py-3 text-right font-bold text-white">
+                        <td colSpan={2} style={{ padding: '12px 16px', fontWeight: 600, color: '#F5F5F5', fontSize: '13px' }}>Total</td>
+                        <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#F5F5F5', fontSize: '14px' }}>
                           ${Number(bankPosition.totalBalance || 0).toFixed(2)}
                         </td>
-                        <td className={`px-4 py-3 text-right font-bold ${
-                          (bankPosition.totalTodayIncome - bankPosition.totalTodayExpense) >= 0 ? "text-green-400" : "text-red-400"
-                        }`}>
+                        <td style={{ 
+                          padding: '12px 16px', 
+                          textAlign: 'right', 
+                          fontWeight: 700, 
+                          fontSize: '14px',
+                          color: (bankPosition.totalTodayIncome - bankPosition.totalTodayExpense) >= 0 ? '#2F855A' : '#C53030'
+                        }}>
                           ${(bankPosition.totalTodayIncome - bankPosition.totalTodayExpense).toFixed(2)}
                         </td>
                         <td colSpan={2}></td>
@@ -423,19 +435,33 @@ export default function TreasuryPage() {
             <div className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Formulario de traslado */}
-                <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                  <h3 className="mb-4 text-lg font-semibold">Nuevo Traslado</h3>
+                <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '24px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '16px' }}>Nuevo Traslado</h3>
                   <form className="space-y-4">
                     <div>
-                      <label className="block text-sm text-slate-400 mb-1">Tipo de Traslado</label>
-                      <select className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white">
+                      <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Tipo de Traslado</label>
+                      <select className="w-full" style={{
+                        backgroundColor: '#0F0F0F',
+                        color: '#F5F5F5',
+                        borderRadius: '4px',
+                        border: '1px solid #2D2D2D',
+                        padding: '10px 12px',
+                        fontSize: '13px',
+                      }}>
                         <option value="INTERNA">Traslado Interno</option>
                         <option value="INTERCOMPAÑIA">Traslado Intercompañía</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm text-slate-400 mb-1">Cuenta Origen</label>
-                      <select className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white">
+                      <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Cuenta Origen</label>
+                      <select className="w-full" style={{
+                        backgroundColor: '#0F0F0F',
+                        color: '#F5F5F5',
+                        borderRadius: '4px',
+                        border: '1px solid #2D2D2D',
+                        padding: '10px 12px',
+                        fontSize: '13px',
+                      }}>
                         <option value="">Seleccionar cuenta</option>
                         {banks.map((bank: any) => (
                           <option key={bank.id} value={bank.id}>
@@ -445,8 +471,15 @@ export default function TreasuryPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm text-slate-400 mb-1">Cuenta Destino</label>
-                      <select className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white">
+                      <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Cuenta Destino</label>
+                      <select className="w-full" style={{
+                        backgroundColor: '#0F0F0F',
+                        color: '#F5F5F5',
+                        borderRadius: '4px',
+                        border: '1px solid #2D2D2D',
+                        padding: '10px 12px',
+                        fontSize: '13px',
+                      }}>
                         <option value="">Seleccionar cuenta</option>
                         {banks.map((bank: any) => (
                           <option key={bank.id} value={bank.id}>
@@ -456,33 +489,68 @@ export default function TreasuryPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm text-slate-400 mb-1">Monto</label>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Monto</label>
                       <input
                         type="number"
                         step="0.01"
                         placeholder="0.00"
-                        className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white"
+                        style={{
+                          width: '100%',
+                          backgroundColor: '#0F0F0F',
+                          color: '#F5F5F5',
+                          borderRadius: '4px',
+                          border: '1px solid #2D2D2D',
+                          padding: '10px 12px',
+                          fontSize: '13px',
+                        }}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm text-slate-400 mb-1">Concepto</label>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Concepto</label>
                       <input
                         type="text"
                         placeholder="Descripción del traslado"
-                        className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white"
+                        style={{
+                          width: '100%',
+                          backgroundColor: '#0F0F0F',
+                          color: '#F5F5F5',
+                          borderRadius: '4px',
+                          border: '1px solid #2D2D2D',
+                          padding: '10px 12px',
+                          fontSize: '13px',
+                        }}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm text-slate-400 mb-1">Referencia (opcional)</label>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Referencia (opcional)</label>
                       <input
                         type="text"
                         placeholder="Número de referencia"
-                        className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white"
+                        style={{
+                          width: '100%',
+                          backgroundColor: '#0F0F0F',
+                          color: '#F5F5F5',
+                          borderRadius: '4px',
+                          border: '1px solid #2D2D2D',
+                          padding: '10px 12px',
+                          fontSize: '13px',
+                        }}
                       />
                     </div>
                     <button
                       type="submit"
-                      className="w-full py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700"
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        borderRadius: '4px',
+                        backgroundColor: '#C0C0C0',
+                        color: '#0A0A0A',
+                        border: '1px solid #C0C0C0',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E8E8E8'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#C0C0C0'}
                     >
                       Realizar Traslado
                     </button>
@@ -490,10 +558,10 @@ export default function TreasuryPage() {
                 </div>
 
                 {/* Historial reciente */}
-                <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                  <h3 className="mb-4 text-lg font-semibold">Historial de Traslados</h3>
+                <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '24px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '16px' }}>Historial de Traslados</h3>
                   <div className="space-y-2">
-                    <p className="text-slate-400 text-center py-8">No hay traslados recientes</p>
+                    <p style={{ color: '#7E7E7E', textAlign: 'center', padding: '32px' }}>No hay traslados recientes</p>
                   </div>
                 </div>
               </div>
@@ -503,13 +571,24 @@ export default function TreasuryPage() {
           {/* TAB 4: CxP - Facturas por pagar con sub-secciones */}
           {activeTab === "cxp" && (
             <div className="space-y-6">
-              <div className="flex gap-4 border-b border-slate-800">
-                <button className="px-4 py-2 border-b-2 border-blue-500 text-blue-400 font-medium">
+              <div className="flex gap-4 border-b" style={{ borderColor: '#2D2D2D' }}>
+                <button className="px-4 py-2 font-medium transition-colors text-sm" style={{
+                  color: '#C0C0C0',
+                  borderBottom: '2px solid #C0C0C0',
+                  backgroundColor: 'transparent',
+                }}>
                   Facturas pendientes de pago
                 </button>
                 <button 
                   onClick={() => setShowScheduledPayments(!showScheduledPayments)}
-                  className="px-4 py-2 text-slate-400 hover:text-white font-medium"
+                  className="px-4 py-2 font-medium transition-colors text-sm"
+                  style={{
+                    color: '#A3A3A3',
+                    borderBottom: '2px solid transparent',
+                    backgroundColor: 'transparent',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#F5F5F5'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#A3A3A3'}
                 >
                   Pagos programados {showScheduledPayments ? '▼' : '▶'}
                 </button>
@@ -517,49 +596,99 @@ export default function TreasuryPage() {
 
               {/* SECCIÓN 1: Facturas pendientes de pago */}
               <div>
-                <h3 className="text-lg font-semibold mb-4">Facturas pendientes de pago</h3>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '16px' }}>Facturas pendientes de pago</h3>
                 {accountsPayable.length === 0 ? (
-                  <div className="rounded-xl border border-slate-800 bg-slate-900 p-8 text-center">
-                    <p className="text-slate-400">No hay facturas pendientes de pago</p>
+                  <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '32px', textAlign: 'center', color: '#7E7E7E' }}>
+                    No hay facturas pendientes de pago
                   </div>
                 ) : (
-                  <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
+                  <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', overflow: 'hidden' }}>
                     <table className="w-full">
-                      <thead className="bg-slate-800">
+                      <thead style={{ backgroundColor: '#0F0F0F', borderBottom: '1px solid #2D2D2D' }}>
                         <tr>
-                          <th className="px-4 py-2 text-left text-sm font-semibold text-white">Proveedor</th>
-                          <th className="px-4 py-2 text-left text-sm font-semibold text-white">Factura #</th>
-                          <th className="px-4 py-2 text-right text-sm font-semibold text-white">Saldo pendiente</th>
-                          <th className="px-4 py-2 text-left text-sm font-semibold text-white">Vencimiento</th>
-                          <th className="px-4 py-2 text-center text-sm font-semibold text-white">Días restantes</th>
-                          <th className="px-4 py-2 text-center text-sm font-semibold text-white">Status</th>
-                          <th className="px-4 py-2 text-center text-sm font-semibold text-white">Acciones</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Proveedor</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Factura #</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Saldo pendiente</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Vencimiento</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Días restantes</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Status</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Acciones</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800">
-                        {accountsPayable.map((cxp: any) => {
+                      <tbody>
+                        {accountsPayable.map((cxp: any, index: number) => {
                           const daysRemaining = cxp.diasHastaVencimiento || 0;
-                          const urgencyColor = daysRemaining < 0 ? 'bg-red-900/40 text-red-300' : daysRemaining < 7 ? 'bg-red-900/40 text-red-300' : daysRemaining < 15 ? 'bg-yellow-900/40 text-yellow-300' : 'bg-green-900/40 text-green-300';
+                          const urgencyColor = daysRemaining < 0 ? '#C53030' : daysRemaining < 7 ? '#C53030' : daysRemaining < 15 ? '#B7791F' : '#2F855A';
+                          const urgencyBorder = daysRemaining < 0 ? '#C53030' : daysRemaining < 7 ? '#C53030' : daysRemaining < 15 ? '#B7791F' : '#2F855A';
                           const saldoPendiente = Number(cxp.saldoPendiente || 0).toFixed(2);
                           return (
-                            <tr key={cxp.id} className="hover:bg-slate-800/50">
-                              <td className="px-4 py-3 text-white">{cxp.supplierName || 'N/A'}</td>
-                              <td className="px-4 py-3 text-white">{cxp.numero || 'Sin número'}</td>
-                              <td className="px-4 py-3 text-right font-semibold text-white">${saldoPendiente}</td>
-                              <td className="px-4 py-3 text-sm text-slate-300">{cxp.fechaVencimiento ? new Date(cxp.fechaVencimiento).toLocaleDateString() : 'Sin fecha'}</td>
-                              <td className="px-4 py-3 text-center">
-                                <span className={`px-2 py-1 rounded text-xs ${urgencyColor}`}>
+                            <tr 
+                              key={cxp.id}
+                              style={{ 
+                                backgroundColor: index % 2 === 0 ? '#0A0A0A' : '#0F0F0F',
+                                borderBottom: index < accountsPayable.length - 1 ? '1px solid #2D2D2D' : 'none',
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1F1F1F'}
+                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = index % 2 === 0 ? '#0A0A0A' : '#0F0F0F'}
+                            >
+                              <td style={{ padding: '12px 16px', fontSize: '13px', color: '#F5F5F5' }}>{cxp.supplierName || 'N/A'}</td>
+                              <td style={{ padding: '12px 16px', fontSize: '13px', color: '#F5F5F5' }}>{cxp.numero || 'Sin número'}</td>
+                              <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: '#F5F5F5', fontSize: '13px' }}>${saldoPendiente}</td>
+                              <td style={{ padding: '12px 16px', fontSize: '13px', color: '#A3A3A3' }}>{cxp.fechaVencimiento ? new Date(cxp.fechaVencimiento).toLocaleDateString() : 'Sin fecha'}</td>
+                              <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                <span style={{
+                                  padding: '4px 8px',
+                                  borderRadius: '4px',
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                  backgroundColor: '#0F0F0F',
+                                  color: urgencyColor,
+                                  border: `1px solid ${urgencyBorder}`
+                                }}>
                                   {daysRemaining} días
                                 </span>
                               </td>
-                              <td className="px-4 py-3 text-center">
-                                <span className="px-2 py-1 rounded text-xs bg-slate-700 text-slate-300">{cxp.status}</span>
+                              <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                <span style={{
+                                  padding: '4px 8px',
+                                  borderRadius: '4px',
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                  backgroundColor: '#0F0F0F',
+                                  color: '#A3A3A3',
+                                  border: '1px solid #2D2D2D'
+                                }}>{cxp.status}</span>
                               </td>
-                              <td className="px-4 py-3 text-center">
-                                <button className="px-2 py-1 rounded bg-blue-600 text-white text-xs hover:bg-blue-700 mr-1">
+                              <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                <button 
+                                  style={{
+                                    padding: '4px 8px',
+                                    borderRadius: '4px',
+                                    fontSize: '11px',
+                                    fontWeight: 600,
+                                    backgroundColor: '#2D2D2D',
+                                    color: '#F5F5F5',
+                                    border: '1px solid #2D2D2D',
+                                    marginRight: '4px',
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3D3D3D'}
+                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2D2D2D'}
+                                >
                                   Programar pago
                                 </button>
-                                <button className="px-2 py-1 rounded bg-green-600 text-white text-xs hover:bg-green-700">
+                                <button 
+                                  style={{
+                                    padding: '4px 8px',
+                                    borderRadius: '4px',
+                                    fontSize: '11px',
+                                    fontWeight: 600,
+                                    backgroundColor: '#C0C0C0',
+                                    color: '#0A0A0A',
+                                    border: '1px solid #C0C0C0',
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E8E8E8'}
+                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#C0C0C0'}
+                                >
                                   Pagar ahora
                                 </button>
                               </td>
@@ -574,10 +703,10 @@ export default function TreasuryPage() {
 
               {/* SECCIÓN 2: Pagos programados (toggle) */}
               {showScheduledPayments && (
-                <div className="border-t border-slate-800 pt-6">
-                  <h3 className="text-lg font-semibold mb-4">Pagos programados</h3>
-                  <div className="rounded-xl border border-slate-800 bg-slate-900 p-8 text-center">
-                    <p className="text-slate-400">No hay pagos programados</p>
+                <div style={{ borderTop: '1px solid #2D2D2D', paddingTop: '24px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '16px' }}>Pagos programados</h3>
+                  <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '32px', textAlign: 'center', color: '#7E7E7E' }}>
+                    No hay pagos programados
                   </div>
                 </div>
               )}
@@ -587,39 +716,55 @@ export default function TreasuryPage() {
           {/* TAB 6: CxC - Cuentas por cobrar */}
           {activeTab === "cxc" && (
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold">Cuentas por Cobrar (CxC)</h3>
+              <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '16px' }}>Cuentas por Cobrar (CxC)</h3>
 
               {accountsReceivable.length === 0 ? (
-                <div className="rounded-xl border border-slate-800 bg-slate-900 p-8 text-center">
-                  <p className="text-slate-400">No hay cuentas por cobrar</p>
+                <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '32px', textAlign: 'center', color: '#7E7E7E' }}>
+                  No hay cuentas por cobrar
                 </div>
               ) : (
-                <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
+                <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', overflow: 'hidden' }}>
                   <table className="w-full">
-                    <thead className="bg-slate-800">
+                    <thead style={{ backgroundColor: '#0F0F0F', borderBottom: '1px solid #2D2D2D' }}>
                       <tr>
-                        <th className="px-4 py-2 text-left text-sm font-semibold text-white">Concepto</th>
-                        <th className="px-4 py-2 text-right text-sm font-semibold text-white">Monto</th>
-                        <th className="px-4 py-2 text-left text-sm font-semibold text-white">Fecha Esperada</th>
-                        <th className="px-4 py-2 text-center text-sm font-semibold text-white">Días</th>
-                        <th className="px-4 py-2 text-center text-sm font-semibold text-white">Status</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Concepto</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Monto</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Fecha Esperada</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Días</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Status</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800">
-                      {accountsReceivable.map((cxc: any) => (
-                        <tr key={cxc.id} className="hover:bg-slate-800/50">
-                          <td className="px-4 py-3 text-white">{cxc.concepto}</td>
-                          <td className="px-4 py-3 text-right font-semibold text-white">
+                    <tbody>
+                      {accountsReceivable.map((cxc: any, index: number) => (
+                        <tr 
+                          key={cxc.id}
+                          style={{ 
+                            backgroundColor: index % 2 === 0 ? '#0A0A0A' : '#0F0F0F',
+                            borderBottom: index < accountsReceivable.length - 1 ? '1px solid #2D2D2D' : 'none',
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1F1F1F'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = index % 2 === 0 ? '#0A0A0A' : '#0F0F0F'}
+                        >
+                          <td style={{ padding: '12px 16px', fontSize: '13px', color: '#F5F5F5' }}>{cxc.concepto}</td>
+                          <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: '#F5F5F5', fontSize: '13px' }}>
                             ${Number(cxc.monto).toFixed(2)}
                           </td>
-                          <td className="px-4 py-3 text-sm text-slate-300">
+                          <td style={{ padding: '12px 16px', fontSize: '13px', color: '#A3A3A3' }}>
                             {new Date(cxc.fechaEsperada).toLocaleDateString()}
                           </td>
-                          <td className="px-4 py-3 text-center text-sm text-slate-300">
+                          <td style={{ padding: '12px 16px', textAlign: 'center', fontSize: '13px', color: '#A3A3A3' }}>
                             {cxc.diasHastaCobro} días
                           </td>
-                          <td className="px-4 py-3 text-center">
-                            <span className="px-2 py-1 rounded bg-blue-900/40 text-blue-300 text-xs">
+                          <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                            <span style={{
+                              padding: '4px 8px',
+                              borderRadius: '4px',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              backgroundColor: '#0F0F0F',
+                              color: '#A3A3A3',
+                              border: '1px solid #2D2D2D'
+                            }}>
                               Pendiente
                             </span>
                           </td>
@@ -636,27 +781,56 @@ export default function TreasuryPage() {
           {activeTab === "alertas" && (
             <div className="space-y-6">
               {/* Configuración de alertas */}
-              <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                <h3 className="mb-4 text-lg font-semibold">Configuración de Alertas</h3>
+              <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '24px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '16px' }}>Configuración de Alertas</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm text-slate-400 mb-1">Saldo Mínimo ($)</label>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Saldo Mínimo ($)</label>
                     <input
                       type="number"
                       defaultValue={alertConfig?.saldoMinimo || 0}
-                      className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white"
+                      style={{
+                        width: '100%',
+                        backgroundColor: '#0F0F0F',
+                        color: '#F5F5F5',
+                        borderRadius: '4px',
+                        border: '1px solid #2D2D2D',
+                        padding: '10px 12px',
+                        fontSize: '13px',
+                      }}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-slate-400 mb-1">Días Anticipación</label>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Días Anticipación</label>
                     <input
                       type="number"
                       defaultValue={alertConfig?.diasAnticipacionAlerta || 7}
-                      className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white"
+                      style={{
+                        width: '100%',
+                        backgroundColor: '#0F0F0F',
+                        color: '#F5F5F5',
+                        borderRadius: '4px',
+                        border: '1px solid #2D2D2D',
+                        padding: '10px 12px',
+                        fontSize: '13px',
+                      }}
                     />
                   </div>
                   <div className="flex items-end">
-                    <button className="w-full py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700">
+                    <button 
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        borderRadius: '4px',
+                        backgroundColor: '#C0C0C0',
+                        color: '#0A0A0A',
+                        border: '1px solid #C0C0C0',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E8E8E8'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#C0C0C0'}
+                    >
                       Guardar Configuración
                     </button>
                   </div>
@@ -667,11 +841,11 @@ export default function TreasuryPage() {
               {alerts && (
                 <div className="space-y-4">
                   {alerts.lowBalanceAccounts?.length > 0 && (
-                    <div className="rounded-xl border border-red-700 bg-red-900/30 p-6">
-                      <h3 className="mb-4 text-lg font-semibold text-red-300">⚠️ Cuentas con Saldo Bajo</h3>
+                    <div style={{ backgroundColor: '#161616', border: '1px solid #C53030', borderRadius: '6px', padding: '24px' }}>
+                      <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#C53030', marginBottom: '16px' }}>⚠️ Cuentas con Saldo Bajo</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {alerts.lowBalanceAccounts.map((alert: any, index: number) => (
-                          <div key={index} className="p-4 rounded-lg bg-red-900/50 border border-red-700">
+                          <div key={index} style={{ padding: '16px', borderRadius: '4px', backgroundColor: '#0F0F0F', border: '1px solid #C53030' }}>
                             <div className="flex items-center gap-3 mb-2">
                               <span className="text-2xl">🏦</span>
                               <div>
@@ -687,19 +861,19 @@ export default function TreasuryPage() {
                   )}
 
                   {alerts.overdueAlerts?.length > 0 && (
-                    <div className="rounded-xl border border-red-700 bg-red-900/30 p-6">
-                      <h3 className="mb-4 text-lg font-semibold text-red-300">📄 Facturas Vencidas</h3>
+                    <div style={{ backgroundColor: '#161616', border: '1px solid #C53030', borderRadius: '6px', padding: '24px' }}>
+                      <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#C53030', marginBottom: '16px' }}>📄 Facturas Vencidas</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {alerts.overdueAlerts.map((alert: any, index: number) => (
-                          <div key={index} className="p-4 rounded-lg bg-red-900/50 border border-red-700">
+                          <div key={index} style={{ padding: '16px', borderRadius: '4px', backgroundColor: '#0F0F0F', border: '1px solid #C53030' }}>
                             <div className="flex items-center gap-3 mb-2">
-                              <span className="text-2xl">📄</span>
+                              <span style={{ fontSize: '20px' }}>📄</span>
                               <div>
-                                <p className="font-medium text-white">{alert.concept}</p>
-                                <p className="text-sm text-red-300">Monto: ${Number(alert.amount).toFixed(2)}</p>
+                                <p style={{ fontWeight: 500, color: '#F5F5F5', fontSize: '13px' }}>{alert.concept}</p>
+                                <p style={{ fontSize: '12px', color: '#C53030' }}>Monto: ${Number(alert.amount).toFixed(2)}</p>
                               </div>
                             </div>
-                            <span className="text-xs font-semibold text-red-400">VENCIDO</span>
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: '#C53030' }}>VENCIDO</span>
                           </div>
                         ))}
                       </div>
@@ -707,19 +881,19 @@ export default function TreasuryPage() {
                   )}
 
                   {alerts.pendingAlerts?.length > 0 && (
-                    <div className="rounded-xl border border-blue-700 bg-blue-900/30 p-6">
-                      <h3 className="mb-4 text-lg font-semibold text-blue-300">🔄 Transferencias Pendientes</h3>
+                    <div style={{ backgroundColor: '#161616', border: '1px solid #B7791F', borderRadius: '6px', padding: '24px' }}>
+                      <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#B7791F', marginBottom: '16px' }}>🔄 Transferencias Pendientes</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {alerts.pendingAlerts.map((alert: any, index: number) => (
-                          <div key={index} className="p-4 rounded-lg bg-blue-900/50 border border-blue-700">
+                          <div key={index} style={{ padding: '16px', borderRadius: '4px', backgroundColor: '#0F0F0F', border: '1px solid #B7791F' }}>
                             <div className="flex items-center gap-3 mb-2">
-                              <span className="text-2xl">💸</span>
+                              <span style={{ fontSize: '20px' }}>💸</span>
                               <div>
-                                <p className="font-medium text-white">{alert.concept}</p>
-                                <p className="text-sm text-blue-300">Monto: ${Number(alert.amount).toFixed(2)}</p>
+                                <p style={{ fontWeight: 500, color: '#F5F5F5', fontSize: '13px' }}>{alert.concept}</p>
+                                <p style={{ fontSize: '12px', color: '#B7791F' }}>Monto: ${Number(alert.amount).toFixed(2)}</p>
                               </div>
                             </div>
-                            <span className="text-xs font-semibold text-blue-400">PENDIENTE</span>
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: '#B7791F' }}>PENDIENTE</span>
                           </div>
                         ))}
                       </div>
@@ -727,8 +901,8 @@ export default function TreasuryPage() {
                   )}
 
                   {alerts.totalAlerts === 0 && (
-                    <div className="rounded-xl border border-green-700 bg-green-900/30 p-6 text-center">
-                      <p className="text-green-300 text-lg">✅ No hay alertas activas</p>
+                    <div style={{ backgroundColor: '#161616', border: '1px solid #2F855A', borderRadius: '6px', padding: '24px', textAlign: 'center' }}>
+                      <p style={{ color: '#2F855A', fontSize: '16px' }}>✅ No hay alertas activas</p>
                     </div>
                   )}
                 </div>

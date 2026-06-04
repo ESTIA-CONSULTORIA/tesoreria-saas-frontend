@@ -1,19 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
+import { useLoginConfigStore } from "../../core/store/useLoginConfigStore";
 
 export default function LoginPage() {
   const { login } = useAuthStore();
+  const { config, loadConfig } = useLoginConfigStore();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    loadConfig();
+  }, [loadConfig]);
 
   async function handleLogin() {
     try {
       setLoading(true);
+      setError("");
 
       const response = await api.post("/auth/login", {
         email,
@@ -38,48 +46,117 @@ export default function LoginPage() {
       );
 
       navigate("/dashboard");
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("Usuario o contraseña incorrectos");
+      setError(error.response?.data?.message || "Usuario o contraseña incorrectos");
     } finally {
       setLoading(false);
     }
   }
 
+  // Verificar modo de mantenimiento
+  if (config.maintenanceMode) {
+    return (
+      <div 
+        className="login-container min-h-screen flex items-center justify-center px-4"
+        style={{
+          backgroundImage: config.backgroundImage ? `url(${config.backgroundImage})` : 'none',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      >
+        <div 
+          className="login-card w-full max-w-md p-8 rounded-lg text-center"
+        >
+          <div className="text-5xl mb-4">🔧</div>
+          <h1 className="login-title text-2xl font-bold mb-4">
+            Sistema en Mantenimiento
+          </h1>
+          <p className="text-sm">
+            {config.maintenanceMessage || 'El sistema se encuentra en mantenimiento programado. Por favor, intente más tarde.'}
+          </p>
+          {config.maintenanceStartTime && config.maintenanceEndTime && (
+            <p className="text-xs mt-4">
+              {new Date(config.maintenanceStartTime).toLocaleString()} - {new Date(config.maintenanceEndTime).toLocaleString()}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-2xl bg-slate-900 p-8 shadow-2xl">
-        <h1 className="mb-6 text-center text-3xl font-bold text-white">
-          Tesorería SaaS
+    <div 
+      className="login-container min-h-screen flex items-center justify-center px-4"
+      style={{
+        backgroundImage: config.backgroundImage ? `url(${config.backgroundImage})` : 'none',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      <div className="login-card w-full max-w-md p-8 rounded-lg">
+        {/* Logo */}
+        {config.logoUrl && (
+          <div className="flex justify-center mb-6">
+            <img 
+              src={config.logoUrl} 
+              alt="Logo" 
+              className="login-logo h-16 object-contain"
+            />
+          </div>
+        )}
+
+        {/* Company Name */}
+        <h1 className="login-title text-center text-3xl font-bold mb-2">
+          {config.companyName}
         </h1>
 
-        <p className="mb-6 text-center text-slate-400">
-          Iniciar sesión
+        {/* Tagline */}
+        <p className="text-center text-sm mb-8">
+          {config.tagline}
         </p>
 
+        {/* Error Message */}
+        {error && (
+          <div className="login-error mb-4 p-3 rounded text-sm text-center">
+            {error}
+          </div>
+        )}
+
+        {/* Email Input */}
         <input
           type="email"
           placeholder="Correo electrónico"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mb-4 w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white"
+          className="login-input mb-4 w-full p-3 rounded text-sm"
         />
 
+        {/* Password Input */}
         <input
           type="password"
           placeholder="Contraseña"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mb-6 w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white"
+          onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+          className="login-input mb-6 w-full p-3 rounded text-sm"
         />
 
+        {/* Login Button */}
         <button
           onClick={handleLogin}
           disabled={loading}
-          className="w-full rounded-lg bg-blue-600 p-3 font-semibold text-white hover:bg-blue-700"
+          className={`login-button w-full p-3 rounded font-semibold text-sm transition-colors ${loading ? 'loading' : ''}`}
         >
           {loading ? "Entrando..." : "Entrar"}
         </button>
+
+        {/* Custom CSS */}
+        {config.customCSS && (
+          <style dangerouslySetInnerHTML={{ __html: config.customCSS }} />
+        )}
       </div>
     </div>
   );

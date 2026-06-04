@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import ImportModal from "./ImportModal";
+import ExecutiveKPI from "../../components/ExecutiveKPI";
 
 interface Invoice {
   id: string;
@@ -167,19 +168,35 @@ export default function ReconciliationPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-bold">Conciliación Bancaria</h2>
-            <p className="text-slate-400">Cruce de movimientos bancarios con facturas</p>
+            <h2 className="text-3xl font-bold" style={{ color: '#F5F5F5' }}>Conciliación Bancaria</h2>
+            <p style={{ color: '#A3A3A3', fontSize: '14px' }}>Cruce de movimientos bancarios con facturas</p>
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => setImportModalOpen(true)}
-              className="rounded-lg bg-slate-700 px-4 py-2 font-medium text-white hover:bg-slate-600"
+              className="px-4 py-2 font-medium text-sm"
+              style={{
+                backgroundColor: '#2D2D2D',
+                color: '#F5F5F5',
+                borderRadius: '4px',
+                border: '1px solid #2D2D2D',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3D3D3D'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2D2D2D'}
             >
               Importar Facturas
             </button>
             <button
               onClick={() => setModalOpen(true)}
-              className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+              className="px-4 py-2 font-medium text-sm"
+              style={{
+                backgroundColor: '#C0C0C0',
+                color: '#0A0A0A',
+                borderRadius: '4px',
+                border: '1px solid #C0C0C0',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E8E8E8'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#C0C0C0'}
             >
               + Captura Manual
             </button>
@@ -187,30 +204,51 @@ export default function ReconciliationPage() {
         </div>
 
         {error && (
-          <div className="rounded-xl border border-red-700 bg-red-900/30 p-4 text-red-300">
+          <div style={{ backgroundColor: '#2D2D2D', border: '1px solid #C53030', borderRadius: '6px', padding: '16px', color: '#F5F5F5' }}>
             {error}
           </div>
         )}
 
         {/* Filtros */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+        <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '16px' }}>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <input
               type="date"
               value={filters.startDate}
               onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-              className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+              style={{
+                backgroundColor: '#0F0F0F',
+                color: '#F5F5F5',
+                borderRadius: '4px',
+                border: '1px solid #2D2D2D',
+                padding: '8px 12px',
+                fontSize: '13px',
+              }}
             />
             <input
               type="date"
               value={filters.endDate}
               onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-              className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+              style={{
+                backgroundColor: '#0F0F0F',
+                color: '#F5F5F5',
+                borderRadius: '4px',
+                border: '1px solid #2D2D2D',
+                padding: '8px 12px',
+                fontSize: '13px',
+              }}
             />
             <select
               value={filters.type}
               onChange={(e) => setFilters({ ...filters, type: e.target.value as any })}
-              className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+              style={{
+                backgroundColor: '#0F0F0F',
+                color: '#F5F5F5',
+                borderRadius: '4px',
+                border: '1px solid #2D2D2D',
+                padding: '8px 12px',
+                fontSize: '13px',
+              }}
             >
               <option value="">Todos los tipos</option>
               <option value="EMITIDA">Emitidas</option>
@@ -218,7 +256,15 @@ export default function ReconciliationPage() {
             </select>
             <button
               onClick={() => setFilters({ bankAccountId: "", startDate: "", endDate: "", type: "" })}
-              className="rounded-lg bg-slate-700 p-2 text-white hover:bg-slate-600"
+              className="p-2 text-sm font-medium"
+              style={{
+                backgroundColor: '#2D2D2D',
+                color: '#F5F5F5',
+                borderRadius: '4px',
+                border: '1px solid #2D2D2D',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3D3D3D'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2D2D2D'}
             >
               Limpiar Filtros
             </button>
@@ -226,52 +272,76 @@ export default function ReconciliationPage() {
         </div>
 
         {loading ? (
-          <div className="rounded-xl bg-slate-900 p-6">Cargando datos...</div>
+          <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '24px', color: '#A3A3A3' }}>
+            Cargando datos...
+          </div>
         ) : (
           <div className="space-y-6">
-            {/* Resumen */}
+            {/* Executive KPIs */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-                <p className="text-sm text-slate-400">Total</p>
-                <p className="text-2xl font-bold">{summary?.total || 0}</p>
-              </div>
-              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-                <p className="text-sm text-slate-400">Conciliadas</p>
-                <p className="text-2xl font-bold text-green-400">{summary?.conciliadas || 0}</p>
-              </div>
-              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-                <p className="text-sm text-slate-400">Pendientes</p>
-                <p className="text-2xl font-bold text-yellow-400">{summary?.pendientes || 0}</p>
-              </div>
-              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-                <p className="text-sm text-slate-400">No Conciliadas</p>
-                <p className="text-2xl font-bold text-red-400">{summary?.noConciliadas || 0}</p>
-              </div>
+              <ExecutiveKPI
+                label="Total"
+                value={summary?.total || 0}
+                context="Total de registros"
+              />
+              <ExecutiveKPI
+                label="Conciliadas"
+                value={summary?.conciliadas || 0}
+                context="Facturas conciliadas"
+                trend="up"
+              />
+              <ExecutiveKPI
+                label="Pendientes"
+                value={summary?.pendientes || 0}
+                context="Facturas pendientes de conciliar"
+                trend="neutral"
+              />
+              <ExecutiveKPI
+                label="No Conciliadas"
+                value={summary?.noConciliadas || 0}
+                context="Movimientos sin factura"
+                trend="down"
+              />
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-2 border-b border-slate-800 overflow-x-auto">
+            <div className="flex gap-2 border-b overflow-x-auto" style={{ borderColor: '#2D2D2D' }}>
               <button
                 onClick={() => setActiveTab("reconciled")}
-                className={`px-4 py-2 text-sm font-medium ${
-                  activeTab === "reconciled" ? "text-green-400 border-b-2 border-green-400" : "text-slate-400"
-                }`}
+                className="px-4 py-2 text-sm font-medium"
+                style={{
+                  color: activeTab === "reconciled" ? '#2F855A' : '#A3A3A3',
+                  borderBottom: activeTab === "reconciled" ? '2px solid #2F855A' : '2px solid transparent',
+                  backgroundColor: 'transparent',
+                }}
+                onMouseEnter={(e) => { if (activeTab !== "reconciled") e.currentTarget.style.color = '#F5F5F5'; }}
+                onMouseLeave={(e) => { if (activeTab !== "reconciled") e.currentTarget.style.color = '#A3A3A3'; }}
               >
                 Conciliados ({reconciliationData?.reconciled?.length || 0})
               </button>
               <button
                 onClick={() => setActiveTab("pending")}
-                className={`px-4 py-2 text-sm font-medium ${
-                  activeTab === "pending" ? "text-yellow-400 border-b-2 border-yellow-400" : "text-slate-400"
-                }`}
+                className="px-4 py-2 text-sm font-medium"
+                style={{
+                  color: activeTab === "pending" ? '#B7791F' : '#A3A3A3',
+                  borderBottom: activeTab === "pending" ? '2px solid #B7791F' : '2px solid transparent',
+                  backgroundColor: 'transparent',
+                }}
+                onMouseEnter={(e) => { if (activeTab !== "pending") e.currentTarget.style.color = '#F5F5F5'; }}
+                onMouseLeave={(e) => { if (activeTab !== "pending") e.currentTarget.style.color = '#A3A3A3'; }}
               >
                 Pendientes ({reconciliationData?.pending?.length || 0})
               </button>
               <button
                 onClick={() => setActiveTab("notReconciled")}
-                className={`px-4 py-2 text-sm font-medium ${
-                  activeTab === "notReconciled" ? "text-red-400 border-b-2 border-red-400" : "text-slate-400"
-                }`}
+                className="px-4 py-2 text-sm font-medium"
+                style={{
+                  color: activeTab === "notReconciled" ? '#C53030' : '#A3A3A3',
+                  borderBottom: activeTab === "notReconciled" ? '2px solid #C53030' : '2px solid transparent',
+                  backgroundColor: 'transparent',
+                }}
+                onMouseEnter={(e) => { if (activeTab !== "notReconciled") e.currentTarget.style.color = '#F5F5F5'; }}
+                onMouseLeave={(e) => { if (activeTab !== "notReconciled") e.currentTarget.style.color = '#A3A3A3'; }}
               >
                 No Conciliados ({reconciliationData?.notReconciled?.length || 0})
               </button>
@@ -279,31 +349,39 @@ export default function ReconciliationPage() {
 
             {/* Tabla de conciliados */}
             {activeTab === "reconciled" && (
-              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-                <h3 className="mb-3 text-lg font-semibold">Conciliados (Factura + Movimiento)</h3>
+              <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '16px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '12px' }}>Conciliados (Factura + Movimiento)</h3>
                 <div className="overflow-x-auto">
-                  <table className="min-w-full text-left text-sm">
-                    <thead className="text-slate-400">
+                  <table className="min-w-full text-left" style={{ fontSize: '13px' }}>
+                    <thead style={{ backgroundColor: '#0F0F0F', borderBottom: '1px solid #2D2D2D' }}>
                       <tr>
-                        <th className="p-2">Factura</th>
-                        <th className="p-2">Tipo</th>
-                        <th className="p-2">Monto Factura</th>
-                        <th className="p-2">Movimiento</th>
-                        <th className="p-2">Monto Movimiento</th>
-                        <th className="p-2">Cuenta</th>
-                        <th className="p-2">Fecha</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Factura</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Tipo</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Monto Factura</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Movimiento</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Monto Movimiento</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Cuenta</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Fecha</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {reconciliationData?.reconciled?.map((item) => (
-                        <tr key={item.invoice.id} className="border-t border-slate-800">
-                          <td className="p-2">{item.invoice.invoiceNumber}</td>
-                          <td className="p-2">{item.invoice.type}</td>
-                          <td className="p-2">${Number(item.invoice.amount).toFixed(2)}</td>
-                          <td className="p-2">{item.movement.id}</td>
-                          <td className="p-2">${Number(item.movement.amount).toFixed(2)}</td>
-                          <td className="p-2">{item.invoice.bankName || item.movement.bankName}</td>
-                          <td className="p-2">{new Date(item.invoice.dueDate).toLocaleDateString()}</td>
+                      {reconciliationData?.reconciled?.map((item, index) => (
+                        <tr 
+                          key={item.invoice.id}
+                          style={{ 
+                            backgroundColor: index % 2 === 0 ? '#0A0A0A' : '#0F0F0F',
+                            borderBottom: index < reconciliationData.reconciled.length - 1 ? '1px solid #2D2D2D' : 'none',
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1F1F1F'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = index % 2 === 0 ? '#0A0A0A' : '#0F0F0F'}
+                        >
+                          <td style={{ padding: '12px 16px', color: '#F5F5F5' }}>{item.invoice.invoiceNumber}</td>
+                          <td style={{ padding: '12px 16px', color: '#A3A3A3' }}>{item.invoice.type}</td>
+                          <td style={{ padding: '12px 16px', color: '#F5F5F5', fontWeight: 600 }}>${Number(item.invoice.amount).toFixed(2)}</td>
+                          <td style={{ padding: '12px 16px', color: '#A3A3A3' }}>{item.movement.id}</td>
+                          <td style={{ padding: '12px 16px', color: '#F5F5F5', fontWeight: 600 }}>${Number(item.movement.amount).toFixed(2)}</td>
+                          <td style={{ padding: '12px 16px', color: '#A3A3A3' }}>{item.invoice.bankName || item.movement.bankName}</td>
+                          <td style={{ padding: '12px 16px', color: '#A3A3A3' }}>{new Date(item.invoice.dueDate).toLocaleDateString()}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -314,36 +392,54 @@ export default function ReconciliationPage() {
 
             {/* Tabla de pendientes */}
             {activeTab === "pending" && (
-              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-                <h3 className="mb-3 text-lg font-semibold">Pendientes (Facturas sin movimiento)</h3>
+              <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '16px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '12px' }}>Pendientes (Facturas sin movimiento)</h3>
                 <div className="overflow-x-auto">
-                  <table className="min-w-full text-left text-sm">
-                    <thead className="text-slate-400">
+                  <table className="min-w-full text-left" style={{ fontSize: '13px' }}>
+                    <thead style={{ backgroundColor: '#0F0F0F', borderBottom: '1px solid #2D2D2D' }}>
                       <tr>
-                        <th className="p-2">Número</th>
-                        <th className="p-2">Tipo</th>
-                        <th className="p-2">Estado</th>
-                        <th className="p-2">Monto</th>
-                        <th className="p-2">Vencimiento</th>
-                        <th className="p-2">Cuenta</th>
-                        <th className="p-2">Concepto</th>
-                        <th className="p-2">Acciones</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Número</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Tipo</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Estado</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Monto</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Vencimiento</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Cuenta</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Concepto</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {reconciliationData?.pending?.map((invoice) => (
-                        <tr key={invoice.id} className="border-t border-slate-800">
-                          <td className="p-2">{invoice.invoiceNumber}</td>
-                          <td className="p-2">{getInvoiceTypeLabel(invoice.type)}</td>
-                          <td className="p-2">{getInvoiceStatusLabel(invoice.status)}</td>
-                          <td className="p-2">${Number(invoice.amount).toFixed(2)}</td>
-                          <td className="p-2">{new Date(invoice.dueDate).toLocaleDateString()}</td>
-                          <td className="p-2">{invoice.bankName || "-"}</td>
-                          <td className="p-2">{invoice.concept || "-"}</td>
-                          <td className="p-2">
+                      {reconciliationData?.pending?.map((invoice, index) => (
+                        <tr 
+                          key={invoice.id}
+                          style={{ 
+                            backgroundColor: index % 2 === 0 ? '#0A0A0A' : '#0F0F0F',
+                            borderBottom: index < reconciliationData.pending.length - 1 ? '1px solid #2D2D2D' : 'none',
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1F1F1F'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = index % 2 === 0 ? '#0A0A0A' : '#0F0F0F'}
+                        >
+                          <td style={{ padding: '12px 16px', color: '#F5F5F5' }}>{invoice.invoiceNumber}</td>
+                          <td style={{ padding: '12px 16px', color: '#A3A3A3' }}>{getInvoiceTypeLabel(invoice.type)}</td>
+                          <td style={{ padding: '12px 16px', color: '#A3A3A3' }}>{getInvoiceStatusLabel(invoice.status)}</td>
+                          <td style={{ padding: '12px 16px', color: '#F5F5F5', fontWeight: 600 }}>${Number(invoice.amount).toFixed(2)}</td>
+                          <td style={{ padding: '12px 16px', color: '#A3A3A3' }}>{new Date(invoice.dueDate).toLocaleDateString()}</td>
+                          <td style={{ padding: '12px 16px', color: '#A3A3A3' }}>{invoice.bankName || "-"}</td>
+                          <td style={{ padding: '12px 16px', color: '#A3A3A3' }}>{invoice.concept || "-"}</td>
+                          <td style={{ padding: '12px 16px' }}>
                             <button
                               onClick={() => handleManualReconciliation(invoice)}
-                              className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700"
+                              style={{
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                backgroundColor: '#C0C0C0',
+                                color: '#0A0A0A',
+                                border: '1px solid #C0C0C0',
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E8E8E8'}
+                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#C0C0C0'}
                             >
                               Conciliar Manual
                             </button>
@@ -358,31 +454,39 @@ export default function ReconciliationPage() {
 
             {/* Tabla de no conciliados */}
             {activeTab === "notReconciled" && (
-              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-                <h3 className="mb-3 text-lg font-semibold">No Conciliados (Movimientos sin factura)</h3>
+              <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '16px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '12px' }}>No Conciliados (Movimientos sin factura)</h3>
                 <div className="overflow-x-auto">
-                  <table className="min-w-full text-left text-sm">
-                    <thead className="text-slate-400">
+                  <table className="min-w-full text-left" style={{ fontSize: '13px' }}>
+                    <thead style={{ backgroundColor: '#0F0F0F', borderBottom: '1px solid #2D2D2D' }}>
                       <tr>
-                        <th className="p-2">ID Movimiento</th>
-                        <th className="p-2">Tipo</th>
-                        <th className="p-2">Categoría</th>
-                        <th className="p-2">Monto</th>
-                        <th className="p-2">Cuenta</th>
-                        <th className="p-2">Concepto</th>
-                        <th className="p-2">Fecha</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>ID Movimiento</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Tipo</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Categoría</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Monto</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Cuenta</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Concepto</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Fecha</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {reconciliationData?.notReconciled?.map((movement) => (
-                        <tr key={movement.id} className="border-t border-slate-800">
-                          <td className="p-2">{movement.id}</td>
-                          <td className="p-2">{getMovementTypeLabel(movement.type)}</td>
-                          <td className="p-2">{movement.category}</td>
-                          <td className="p-2">${Number(movement.amount).toFixed(2)}</td>
-                          <td className="p-2">{movement.bankName}</td>
-                          <td className="p-2">{movement.concept || "-"}</td>
-                          <td className="p-2">{new Date(movement.createdAt).toLocaleDateString()}</td>
+                      {reconciliationData?.notReconciled?.map((movement, index) => (
+                        <tr 
+                          key={movement.id}
+                          style={{ 
+                            backgroundColor: index % 2 === 0 ? '#0A0A0A' : '#0F0F0F',
+                            borderBottom: index < reconciliationData.notReconciled.length - 1 ? '1px solid #2D2D2D' : 'none',
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1F1F1F'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = index % 2 === 0 ? '#0A0A0A' : '#0F0F0F'}
+                        >
+                          <td style={{ padding: '12px 16px', color: '#F5F5F5' }}>{movement.id}</td>
+                          <td style={{ padding: '12px 16px', color: '#A3A3A3' }}>{getMovementTypeLabel(movement.type)}</td>
+                          <td style={{ padding: '12px 16px', color: '#A3A3A3' }}>{movement.category}</td>
+                          <td style={{ padding: '12px 16px', color: '#F5F5F5', fontWeight: 600 }}>${Number(movement.amount).toFixed(2)}</td>
+                          <td style={{ padding: '12px 16px', color: '#A3A3A3' }}>{movement.bankName}</td>
+                          <td style={{ padding: '12px 16px', color: '#A3A3A3' }}>{movement.concept || "-"}</td>
+                          <td style={{ padding: '12px 16px', color: '#A3A3A3' }}>{new Date(movement.createdAt).toLocaleDateString()}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -396,38 +500,56 @@ export default function ReconciliationPage() {
         {/* Modal de nueva factura */}
         {modalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-            <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
+            <div style={{ width: '100%', maxWidth: '512px', borderRadius: '8px', border: '1px solid #2D2D2D', backgroundColor: '#161616', padding: '24px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
               <div className="mb-6 flex items-center justify-between">
                 <div>
-                  <h3 className="text-2xl font-bold text-white">Nueva Factura</h3>
-                  <p className="text-sm text-slate-400">Registro de factura para conciliación</p>
+                  <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#F5F5F5' }}>Nueva Factura</h3>
+                  <p style={{ fontSize: '13px', color: '#7E7E7E' }}>Registro de factura para conciliación</p>
                 </div>
                 <button
                   onClick={() => {
                     setModalOpen(false);
                     setModalTab("manual");
                   }}
-                  className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700"
+                  className="px-3 py-2 text-sm font-medium"
+                  style={{
+                    backgroundColor: '#2D2D2D',
+                    color: '#F5F5F5',
+                    borderRadius: '4px',
+                    border: '1px solid #2D2D2D',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3D3D3D'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2D2D2D'}
                 >
                   Cerrar
                 </button>
               </div>
 
               {/* Tabs del modal */}
-              <div className="flex gap-2 border-b border-slate-800 mb-4">
+              <div className="flex gap-2 border-b mb-4" style={{ borderColor: '#2D2D2D' }}>
                 <button
                   onClick={() => setModalTab("manual")}
-                  className={`px-4 py-2 text-sm font-medium ${
-                    modalTab === "manual" ? "text-blue-400 border-b-2 border-blue-400" : "text-slate-400"
-                  }`}
+                  className="px-4 py-2 text-sm font-medium"
+                  style={{
+                    color: modalTab === "manual" ? '#C0C0C0' : '#A3A3A3',
+                    borderBottom: modalTab === "manual" ? '2px solid #C0C0C0' : '2px solid transparent',
+                    backgroundColor: 'transparent',
+                  }}
+                  onMouseEnter={(e) => { if (modalTab !== "manual") e.currentTarget.style.color = '#F5F5F5'; }}
+                  onMouseLeave={(e) => { if (modalTab !== "manual") e.currentTarget.style.color = '#A3A3A3'; }}
                 >
                   Captura Manual
                 </button>
                 <button
                   onClick={() => setModalTab("import")}
-                  className={`px-4 py-2 text-sm font-medium ${
-                    modalTab === "import" ? "text-blue-400 border-b-2 border-blue-400" : "text-slate-400"
-                  }`}
+                  className="px-4 py-2 text-sm font-medium"
+                  style={{
+                    color: modalTab === "import" ? '#C0C0C0' : '#A3A3A3',
+                    borderBottom: modalTab === "import" ? '2px solid #C0C0C0' : '2px solid transparent',
+                    backgroundColor: 'transparent',
+                  }}
+                  onMouseEnter={(e) => { if (modalTab !== "import") e.currentTarget.style.color = '#F5F5F5'; }}
+                  onMouseLeave={(e) => { if (modalTab !== "import") e.currentTarget.style.color = '#A3A3A3'; }}
                 >
                   Importación Masiva
                 </button>
@@ -440,12 +562,28 @@ export default function ReconciliationPage() {
                     onChange={(e) => setFormData({ ...formData, invoiceNumber: e.target.value })}
                     placeholder="Número de factura"
                     required
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                    style={{
+                      width: '100%',
+                      backgroundColor: '#0F0F0F',
+                      color: '#F5F5F5',
+                      borderRadius: '4px',
+                      border: '1px solid #2D2D2D',
+                      padding: '10px 12px',
+                      fontSize: '13px',
+                    }}
                   />
                   <select
                     value={formData.type}
                     onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                    style={{
+                      width: '100%',
+                      backgroundColor: '#0F0F0F',
+                      color: '#F5F5F5',
+                      borderRadius: '4px',
+                      border: '1px solid #2D2D2D',
+                      padding: '10px 12px',
+                      fontSize: '13px',
+                    }}
                   >
                     <option value="EMITIDA">Emitida</option>
                     <option value="RECIBIDA">Recibida</option>
@@ -453,7 +591,15 @@ export default function ReconciliationPage() {
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                    style={{
+                      width: '100%',
+                      backgroundColor: '#0F0F0F',
+                      color: '#F5F5F5',
+                      borderRadius: '4px',
+                      border: '1px solid #2D2D2D',
+                      padding: '10px 12px',
+                      fontSize: '13px',
+                    }}
                   >
                     <option value="PENDIENTE_PAGO">Pendiente de Pago</option>
                     <option value="PENDIENTE_COBRO">Pendiente de Cobro</option>
@@ -466,7 +612,15 @@ export default function ReconciliationPage() {
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                     placeholder="Monto"
                     required
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                    style={{
+                      width: '100%',
+                      backgroundColor: '#0F0F0F',
+                      color: '#F5F5F5',
+                      borderRadius: '4px',
+                      border: '1px solid #2D2D2D',
+                      padding: '10px 12px',
+                      fontSize: '13px',
+                    }}
                   />
                   <input
                     type="date"
@@ -474,23 +628,58 @@ export default function ReconciliationPage() {
                     onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
                     placeholder="Fecha de vencimiento"
                     required
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                    style={{
+                      width: '100%',
+                      backgroundColor: '#0F0F0F',
+                      color: '#F5F5F5',
+                      borderRadius: '4px',
+                      border: '1px solid #2D2D2D',
+                      padding: '10px 12px',
+                      fontSize: '13px',
+                    }}
                   />
                   <input
                     value={formData.bankAccountId}
                     onChange={(e) => setFormData({ ...formData, bankAccountId: e.target.value })}
                     placeholder="ID Cuenta Bancaria (opcional)"
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                    style={{
+                      width: '100%',
+                      backgroundColor: '#0F0F0F',
+                      color: '#F5F5F5',
+                      borderRadius: '4px',
+                      border: '1px solid #2D2D2D',
+                      padding: '10px 12px',
+                      fontSize: '13px',
+                    }}
                   />
                   <input
                     value={formData.concept}
                     onChange={(e) => setFormData({ ...formData, concept: e.target.value })}
                     placeholder="Concepto"
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                    style={{
+                      width: '100%',
+                      backgroundColor: '#0F0F0F',
+                      color: '#F5F5F5',
+                      borderRadius: '4px',
+                      border: '1px solid #2D2D2D',
+                      padding: '10px 12px',
+                      fontSize: '13px',
+                    }}
                   />
                   <button
                     type="submit"
-                    className="w-full rounded-lg bg-blue-600 p-3 font-semibold text-white hover:bg-blue-700"
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '4px',
+                      backgroundColor: '#C0C0C0',
+                      color: '#0A0A0A',
+                      border: '1px solid #C0C0C0',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E8E8E8'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#C0C0C0'}
                   >
                     Guardar Factura
                   </button>
@@ -499,14 +688,22 @@ export default function ReconciliationPage() {
 
               {modalTab === "import" && (
                 <div className="text-center py-8">
-                  <p className="text-slate-400 mb-4">Usa el botón "Importar Facturas" en la página principal para importar múltiples facturas</p>
+                  <p style={{ color: '#7E7E7E', marginBottom: '16px' }}>Usa el botón "Importar Facturas" en la página principal para importar múltiples facturas</p>
                   <button
                     onClick={() => {
                       setModalOpen(false);
                       setModalTab("manual");
                       setImportModalOpen(true);
                     }}
-                    className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+                    className="px-4 py-2 font-medium"
+                    style={{
+                      backgroundColor: '#C0C0C0',
+                      color: '#0A0A0A',
+                      borderRadius: '4px',
+                      border: '1px solid #C0C0C0',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E8E8E8'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#C0C0C0'}
                   >
                     Ir a Importación Masiva
                   </button>
@@ -519,33 +716,48 @@ export default function ReconciliationPage() {
         {/* Modal de conciliación manual */}
         {reconcileModalOpen && selectedInvoice && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-            <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
+            <div style={{ width: '100%', maxWidth: '512px', borderRadius: '8px', border: '1px solid #2D2D2D', backgroundColor: '#161616', padding: '24px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
               <div className="mb-6 flex items-center justify-between">
                 <div>
-                  <h3 className="text-2xl font-bold text-white">Conciliación Manual</h3>
-                  <p className="text-sm text-slate-400">Factura: {selectedInvoice.invoiceNumber}</p>
+                  <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#F5F5F5' }}>Conciliación Manual</h3>
+                  <p style={{ fontSize: '13px', color: '#7E7E7E' }}>Factura: {selectedInvoice.invoiceNumber}</p>
                 </div>
                 <button
                   onClick={() => setReconcileModalOpen(false)}
-                  className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700"
+                  className="px-3 py-2 text-sm font-medium"
+                  style={{
+                    backgroundColor: '#2D2D2D',
+                    color: '#F5F5F5',
+                    borderRadius: '4px',
+                    border: '1px solid #2D2D2D',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3D3D3D'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2D2D2D'}
                 >
                   Cerrar
                 </button>
               </div>
               <div className="space-y-4">
-                <p className="text-sm text-slate-400">Seleccione un movimiento para conciliar:</p>
+                <p style={{ fontSize: '13px', color: '#7E7E7E' }}>Seleccione un movimiento para conciliar:</p>
                 <div className="max-h-64 overflow-y-auto space-y-2">
-                  {availableMovements.map((movement) => (
+                  {availableMovements.map((movement, index) => (
                     <button
                       key={movement.id}
                       onClick={() => confirmReconciliation(movement.id)}
-                      className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-left hover:bg-slate-700"
+                      className="w-full p-3 text-left transition-colors"
+                      style={{
+                        borderRadius: '4px',
+                        border: '1px solid #2D2D2D',
+                        backgroundColor: index % 2 === 0 ? '#0A0A0A' : '#0F0F0F',
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1F1F1F'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = index % 2 === 0 ? '#0A0A0A' : '#0F0F0F'}
                     >
                       <div className="flex justify-between">
-                        <span className="text-sm text-white">{movement.id}</span>
-                        <span className="text-sm text-slate-400">${Number(movement.amount).toFixed(2)}</span>
+                        <span style={{ fontSize: '13px', color: '#F5F5F5' }}>{movement.id}</span>
+                        <span style={{ fontSize: '13px', color: '#A3A3A3' }}>${Number(movement.amount).toFixed(2)}</span>
                       </div>
-                      <p className="text-xs text-slate-500">{movement.concept || movement.category}</p>
+                      <p style={{ fontSize: '11px', color: '#7E7E7E' }}>{movement.concept || movement.category}</p>
                     </button>
                   ))}
                 </div>

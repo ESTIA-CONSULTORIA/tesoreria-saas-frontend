@@ -12,22 +12,21 @@ interface Props {
 }
 
 const navItems = [
-  { label: "Dashboard", to: "/dashboard", icon: "📊", modulo: "dashboard", shortcut: "Alt+1" },
-  { label: "Empresas", to: "/companies", icon: "🏢", modulo: "empresas" },
-  { label: "Sucursales", to: "/branches", icon: "🏪", modulo: "sucursales" },
-  { label: "Usuarios y Roles", to: "/users", icon: "👤", modulo: "usuarios" },
-  { label: "Bancos", to: "/banks", icon: "🏦", modulo: "bancos" },
-  { label: "Movimientos", to: "/movements", icon: "🧾", modulo: "movimientos", shortcut: "Alt+2" },
-  { label: "Traslado de Fondos", to: "/transfers", icon: "🔁", modulo: "transferencias", shortcut: "Alt+3" },
-  { label: "Proveedores", to: "/suppliers", icon: "🚚", modulo: "proveedores" },
-  { label: "Compras", to: "/purchases", icon: "🛒", modulo: "compras" },
-  { label: "Costos y Producción", to: "/costs", icon: "🏭", modulo: "costos" },
-  { label: "Reportes", to: "/reports", icon: "📑", modulo: "reportes", shortcut: "Alt+4" },
-  { label: "Tesorería", to: "/treasury", icon: "💰", modulo: "tesoreria" },
-  { label: "Conciliación", to: "/reconciliation", icon: "📋", modulo: "conciliacion" },
-  { label: "POS", to: "/pos", icon: "�️", modulo: "pos" },
-  { label: "Administración", to: "/administration", icon: "🔐", adminOnly: true, modulo: "administracion" },
-  { label: "Configuración", to: "/settings", icon: "⚙️", modulo: "configuracion" },
+  { label: "Dashboard", to: "/dashboard", icon: "📊", modulo: "dashboard", shortcut: "Alt+1", category: "OPERACIÓN" },
+  { label: "Empresas", to: "/companies", icon: "🏢", modulo: "empresas", category: "OPERACIÓN" },
+  { label: "Sucursales", to: "/branches", icon: "🏪", modulo: "sucursales", category: "OPERACIÓN" },
+  { label: "Bancos", to: "/banks", icon: "🏦", modulo: "bancos", category: "TESORERÍA" },
+  { label: "Movimientos", to: "/movements", icon: "🧾", modulo: "movimientos", shortcut: "Alt+2", category: "TESORERÍA" },
+  { label: "Transferencias", to: "/transfers", icon: "🔁", modulo: "transferencias", shortcut: "Alt+3", category: "TESORERÍA" },
+  { label: "Tesorería", to: "/treasury", icon: "💰", modulo: "tesoreria", category: "TESORERÍA" },
+  { label: "Conciliación", to: "/reconciliation", icon: "📋", modulo: "conciliacion", category: "TESORERÍA" },
+  { label: "Proveedores", to: "/suppliers", icon: "📦", modulo: "proveedores", category: "COMPRAS" },
+  { label: "Compras", to: "/purchases", icon: "🛒", modulo: "compras", category: "COMPRAS" },
+  { label: "Costos", to: "/costs", icon: "🏭", modulo: "costos", category: "COMPRAS" },
+  { label: "Reportes", to: "/reports", icon: "📑", modulo: "reportes", shortcut: "Alt+4", category: "ANÁLISIS" },
+  { label: "POS", to: "/pos", icon: "🖥️", modulo: "pos", category: "ANÁLISIS" },
+  { label: "Configuración", to: "/settings", icon: "⚙️", modulo: "configuracion", category: "CONTROL" },
+  { label: "Config. Login", to: "/settings/login-config", icon: "🔐", modulo: "configuracion", category: "CONTROL" },
 ];
 
 const soporteNavItems = [
@@ -57,7 +56,7 @@ export default function MainLayout({ children }: Props) {
   ]);
 
   return (
-    <div className={`min-h-screen ${theme.colors.background} ${theme.colors.text}`}>
+    <div className="min-h-screen" style={{ backgroundColor: '#0A0A0A', color: '#F5F5F5' }}>
       <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} onSearchClick={() => setSearchOpen(true)} />
 
       <div className="flex relative">
@@ -71,16 +70,16 @@ export default function MainLayout({ children }: Props) {
 
         {/* Sidebar */}
         <aside
-          className={`fixed lg:static z-50 lg:z-auto w-64 min-h-[calc(100vh-64px)] border-r ${theme.colors.border} ${theme.colors.surface} flex-col py-2 transition-transform duration-300
+          className={`fixed lg:static z-50 lg:z-auto w-64 min-h-[calc(100vh-64px)] border-r flex-col py-2 transition-transform duration-300
             ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
             ${sidebarOpen ? "flex" : "hidden lg:flex"}`}
-          style={{ backgroundColor: 'var(--sidebar-bg)' }}
+          style={{ backgroundColor: '#111111', borderColor: '#2D2D2D' }}
         >
-          <nav className="flex flex-col gap-1 px-2">
+          <nav className="flex flex-col gap-0 px-2">
             {isSoporte ? (
               // Navegación para SOPORTE
               <>
-                <div className={`px-3 py-2 text-xs font-semibold ${theme.colors.textMuted}`}>
+                <div className="px-3 py-2 text-xs font-semibold" style={{ color: '#7E7E7E', letterSpacing: '0.05em' }}>
                   PANEL DE SOPORTE
                 </div>
                 {soporteNavItems.map((item) => {
@@ -90,20 +89,21 @@ export default function MainLayout({ children }: Props) {
                       key={item.to}
                       to={item.to}
                       onClick={() => setSidebarOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                        ${
-                          isActive
-                            ? `${theme.colors.text}`
-                            : `${theme.colors.textMuted} ${theme.colors.surfaceHover}`
-                        }`}
-                      style={isActive ? { backgroundColor: 'var(--sidebar-active)', color: 'var(--sidebar-text)' } : { color: 'var(--sidebar-text)' }}
+                      className="flex items-center gap-3 px-3 py-2 text-sm font-medium transition-colors"
+                      style={{
+                        color: '#A3A3A3',
+                        borderLeft: isActive ? '3px solid #C0C0C0' : '3px solid transparent',
+                        backgroundColor: isActive ? '#222222' : 'transparent',
+                      }}
+                      onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = '#1A1A1A'; }}
+                      onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = 'transparent'; }}
                     >
                       <span>{item.icon}</span>
                       <span>{item.label}</span>
                     </Link>
                   );
                 })}
-                <div className={`mt-4 px-3 py-2 text-xs font-semibold ${theme.colors.textMuted} border-t ${theme.colors.border}`}>
+                <div className="mt-4 px-3 py-2 text-xs font-semibold border-t" style={{ color: '#7E7E7E', letterSpacing: '0.05em', borderColor: '#2D2D2D' }}>
                   MÓDULOS DEL SISTEMA
                 </div>
                 {navItems.map((item) => {
@@ -113,69 +113,86 @@ export default function MainLayout({ children }: Props) {
                       key={item.to}
                       to={item.to}
                       onClick={() => setSidebarOpen(false)}
-                      className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                        ${
-                          isActive
-                            ? `${theme.colors.text}`
-                            : `${theme.colors.textMuted} ${theme.colors.surfaceHover}`
-                        }`}
-                      style={isActive ? { backgroundColor: 'var(--sidebar-active)', color: 'var(--sidebar-text)' } : { color: 'var(--sidebar-text)' }}
+                      className="flex items-center justify-between px-3 py-2 text-sm font-medium transition-colors"
+                      style={{
+                        color: '#A3A3A3',
+                        borderLeft: isActive ? '3px solid #C0C0C0' : '3px solid transparent',
+                        backgroundColor: isActive ? '#222222' : 'transparent',
+                      }}
+                      onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = '#1A1A1A'; }}
+                      onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = 'transparent'; }}
                     >
                       <div className="flex items-center gap-3">
                         <span>{item.icon}</span>
                         <span>{item.label}</span>
                       </div>
                       {item.shortcut && (
-                        <kbd className="text-xs bg-slate-700 px-1.5 py-0.5 rounded text-slate-400">{item.shortcut}</kbd>
+                        <kbd className="text-xs px-1.5 py-0.5" style={{ backgroundColor: '#2D2D2D', color: '#7E7E7E' }}>{item.shortcut}</kbd>
                       )}
                     </Link>
                   );
                 })}
               </>
             ) : (
-              // Navegación para CLIENTE (ADMIN)
-              navItems.map((item) => {
-                const isActive = location.pathname === item.to;
-                const moduloActivo = useModulo(item.modulo);
+              // Navegación para CLIENTE (ADMIN) - Agrupada por categorías
+              (() => {
+                const categories = ['OPERACIÓN', 'TESORERÍA', 'COMPRAS', 'ANÁLISIS', 'CONTROL'] as const;
+                return categories.map((category) => {
+                  const categoryItems = navItems.filter((item) => item.category === category);
+                  if (categoryItems.length === 0) return null;
 
-                if (!moduloActivo) return null;
+                  return (
+                    <div key={category}>
+                      <div className="px-3 py-2 text-xs font-semibold" style={{ color: '#7E7E7E', letterSpacing: '0.05em' }}>
+                        {category}
+                      </div>
+                      {categoryItems.map((item) => {
+                        const isActive = location.pathname === item.to;
+                        const moduloActivo = useModulo(item.modulo);
 
-                return (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                      ${
-                        isActive
-                          ? `${theme.colors.text}`
-                          : `${theme.colors.textMuted} ${theme.colors.surfaceHover}`
-                      }`}
-                    style={isActive ? { backgroundColor: 'var(--sidebar-active)', color: 'var(--sidebar-text)' } : { color: 'var(--sidebar-text)' }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span>{item.icon}</span>
-                      <span>{item.label}</span>
+                        if (!moduloActivo) return null;
+
+                        return (
+                          <Link
+                            key={item.to}
+                            to={item.to}
+                            onClick={() => setSidebarOpen(false)}
+                            className="flex items-center justify-between px-3 py-2 text-sm font-medium transition-colors"
+                            style={{
+                              color: '#A3A3A3',
+                              borderLeft: isActive ? '3px solid #C0C0C0' : '3px solid transparent',
+                              backgroundColor: isActive ? '#222222' : 'transparent',
+                            }}
+                            onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = '#1A1A1A'; }}
+                            onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = 'transparent'; }}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span>{item.icon}</span>
+                              <span>{item.label}</span>
+                            </div>
+                            {item.shortcut && (
+                              <kbd className="text-xs px-1.5 py-0.5" style={{ backgroundColor: '#2D2D2D', color: '#7E7E7E' }}>{item.shortcut}</kbd>
+                            )}
+                          </Link>
+                        );
+                      })}
                     </div>
-                    {item.shortcut && (
-                      <kbd className="text-xs bg-slate-700 px-1.5 py-0.5 rounded text-slate-400">{item.shortcut}</kbd>
-                    )}
-                  </Link>
-                );
-              })
+                  );
+                });
+              })()
             )}
           </nav>
 
           {/* Footer del sidebar */}
-          <div className={`mt-auto px-4 py-4 border-t ${theme.colors.border}`}>
-            <p className={`text-xs ${theme.colors.textMuted}`}>
+          <div className="mt-auto px-4 py-4 border-t" style={{ borderColor: '#2D2D2D' }}>
+            <p className="text-xs" style={{ color: '#7E7E7E' }}>
               {theme.appName}
             </p>
           </div>
         </aside>
 
         {/* Content */}
-        <main className="flex-1 p-4 md:p-6 overflow-auto w-full">
+        <main className="flex-1 p-4 md:p-6 overflow-auto w-full" style={{ backgroundColor: '#0A0A0A' }}>
           {children}
         </main>
       </div>
