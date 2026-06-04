@@ -118,7 +118,11 @@ export default function PurchasesPage() {
     try {
       setLoading(true);
       const response = await api.get("/purchases/orders", { params: { status } });
-      setOrders(Array.isArray(response.data) ? response.data : []);
+      const ordersData = Array.isArray(response.data) ? response.data : [];
+      setOrders(ordersData);
+      if (ordersData.length > 0) {
+        console.log('Primera OC:', JSON.stringify(ordersData[0]));
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || "No fue posible cargar órdenes");
     } finally {
