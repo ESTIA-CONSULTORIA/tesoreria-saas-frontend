@@ -1,20 +1,22 @@
 import { useState, useEffect } from "react";
 import MainLayout from "../../core/layout/MainLayout";
 import { useLoginConfigStore, LoginConfig } from "../../core/store/useLoginConfigStore";
+import { useAuthStore } from "../../core/store/useAuthStore";
 
 export default function LoginConfigPage() {
   const { config, setConfig, loadConfig, saveConfig, resetConfig } = useLoginConfigStore();
+  const tenantId = useAuthStore((state) => state.tenantId);
   const [previewMode, setPreviewMode] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    loadConfig();
-  }, [loadConfig]);
+    loadConfig(tenantId);
+  }, [loadConfig, tenantId]);
 
   async function handleSave() {
     try {
       setSaving(true);
-      await saveConfig();
+      await saveConfig(tenantId);
       alert("Configuración guardada exitosamente");
     } catch (error) {
       alert("Error al guardar la configuración");

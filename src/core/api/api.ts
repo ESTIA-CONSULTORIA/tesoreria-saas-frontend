@@ -28,7 +28,11 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('tenant_id');
+      window.location.href = '/';
+    } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
       error.message = 'Tiempo de espera agotado. El servidor tardó demasiado en responder.';
     } else if (!error.response) {
       error.message = `No se puede conectar al servidor. Verifica que el backend esté corriendo en ${baseURL}`;

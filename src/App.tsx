@@ -25,6 +25,7 @@ import LoginConfigPage from "./pages/settings/LoginConfigPage";
 import ProtectedRoute from "./core/router/ProtectedRoute";
 import ModuloRoute from "./core/router/ModuloRoute";
 import { useAuthStore } from "./core/store/useAuthStore";
+import { api } from "./core/api/api";
 
 // Páginas de SOPORTE
 import SoporteDashboard from "./pages/soporte/SoporteDashboard";
@@ -36,12 +37,46 @@ import ConfiguracionGlobal from "./pages/soporte/ConfiguracionGlobal";
 function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const user = useAuthStore((state) => state.user);
+  const tenantId = useAuthStore((state) => state.tenantId);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    const applyTheme = async () => {
+      if (tenantId) {
+        try {
+          const res = await api.get(`/tenant-settings/${tenantId}`);
+          const config = res.data;
+          if (config) {
+            if (config.primaryColor) {
+              document.documentElement.style.setProperty('--color-primary', config.primaryColor);
+            }
+            if (config.secondaryColor) {
+              document.documentElement.style.setProperty('--color-secondary', config.secondaryColor);
+            }
+            if (config.accentColor) {
+              document.documentElement.style.setProperty('--color-accent', config.accentColor);
+            }
+            if (config.fontFamily) {
+              document.documentElement.style.setProperty('--font-family', config.fontFamily);
+            }
+            if (config.customCSS) {
+              const style = document.createElement('style');
+              style.textContent = config.customCSS;
+              document.head.appendChild(style);
+            }
+          }
+        } catch (error) {
+          console.error('Error loading tenant theme:', error);
+        }
+      }
+    };
+    applyTheme();
+  }, [tenantId]);
 
   // Si es móvil y el usuario tiene rol permitido, mostrar MobileAnalyticsApp
   if (isMobile && user) {

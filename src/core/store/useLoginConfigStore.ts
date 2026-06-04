@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { api } from '../api/api';
 
 export interface LoginConfig {
   backgroundImage?: string;
@@ -21,8 +22,8 @@ interface LoginConfigStore {
   config: LoginConfig;
   setConfig: (config: Partial<LoginConfig>) => void;
   resetConfig: () => void;
-  loadConfig: () => Promise<void>;
-  saveConfig: () => Promise<void>;
+  loadConfig: (tenantId?: string) => Promise<void>;
+  saveConfig: (tenantId?: string) => Promise<void>;
 }
 
 const defaultConfig: LoginConfig = {
@@ -53,21 +54,56 @@ export const useLoginConfigStore = create<LoginConfigStore>((set, get) => ({
     set({ config: defaultConfig });
   },
 
-  loadConfig: async () => {
+  loadConfig: async (tenantId?: string) => {
     try {
-      const stored = localStorage.getItem('loginConfig');
-      if (stored) {
-        set({ config: JSON.parse(stored) });
+      if (tenantId) {
+        const response = await api.get(`/tenant-settings/${tenantId}`);
+        const settings = response.data;
+        if (settings) {
+          set({
+            config: {
+              backgroundImage: settings.backgroundImage || '',
+              logoUrl: settings.logoUrl || '',
+              buttonOpacity: 1,
+              cardOpacity: 0.95,
+              primaryColor: settings.primaryColor || '#C0C0C0',
+              textColor: settings.textColor || '#F5F5F5',
+              accentColor: settings.accentColor || '#2F855A',
+              companyName: settings.name || 'Tesorería SaaS',
+              tagline: 'Gestión Financiera Empresarial',
+              maintenanceMode: false,
+              maintenanceMessage: '',
+              customCSS: settings.customCSS || '',
+            },
+          });
+        }
+      } else {
+        const stored = localStorage.getItem('loginConfig');
+        if (stored) {
+          set({ config: JSON.parse(stored) });
+        }
       }
     } catch (error) {
       console.error('Error loading login config:', error);
     }
   },
 
-  saveConfig: async () => {
+  saveConfig: async (tenantId?: string) => {
     try {
       const { config } = get();
-      localStorage.setItem('loginConfig', JSON.stringify(config));
+      if (tenantId) {
+        await api.post(`/tenant-settings/${tenantId}`, {
+          name: config.companyName,
+          logoUrl: config.logoUrl,
+          primaryColor: config.primaryColor,
+          secondaryColor: config.textColor,
+          accentColor: config.accentColor,
+          fontFamily: 'Inter',
+          customCSS: config.customCSS,
+        });
+      } else {
+        localStorage.setItem('loginConfig', JSON.stringify(config));
+      }
     } catch (error) {
       console.error('Error saving login config:', error);
     }
