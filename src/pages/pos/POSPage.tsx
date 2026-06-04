@@ -242,8 +242,8 @@ export default function POSPage() {
   });
 
   useEffect(() => {
-    loadCategories().then(() => {
-      loadProducts();
+    loadCategories().then((cats) => {
+      loadProducts(cats);
     });
     loadOpenShift();
   }, []);
@@ -262,13 +262,13 @@ export default function POSPage() {
     }
   }, [showPaymentModal]);
 
-  async function loadProducts() {
+  async function loadProducts(cats: any[]) {
     try {
       const response = await api.get("/pos/products");
       const mappedProducts = Array.isArray(response.data) ? response.data.map((p: any) => ({
         ...p,
         price: Number(p.price) || 0,
-        category: categories.find(c => c.id === p.categoryId)?.name || 'Sin categoría'
+        category: cats.find(c => c.id === p.categoryId)?.name || 'Sin categoría'
       })) : [];
       console.log('productos cargados:', mappedProducts.length, mappedProducts);
       if (mappedProducts.length > 0) {
@@ -286,8 +286,10 @@ export default function POSPage() {
       console.log('categorías del backend:', response.data);
       const cats = Array.isArray(response.data) ? response.data : [];
       setCategories([{ id: "all", name: "Todos" }, ...cats]);
+      return cats;
     } catch (error) {
       console.error("Error loading categories:", error);
+      return [];
     }
   }
 
@@ -824,7 +826,7 @@ export default function POSPage() {
         
         const response = await api.post("/pos/products/import", { productos: data });
         setPosCsvImportResult(response.data);
-        loadProducts();
+        loadProducts(categories);
       };
       reader.readAsText(posCsvFile);
     } catch (err: any) {
