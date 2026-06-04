@@ -18,6 +18,19 @@ export default function LoginPage() {
     loadConfig();
   }, [loadConfig]);
 
+  useEffect(() => {
+    if (config.customCSS) {
+      const style = document.createElement('style');
+      style.id = 'white-label-css';
+      style.innerHTML = config.customCSS;
+      document.head.appendChild(style);
+      return () => {
+        const el = document.getElementById('white-label-css');
+        if (el) el.remove();
+      };
+    }
+  }, [config.customCSS]);
+
   async function handleLogin() {
     try {
       setLoading(true);
@@ -152,11 +165,6 @@ export default function LoginPage() {
         >
           {loading ? "Entrando..." : "Entrar"}
         </button>
-
-        {/* Custom CSS */}
-        {config.customCSS && (
-          <style dangerouslySetInnerHTML={{ __html: config.customCSS }} />
-        )}
       </div>
     </div>
   );
