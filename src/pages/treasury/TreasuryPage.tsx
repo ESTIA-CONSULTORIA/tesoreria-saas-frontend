@@ -16,8 +16,10 @@ export default function TreasuryPage() {
   const [scheduledPayments, setScheduledPayments] = useState<any[]>([]);
   const [accountsPayable, setAccountsPayable] = useState<any[]>([]);
   const [accountsReceivable, setAccountsReceivable] = useState<any[]>([]);
+  const [suppliers, setSuppliers] = useState<any[]>([]);
   const [alertConfig, setAlertConfig] = useState<any>(null);
   const [banks, setBanks] = useState<any[]>([]);
+  const [showScheduledPayments, setShowScheduledPayments] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -52,6 +54,8 @@ export default function TreasuryPage() {
         case "cxp":
           const cxpRes = await api.get("/treasury/accounts-payable");
           setAccountsPayable(Array.isArray(cxpRes.data) ? cxpRes.data : []);
+          const suppliersRes = await api.get("/suppliers");
+          setSuppliers(Array.isArray(suppliersRes.data) ? suppliersRes.data : []);
           break;
         case "cxc":
           const cxcRes = await api.get("/treasury/accounts-receivable");
@@ -497,19 +501,22 @@ export default function TreasuryPage() {
             <div className="space-y-6">
               <div className="flex gap-4 border-b border-slate-800">
                 <button className="px-4 py-2 border-b-2 border-blue-500 text-blue-400 font-medium">
-                  Pendientes de pagar
+                  Facturas pendientes de pago
                 </button>
-                <button className="px-4 py-2 text-slate-400 hover:text-white font-medium">
-                  Pagos programados
+                <button 
+                  onClick={() => setShowScheduledPayments(!showScheduledPayments)}
+                  className="px-4 py-2 text-slate-400 hover:text-white font-medium"
+                >
+                  Pagos programados {showScheduledPayments ? '▼' : '▶'}
                 </button>
               </div>
 
-              {/* SECCIÓN 1: Pendientes de pagar */}
+              {/* SECCIÓN 1: Facturas pendientes de pago */}
               <div>
-                <h3 className="text-lg font-semibold mb-4">Pendientes de pagar</h3>
+                <h3 className="text-lg font-semibold mb-4">Facturas pendientes de pago</h3>
                 {accountsPayable.length === 0 ? (
                   <div className="rounded-xl border border-slate-800 bg-slate-900 p-8 text-center">
-                    <p className="text-slate-400">No hay cuentas por pagar pendientes</p>
+                    <p className="text-slate-400">No hay facturas pendientes de pago</p>
                   </div>
                 ) : (
                   <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
@@ -517,8 +524,8 @@ export default function TreasuryPage() {
                       <thead className="bg-slate-800">
                         <tr>
                           <th className="px-4 py-2 text-left text-sm font-semibold text-white">Proveedor</th>
-                          <th className="px-4 py-2 text-left text-sm font-semibold text-white">Concepto</th>
-                          <th className="px-4 py-2 text-right text-sm font-semibold text-white">Monto</th>
+                          <th className="px-4 py-2 text-left text-sm font-semibold text-white">Factura #</th>
+                          <th className="px-4 py-2 text-right text-sm font-semibold text-white">Saldo pendiente</th>
                           <th className="px-4 py-2 text-left text-sm font-semibold text-white">Vencimiento</th>
                           <th className="px-4 py-2 text-center text-sm font-semibold text-white">Días restantes</th>
                           <th className="px-4 py-2 text-center text-sm font-semibold text-white">Status</th>
@@ -528,13 +535,14 @@ export default function TreasuryPage() {
                       <tbody className="divide-y divide-slate-800">
                         {accountsPayable.map((cxp: any) => {
                           const daysRemaining = cxp.diasHastaVencimiento || 0;
-                          const urgencyColor = daysRemaining < 7 ? 'bg-red-900/40 text-red-300' : daysRemaining < 15 ? 'bg-yellow-900/40 text-yellow-300' : 'bg-green-900/40 text-green-300';
+                          const urgencyColor = daysRemaining < 0 ? 'bg-red-900/40 text-red-300' : daysRemaining < 7 ? 'bg-red-900/40 text-red-300' : daysRemaining < 15 ? 'bg-yellow-900/40 text-yellow-300' : 'bg-green-900/40 text-green-300';
+                          const supplier = suppliers.find((s: any) => s.id === cxp.supplierId);
                           return (
                             <tr key={cxp.id} className="hover:bg-slate-800/50">
-                              <td className="px-4 py-3 text-white">{cxp.proveedor || 'N/A'}</td>
-                              <td className="px-4 py-3 text-white">{cxp.concepto}</td>
-                              <td className="px-4 py-3 text-right font-semibold text-white">${Number(cxp.monto).toFixed(2)}</td>
-                              <td className="px-4 py-3 text-sm text-slate-300">{new Date(cxp.fechaVencimiento).toLocaleDateString()}</td>
+                              <td className="px-4 py-3 text-white">{supplier?.nombre || 'N/A'}</td>
+                              <td className="px-4 py-3 text-white">{cxp.numero || 'N/A'}</td>
+                              <td className="px-4 py-3 text-right font-semibold text-white">${Number(cxp.saldoPendiente).toFixed(2)}</td>
+                              <td className="px-4 py-3 text-sm text-slate-300">{cxp.fechaVencimiento ? new Date(cxp.fechaVencimiento).toLocaleDateString() : 'N/A'}</td>
                               <td className="px-4 py-3 text-center">
                                 <span className={`px-2 py-1 rounded text-xs ${urgencyColor}`}>
                                   {daysRemaining} días
@@ -560,13 +568,15 @@ export default function TreasuryPage() {
                 )}
               </div>
 
-              {/* SECCIÓN 2: Pagos programados */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Pagos programados</h3>
-                <div className="rounded-xl border border-slate-800 bg-slate-900 p-8 text-center">
-                  <p className="text-slate-400">No hay pagos programados</p>
+              {/* SECCIÓN 2: Pagos programados (toggle) */}
+              {showScheduledPayments && (
+                <div className="border-t border-slate-800 pt-6">
+                  <h3 className="text-lg font-semibold mb-4">Pagos programados</h3>
+                  <div className="rounded-xl border border-slate-800 bg-slate-900 p-8 text-center">
+                    <p className="text-slate-400">No hay pagos programados</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
