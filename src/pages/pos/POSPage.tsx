@@ -131,7 +131,7 @@ export default function POSPage() {
   // Login/Shift opening screens
   const [showLoginScreen, setShowLoginScreen] = useState(false);
   const [cashierPin, setCashierPin] = useState<string>("");
-  const [selectedCashier, setSelectedCashier] = useState<string>("");
+  const [selectedCashier, setSelectedCashier] = useState<string>(localStorage.getItem("selected_cashier") || "");
   const [shiftNotes, setShiftNotes] = useState<string>("");
   
   // Precorte/Corte modals
@@ -2003,7 +2003,10 @@ export default function POSPage() {
                 <label className="block text-sm text-slate-400 mb-1">Seleccionar Cajero</label>
                 <select
                   value={selectedCashier}
-                  onChange={(e) => setSelectedCashier(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedCashier(e.target.value);
+                    localStorage.setItem("selected_cashier", e.target.value);
+                  }}
                   className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white"
                 >
                   <option value="">Seleccionar...</option>
