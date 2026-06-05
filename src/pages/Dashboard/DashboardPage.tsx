@@ -4,6 +4,7 @@ import { api } from "../../core/api/api";
 import DashboardInfoModal from "./DashboardInfoModal";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import ExecutiveKPI from "../../components/ExecutiveKPI";
+import { useCompanyStore } from "../../core/store/useCompanyStore";
 
 export default function DashboardPage() {
   const [kpis, setKpis] = useState<any>(null);
@@ -11,17 +12,30 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
   const [infoOpen, setInfoOpen] = useState(false);
   const [period, setPeriod] = useState<"today" | "week" | "month" | "year">("month");
+  const [viewMode, setViewMode] = useState<"consolidated" | "individual">("consolidated");
+  const { activeBranch } = useCompanyStore();
 
   useEffect(() => {
     loadKpis();
-  }, [period]);
+  }, [period, viewMode]);
 
   async function loadKpis() {
     try {
       setLoading(true);
       setError("");
-      const response = await api.get("/dashboard/kpis", { params: { period } });
-      setKpis(response.data);
+      
+      // En vista individual, usamos el header X-Branch-Id del interceptor
+      // En vista consolidada, necesitamos remover temporalmente el header
+      if (viewMode === "consolidated") {
+        const branchId = localStorage.getItem("active_branch_id");
+        localStorage.removeItem("active_branch_id");
+        const response = await api.get("/dashboard/kpis", { params: { period } });
+        if (branchId) localStorage.setItem("active_branch_id", branchId);
+        setKpis(response.data);
+      } else {
+        const response = await api.get("/dashboard/kpis", { params: { period } });
+        setKpis(response.data);
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || "No fue posible cargar dashboard");
     } finally {
@@ -69,9 +83,41 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold" style={{ color: '#F5F5F5' }}>Dashboard</h2>
-            <p style={{ color: '#A3A3A3', fontSize: '14px' }}>Vista financiera general</p>
+            <p style={{ color: '#A3A3A3', fontSize: '14px' }}>
+              {viewMode === 'consolidated' ? 'Vista consolidada (todas las empresas)' : `Vista por sucursal: ${activeBranch?.name || 'Seleccionar sucursal'}`}
+            </p>
           </div>
           <div className="flex gap-3">
+            <div className="flex gap-2">
+              <button
+                onClick={() => setViewMode('consolidated')}
+                className="px-3 py-1.5 text-sm font-medium transition-colors"
+                style={{
+                  backgroundColor: viewMode === 'consolidated' ? '#C0C0C0' : '#2D2D2D',
+                  color: viewMode === 'consolidated' ? '#0A0A0A' : '#F5F5F5',
+                  borderRadius: '4px',
+                  border: '1px solid #2D2D2D',
+                }}
+                onMouseEnter={(e) => { if (viewMode !== 'consolidated') e.currentTarget.style.backgroundColor = '#3D3D3D'; }}
+                onMouseLeave={(e) => { if (viewMode !== 'consolidated') e.currentTarget.style.backgroundColor = '#2D2D2D'; }}
+              >
+                Vista Consolidada
+              </button>
+              <button
+                onClick={() => setViewMode('individual')}
+                className="px-3 py-1.5 text-sm font-medium transition-colors"
+                style={{
+                  backgroundColor: viewMode === 'individual' ? '#C0C0C0' : '#2D2D2D',
+                  color: viewMode === 'individual' ? '#0A0A0A' : '#F5F5F5',
+                  borderRadius: '4px',
+                  border: '1px solid #2D2D2D',
+                }}
+                onMouseEnter={(e) => { if (viewMode !== 'individual') e.currentTarget.style.backgroundColor = '#3D3D3D'; }}
+                onMouseLeave={(e) => { if (viewMode !== 'individual') e.currentTarget.style.backgroundColor = '#2D2D2D'; }}
+              >
+                Vista por Sucursal
+              </button>
+            </div>
             <div className="flex gap-2">
               {[
                 { value: 'today', label: 'Hoy' },
