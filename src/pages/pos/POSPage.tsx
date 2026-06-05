@@ -267,7 +267,7 @@ export default function POSPage() {
       const response = await api.get("/pos/products");
       const productos = Array.isArray(response.data) ? response.data : [];
       console.log('primer producto categoryId tipo:', typeof productos[0]?.categoryId, productos[0]?.categoryId);
-      console.log('cats disponibles:', cats.map(c => ({id: c.id, tipo: typeof c.id, name: c.name})));
+      console.log('cats disponibles COMPLETO:', JSON.stringify(cats));
       const mappedProducts = productos.map((p: any) => ({
         ...p,
         price: Number(p.price) || 0,
