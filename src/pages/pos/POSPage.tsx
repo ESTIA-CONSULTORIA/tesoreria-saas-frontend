@@ -265,11 +265,14 @@ export default function POSPage() {
   async function loadProducts(cats: any[]) {
     try {
       const response = await api.get("/pos/products");
-      const mappedProducts = Array.isArray(response.data) ? response.data.map((p: any) => ({
+      const productos = Array.isArray(response.data) ? response.data : [];
+      console.log('primer producto categoryId tipo:', typeof productos[0]?.categoryId, productos[0]?.categoryId);
+      console.log('cats disponibles:', cats.map(c => ({id: c.id, tipo: typeof c.id, name: c.name})));
+      const mappedProducts = productos.map((p: any) => ({
         ...p,
         price: Number(p.price) || 0,
         category: cats.find(c => c.id === p.categoryId)?.name || 'Sin categoría'
-      })) : [];
+      }));
       setProducts(mappedProducts);
     } catch (error) {
       console.error("Error loading products:", error);
@@ -280,6 +283,8 @@ export default function POSPage() {
     try {
       const response = await api.get("/pos/categories");
       const cats = Array.isArray(response.data) ? response.data : [];
+      console.log('cats recibidas:', cats);
+      console.log('primer cat id tipo:', typeof cats[0]?.id, cats[0]?.id);
       setCategories([{ id: "all", name: "Todos" }, ...cats]);
       return cats;
     } catch (error) {
