@@ -1,4 +1,5 @@
 import axios from "axios";
+import { useCompanyStore } from "../store/useCompanyStore";
 
 const baseURL = import.meta.env.VITE_API_URL ||
   (window.location.hostname === 'localhost'
@@ -13,6 +14,8 @@ export const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("access_token");
   const tenantId = localStorage.getItem("tenant_id");
+  const activeCompanyId = localStorage.getItem("active_company_id");
+  const activeBranchId = localStorage.getItem("active_branch_id");
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -20,6 +23,14 @@ api.interceptors.request.use((config) => {
 
   if (tenantId && tenantId !== '') {
     config.headers["tenant-id"] = tenantId;
+  }
+
+  if (activeCompanyId && activeCompanyId !== '') {
+    config.headers["X-Company-Id"] = activeCompanyId;
+  }
+
+  if (activeBranchId && activeBranchId !== '') {
+    config.headers["X-Branch-Id"] = activeBranchId;
   }
 
   return config;
