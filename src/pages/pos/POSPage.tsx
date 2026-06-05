@@ -308,6 +308,7 @@ export default function POSPage() {
   async function loadAreas() {
     try {
       const response = await api.get('/pos/areas');
+      console.log('áreas:', JSON.stringify(response.data[0]));
       setAreas(response.data || []);
     } catch (error) {
       console.error('Error loading areas:', error);
