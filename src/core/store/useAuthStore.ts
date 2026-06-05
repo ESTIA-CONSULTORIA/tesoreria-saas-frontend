@@ -27,12 +27,13 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   token: localStorage.getItem("access_token"),
   tenantId: localStorage.getItem("tenant_id"),
-  user: null,
+  user: JSON.parse(localStorage.getItem("user") || "null"),
   modulosActivos: JSON.parse(localStorage.getItem("modulos_activos") || "[]"),
 
   login: (token, tenantId, user, modulosActivos = []) => {
     localStorage.setItem("access_token", token);
     localStorage.setItem("tenant_id", tenantId);
+    localStorage.setItem("user", JSON.stringify(user));
     localStorage.setItem("modulos_activos", JSON.stringify(modulosActivos));
 
     set({
@@ -46,6 +47,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("tenant_id");
+    localStorage.removeItem("user");
     localStorage.removeItem("modulos_activos");
 
     set({
