@@ -82,6 +82,7 @@ export default function POSPage() {
   const [activeTab, setActiveTab] = useState<TabType>("terminal");
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  const token = useAuthStore((state) => state.token);
   const { config } = useLoginConfigStore();
   const isAdminOrSoporte = user?.roleCode === "ADMIN" || user?.roleCode === "SOPORTE";
 
@@ -249,6 +250,7 @@ export default function POSPage() {
   });
 
   useEffect(() => {
+    if (!token) return; // esperar token
     const savedCashier = localStorage.getItem('selected_cashier');
     loadCategories().then((cats) => {
       loadProducts(cats);
@@ -274,7 +276,7 @@ export default function POSPage() {
         setShowLoginScreen(true);
       }
     });
-  }, [user]);
+  }, [token]);
 
   useEffect(() => {
     const savedCashier = localStorage.getItem('selected_cashier');
@@ -3493,7 +3495,22 @@ export default function POSPage() {
                 Cancelar
               </button>
               <button
-                onClick={() => navigate('/dashboard')}
+                onClick={() => {
+                  if (user?.roleCode === 'CAJERO') {
+                    // NO limpiar selected_cashier si hay turno abierto
+                    if (!shift) {
+                      localStorage.removeItem('selected_cashier');
+                    }
+                    logout();
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('modulos_activos');
+                    localStorage.removeItem('tenant_id');
+                    navigate('/');
+                  } else {
+                    navigate('/dashboard');
+                  }
+                }}
                 className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
               >
                 Salir
