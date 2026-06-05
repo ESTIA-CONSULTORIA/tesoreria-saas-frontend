@@ -260,7 +260,7 @@ export default function POSPage() {
       if (user?.roleCode === 'CAJERO') {
         setShowLoginScreen(false);
         if (openShift) {
-          setSelectedCashier(user?.id || '');
+          setSelectedCashier(localStorage.getItem('selected_cashier') || user?.id || '');
         } else {
           // Si no hay turno abierto, mostrar modal de apertura
           setShowOpenShiftModal(true);
@@ -1003,6 +1003,10 @@ export default function POSPage() {
                     setShowExitConfirmModal(true);
                   } else {
                     if (user?.roleCode === 'CAJERO') {
+                      // NO limpiar selected_cashier si hay turno abierto
+                      if (!shift) {
+                        localStorage.removeItem('selected_cashier');
+                      }
                       logout();
                       navigate('/');
                     } else {
@@ -3200,9 +3204,16 @@ export default function POSPage() {
                   <div key={denom} className="flex items-center gap-2 mb-2">
                     <span className="w-20 text-sm">${denom} ×</span>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       value={cashCounts[denom] || 0}
-                      onChange={(e) => setCashCounts({ ...cashCounts, [denom]: Number(e.target.value) })}
+                      onChange={(e) => {
+                        let val = e.target.value.replace(/[^0-9]/g, '');
+                        if (val.startsWith('0') && val.length > 1) {
+                          val = val.slice(1);
+                        }
+                        setCashCounts({ ...cashCounts, [denom]: Number(val) || 0 });
+                      }}
                       className="w-20 px-2 py-1 rounded bg-slate-700 text-white text-sm"
                     />
                     <span className="text-sm text-slate-400">= ${(cashCounts[denom] || 0) * denom}</span>
@@ -3220,9 +3231,16 @@ export default function POSPage() {
                   <div className="flex items-center gap-2">
                     <span className="w-32 text-sm">Terminal débito:</span>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       value={debitoDeclarado}
-                      onChange={(e) => setDebitoDeclarado(e.target.value)}
+                      onChange={(e) => {
+                        let val = e.target.value.replace(/[^0-9.]/g, '');
+                        if (val.startsWith('0') && val.length > 1 && val[1] !== '.') {
+                          val = val.slice(1);
+                        }
+                        setDebitoDeclarado(val);
+                      }}
                       placeholder="0.00"
                       className="flex-1 px-2 py-1 rounded bg-slate-700 text-white text-sm"
                     />
@@ -3230,9 +3248,16 @@ export default function POSPage() {
                   <div className="flex items-center gap-2">
                     <span className="w-32 text-sm">Terminal crédito:</span>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       value={creditoDeclarado}
-                      onChange={(e) => setCreditoDeclarado(e.target.value)}
+                      onChange={(e) => {
+                        let val = e.target.value.replace(/[^0-9.]/g, '');
+                        if (val.startsWith('0') && val.length > 1 && val[1] !== '.') {
+                          val = val.slice(1);
+                        }
+                        setCreditoDeclarado(val);
+                      }}
                       placeholder="0.00"
                       className="flex-1 px-2 py-1 rounded bg-slate-700 text-white text-sm"
                     />
@@ -3240,9 +3265,16 @@ export default function POSPage() {
                   <div className="flex items-center gap-2">
                     <span className="w-32 text-sm">Transferencias:</span>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       value={transferenciaDeclarada}
-                      onChange={(e) => setTransferenciaDeclarada(e.target.value)}
+                      onChange={(e) => {
+                        let val = e.target.value.replace(/[^0-9.]/g, '');
+                        if (val.startsWith('0') && val.length > 1 && val[1] !== '.') {
+                          val = val.slice(1);
+                        }
+                        setTransferenciaDeclarada(val);
+                      }}
                       placeholder="0.00"
                       className="flex-1 px-2 py-1 rounded bg-slate-700 text-white text-sm"
                     />
@@ -3250,9 +3282,16 @@ export default function POSPage() {
                   <div className="flex items-center gap-2">
                     <span className="w-32 text-sm">Vales/Cupones:</span>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       value={valesDeclarados}
-                      onChange={(e) => setValesDeclarados(e.target.value)}
+                      onChange={(e) => {
+                        let val = e.target.value.replace(/[^0-9.]/g, '');
+                        if (val.startsWith('0') && val.length > 1 && val[1] !== '.') {
+                          val = val.slice(1);
+                        }
+                        setValesDeclarados(val);
+                      }}
                       placeholder="0.00"
                       className="flex-1 px-2 py-1 rounded bg-slate-700 text-white text-sm"
                     />
