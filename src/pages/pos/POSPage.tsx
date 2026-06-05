@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
+import { useLoginConfigStore } from "../../core/store/useLoginConfigStore";
 
 type TabType = "terminal" | "productos" | "categorias" | "areas" | "turnos" | "hardware" | "parametros";
 
@@ -81,6 +82,7 @@ export default function POSPage() {
   const [activeTab, setActiveTab] = useState<TabType>("terminal");
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  const { config } = useLoginConfigStore();
   const isAdminOrSoporte = user?.roleCode === "ADMIN" || user?.roleCode === "SOPORTE";
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -94,6 +96,10 @@ export default function POSPage() {
   const [salesFilter, setSalesFilter] = useState<string>("all");
   const [showReceipt, setShowReceipt] = useState(false);
   const [currentSale, setCurrentSale] = useState<Sale | null>(null);
+  const [ticketMessage, setTicketMessage] = useState("");
+  const [requireInvoice, setRequireInvoice] = useState(false);
+  const [invoiceRfc, setInvoiceRfc] = useState("");
+  const [invoiceEmail, setInvoiceEmail] = useState("");
   const [showOpenShiftModal, setShowOpenShiftModal] = useState(false);
   const [initialFund, setInitialFund] = useState<string>("");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -255,6 +261,9 @@ export default function POSPage() {
         setShowLoginScreen(false);
         if (openShift) {
           setSelectedCashier(user?.id || '');
+        } else {
+          // Si no hay turno abierto, mostrar modal de apertura
+          setShowOpenShiftModal(true);
         }
       } else if (openShift && savedCashier) {
         // Si es ADMIN/SOPORTE, mostrar login de cajero si hay turno abierto
@@ -2586,7 +2595,12 @@ export default function POSPage() {
                       if (key === "⌫") {
                         setPaymentAmount(paymentAmount.slice(0, -1));
                       } else {
-                        setPaymentAmount(paymentAmount + key);
+                        let newAmount = paymentAmount + key;
+                        // Eliminar cero a la izquierda si no es decimal
+                        if (newAmount.startsWith('0') && newAmount.length > 1 && newAmount[1] !== '.') {
+                          newAmount = newAmount.slice(1);
+                        }
+                        setPaymentAmount(newAmount);
                       }
                     }}
                     className="h-16 rounded-lg bg-slate-700 hover:bg-slate-600 text-2xl font-medium transition-colors"
@@ -2595,6 +2609,14 @@ export default function POSPage() {
                   </button>
                 ))}
               </div>
+
+              {/* Botón Exacto */}
+              <button
+                onClick={() => setPaymentAmount(getPending().toFixed(2))}
+                className="w-full py-3 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 mb-4"
+              >
+                Exacto ${getPending().toFixed(2)}
+              </button>
 
               {/* Botón agregar pago */}
               <button
@@ -2739,40 +2761,112 @@ export default function POSPage() {
       {/* MODAL TICKET DE VENTA */}
       {showReceipt && currentSale && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white text-black rounded-xl p-6 w-96">
+          <div className="bg-white text-black rounded-xl p-6 w-[400px] max-h-[90vh] overflow-y-auto">
+            {/* Header del ticket */}
             <div className="text-center mb-4">
-              <h3 className="text-lg font-bold">Ticket de Venta</h3>
-              <p className="text-sm text-slate-600">{currentSale.folio}</p>
+              {config.logoUrl && (
+                <img src={config.logoUrl} alt="Logo" className="w-20 h-20 mx-auto mb-2 object-contain" />
+              )}
+              <h3 className="text-xl font-bold">{config.companyName || 'Empresa'}</h3>
+              <p className="text-xs text-slate-600 mt-1">Dirección: Calle Demo #123, Col. Centro</p>
+              <p className="text-xs text-slate-600">RFC: XAXX010101000</p>
+              <p className="text-xs text-slate-600">Tel: (555) 123-4567</p>
+              <div className="border-t border-slate-300 my-2"></div>
+              <p className="text-sm font-semibold">Ticket #{currentSale.folio}</p>
+              <p className="text-xs text-slate-600">{new Date(currentSale.fecha).toLocaleString('es-MX')}</p>
             </div>
-            <div className="space-y-2 mb-4">
+
+            {/* Productos */}
+            <div className="space-y-1 mb-4 text-sm">
               {currentSale.items.map((item, index) => (
-                <div key={index} className="flex justify-between text-sm">
-                  <span>{item.nombre} x{item.cantidad}</span>
-                  <span>${item.subtotal.toFixed(2)}</span>
+                <div key={index} className="flex justify-between">
+                  <div className="flex-1">
+                    <p className="font-medium">{item.nombre}</p>
+                    <p className="text-xs text-slate-600">
+                      {item.cantidad} x ${Number(item.precioUnitario).toFixed(2)}
+                    </p>
+                  </div>
+                  <span className="font-semibold">${item.subtotal.toFixed(2)}</span>
                 </div>
               ))}
-              <div className="border-t pt-2 mt-2">
-                <div className="flex justify-between font-bold">
-                  <span>TOTAL</span>
-                  <span>${Number(currentSale.total).toFixed(2)}</span>
-                </div>
+            </div>
+
+            {/* Totales */}
+            <div className="border-t border-slate-300 pt-2 mt-2 space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span>${(Number(currentSale.total) / 1.16).toFixed(2)}</span>
               </div>
-              <div className="border-t pt-2 mt-2">
-                <p className="text-sm font-semibold mb-2">Formas de Pago:</p>
-                {Array.isArray(currentSale.formasPago) ? currentSale.formasPago.map((pf: any, idx: number) => (
-                  <div key={idx} className="text-xs flex justify-between">
-                    <span>{pf.forma}{pf.ultimos4Digitos ? ` ****${pf.ultimos4Digitos}` : ''}</span>
-                    <span>${pf.monto.toFixed(2)}</span>
-                  </div>
-                )) : (
-                  <div className="text-xs flex justify-between">
-                    <span>{currentSale.formaPago}</span>
-                    <span>${Number(currentSale.total).toFixed(2)}</span>
-                  </div>
-                )}
+              <div className="flex justify-between">
+                <span>IVA (16%)</span>
+                <span>${((Number(currentSale.total) / 1.16) * 0.16).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between font-bold text-lg border-t border-slate-300 pt-2 mt-2">
+                <span>TOTAL</span>
+                <span>${Number(currentSale.total).toFixed(2)}</span>
               </div>
             </div>
-            <div className="flex gap-2">
+
+            {/* Formas de pago */}
+            <div className="border-t border-slate-300 pt-2 mt-2">
+              <p className="text-sm font-semibold mb-2">Formas de Pago:</p>
+              {Array.isArray(currentSale.formasPago) ? currentSale.formasPago.map((pf: any, idx: number) => (
+                <div key={idx} className="text-xs flex justify-between">
+                  <span>{pf.forma}{pf.ultimos4Digitos ? ` ****${pf.ultimos4Digitos}` : ''}</span>
+                  <span>${pf.monto.toFixed(2)}</span>
+                </div>
+              )) : (
+                <div className="text-xs flex justify-between">
+                  <span>{currentSale.formaPago}</span>
+                  <span>${Number(currentSale.total).toFixed(2)}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Mensaje opcional */}
+            <div className="border-t border-slate-300 pt-2 mt-2">
+              <label className="text-sm font-semibold block mb-1">Mensaje (opcional):</label>
+              <textarea
+                value={ticketMessage}
+                onChange={(e) => setTicketMessage(e.target.value)}
+                className="w-full p-2 border border-slate-300 rounded text-sm"
+                rows={2}
+                placeholder="¡Gracias por su compra!"
+              />
+            </div>
+
+            {/* Datos de facturación */}
+            <div className="border-t border-slate-300 pt-2 mt-2">
+              <label className="flex items-center gap-2 text-sm font-semibold mb-2">
+                <input
+                  type="checkbox"
+                  checked={requireInvoice}
+                  onChange={(e) => setRequireInvoice(e.target.checked)}
+                />
+                ¿Requiere factura?
+              </label>
+              {requireInvoice && (
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={invoiceRfc}
+                    onChange={(e) => setInvoiceRfc(e.target.value)}
+                    placeholder="RFC"
+                    className="w-full p-2 border border-slate-300 rounded text-sm"
+                  />
+                  <input
+                    type="email"
+                    value={invoiceEmail}
+                    onChange={(e) => setInvoiceEmail(e.target.value)}
+                    placeholder="Email para factura"
+                    className="w-full p-2 border border-slate-300 rounded text-sm"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Botones */}
+            <div className="flex gap-2 mt-4">
               <button
                 onClick={() => setShowReceipt(false)}
                 className="flex-1 py-2 rounded bg-slate-200 text-black hover:bg-slate-300"
