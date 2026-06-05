@@ -1399,7 +1399,7 @@ export default function POSPage() {
                     </div>
                   </div>
                   <p className="text-sm text-slate-400">{cat.description || "Sin descripción"}</p>
-                  <p className="text-xs text-slate-500 mt-2">{cat.productCount || 0} productos</p>
+                  <p className="text-xs text-slate-500 mt-2">{cat.products?.length || cat.productCount || 0} productos</p>
                 </div>
               ))
             )}
