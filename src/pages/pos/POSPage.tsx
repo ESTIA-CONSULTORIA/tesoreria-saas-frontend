@@ -156,7 +156,7 @@ export default function POSPage() {
   const [valesDeclarados, setValesDeclarados] = useState<string>("");
   
   // Premium payment modal state
-  const [selectedPaymentForm, setSelectedPaymentForm] = useState<"EFECTIVO" | "TARJETA" | "DEBITO" | "CREDITO" | "TRANSFERENCIA" | "CORTESIA" | null>(null);
+  const [selectedPaymentForm, setSelectedPaymentForm] = useState<"EFECTIVO" | "TARJETA" | "DEBITO" | "CREDITO" | "TRANSFERENCIA" | "CORTESIA" | null>("EFECTIVO");
   const [paymentAmount, setPaymentAmount] = useState<string>("");
   const [cardLast4, setCardLast4] = useState<string>("");
   const [cardBank, setCardBank] = useState<string>("");
@@ -2612,7 +2612,12 @@ export default function POSPage() {
 
               {/* Botón Exacto */}
               <button
-                onClick={() => setPaymentAmount(getPending().toFixed(2))}
+                onClick={() => {
+                  if (!selectedPaymentForm) {
+                    setSelectedPaymentForm("EFECTIVO");
+                  }
+                  setPaymentAmount(getPending().toFixed(2));
+                }}
                 className="w-full py-3 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 mb-4"
               >
                 Exacto ${getPending().toFixed(2)}
