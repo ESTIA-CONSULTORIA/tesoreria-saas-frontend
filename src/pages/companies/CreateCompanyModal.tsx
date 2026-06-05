@@ -1,23 +1,51 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "../../core/api/api";
+
+interface Company {
+  id: string;
+  legalName: string;
+  tradeName: string;
+  taxId?: string;
+  baseCurrency: string;
+  isActive: boolean;
+}
 
 interface Props {
   open: boolean;
   onClose: () => void;
   onCreated: () => void;
+  company?: Company | null;
 }
 
 export default function CreateCompanyModal({
   open,
   onClose,
   onCreated,
+  company,
 }: Props) {
   const [legalName, setLegalName] = useState("");
   const [tradeName, setTradeName] = useState("");
   const [taxId, setTaxId] = useState("");
   const [baseCurrency, setBaseCurrency] = useState("MXN");
+  const [isActive, setIsActive] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (company) {
+      setLegalName(company.legalName);
+      setTradeName(company.tradeName);
+      setTaxId(company.taxId || "");
+      setBaseCurrency(company.baseCurrency);
+      setIsActive(company.isActive);
+    } else {
+      setLegalName("");
+      setTradeName("");
+      setTaxId("");
+      setBaseCurrency("MXN");
+      setIsActive(true);
+    }
+  }, [company, open]);
 
   if (!open) return null;
 
@@ -28,13 +56,23 @@ export default function CreateCompanyModal({
       setLoading(true);
       setError("");
 
-      await api.post("/companies", {
-  tenantId: localStorage.getItem("tenant_id") || "test-tenant",
-  legalName,
-  tradeName,
-  taxId,
-  baseCurrency,
-});
+      if (company) {
+        await api.patch(`/companies/${company.id}`, {
+          legalName,
+          tradeName,
+          taxId,
+          baseCurrency,
+          isActive,
+        });
+      } else {
+        await api.post("/companies", {
+          tenantId: localStorage.getItem("tenant_id") || "test-tenant",
+          legalName,
+          tradeName,
+          taxId,
+          baseCurrency,
+        });
+      }
 
       onCreated();
       onClose();
@@ -43,10 +81,11 @@ export default function CreateCompanyModal({
       setTradeName("");
       setTaxId("");
       setBaseCurrency("MXN");
+      setIsActive(true);
     } catch (err: any) {
       setError(
         err.response?.data?.message ||
-          "No fue posible crear la empresa"
+          "No fue posible guardar la empresa"
       );
     } finally {
       setLoading(false);
@@ -61,10 +100,10 @@ export default function CreateCompanyModal({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-2xl font-bold text-white">
-                Nueva Empresa
+                {company ? "Editar Empresa" : "Nueva Empresa"}
               </h3>
               <p className="text-sm text-slate-400">
-                Registra una empresa para el tenant actual
+                {company ? "Modifica los datos de la empresa" : "Registra una empresa para el tenant actual"}
               </p>
             </div>
 
@@ -118,11 +157,23 @@ export default function CreateCompanyModal({
               <option value="USD">USD</option>
             </select>
 
+            {company && (
+              <label className="flex items-center gap-2 text-sm text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={isActive}
+                  onChange={(e) => setIsActive(e.target.checked)}
+                  className="rounded"
+                />
+                Activa
+              </label>
+            )}
+
             <button
               disabled={loading}
               className="w-full rounded-lg bg-blue-600 p-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
             >
-              {loading ? "Guardando..." : "Guardar empresa"}
+              {loading ? "Guardando..." : company ? "Actualizar empresa" : "Guardar empresa"}
             </button>
           </form>
         </div>

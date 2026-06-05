@@ -17,6 +17,7 @@ export default function BranchesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
 
   useEffect(() => {
     loadBranches();
@@ -36,12 +37,38 @@ export default function BranchesPage() {
     }
   }
 
+  async function deleteBranch(id: string) {
+    if (!confirm("¿Estás seguro de eliminar esta sucursal?")) return;
+    try {
+      await api.delete(`/branches/${id}`);
+      loadBranches();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible eliminar la sucursal");
+    }
+  }
+
+  function handleEdit(branch: Branch) {
+    setSelectedBranch(branch);
+    setModalOpen(true);
+  }
+
+  function handleCreate() {
+    setSelectedBranch(null);
+    setModalOpen(true);
+  }
+
+  function handleCloseModal() {
+    setModalOpen(false);
+    setSelectedBranch(null);
+  }
+
   return (
     <MainLayout>
       <CreateBranchModal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={handleCloseModal}
         onCreated={loadBranches}
+        branch={selectedBranch}
       />
 
       <div className="space-y-6">
@@ -52,7 +79,7 @@ export default function BranchesPage() {
           </div>
 
           <button
-            onClick={() => setModalOpen(true)}
+            onClick={handleCreate}
             className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
           >
             + Nueva Sucursal
@@ -93,9 +120,23 @@ export default function BranchesPage() {
                       </p>
                     </div>
 
-                    <span className="rounded-full bg-green-900/40 px-3 py-1 text-sm text-green-300">
-                      {branch.isActive ? "Activa" : "Inactiva"}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-full bg-green-900/40 px-3 py-1 text-sm text-green-300">
+                        {branch.isActive ? "Activa" : "Inactiva"}
+                      </span>
+                      <button
+                        onClick={() => handleEdit(branch)}
+                        className="rounded-lg bg-slate-700 px-3 py-2 text-sm text-white hover:bg-slate-600"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => deleteBranch(branch.id)}
+                        className="rounded-lg bg-red-600 px-3 py-2 text-sm text-white hover:bg-red-700"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))

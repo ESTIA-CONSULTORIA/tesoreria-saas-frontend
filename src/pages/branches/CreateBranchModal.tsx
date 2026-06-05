@@ -1,19 +1,50 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "../../core/api/api";
+
+interface Branch {
+  id: string;
+  name: string;
+  code?: string;
+  city?: string;
+  address?: string;
+  state?: string;
+  isActive: boolean;
+}
 
 interface Props {
   open: boolean;
   onClose: () => void;
   onCreated: () => void;
+  branch?: Branch | null;
 }
 
-export default function CreateBranchModal({ open, onClose, onCreated }: Props) {
+export default function CreateBranchModal({ open, onClose, onCreated, branch }: Props) {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [city, setCity] = useState("");
   const [address, setAddress] = useState("");
+  const [state, setState] = useState("");
+  const [isActive, setIsActive] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (branch) {
+      setName(branch.name);
+      setCode(branch.code || "");
+      setCity(branch.city || "");
+      setAddress(branch.address || "");
+      setState(branch.state || "");
+      setIsActive(branch.isActive);
+    } else {
+      setName("");
+      setCode("");
+      setCity("");
+      setAddress("");
+      setState("");
+      setIsActive(true);
+    }
+  }, [branch, open]);
 
   if (!open) return null;
 
@@ -24,13 +55,25 @@ export default function CreateBranchModal({ open, onClose, onCreated }: Props) {
       setLoading(true);
       setError("");
 
-      await api.post("/branches", {
-        tenantId: localStorage.getItem("tenant_id") || "test-tenant",
-        name,
-        code,
-        city,
-        address,
-      });
+      if (branch) {
+        await api.patch(`/branches/${branch.id}`, {
+          name,
+          code,
+          city,
+          address,
+          state,
+          isActive,
+        });
+      } else {
+        await api.post("/branches", {
+          companyId: localStorage.getItem("tenant_id") || "test-tenant",
+          name,
+          code,
+          city,
+          address,
+          state,
+        });
+      }
 
       onCreated();
       onClose();
@@ -39,8 +82,10 @@ export default function CreateBranchModal({ open, onClose, onCreated }: Props) {
       setCode("");
       setCity("");
       setAddress("");
+      setState("");
+      setIsActive(true);
     } catch (err: any) {
-      setError(err.response?.data?.message || "No fue posible crear la sucursal");
+      setError(err.response?.data?.message || "No fue posible guardar la sucursal");
     } finally {
       setLoading(false);
     }
@@ -53,9 +98,9 @@ export default function CreateBranchModal({ open, onClose, onCreated }: Props) {
         <div className="flex-shrink-0 p-6 border-b border-slate-800">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-2xl font-bold text-white">Nueva Sucursal</h3>
+              <h3 className="text-2xl font-bold text-white">{branch ? "Editar Sucursal" : "Nueva Sucursal"}</h3>
               <p className="text-sm text-slate-400">
-                Registra una sucursal para el tenant actual
+                {branch ? "Modifica los datos de la sucursal" : "Registra una sucursal para el tenant actual"}
               </p>
             </div>
 
@@ -106,11 +151,30 @@ export default function CreateBranchModal({ open, onClose, onCreated }: Props) {
               className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
             />
 
+            <input
+              value={state}
+              onChange={(e) => setState(e.target.value)}
+              placeholder="Estado"
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+            />
+
+            {branch && (
+              <label className="flex items-center gap-2 text-sm text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={isActive}
+                  onChange={(e) => setIsActive(e.target.checked)}
+                  className="rounded"
+                />
+                Activa
+              </label>
+            )}
+
             <button
               disabled={loading}
               className="w-full rounded-lg bg-blue-600 p-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
             >
-              {loading ? "Guardando..." : "Guardar sucursal"}
+              {loading ? "Guardando..." : branch ? "Actualizar sucursal" : "Guardar sucursal"}
             </button>
           </form>
         </div>

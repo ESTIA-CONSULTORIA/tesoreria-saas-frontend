@@ -17,6 +17,7 @@ export default function CompaniesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
 
   useEffect(() => {
     loadCompanies();
@@ -39,12 +40,38 @@ export default function CompaniesPage() {
     }
   }
 
+  async function deleteCompany(id: string) {
+    if (!confirm("¿Estás seguro de eliminar esta empresa?")) return;
+    try {
+      await api.delete(`/companies/${id}`);
+      loadCompanies();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible eliminar la empresa");
+    }
+  }
+
+  function handleEdit(company: Company) {
+    setSelectedCompany(company);
+    setModalOpen(true);
+  }
+
+  function handleCreate() {
+    setSelectedCompany(null);
+    setModalOpen(true);
+  }
+
+  function handleCloseModal() {
+    setModalOpen(false);
+    setSelectedCompany(null);
+  }
+
   return (
     <MainLayout>
       <CreateCompanyModal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={handleCloseModal}
         onCreated={loadCompanies}
+        company={selectedCompany}
       />
 
       <div className="space-y-6">
@@ -57,7 +84,7 @@ export default function CompaniesPage() {
           </div>
 
           <button
-            onClick={() => setModalOpen(true)}
+            onClick={handleCreate}
             className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
           >
             + Nueva Empresa
@@ -102,9 +129,23 @@ export default function CompaniesPage() {
                       </p>
                     </div>
 
-                    <span className="rounded-full bg-green-900/40 px-3 py-1 text-sm text-green-300">
-                      {company.isActive ? "Activa" : "Inactiva"}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-full bg-green-900/40 px-3 py-1 text-sm text-green-300">
+                        {company.isActive ? "Activa" : "Inactiva"}
+                      </span>
+                      <button
+                        onClick={() => handleEdit(company)}
+                        className="rounded-lg bg-slate-700 px-3 py-2 text-sm text-white hover:bg-slate-600"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => deleteCompany(company.id)}
+                        className="rounded-lg bg-red-600 px-3 py-2 text-sm text-white hover:bg-red-700"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))

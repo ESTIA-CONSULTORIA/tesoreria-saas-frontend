@@ -1,10 +1,23 @@
 import { useState, useEffect } from "react";
 import { api } from "../../core/api/api";
 
+interface BankAccount {
+  id: string;
+  branchId: string;
+  name: string;
+  accountNumber: string;
+  bank: string;
+  initialBalance: number;
+  currency: string;
+  type: string;
+  isActive: boolean;
+}
+
 interface Props {
   open: boolean;
   onClose: () => void;
   onCreated: () => void;
+  bankAccount?: BankAccount | null;
 }
 
 interface Branch {
@@ -13,7 +26,7 @@ interface Branch {
   code: string;
 }
 
-export default function CreateBankModal({ open, onClose, onCreated }: Props) {
+export default function CreateBankModal({ open, onClose, onCreated, bankAccount }: Props) {
   const [branchId, setBranchId] = useState("");
   const [name, setName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
@@ -21,6 +34,7 @@ export default function CreateBankModal({ open, onClose, onCreated }: Props) {
   const [initialBalance, setInitialBalance] = useState("0");
   const [currency, setCurrency] = useState("MXN");
   const [type, setType] = useState("BANCO");
+  const [isActive, setIsActive] = useState(true);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -30,6 +44,28 @@ export default function CreateBankModal({ open, onClose, onCreated }: Props) {
       loadBranches();
     }
   }, [open]);
+
+  useEffect(() => {
+    if (bankAccount) {
+      setBranchId(bankAccount.branchId);
+      setName(bankAccount.name);
+      setAccountNumber(bankAccount.accountNumber);
+      setBank(bankAccount.bank);
+      setInitialBalance(bankAccount.initialBalance.toString());
+      setCurrency(bankAccount.currency);
+      setType(bankAccount.type);
+      setIsActive(bankAccount.isActive);
+    } else {
+      setBranchId("");
+      setName("");
+      setAccountNumber("");
+      setBank("");
+      setInitialBalance("0");
+      setCurrency("MXN");
+      setType("BANCO");
+      setIsActive(true);
+    }
+  }, [bankAccount, open]);
 
   async function loadBranches() {
     try {
@@ -47,15 +83,29 @@ export default function CreateBankModal({ open, onClose, onCreated }: Props) {
     try {
       setLoading(true);
       setError("");
-      await api.post("/banks", {
-        branchId,
-        name,
-        accountNumber,
-        bank,
-        initialBalance: Number(initialBalance),
-        currency,
-        type,
-      });
+
+      if (bankAccount) {
+        await api.patch(`/banks/${bankAccount.id}`, {
+          branchId,
+          name,
+          accountNumber,
+          bank,
+          currency,
+          type,
+          isActive,
+        });
+      } else {
+        await api.post("/banks", {
+          branchId,
+          name,
+          accountNumber,
+          bank,
+          initialBalance: Number(initialBalance),
+          currency,
+          type,
+        });
+      }
+
       onCreated();
       onClose();
       setBranchId("");
@@ -65,8 +115,9 @@ export default function CreateBankModal({ open, onClose, onCreated }: Props) {
       setInitialBalance("0");
       setCurrency("MXN");
       setType("BANCO");
+      setIsActive(true);
     } catch (err: any) {
-      setError(err.response?.data?.message || "No fue posible crear la cuenta");
+      setError(err.response?.data?.message || "No fue posible guardar la cuenta");
     } finally {
       setLoading(false);
     }
@@ -79,8 +130,8 @@ export default function CreateBankModal({ open, onClose, onCreated }: Props) {
         <div className="flex-shrink-0 p-6 border-b border-slate-800">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-2xl font-bold text-white">Nueva Cuenta Bancaria</h3>
-              <p className="text-sm text-slate-400">Registro de cuenta por sucursal</p>
+              <h3 className="text-2xl font-bold text-white">{bankAccount ? "Editar Cuenta Bancaria" : "Nueva Cuenta Bancaria"}</h3>
+              <p className="text-sm text-slate-400">{bankAccount ? "Modifica los datos de la cuenta" : "Registro de cuenta por sucursal"}</p>
             </div>
             <button onClick={onClose} className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700">Cerrar</button>
           </div>
@@ -106,7 +157,9 @@ export default function CreateBankModal({ open, onClose, onCreated }: Props) {
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre" required className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500" />
             <input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} placeholder="Numero de cuenta" required className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500" />
             <input value={bank} onChange={(e) => setBank(e.target.value)} placeholder="Banco" required className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500" />
-            <input type="number" step="0.01" value={initialBalance} onChange={(e) => setInitialBalance(e.target.value)} placeholder="Saldo inicial" required className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500" />
+            {!bankAccount && (
+              <input type="number" step="0.01" value={initialBalance} onChange={(e) => setInitialBalance(e.target.value)} placeholder="Saldo inicial" required className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500" />
+            )}
             <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500">
               <option value="MXN">MXN</option>
               <option value="USD">USD</option>
@@ -116,8 +169,19 @@ export default function CreateBankModal({ open, onClose, onCreated }: Props) {
               <option value="BANCO">BANCO</option>
               <option value="CAJA">CAJA</option>
             </select>
+            {bankAccount && (
+              <label className="flex items-center gap-2 text-sm text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={isActive}
+                  onChange={(e) => setIsActive(e.target.checked)}
+                  className="rounded"
+                />
+                Activa
+              </label>
+            )}
             <button disabled={loading} className="w-full rounded-lg bg-blue-600 p-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-60">
-              {loading ? "Guardando..." : "Guardar cuenta"}
+              {loading ? "Guardando..." : bankAccount ? "Actualizar cuenta" : "Guardar cuenta"}
             </button>
           </form>
         </div>

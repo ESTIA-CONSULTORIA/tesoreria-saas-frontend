@@ -357,6 +357,11 @@ export default function POSPage() {
       const user = JSON.parse(localStorage.getItem('user') || 'null');
       const savedCashier = localStorage.getItem('selected_cashier');
       
+      console.log('loadOpenShift params:', {
+        cajero: savedCashier || user?.id,
+        tenantId: user?.tenantId
+      });
+      
       const response = await api.get("/pos/shifts/open", {
         params: {
           cajero: savedCashier || user?.id || "current-user-id",

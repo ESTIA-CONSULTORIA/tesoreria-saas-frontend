@@ -41,6 +41,7 @@ export default function UsersPage() {
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [permissionsModalOpen, setPermissionsModalOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [localPermissions, setLocalPermissions] = useState<Permission[]>([]);
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
 
@@ -80,6 +81,31 @@ export default function UsersPage() {
     setSelectedRole(role);
     setLocalPermissions(role.permissions || []);
     setPermissionsModalOpen(true);
+  }
+
+  async function deleteUser(id: string) {
+    if (!confirm("¿Estás seguro de eliminar este usuario?")) return;
+    try {
+      await api.delete(`/users/${id}`);
+      loadData();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible eliminar el usuario");
+    }
+  }
+
+  function handleEditUser(user: User) {
+    setSelectedUser(user);
+    setModalOpen(true);
+  }
+
+  function handleCreateUser() {
+    setSelectedUser(null);
+    setModalOpen(true);
+  }
+
+  function handleCloseUserModal() {
+    setModalOpen(false);
+    setSelectedUser(null);
   }
 
   async function updatePermission(module: string, field: keyof Permission, value: boolean) {
@@ -330,8 +356,9 @@ export default function UsersPage() {
     <MainLayout>
       <CreateUserModal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={handleCloseUserModal}
         onCreated={loadData}
+        user={selectedUser}
       />
       <CreateRoleModal
         open={roleModalOpen}
@@ -354,7 +381,7 @@ export default function UsersPage() {
               + Nuevo Rol
             </button>
             <button
-              onClick={() => setModalOpen(true)}
+              onClick={handleCreateUser}
               className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
             >
               + Nuevo Usuario
@@ -434,9 +461,23 @@ export default function UsersPage() {
                           </p>
                         </div>
 
-                        <span className="rounded-full bg-green-900/40 px-3 py-1 text-sm text-green-300">
-                          {user.isActive ? "Activo" : "Inactivo"}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="rounded-full bg-green-900/40 px-3 py-1 text-sm text-green-300">
+                            {user.isActive ? "Activo" : "Inactivo"}
+                          </span>
+                          <button
+                            onClick={() => handleEditUser(user)}
+                            className="rounded-lg bg-slate-700 px-3 py-2 text-sm text-white hover:bg-slate-600"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => deleteUser(user.id)}
+                            className="rounded-lg bg-red-600 px-3 py-2 text-sm text-white hover:bg-red-700"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))
