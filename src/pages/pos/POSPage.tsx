@@ -251,11 +251,13 @@ export default function POSPage() {
   }, []);
 
   useEffect(() => {
-    // Show login screen if no shift is open and cashier hasn't been selected
-    if (!shift && !selectedCashier) {
+    const savedCashier = localStorage.getItem('selected_cashier');
+    if (!shift && !savedCashier) {
       setShowLoginScreen(true);
+    } else if (savedCashier && !selectedCashier) {
+      setSelectedCashier(savedCashier);
     }
-  }, [shift, selectedCashier]);
+  }, [shift]);
 
   // Auto-focus payment input when modal opens
   useEffect(() => {
@@ -432,7 +434,10 @@ export default function POSPage() {
         efectivoContado: Number(declaracion.efectivoContado) || 0,
       });
       setShift(null);
+      localStorage.removeItem('selected_cashier');
+      setSelectedCashier('');
       setShowCloseShiftModal(false);
+      setShowLoginScreen(true);
       alert("Turno cerrado exitosamente");
     } catch (error) {
       console.error("Error closing shift:", error);
