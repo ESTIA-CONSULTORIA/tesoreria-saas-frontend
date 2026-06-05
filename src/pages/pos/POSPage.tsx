@@ -990,7 +990,7 @@ export default function POSPage() {
               </div>
               {shift && (
                 <div className="text-sm text-slate-400">
-                  Turno: <span className="text-green-400">Abierto</span> ({shift.horaApertura})
+                  Turno: <span className="text-green-400">Abierto</span> ({shift.horaApertura || new Date().toLocaleTimeString('es-MX')})
                 </div>
               )}
             </div>
