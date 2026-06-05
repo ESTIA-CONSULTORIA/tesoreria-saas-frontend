@@ -8,8 +8,8 @@ interface Props {
 export default function ProtectedRoute({
   children,
 }: Props) {
-  const token = useAuthStore((state) => state.token);
-  const user = useAuthStore((state) => state.user);
+  const token = useAuthStore((state) => state.token) || localStorage.getItem('access_token');
+  const user = useAuthStore((state) => state.user) || JSON.parse(localStorage.getItem('user') || 'null');
 
   if (!token) {
     return <Navigate to="/" replace />;

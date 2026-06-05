@@ -304,15 +304,6 @@ function App() {
         }
       />
 
-      <Route
-        path="/pos"
-        element={
-          <ProtectedRoute>
-            <POSPage />
-          </ProtectedRoute>
-        }
-      />
-
       {/* Rutas de SOPORTE - Solo accesibles para rol SOPORTE */}
       <Route
         path="/soporte/dashboard"
