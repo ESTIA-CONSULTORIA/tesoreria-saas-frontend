@@ -15,7 +15,12 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    loadConfig();
+    const tenantId = localStorage.getItem('tenant_id');
+    if (tenantId) {
+      loadConfig(tenantId);
+    } else {
+      loadConfig();
+    }
   }, [loadConfig]);
 
   useEffect(() => {
@@ -69,17 +74,20 @@ export default function LoginPage() {
 
   // Verificar modo de mantenimiento
   if (config.maintenanceMode) {
+    const containerStyle = {
+      ...(config.backgroundImage && {
+        backgroundImage: `url(${config.backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }),
+    };
+
     return (
-      <div 
+      <div
         className="login-container min-h-screen flex items-center justify-center px-4"
-        style={{
-          backgroundImage: config.backgroundImage ? `url(${config.backgroundImage})` : 'none',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}
+        style={containerStyle}
       >
-        <div 
+        <div
           className="login-card w-full max-w-md p-8 rounded-lg text-center"
         >
           <div className="text-5xl mb-4">🔧</div>
@@ -99,26 +107,27 @@ export default function LoginPage() {
     );
   }
 
+  const containerStyle = {
+    ...(config.backgroundImage && {
+      backgroundImage: `url(${config.backgroundImage})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    }),
+  };
+
   return (
-    <div 
+    <div
       className="login-container min-h-screen flex items-center justify-center px-4"
-      style={{
-        backgroundImage: config.backgroundImage ? `url(${config.backgroundImage})` : 'none',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-      }}
+      style={containerStyle}
     >
       <div className="login-card w-full max-w-md p-8 rounded-lg">
         {/* Logo */}
         {config.logoUrl && (
-          <div className="flex justify-center mb-6">
-            <img 
-              src={config.logoUrl} 
-              alt="Logo" 
-              className="login-logo h-16 object-contain"
-            />
-          </div>
+          <img
+            src={config.logoUrl}
+            alt="Logo"
+            style={{ maxHeight: '56px', marginBottom: '20px', display: 'block', margin: '0 auto 20px' }}
+          />
         )}
 
         {/* Company Name */}
