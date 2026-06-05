@@ -1348,16 +1348,16 @@ export default function POSPage() {
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 rounded" style={{ backgroundColor: cat.color }}></div>
-                      <h3 className="font-semibold">{cat.nombre}</h3>
+                      <h3 className="font-semibold">{cat.name}</h3>
                     </div>
                     <div className="flex gap-1">
                       <button
                         onClick={() => {
                           setEditingCategory(cat);
                           setCategoryForm({
-                            nombre: cat.nombre,
+                            nombre: cat.name,
                             color: cat.color,
-                            descripcion: cat.descripcion || ""
+                            descripcion: cat.description || ""
                           });
                           setShowCategoryModal(true);
                         }}
@@ -1377,7 +1377,7 @@ export default function POSPage() {
                       </button>
                     </div>
                   </div>
-                  <p className="text-sm text-slate-400">{cat.descripcion || "Sin descripción"}</p>
+                  <p className="text-sm text-slate-400">{cat.description || "Sin descripción"}</p>
                   <p className="text-xs text-slate-500 mt-2">{cat.productCount || 0} productos</p>
                 </div>
               ))
