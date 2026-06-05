@@ -245,6 +245,8 @@ export default function POSPage() {
     loadCategories().then((cats) => {
       loadProducts(cats);
     });
+    loadPosCategories();
+    loadAreas();
     loadOpenShift();
   }, []);
 
@@ -261,6 +263,12 @@ export default function POSPage() {
       paymentInputRef.current.focus();
     }
   }, [showPaymentModal]);
+
+  // Load data when tab changes
+  useEffect(() => {
+    if (activeTab === 'categorias') loadPosCategories();
+    if (activeTab === 'areas') loadAreas();
+  }, [activeTab]);
 
   async function loadProducts(cats: any[]) {
     try {
@@ -285,6 +293,24 @@ export default function POSPage() {
     } catch (error) {
       console.error("Error loading categories:", error);
       return [];
+    }
+  }
+
+  async function loadPosCategories() {
+    try {
+      const response = await api.get('/pos/categories');
+      setPosCategories(response.data || []);
+    } catch (error) {
+      console.error('Error loading pos categories:', error);
+    }
+  }
+
+  async function loadAreas() {
+    try {
+      const response = await api.get('/pos/areas');
+      setAreas(response.data || []);
+    } catch (error) {
+      console.error('Error loading areas:', error);
     }
   }
 
