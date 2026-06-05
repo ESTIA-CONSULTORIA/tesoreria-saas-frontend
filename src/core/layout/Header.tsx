@@ -1,4 +1,5 @@
 import { useAuthStore } from "../store/useAuthStore";
+import CompanySelector from "../components/CompanySelector";
 
 interface Props {
   onMenuClick?: () => void;
@@ -32,6 +33,7 @@ export default function Header({ onMenuClick, onSearchClick }: Props) {
       </div>
 
       <div className="flex items-center gap-4">
+        <CompanySelector />
         <button
           onClick={onSearchClick}
           className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-colors"
