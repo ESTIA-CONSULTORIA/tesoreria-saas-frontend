@@ -328,10 +328,13 @@ export default function POSPage() {
 
   async function loadOpenShift() {
     try {
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      const savedCashier = localStorage.getItem('selected_cashier');
+      
       const response = await api.get("/pos/shifts/open", {
         params: {
-          cajero: "current-user-id",
-          sucursalId: "default-branch-id",
+          cajero: savedCashier || user?.id || "current-user-id",
+          sucursalId: user?.branchId || "default-branch-id",
         },
       });
       const shiftData = response.data ? {
