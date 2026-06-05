@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [cajero, setCajero] = useState("");
+  const [nip, setNip] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedAccess, setSelectedAccess] = useState<"main" | "pos" | null>(null);
@@ -103,9 +104,13 @@ export default function LoginPage() {
       setLoading(true);
       setError("");
 
-      const response = await api.post("/auth/login", {
-        email: cajero,
-        password,
+      const tenantId = localStorage.getItem('tenant_id');
+      const response = await api.post("/pos/cashiers/nip", {
+        nip,
+      }, {
+        headers: {
+          'tenant-id': tenantId || '',
+        },
       });
 
       const token = response.data.access_token;
@@ -117,7 +122,7 @@ export default function LoginPage() {
         user.tenantId || '',
         {
           id: user.id || "1",
-          email: cajero,
+          email: user.email || cajero,
           name: user.name || "Cajero",
           roleCode: user.roleCode,
           tenantId: user.tenantId,
@@ -128,11 +133,31 @@ export default function LoginPage() {
       navigate("/pos");
     } catch (error: any) {
       console.error(error);
-      setError(error.response?.data?.message || "Cajero o contraseña incorrectos");
+      setError(error.response?.data?.message || "NIP incorrecto");
     } finally {
       setLoading(false);
     }
   }
+
+  const handleNipInput = (value: string) => {
+    if (nip.length < 4) {
+      setNip(nip + value);
+    }
+  };
+
+  const handleNipDelete = () => {
+    setNip(nip.slice(0, -1));
+  };
+
+  const handleNipClear = () => {
+    setNip("");
+  };
+
+  useEffect(() => {
+    if (nip.length === 4 && !loading) {
+      handlePosLogin();
+    }
+  }, [nip]);
 
   // Verificar modo de mantenimiento
   if (config.maintenanceMode) {
@@ -373,34 +398,122 @@ export default function LoginPage() {
               </>
             ) : (
               <>
+                {/* Display de NIP */}
+                <div className="mb-8 text-center">
+                  <div className="flex justify-center gap-4 mb-3">
+                    {[0, 1, 2, 3].map((index) => (
+                      <div
+                        key={index}
+                        className="w-12 h-12 rounded-full flex items-center justify-center text-2xl"
+                        style={{
+                          backgroundColor: 'rgba(255,255,255,0.04)',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          color: '#D4AF37',
+                        }}
+                      >
+                        {index < nip.length ? '●' : '○'}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                    Ingresa tu NIP de 4 dígitos
+                  </p>
+                </div>
+
+                {/* Teclado numérico */}
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                  {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((num) => (
+                    <button
+                      key={num}
+                      onClick={() => handleNipInput(num)}
+                      className="w-16 h-16 rounded-lg text-2xl font-semibold transition-all"
+                      style={{
+                        backgroundColor: 'rgba(255,255,255,0.04)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        color: '#ffffff',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(212,175,55,0.1)';
+                        e.currentTarget.style.borderColor = 'rgba(212,175,55,0.3)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.04)';
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                      }}
+                    >
+                      {num}
+                    </button>
+                  ))}
+                  <button
+                    onClick={handleNipDelete}
+                    className="w-16 h-16 rounded-lg text-2xl font-semibold transition-all"
+                    style={{
+                      backgroundColor: 'rgba(239,68,68,0.1)',
+                      border: '1px solid rgba(239,68,68,0.2)',
+                      color: '#ef4444',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.2)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.1)';
+                    }}
+                  >
+                    ⌫
+                  </button>
+                  <button
+                    onClick={() => handleNipInput('0')}
+                    className="w-16 h-16 rounded-lg text-2xl font-semibold transition-all"
+                    style={{
+                      backgroundColor: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      color: '#ffffff',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(212,175,55,0.1)';
+                      e.currentTarget.style.borderColor = 'rgba(212,175,55,0.3)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.04)';
+                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                    }}
+                  >
+                    0
+                  </button>
+                  <button
+                    onClick={handleNipClear}
+                    className="w-16 h-16 rounded-lg text-2xl font-semibold transition-all"
+                    style={{
+                      backgroundColor: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      color: 'rgba(255,255,255,0.6)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.04)';
+                    }}
+                  >
+                    C
+                  </button>
+                </div>
+
+                {/* Input oculto para teclado físico */}
                 <input
                   type="text"
-                  placeholder="Código de cajero"
-                  value={cajero}
-                  onChange={(e) => setCajero(e.target.value)}
-                  className="mb-4 w-full p-3 rounded text-sm"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#ffffff' }}
-                />
-                <input
-                  type="password"
-                  placeholder="Contraseña"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handlePosLogin()}
-                  className="mb-6 w-full p-3 rounded text-sm"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#ffffff' }}
-                />
-                <button
-                  onClick={handlePosLogin}
-                  disabled={loading}
-                  className="w-full py-3 rounded font-semibold text-sm transition-all"
-                  style={{
-                    backgroundColor: loading ? 'rgba(212,175,55,0.5)' : '#D4AF37',
-                    color: '#0a0a0a',
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={4}
+                  value={nip}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9]/g, '');
+                    setNip(value);
                   }}
-                >
-                  {loading ? "Entrando..." : "INGRESAR →"}
-                </button>
+                  className="opacity-0 absolute"
+                  style={{ pointerEvents: 'none' }}
+                  autoFocus
+                />
               </>
             )}
           </div>

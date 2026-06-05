@@ -80,6 +80,7 @@ export default function POSPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>("terminal");
   const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
   const isAdminOrSoporte = user?.roleCode === "ADMIN" || user?.roleCode === "SOPORTE";
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -992,7 +993,12 @@ export default function POSPage() {
                   if (shift && salesHistory.length > 0) {
                     setShowExitConfirmModal(true);
                   } else {
-                    navigate('/dashboard');
+                    if (user?.roleCode === 'CAJERO') {
+                      logout();
+                      navigate('/');
+                    } else {
+                      navigate('/dashboard');
+                    }
                   }
                 }}
                 className="text-sm text-slate-400 hover:text-white flex items-center gap-1"
