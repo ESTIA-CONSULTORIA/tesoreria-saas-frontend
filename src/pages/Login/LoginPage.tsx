@@ -50,6 +50,30 @@ export default function LoginPage() {
       const modulosActivos = response.data.modulosActivos || [];
       const user = response.data.user || {};
 
+      // SOPORTE tiene acceso a todos los módulos
+      let finalModulosActivos = modulosActivos;
+      if (user.roleCode === 'SOPORTE') {
+        finalModulosActivos = [
+          'dashboard',
+          'empresas',
+          'sucursales',
+          'bancos',
+          'movimientos',
+          'transferencias',
+          'reportes',
+          'tesoreria',
+          'conciliacion',
+          'pos',
+          'configuracion-pos',
+          'integraciones',
+          'proveedores',
+          'compras',
+          'costos',
+          'white-label',
+          'administracion'
+        ];
+      }
+
       login(
         token,
         user.tenantId || '',
@@ -60,7 +84,7 @@ export default function LoginPage() {
           roleCode: user.roleCode,
           tenantId: user.tenantId,
         },
-        modulosActivos
+        finalModulosActivos
       );
 
       navigate("/dashboard");

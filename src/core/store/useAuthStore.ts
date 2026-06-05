@@ -32,7 +32,11 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   login: (token, tenantId, user, modulosActivos = []) => {
     localStorage.setItem("access_token", token);
-    localStorage.setItem("tenant_id", tenantId);
+    if (tenantId) {
+      localStorage.setItem("tenant_id", tenantId);
+    } else {
+      localStorage.removeItem("tenant_id");
+    }
     localStorage.setItem("user", JSON.stringify(user));
     localStorage.setItem("modulos_activos", JSON.stringify(modulosActivos));
 
