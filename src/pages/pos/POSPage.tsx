@@ -265,14 +265,11 @@ export default function POSPage() {
   async function loadProducts(cats: any[]) {
     try {
       const response = await api.get("/pos/products");
-      const productos = Array.isArray(response.data) ? response.data : [];
-      console.log('primer producto categoryId tipo:', typeof productos[0]?.categoryId, productos[0]?.categoryId);
-      console.log('cats disponibles COMPLETO:', JSON.stringify(cats));
-      const mappedProducts = productos.map((p: any) => ({
+      const mappedProducts = Array.isArray(response.data) ? response.data.map((p: any) => ({
         ...p,
         price: Number(p.price) || 0,
         category: cats.find(c => c.id === p.categoryId)?.name || 'Sin categoría'
-      }));
+      })) : [];
       setProducts(mappedProducts);
     } catch (error) {
       console.error("Error loading products:", error);
@@ -283,9 +280,7 @@ export default function POSPage() {
     try {
       const response = await api.get("/pos/categories");
       const cats = Array.isArray(response.data) ? response.data : [];
-      console.log('cats recibidas:', cats);
-      console.log('primer cat id tipo:', typeof cats[0]?.id, cats[0]?.id);
-      setCategories([{ id: "all", name: "Todos" }, ...cats]);
+      setCategories(cats);
       return cats;
     } catch (error) {
       console.error("Error loading categories:", error);
@@ -1025,17 +1020,27 @@ export default function POSPage() {
                   className="w-full px-4 py-2 rounded-lg border border-slate-600 bg-slate-800 text-white"
                 />
                 <div className="flex gap-2 overflow-x-auto pb-1">
-                  {categories.map((category) => (
+                  <button
+                    onClick={() => setSelectedCategory("all")}
+                    className={`px-3 py-1 rounded text-sm whitespace-nowrap ${
+                      selectedCategory === "all"
+                        ? "bg-blue-600 text-white"
+                        : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                    }`}
+                  >
+                    Todos
+                  </button>
+                  {categories.map((cat) => (
                     <button
-                      key={category.id}
-                      onClick={() => setSelectedCategory(category.id === "all" ? "all" : category.name)}
+                      key={cat.id}
+                      onClick={() => setSelectedCategory(cat.name)}
                       className={`px-3 py-1 rounded text-sm whitespace-nowrap ${
-                        selectedCategory === (category.id === "all" ? "all" : category.name)
+                        selectedCategory === cat.name
                           ? "bg-blue-600 text-white"
                           : "bg-slate-700 text-slate-300 hover:bg-slate-600"
                       }`}
                     >
-                      {category.name}
+                      {cat.name}
                     </button>
                   ))}
                 </div>
