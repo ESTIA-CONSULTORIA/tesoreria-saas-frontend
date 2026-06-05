@@ -242,12 +242,21 @@ export default function POSPage() {
   });
 
   useEffect(() => {
+    const savedCashier = localStorage.getItem('selected_cashier');
     loadCategories().then((cats) => {
       loadProducts(cats);
     });
     loadPosCategories();
     loadAreas();
-    loadOpenShift();
+    loadOpenShift().then((openShift) => {
+      if (openShift && savedCashier) {
+        setSelectedCashier(savedCashier);
+        setShowLoginScreen(false);
+      } else {
+        localStorage.removeItem('selected_cashier');
+        setShowLoginScreen(true);
+      }
+    });
   }, []);
 
   useEffect(() => {
@@ -325,7 +334,7 @@ export default function POSPage() {
           sucursalId: "default-branch-id",
         },
       });
-      setShift(response.data ? {
+      const shiftData = response.data ? {
         ...response.data,
         totalVentas: Number(response.data.totalVentas) || 0,
         totalEfectivo: Number(response.data.totalEfectivo) || 0,
@@ -337,9 +346,12 @@ export default function POSPage() {
         totalDepositos: Number(response.data.totalDepositos) || 0,
         precorteGuardado: response.data.precorteGuardado || false,
         precorteDeclaracion: response.data.precorteDeclaracion || null,
-      } : null);
+      } : null;
+      setShift(shiftData);
+      return shiftData;
     } catch (error) {
       console.error("Error loading open shift:", error);
+      return null;
     }
   }
 
@@ -1419,17 +1431,17 @@ export default function POSPage() {
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{expandedArea === area.id ? "▼" : "▶"}</span>
                       <div>
-                        <h3 className="font-semibold">{area.nombre}</h3>
-                        <p className="text-sm text-slate-400">{area.descripcion || "Sin descripción"}</p>
+                        <h3 className="font-semibold">{area.name}</h3>
+                        <p className="text-sm text-slate-400">{area.description || "Sin descripción"}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-slate-400">{area.mesas?.length || 0} mesas</span>
+                      <span className="text-sm text-slate-400">{area.tables?.length || 0} mesas</span>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setEditingArea(area);
-                          setAreaForm({ nombre: area.nombre, descripcion: area.descripcion || "" });
+                          setAreaForm({ nombre: area.name, descripcion: area.description || "" });
                           setShowAreaModal(true);
                         }}
                         className="px-2 py-1 rounded bg-blue-600 text-xs hover:bg-blue-700"
@@ -1465,10 +1477,10 @@ export default function POSPage() {
                         </button>
                       </div>
                       <div className="grid grid-cols-4 gap-2">
-                        {area.mesas?.length === 0 ? (
+                        {area.tables?.length === 0 ? (
                           <p className="col-span-4 text-sm text-slate-400">No hay mesas en esta área</p>
                         ) : (
-                          area.mesas.map((mesa: any) => (
+                          area.tables.map((mesa: any) => (
                             <div key={mesa.id} className="p-3 rounded-lg bg-slate-900 border border-slate-700">
                               <div className="flex justify-between items-start mb-1">
                                 <span className="font-semibold">Mesa {mesa.numero}</span>
