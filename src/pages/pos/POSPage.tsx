@@ -249,7 +249,14 @@ export default function POSPage() {
     loadPosCategories();
     loadAreas();
     loadOpenShift().then((openShift) => {
-      if (openShift && savedCashier) {
+      // Si el usuario es CAJERO, omitir pantalla de login de cajero
+      if (user?.roleCode === 'CAJERO') {
+        setShowLoginScreen(false);
+        if (openShift) {
+          setSelectedCashier(user?.id || '');
+        }
+      } else if (openShift && savedCashier) {
+        // Si es ADMIN/SOPORTE, mostrar login de cajero si hay turno abierto
         setSelectedCashier(savedCashier);
         setShowLoginScreen(false);
       } else {
@@ -257,11 +264,18 @@ export default function POSPage() {
         setShowLoginScreen(true);
       }
     });
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     const savedCashier = localStorage.getItem('selected_cashier');
-    if (!shift && !savedCashier) {
+    // Si el usuario es CAJERO, no mostrar pantalla de login de cajero
+    if (user?.roleCode === 'CAJERO') {
+      setShowLoginScreen(false);
+      if (shift) {
+        setSelectedCashier(user?.id || '');
+      }
+    } else if (!shift && !savedCashier) {
+      // Si es ADMIN/SOPORTE, mostrar login de cajero si no hay turno ni cajero seleccionado
       setShowLoginScreen(true);
     } else if (savedCashier && !selectedCashier) {
       setSelectedCashier(savedCashier);

@@ -11,8 +11,10 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [cajero, setCajero] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selectedAccess, setSelectedAccess] = useState<"main" | "pos" | null>(null);
 
   useEffect(() => {
     const tenantId = localStorage.getItem('tenant_id');
@@ -36,7 +38,7 @@ export default function LoginPage() {
     }
   }, [config.customCSS]);
 
-  async function handleLogin() {
+  async function handleMainLogin() {
     try {
       setLoading(true);
       setError("");
@@ -96,33 +98,56 @@ export default function LoginPage() {
     }
   }
 
+  async function handlePosLogin() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await api.post("/auth/login", {
+        email: cajero,
+        password,
+      });
+
+      const token = response.data.access_token;
+      const modulosActivos = response.data.modulosActivos || [];
+      const user = response.data.user || {};
+
+      login(
+        token,
+        user.tenantId || '',
+        {
+          id: user.id || "1",
+          email: cajero,
+          name: user.name || "Cajero",
+          roleCode: user.roleCode,
+          tenantId: user.tenantId,
+        },
+        modulosActivos
+      );
+
+      navigate("/pos");
+    } catch (error: any) {
+      console.error(error);
+      setError(error.response?.data?.message || "Cajero o contraseña incorrectos");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   // Verificar modo de mantenimiento
   if (config.maintenanceMode) {
-    const containerStyle = {
-      ...(config.backgroundImage && {
-        backgroundImage: `url(${config.backgroundImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }),
-    };
-
     return (
-      <div
-        className="login-container min-h-screen flex items-center justify-center px-4"
-        style={containerStyle}
-      >
-        <div
-          className="login-card w-full max-w-md p-8 rounded-lg text-center"
-        >
+      <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#0a0a0a' }}>
+        <div className="w-full max-w-md p-8 rounded-lg text-center" style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <div className="text-5xl mb-4">🔧</div>
-          <h1 className="login-title text-2xl font-bold mb-4">
+          <h1 className="text-2xl font-bold mb-4" style={{ color: '#ffffff' }}>
             Sistema en Mantenimiento
           </h1>
-          <p className="text-sm">
+          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
             {config.maintenanceMessage || 'El sistema se encuentra en mantenimiento programado. Por favor, intente más tarde.'}
           </p>
           {config.maintenanceStartTime && config.maintenanceEndTime && (
-            <p className="text-xs mt-4">
+            <p className="text-xs mt-4" style={{ color: 'rgba(255,255,255,0.4)' }}>
               {new Date(config.maintenanceStartTime).toLocaleString()} - {new Date(config.maintenanceEndTime).toLocaleString()}
             </p>
           )}
@@ -131,73 +156,265 @@ export default function LoginPage() {
     );
   }
 
-  const containerStyle = {
-    ...(config.backgroundImage && {
-      backgroundImage: `url(${config.backgroundImage})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-    }),
-  };
-
   return (
-    <div
-      className="login-container min-h-screen flex items-center justify-center px-4"
-      style={containerStyle}
-    >
-      <div className="login-card w-full max-w-md p-8 rounded-lg">
-        {/* Logo */}
+    <div className="min-h-screen flex" style={{ backgroundColor: '#0a0a0a' }}>
+      {/* Columna Izquierda - 40% */}
+      <div 
+        className="w-2/5 relative flex flex-col justify-between p-12"
+        style={{
+          backgroundImage: config.backgroundImage ? `url(${config.backgroundImage})` : 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        {/* Logo en esquina superior derecha */}
         {config.logoUrl && (
-          <img
-            src={config.logoUrl}
-            alt="Logo"
-            style={{ maxHeight: '56px', marginBottom: '20px', display: 'block', margin: '0 auto 20px' }}
-          />
-        )}
-
-        {/* Company Name */}
-        <h1 className="login-title text-center text-3xl font-bold mb-2">
-          {config.companyName}
-        </h1>
-
-        {/* Tagline */}
-        <p className="text-center text-sm mb-8">
-          {config.tagline}
-        </p>
-
-        {/* Error Message */}
-        {error && (
-          <div className="login-error mb-4 p-3 rounded text-sm text-center">
-            {error}
+          <div className="absolute top-8 right-8">
+            <img
+              src={config.logoUrl}
+              alt="Logo"
+              style={{ maxHeight: '60px' }}
+            />
           </div>
         )}
 
-        {/* Email Input */}
-        <input
-          type="email"
-          placeholder="Correo electrónico"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="login-input mb-4 w-full p-3 rounded text-sm"
-        />
+        {/* Contenido superior */}
+        <div className="mt-20">
+          <p className="text-sm font-medium mb-2" style={{ color: 'rgba(255,255,255,0.6)', letterSpacing: '2px' }}>
+            BIENVENIDO A
+          </p>
+          <h1 className="text-4xl font-bold mb-4" style={{ color: '#ffffff' }}>
+            {config.companyName || 'Sistema de Gestión'}
+          </h1>
+          <p className="text-lg" style={{ color: 'rgba(255,255,255,0.8)' }}>
+            {config.tagline || 'Solución integral para tu negocio'}
+          </p>
+        </div>
 
-        {/* Password Input */}
-        <input
-          type="password"
-          placeholder="Contraseña"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-          className="login-input mb-6 w-full p-3 rounded text-sm"
-        />
+        {/* Íconos de características */}
+        <div className="grid grid-cols-2 gap-6 mt-12">
+          <div className="flex flex-col items-center text-center">
+            <div className="text-3xl mb-2">📊</div>
+            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.7)' }}>Información en tiempo real</p>
+          </div>
+          <div className="flex flex-col items-center text-center">
+            <div className="text-3xl mb-2">🔒</div>
+            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.7)' }}>Seguridad avanzada</p>
+          </div>
+          <div className="flex flex-col items-center text-center">
+            <div className="text-3xl mb-2">📈</div>
+            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.7)' }}>Indicadores clave</p>
+          </div>
+          <div className="flex flex-col items-center text-center">
+            <div className="text-3xl mb-2">👥</div>
+            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.7)' }}>Multiusuario y permisos</p>
+          </div>
+        </div>
+      </div>
 
-        {/* Login Button */}
-        <button
-          onClick={handleLogin}
-          disabled={loading}
-          className={`login-button w-full p-3 rounded font-semibold text-sm transition-colors ${loading ? 'loading' : ''}`}
-        >
-          {loading ? "Entrando..." : "Entrar"}
-        </button>
+      {/* Columna Derecha - 60% */}
+      <div className="w-3/5 flex flex-col p-12">
+        {/* Header */}
+        <div className="mb-12">
+          <h1 className="text-3xl font-bold mb-2" style={{ color: '#ffffff' }}>
+            ¿Cómo deseas ingresar?
+          </h1>
+          <p className="text-lg" style={{ color: 'rgba(255,255,255,0.6)' }}>
+            Selecciona el acceso que necesitas
+          </p>
+        </div>
+
+        {/* Tarjetas de acceso */}
+        {!selectedAccess ? (
+          <div className="grid grid-cols-2 gap-6 flex-1">
+            {/* Tarjeta 1 - Sistema Principal */}
+            <div
+              className="p-6 rounded-lg cursor-pointer transition-all hover:scale-105"
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(212,175,55,0.5)'}
+              onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
+              onClick={() => setSelectedAccess('main')}
+            >
+              <div className="text-4xl mb-4">🖥️</div>
+              <h2 className="text-xl font-bold mb-3" style={{ color: '#ffffff' }}>
+                SISTEMA PRINCIPAL
+              </h2>
+              <div className="w-16 h-0.5 mb-4" style={{ backgroundColor: '#D4AF37' }}></div>
+              <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                Administra todas las áreas de tu negocio desde una sola plataforma.
+              </p>
+              <div className="flex flex-wrap gap-2 mb-6">
+                <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(212,175,55,0.1)', color: '#D4AF37' }}>Ventas</span>
+                <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(212,175,55,0.1)', color: '#D4AF37' }}>Inventarios</span>
+                <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(212,175,55,0.1)', color: '#D4AF37' }}>Compras</span>
+                <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(212,175,55,0.1)', color: '#D4AF37' }}>Finanzas</span>
+                <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(212,175,55,0.1)', color: '#D4AF37' }}>Tesorería</span>
+              </div>
+              <button
+                className="w-full py-3 rounded font-semibold text-sm transition-all"
+                style={{
+                  backgroundColor: '#0a0a0a',
+                  color: '#ffffff',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#D4AF37';
+                  e.currentTarget.style.borderColor = '#D4AF37';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#0a0a0a';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                }}
+              >
+                INGRESAR →
+              </button>
+            </div>
+
+            {/* Tarjeta 2 - Punto de Venta */}
+            <div
+              className="p-6 rounded-lg cursor-pointer transition-all hover:scale-105"
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(212,175,55,0.5)'}
+              onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
+              onClick={() => setSelectedAccess('pos')}
+            >
+              <div className="text-4xl mb-4">🧾</div>
+              <h2 className="text-xl font-bold mb-3" style={{ color: '#ffffff' }}>
+                PUNTO DE VENTA (POS)
+              </h2>
+              <div className="w-16 h-0.5 mb-4" style={{ backgroundColor: '#D4AF37' }}></div>
+              <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                Accede al sistema de ventas rápido y seguro para tu punto de venta.
+              </p>
+              <div className="flex flex-wrap gap-2 mb-6">
+                <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(212,175,55,0.1)', color: '#D4AF37' }}>Ventas</span>
+                <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(212,175,55,0.1)', color: '#D4AF37' }}>Cobros</span>
+                <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(212,175,55,0.1)', color: '#D4AF37' }}>Cortes de caja</span>
+                <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(212,175,55,0.1)', color: '#D4AF37' }}>Tickets</span>
+                <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(212,175,55,0.1)', color: '#D4AF37' }}>Clientes</span>
+              </div>
+              <button
+                className="w-full py-3 rounded font-semibold text-sm transition-all"
+                style={{
+                  backgroundColor: '#0a0a0a',
+                  color: '#ffffff',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#D4AF37';
+                  e.currentTarget.style.borderColor = '#D4AF37';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#0a0a0a';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                }}
+              >
+                INGRESAR →
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* Formulario de login */
+          <div className="max-w-md mx-auto">
+            <button
+              onClick={() => setSelectedAccess(null)}
+              className="mb-6 text-sm flex items-center gap-2"
+              style={{ color: 'rgba(255,255,255,0.6)' }}
+            >
+              ← Volver
+            </button>
+
+            <h2 className="text-2xl font-bold mb-6" style={{ color: '#ffffff' }}>
+              {selectedAccess === 'main' ? 'Sistema Principal' : 'Punto de Venta'}
+            </h2>
+
+            {error && (
+              <div className="mb-4 p-3 rounded text-sm text-center" style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
+                {error}
+              </div>
+            )}
+
+            {selectedAccess === 'main' ? (
+              <>
+                <input
+                  type="email"
+                  placeholder="Correo electrónico"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mb-4 w-full p-3 rounded text-sm"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#ffffff' }}
+                />
+                <input
+                  type="password"
+                  placeholder="Contraseña"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleMainLogin()}
+                  className="mb-6 w-full p-3 rounded text-sm"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#ffffff' }}
+                />
+                <button
+                  onClick={handleMainLogin}
+                  disabled={loading}
+                  className="w-full py-3 rounded font-semibold text-sm transition-all"
+                  style={{
+                    backgroundColor: loading ? 'rgba(212,175,55,0.5)' : '#D4AF37',
+                    color: '#0a0a0a',
+                  }}
+                >
+                  {loading ? "Entrando..." : "INGRESAR →"}
+                </button>
+              </>
+            ) : (
+              <>
+                <input
+                  type="text"
+                  placeholder="Código de cajero"
+                  value={cajero}
+                  onChange={(e) => setCajero(e.target.value)}
+                  className="mb-4 w-full p-3 rounded text-sm"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#ffffff' }}
+                />
+                <input
+                  type="password"
+                  placeholder="Contraseña"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handlePosLogin()}
+                  className="mb-6 w-full p-3 rounded text-sm"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#ffffff' }}
+                />
+                <button
+                  onClick={handlePosLogin}
+                  disabled={loading}
+                  className="w-full py-3 rounded font-semibold text-sm transition-all"
+                  style={{
+                    backgroundColor: loading ? 'rgba(212,175,55,0.5)' : '#D4AF37',
+                    color: '#0a0a0a',
+                  }}
+                >
+                  {loading ? "Entrando..." : "INGRESAR →"}
+                </button>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="mt-auto pt-8 text-center">
+          <p className="text-sm mb-2" style={{ color: 'rgba(255,255,255,0.5)' }}>
+            Alta seguridad · Respaldo en la nube · Soporte especializado
+          </p>
+          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
+            © {new Date().getFullYear()} {config.companyName || 'Sistema de Gestión'}. Todos los derechos reservados.
+          </p>
+        </div>
       </div>
     </div>
   );
