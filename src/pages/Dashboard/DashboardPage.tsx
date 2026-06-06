@@ -18,6 +18,11 @@ export default function DashboardPage() {
   // Detectar vista actual
   const viewMode = !activeCompany ? 'global' : !activeBranch ? 'company' : 'branch';
 
+  console.log('viewMode:', viewMode);
+  console.log('activeCompany:', activeCompany);
+  console.log('activeBranch:', activeBranch);
+  console.log('companiesBreakdown:', kpis?.companiesBreakdown);
+
   useEffect(() => {
     loadKpis();
   }, [period, activeBranch?.id, activeCompany?.id]);

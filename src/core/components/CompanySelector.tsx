@@ -77,9 +77,12 @@ export default function CompanySelector() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800 text-white hover:bg-slate-700 transition-colors"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+        style={{ backgroundColor: '#161616', color: '#F5F5F5', border: '1px solid #2D2D2D' }}
+        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1B1B1B'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#161616'; }}
       >
-        <span className="text-sm font-medium">
+        <span>
           {!activeCompany ? "Seleccionar empresa" :
            activeBranch ? `${activeCompany.name} — ${activeBranch.name}` :
            `${activeCompany.name} — Todas las sucursales`}
@@ -90,45 +93,51 @@ export default function CompanySelector() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 rounded-lg border border-slate-700 bg-slate-900 shadow-xl z-50 max-h-96 overflow-y-auto">
-          <div className="p-4 border-b border-slate-700">
-            <h3 className="text-sm font-semibold text-white">Seleccionar Empresa y Sucursal</h3>
+        <div className="absolute right-0 mt-2 w-80 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto" style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D' }}>
+          <div className="p-4 border-b" style={{ borderColor: '#2D2D2D' }}>
+            <h3 className="text-sm font-semibold" style={{ color: '#F5F5F5' }}>Seleccionar Empresa y Sucursal</h3>
           </div>
 
           {loading ? (
-            <div className="p-4 text-sm text-slate-400">Cargando...</div>
+            <div className="p-4 text-sm" style={{ color: '#9A9A9A' }}>Cargando...</div>
           ) : (
             <div className="p-2">
               {/* Opción Vista Global */}
               <button
                 onClick={handleGlobalView}
-                className="w-full text-left px-3 py-2 rounded hover:bg-slate-800 transition-colors mb-2"
+                className="w-full text-left px-3 py-2 rounded transition-colors mb-2"
                 style={{
-                  backgroundColor: !activeCompany ? '#1e3a5f' : 'transparent',
+                  backgroundColor: !activeCompany ? '#222222' : 'transparent',
+                  color: '#F5F5F5',
                 }}
+                onMouseEnter={(e) => { if (!activeCompany) e.currentTarget.style.backgroundColor = '#2A2A2A'; }}
+                onMouseLeave={(e) => { if (!activeCompany) e.currentTarget.style.backgroundColor = '#222222'; }}
               >
-                <div className="text-sm font-medium text-white flex items-center gap-2">
+                <div className="text-sm font-medium flex items-center gap-2">
                   <span>🌐</span>
                   <span>Vista Global</span>
                 </div>
               </button>
 
               {companies.length === 0 ? (
-                <div className="p-4 text-sm text-slate-400">No hay empresas disponibles</div>
+                <div className="p-4 text-sm" style={{ color: '#9A9A9A' }}>No hay empresas disponibles</div>
               ) : (
                 companies.map((company) => (
                   <div key={company.id} className="mb-2">
                     <button
                       onClick={() => handleCompanyClick(company)}
-                      className="w-full text-left px-3 py-2 rounded hover:bg-slate-800 transition-colors"
+                      className="w-full text-left px-3 py-2 rounded transition-colors"
                       style={{
-                        backgroundColor: selectedCompanyId === company.id ? '#1e3a5f' : 'transparent',
+                        backgroundColor: selectedCompanyId === company.id ? '#222222' : 'transparent',
+                        color: '#F5F5F5',
                       }}
+                      onMouseEnter={(e) => { if (selectedCompanyId !== company.id) e.currentTarget.style.backgroundColor = '#1B1B1B'; }}
+                      onMouseLeave={(e) => { if (selectedCompanyId !== company.id) e.currentTarget.style.backgroundColor = 'transparent'; }}
                     >
-                      <div className="text-sm font-medium text-white">
+                      <div className="text-sm font-medium">
                         {company.tradeName || company.legalName}
                       </div>
-                      <div className="text-xs text-slate-400">{company.legalName}</div>
+                      <div className="text-xs" style={{ color: '#9A9A9A' }}>{company.legalName}</div>
                     </button>
 
                     {selectedCompanyId === company.id && branches.length > 0 && (
@@ -136,12 +145,15 @@ export default function CompanySelector() {
                         {/* Opción Ver toda la empresa */}
                         <button
                           onClick={handleViewAllCompany}
-                          className="w-full text-left px-3 py-1.5 rounded text-sm hover:bg-slate-800 transition-colors"
+                          className="w-full text-left px-3 py-1.5 rounded text-sm transition-colors"
                           style={{
-                            backgroundColor: !activeBranch && activeCompany?.id === company.id ? '#1e3a5f' : 'transparent',
+                            backgroundColor: !activeBranch && activeCompany?.id === company.id ? '#222222' : 'transparent',
+                            color: '#9A9A9A',
                           }}
+                          onMouseEnter={(e) => { if (!(!activeBranch && activeCompany?.id === company.id)) e.currentTarget.style.backgroundColor = '#1B1B1B'; }}
+                          onMouseLeave={(e) => { if (!(!activeBranch && activeCompany?.id === company.id)) e.currentTarget.style.backgroundColor = 'transparent'; }}
                         >
-                          <span className="text-slate-300 flex items-center gap-2">
+                          <span className="flex items-center gap-2">
                             <span>📊</span>
                             <span>Ver toda la empresa</span>
                           </span>
@@ -151,12 +163,15 @@ export default function CompanySelector() {
                           <button
                             key={branch.id}
                             onClick={() => handleBranchClick(branch)}
-                            className="w-full text-left px-3 py-1.5 rounded text-sm hover:bg-slate-800 transition-colors"
+                            className="w-full text-left px-3 py-1.5 rounded text-sm transition-colors"
                             style={{
-                              backgroundColor: activeBranch?.id === branch.id ? '#1e3a5f' : 'transparent',
+                              backgroundColor: activeBranch?.id === branch.id ? '#222222' : 'transparent',
+                              color: '#9A9A9A',
                             }}
+                            onMouseEnter={(e) => { if (activeBranch?.id !== branch.id) e.currentTarget.style.backgroundColor = '#1B1B1B'; }}
+                            onMouseLeave={(e) => { if (activeBranch?.id !== branch.id) e.currentTarget.style.backgroundColor = 'transparent'; }}
                           >
-                            <span className="text-slate-300">{branch.name}</span>
+                            <span>{branch.name}</span>
                           </button>
                         ))}
                       </div>
