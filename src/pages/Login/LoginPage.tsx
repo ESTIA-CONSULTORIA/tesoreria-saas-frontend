@@ -16,6 +16,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedAccess, setSelectedAccess] = useState<"main" | "pos" | null>(null);
+  const [expandedCard, setExpandedCard] = useState<"main" | "pos" | null>(null);
 
   useEffect(() => {
     const tenantId = localStorage.getItem('tenant_id');
@@ -53,42 +54,23 @@ export default function LoginPage() {
       const modulosActivos = response.data.modulosActivos || [];
       const user = response.data.user || {};
 
-      // SOPORTE tiene acceso a todos los módulos
       let finalModulosActivos = modulosActivos;
       if (user.roleCode === 'SOPORTE') {
         finalModulosActivos = [
-          'dashboard',
-          'empresas',
-          'sucursales',
-          'bancos',
-          'movimientos',
-          'transferencias',
-          'reportes',
-          'tesoreria',
-          'conciliacion',
-          'pos',
-          'configuracion-pos',
-          'integraciones',
-          'proveedores',
-          'compras',
-          'costos',
-          'white-label',
-          'administracion'
+          'dashboard', 'empresas', 'sucursales', 'bancos', 'movements',
+          'transferencias', 'reportes', 'tesoreria', 'conciliacion', 'pos',
+          'configuracion-pos', 'integraciones', 'proveedores', 'compras',
+          'costos', 'white-label', 'administracion'
         ];
       }
 
-      login(
-        token,
-        user.tenantId || '',
-        {
-          id: user.id || "1",
-          email,
-          name: user.name || "Administrador",
-          roleCode: user.roleCode,
-          tenantId: user.tenantId,
-        },
-        finalModulosActivos
-      );
+      login(token, user.tenantId || '', {
+        id: user.id || "1",
+        email,
+        name: user.name || "Administrador",
+        roleCode: user.roleCode,
+        tenantId: user.tenantId,
+      }, finalModulosActivos);
 
       navigate("/dashboard");
     } catch (error: any) {
@@ -105,30 +87,21 @@ export default function LoginPage() {
       setError("");
 
       const tenantId = localStorage.getItem('tenant_id');
-      const response = await api.post("/pos/cashiers/nip", {
-        nip,
-      }, {
-        headers: {
-          'tenant-id': tenantId || '',
-        },
+      const response = await api.post("/pos/cashiers/nip", { nip }, {
+        headers: { 'tenant-id': tenantId || '' },
       });
 
       const token = response.data.access_token;
       const modulosActivos = response.data.modulosActivos || [];
       const user = response.data.user || {};
 
-      login(
-        token,
-        user.tenantId || '',
-        {
-          id: user.id || "1",
-          email: user.email || cajero,
-          name: user.name || "Cajero",
-          roleCode: user.roleCode,
-          tenantId: user.tenantId,
-        },
-        modulosActivos
-      );
+      login(token, user.tenantId || '', {
+        id: user.id || "1",
+        email: user.email || cajero,
+        name: user.name || "Cajero",
+        roleCode: user.roleCode,
+        tenantId: user.tenantId,
+      }, modulosActivos);
 
       navigate("/pos");
     } catch (error: any) {
@@ -159,20 +132,19 @@ export default function LoginPage() {
     }
   }, [nip]);
 
-  // Verificar modo de mantenimiento
   if (config.maintenanceMode) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#0a0a0a' }}>
-        <div className="w-full max-w-md p-8 rounded-lg text-center" style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <div className="text-5xl mb-4">🔧</div>
-          <h1 className="text-2xl font-bold mb-4" style={{ color: '#ffffff' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', backgroundColor: '#0A0A0A' }}>
+        <div style={{ width: '100%', maxWidth: '448px', padding: '32px', borderRadius: '8px', textAlign: 'center', backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔧</div>
+          <h1 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '16px', color: '#F5F5F5' }}>
             Sistema en Mantenimiento
           </h1>
-          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
+          <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>
             {config.maintenanceMessage || 'El sistema se encuentra en mantenimiento programado. Por favor, intente más tarde.'}
           </p>
           {config.maintenanceStartTime && config.maintenanceEndTime && (
-            <p className="text-xs mt-4" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <p style={{ fontSize: '12px', marginTop: '16px', color: 'rgba(255,255,255,0.4)' }}>
               {new Date(config.maintenanceStartTime).toLocaleString()} - {new Date(config.maintenanceEndTime).toLocaleString()}
             </p>
           )}
@@ -182,162 +154,213 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: '#0a0a0a' }}>
-      {/* Columna Izquierda - 40% */}
-      <div 
-        className="w-2/5 relative flex flex-col justify-between p-12"
-        style={{
-          backgroundImage: config.backgroundImage ? `url(${config.backgroundImage})` : 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        {/* Logo en esquina superior derecha */}
+    <div style={{ minHeight: '100vh', display: 'flex', backgroundColor: '#0A0A0A' }}>
+      {/* Columna Izquierda - 45% */}
+      <div style={{
+        width: '45%',
+        position: 'relative',
+        overflow: 'hidden',
+        backgroundImage: config.backgroundImage ? `url(${config.backgroundImage})` : 'url(https://images.unsplash.com/photo-1514190051997-0f6f39ca5cde?w=800&q=80)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        padding: '48px',
+      }}>
+        {/* Overlay */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%)',
+          zIndex: 0,
+        }} />
+
+        {/* Logo del cliente */}
         {config.logoUrl && (
-          <div className="absolute top-8 right-8">
-            <img
-              src={config.logoUrl}
-              alt="Logo"
-              style={{ maxHeight: '60px' }}
-            />
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <img src={config.logoUrl} alt="Logo" style={{ maxHeight: '60px' }} />
           </div>
         )}
 
-        {/* Contenido superior */}
-        <div className="mt-20">
-          <p className="text-sm font-medium mb-2" style={{ color: 'rgba(255,255,255,0.6)', letterSpacing: '2px' }}>
+        {/* ESTIA logo */}
+        <div style={{ position: 'absolute', top: '48px', right: '48px', zIndex: 1 }}>
+          <span style={{ fontSize: '12px', color: '#BDBDBD', letterSpacing: '0.1em' }}>ESTIA</span>
+        </div>
+
+        {/* Contenido central */}
+        <div style={{ position: 'relative', zIndex: 1, marginTop: 'auto', marginBottom: 'auto' }}>
+          <p style={{ fontSize: '12px', color: '#BDBDBD', letterSpacing: '0.15em', marginBottom: '16px' }}>
             BIENVENIDO A
           </p>
-          <h1 className="text-4xl font-bold mb-4" style={{ color: '#ffffff' }}>
+          <h1 style={{ fontSize: '48px', fontWeight: 300, color: '#F5F5F5', letterSpacing: '0.1em', marginBottom: '8px' }}>
             {config.companyName || 'Sistema de Gestión'}
           </h1>
-          <p className="text-lg" style={{ color: 'rgba(255,255,255,0.8)' }}>
+          <p style={{ fontSize: '14px', color: '#BDBDBD', letterSpacing: '0.2em', marginBottom: '16px' }}>
+            CONSULTORÍA
+          </p>
+          <p style={{ fontSize: '14px', color: '#9A9A9A' }}>
             {config.tagline || 'Solución integral para tu negocio'}
           </p>
         </div>
 
-        {/* Íconos de características */}
-        <div className="grid grid-cols-2 gap-6 mt-12">
-          <div className="flex flex-col items-center text-center">
-            <div className="text-3xl mb-2">📊</div>
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.7)' }}>Información en tiempo real</p>
+        {/* Íconos */}
+        <div style={{ position: 'relative', zIndex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+            <div style={{ fontSize: '24px', marginBottom: '8px' }}>📊</div>
+            <p style={{ fontSize: '11px', color: '#BDBDBD' }}>Información en tiempo real</p>
           </div>
-          <div className="flex flex-col items-center text-center">
-            <div className="text-3xl mb-2">🔒</div>
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.7)' }}>Seguridad avanzada</p>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+            <div style={{ fontSize: '24px', marginBottom: '8px' }}>🔒</div>
+            <p style={{ fontSize: '11px', color: '#BDBDBD' }}>Seguridad avanzada</p>
           </div>
-          <div className="flex flex-col items-center text-center">
-            <div className="text-3xl mb-2">📈</div>
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.7)' }}>Indicadores clave</p>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+            <div style={{ fontSize: '24px', marginBottom: '8px' }}>📈</div>
+            <p style={{ fontSize: '11px', color: '#BDBDBD' }}>Indicadores clave</p>
           </div>
-          <div className="flex flex-col items-center text-center">
-            <div className="text-3xl mb-2">👥</div>
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.7)' }}>Multiusuario y permisos</p>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+            <div style={{ fontSize: '24px', marginBottom: '8px' }}>👥</div>
+            <p style={{ fontSize: '11px', color: '#BDBDBD' }}>Multiusuario y permisos</p>
           </div>
         </div>
       </div>
 
-      {/* Columna Derecha - 60% */}
-      <div className="w-3/5 flex flex-col p-12">
+      {/* Columna Derecha - 55% */}
+      <div style={{ width: '55%', backgroundColor: '#0A0A0A', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '48px' }}>
         {/* Header */}
-        <div className="mb-12">
-          <h1 className="text-3xl font-bold mb-2" style={{ color: '#ffffff' }}>
+        <div style={{ marginBottom: '48px' }}>
+          <h1 style={{ fontSize: '28px', fontWeight: 300, color: '#F5F5F5', marginBottom: '8px' }}>
             ¿Cómo deseas ingresar?
           </h1>
-          <p className="text-lg" style={{ color: 'rgba(255,255,255,0.6)' }}>
+          <p style={{ fontSize: '14px', color: '#9A9A9A' }}>
             Selecciona el acceso que necesitas
           </p>
         </div>
 
-        {/* Tarjetas de acceso */}
-        {!selectedAccess ? (
-          <div className="grid grid-cols-2 gap-6 flex-1">
-            {/* Tarjeta 1 - Sistema Principal */}
+        {/* Tarjetas */}
+        {!expandedCard ? (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+            {/* Tarjeta Sistema Principal */}
             <div
-              className="p-6 rounded-lg cursor-pointer transition-all hover:scale-105"
               style={{
-                backgroundColor: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.1)',
+                backgroundColor: '#161616',
+                border: '1px solid #2D2D2D',
+                borderRadius: '12px',
+                padding: '32px 24px',
+                cursor: 'pointer',
+                transition: 'border-color 0.2s',
               }}
-              onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(212,175,55,0.5)'}
-              onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
-              onClick={() => setSelectedAccess('main')}
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = '#BDBDBD'}
+              onMouseLeave={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
+              onClick={() => setExpandedCard('main')}
             >
-              <div className="text-4xl mb-4">🖥️</div>
-              <h2 className="text-xl font-bold mb-3" style={{ color: '#ffffff' }}>
+              {/* Doodle SVG */}
+              <div style={{ marginBottom: '24px', opacity: 0.15 }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9A9A9A" strokeWidth="1">
+                  <rect x="2" y="3" width="20" height="14" rx="2" />
+                  <line x1="8" y1="21" x2="16" y2="21" />
+                  <line x1="12" y1="17" x2="12" y2="21" />
+                </svg>
+              </div>
+              <h2 style={{ fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.15em', color: '#F5F5F5', marginBottom: '12px' }}>
                 SISTEMA PRINCIPAL
               </h2>
-              <div className="w-16 h-0.5 mb-4" style={{ backgroundColor: '#D4AF37' }}></div>
-              <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.6)' }}>
+              <div style={{ width: '40px', height: '1px', backgroundColor: '#2D2D2D', marginBottom: '12px' }} />
+              <p style={{ fontSize: '13px', color: '#9A9A9A', marginBottom: '16px' }}>
                 Administra todas las áreas de tu negocio desde una sola plataforma.
               </p>
-              <div className="flex flex-wrap gap-2 mb-6">
-                <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(212,175,55,0.1)', color: '#D4AF37' }}>Ventas</span>
-                <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(212,175,55,0.1)', color: '#D4AF37' }}>Inventarios</span>
-                <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(212,175,55,0.1)', color: '#D4AF37' }}>Compras</span>
-                <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(212,175,55,0.1)', color: '#D4AF37' }}>Finanzas</span>
-                <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(212,175,55,0.1)', color: '#D4AF37' }}>Tesorería</span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Ventas</span>
+                <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Inventarios</span>
+                <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Compras</span>
+                <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Finanzas</span>
+                <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Tesorería</span>
               </div>
               <button
-                className="w-full py-3 rounded font-semibold text-sm transition-all"
                 style={{
-                  backgroundColor: '#0a0a0a',
-                  color: '#ffffff',
-                  border: '1px solid rgba(255,255,255,0.2)',
+                  width: '100%',
+                  padding: '12px',
+                  fontSize: '12px',
+                  color: '#BDBDBD',
+                  backgroundColor: '#1B1B1B',
+                  border: '1px solid #3D3D3D',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  letterSpacing: '0.1em',
+                  transition: 'all 0.2s',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#D4AF37';
-                  e.currentTarget.style.borderColor = '#D4AF37';
+                  e.currentTarget.style.borderColor = '#BDBDBD';
+                  e.currentTarget.style.color = '#F5F5F5';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#0a0a0a';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                  e.currentTarget.style.borderColor = '#3D3D3D';
+                  e.currentTarget.style.color = '#BDBDBD';
                 }}
               >
                 INGRESAR →
               </button>
             </div>
 
-            {/* Tarjeta 2 - Punto de Venta */}
+            {/* Tarjeta POS */}
             <div
-              className="p-6 rounded-lg cursor-pointer transition-all hover:scale-105"
               style={{
-                backgroundColor: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.1)',
+                backgroundColor: '#161616',
+                border: '1px solid #2D2D2D',
+                borderRadius: '12px',
+                padding: '32px 24px',
+                cursor: 'pointer',
+                transition: 'border-color 0.2s',
               }}
-              onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(212,175,55,0.5)'}
-              onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
-              onClick={() => setSelectedAccess('pos')}
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = '#BDBDBD'}
+              onMouseLeave={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
+              onClick={() => setExpandedCard('pos')}
             >
-              <div className="text-4xl mb-4">🧾</div>
-              <h2 className="text-xl font-bold mb-3" style={{ color: '#ffffff' }}>
-                PUNTO DE VENTA (POS)
+              {/* Doodle SVG */}
+              <div style={{ marginBottom: '24px', opacity: 0.15 }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9A9A9A" strokeWidth="1">
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <path d="M16 10a4 4 0 0 1-8 0" />
+                </svg>
+              </div>
+              <h2 style={{ fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.15em', color: '#F5F5F5', marginBottom: '12px' }}>
+                PUNTO DE VENTA
               </h2>
-              <div className="w-16 h-0.5 mb-4" style={{ backgroundColor: '#D4AF37' }}></div>
-              <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.6)' }}>
+              <div style={{ width: '40px', height: '1px', backgroundColor: '#2D2D2D', marginBottom: '12px' }} />
+              <p style={{ fontSize: '13px', color: '#9A9A9A', marginBottom: '16px' }}>
                 Accede al sistema de ventas rápido y seguro para tu punto de venta.
               </p>
-              <div className="flex flex-wrap gap-2 mb-6">
-                <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(212,175,55,0.1)', color: '#D4AF37' }}>Ventas</span>
-                <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(212,175,55,0.1)', color: '#D4AF37' }}>Cobros</span>
-                <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(212,175,55,0.1)', color: '#D4AF37' }}>Cortes de caja</span>
-                <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(212,175,55,0.1)', color: '#D4AF37' }}>Tickets</span>
-                <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'rgba(212,175,55,0.1)', color: '#D4AF37' }}>Clientes</span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Ventas</span>
+                <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Cobros</span>
+                <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Cortes de caja</span>
+                <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Tickets</span>
+                <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Clientes</span>
               </div>
               <button
-                className="w-full py-3 rounded font-semibold text-sm transition-all"
                 style={{
-                  backgroundColor: '#0a0a0a',
-                  color: '#ffffff',
-                  border: '1px solid rgba(255,255,255,0.2)',
+                  width: '100%',
+                  padding: '12px',
+                  fontSize: '12px',
+                  color: '#BDBDBD',
+                  backgroundColor: '#1B1B1B',
+                  border: '1px solid #3D3D3D',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  letterSpacing: '0.1em',
+                  transition: 'all 0.2s',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#D4AF37';
-                  e.currentTarget.style.borderColor = '#D4AF37';
+                  e.currentTarget.style.borderColor = '#BDBDBD';
+                  e.currentTarget.style.color = '#F5F5F5';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#0a0a0a';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                  e.currentTarget.style.borderColor = '#3D3D3D';
+                  e.currentTarget.style.color = '#BDBDBD';
                 }}
               >
                 INGRESAR →
@@ -345,35 +368,33 @@ export default function LoginPage() {
             </div>
           </div>
         ) : (
-          /* Formulario de login */
-          <div className="max-w-md mx-auto">
+          /* Formulario expandido */
+          <div style={{ maxWidth: '448px', margin: '0 auto' }}>
             <button
-              onClick={() => setSelectedAccess(null)}
-              className="mb-6 text-sm flex items-center gap-2"
-              style={{ color: 'rgba(255,255,255,0.6)' }}
+              onClick={() => setExpandedCard(null)}
+              style={{ marginBottom: '24px', fontSize: '14px', color: '#9A9A9A', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
             >
               ← Volver
             </button>
 
-            <h2 className="text-2xl font-bold mb-6" style={{ color: '#ffffff' }}>
-              {selectedAccess === 'main' ? 'Sistema Principal' : 'Punto de Venta'}
+            <h2 style={{ fontSize: '24px', fontWeight: 300, color: '#F5F5F5', marginBottom: '24px' }}>
+              {expandedCard === 'main' ? 'Sistema Principal' : 'Punto de Venta'}
             </h2>
 
             {error && (
-              <div className="mb-4 p-3 rounded text-sm text-center" style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
+              <div style={{ marginBottom: '16px', padding: '12px', borderRadius: '6px', fontSize: '14px', textAlign: 'center', backgroundColor: 'rgba(155, 58, 58, 0.1)', color: '#9B3A3A', border: '1px solid #9B3A3A' }}>
                 {error}
               </div>
             )}
 
-            {selectedAccess === 'main' ? (
+            {expandedCard === 'main' ? (
               <>
                 <input
                   type="email"
                   placeholder="Correo electrónico"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mb-4 w-full p-3 rounded text-sm"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#ffffff' }}
+                  style={{ marginBottom: '16px', width: '100%', padding: '12px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#1B1B1B', border: '1px solid #2D2D2D', color: '#F5F5F5' }}
                 />
                 <input
                   type="password"
@@ -381,16 +402,22 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleMainLogin()}
-                  className="mb-6 w-full p-3 rounded text-sm"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#ffffff' }}
+                  style={{ marginBottom: '24px', width: '100%', padding: '12px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#1B1B1B', border: '1px solid #2D2D2D', color: '#F5F5F5' }}
                 />
                 <button
                   onClick={handleMainLogin}
                   disabled={loading}
-                  className="w-full py-3 rounded font-semibold text-sm transition-all"
                   style={{
-                    backgroundColor: loading ? 'rgba(212,175,55,0.5)' : '#D4AF37',
-                    color: '#0a0a0a',
+                    width: '100%',
+                    padding: '12px',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    color: loading ? '#9A9A9A' : '#F5F5F5',
+                    backgroundColor: loading ? '#2D2D2D' : '#2D2D2D',
+                    border: '1px solid #3D3D3D',
+                    borderRadius: '6px',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    letterSpacing: '0.05em',
                   }}
                 >
                   {loading ? "Entrando..." : "INGRESAR →"}
@@ -399,46 +426,58 @@ export default function LoginPage() {
             ) : (
               <>
                 {/* Display de NIP */}
-                <div className="mb-8 text-center">
-                  <div className="flex justify-center gap-4 mb-3">
+                <div style={{ marginBottom: '32px', textAlign: 'center' }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '12px' }}>
                     {[0, 1, 2, 3].map((index) => (
                       <div
                         key={index}
-                        className="w-12 h-12 rounded-full flex items-center justify-center text-2xl"
                         style={{
-                          backgroundColor: 'rgba(255,255,255,0.04)',
-                          border: '1px solid rgba(255,255,255,0.1)',
-                          color: '#D4AF37',
+                          width: '48px',
+                          height: '48px',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '24px',
+                          backgroundColor: '#1B1B1B',
+                          border: '1px solid #2D2D2D',
+                          color: '#BDBDBD',
                         }}
                       >
                         {index < nip.length ? '●' : '○'}
                       </div>
                     ))}
                   </div>
-                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                  <p style={{ fontSize: '14px', color: '#9A9A9A' }}>
                     Ingresa tu NIP de 4 dígitos
                   </p>
                 </div>
 
                 {/* Teclado numérico */}
-                <div className="grid grid-cols-3 gap-3 mb-6">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
                   {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((num) => (
                     <button
                       key={num}
                       onClick={() => handleNipInput(num)}
-                      className="w-16 h-16 rounded-lg text-2xl font-semibold transition-all"
                       style={{
-                        backgroundColor: 'rgba(255,255,255,0.04)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        color: '#ffffff',
+                        width: '64px',
+                        height: '64px',
+                        borderRadius: '8px',
+                        fontSize: '24px',
+                        fontWeight: 500,
+                        backgroundColor: '#1B1B1B',
+                        border: '1px solid #2D2D2D',
+                        color: '#F5F5F5',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(212,175,55,0.1)';
-                        e.currentTarget.style.borderColor = 'rgba(212,175,55,0.3)';
+                        e.currentTarget.style.backgroundColor = '#222222';
+                        e.currentTarget.style.borderColor = '#3D3D3D';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.04)';
-                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                        e.currentTarget.style.backgroundColor = '#1B1B1B';
+                        e.currentTarget.style.borderColor = '#2D2D2D';
                       }}
                     >
                       {num}
@@ -446,60 +485,77 @@ export default function LoginPage() {
                   ))}
                   <button
                     onClick={handleNipDelete}
-                    className="w-16 h-16 rounded-lg text-2xl font-semibold transition-all"
                     style={{
-                      backgroundColor: 'rgba(239,68,68,0.1)',
-                      border: '1px solid rgba(239,68,68,0.2)',
-                      color: '#ef4444',
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '8px',
+                      fontSize: '24px',
+                      fontWeight: 500,
+                      backgroundColor: 'rgba(155, 58, 58, 0.1)',
+                      border: '1px solid #9B3A3A',
+                      color: '#9B3A3A',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.2)';
+                      e.currentTarget.style.backgroundColor = 'rgba(155, 58, 58, 0.2)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.1)';
+                      e.currentTarget.style.backgroundColor = 'rgba(155, 58, 58, 0.1)';
                     }}
                   >
                     ⌫
                   </button>
                   <button
                     onClick={() => handleNipInput('0')}
-                    className="w-16 h-16 rounded-lg text-2xl font-semibold transition-all"
                     style={{
-                      backgroundColor: 'rgba(255,255,255,0.04)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      color: '#ffffff',
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '8px',
+                      fontSize: '24px',
+                      fontWeight: 500,
+                      backgroundColor: '#1B1B1B',
+                      border: '1px solid #2D2D2D',
+                      color: '#F5F5F5',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(212,175,55,0.1)';
-                      e.currentTarget.style.borderColor = 'rgba(212,175,55,0.3)';
+                      e.currentTarget.style.backgroundColor = '#222222';
+                      e.currentTarget.style.borderColor = '#3D3D3D';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.04)';
-                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                      e.currentTarget.style.backgroundColor = '#1B1B1B';
+                      e.currentTarget.style.borderColor = '#2D2D2D';
                     }}
                   >
                     0
                   </button>
                   <button
                     onClick={handleNipClear}
-                    className="w-16 h-16 rounded-lg text-2xl font-semibold transition-all"
                     style={{
-                      backgroundColor: 'rgba(255,255,255,0.04)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      color: 'rgba(255,255,255,0.6)',
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '8px',
+                      fontSize: '24px',
+                      fontWeight: 500,
+                      backgroundColor: '#1B1B1B',
+                      border: '1px solid #2D2D2D',
+                      color: '#9A9A9A',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)';
+                      e.currentTarget.style.backgroundColor = '#222222';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.04)';
+                      e.currentTarget.style.backgroundColor = '#1B1B1B';
                     }}
                   >
                     C
                   </button>
                 </div>
 
-                {/* Input oculto para teclado físico */}
                 <input
                   type="text"
                   inputMode="numeric"
@@ -510,8 +566,7 @@ export default function LoginPage() {
                     const value = e.target.value.replace(/[^0-9]/g, '');
                     setNip(value);
                   }}
-                  className="opacity-0 absolute"
-                  style={{ pointerEvents: 'none' }}
+                  style={{ opacity: 0, position: 'absolute', pointerEvents: 'none' }}
                   autoFocus
                 />
               </>
@@ -520,11 +575,11 @@ export default function LoginPage() {
         )}
 
         {/* Footer */}
-        <div className="mt-auto pt-8 text-center">
-          <p className="text-sm mb-2" style={{ color: 'rgba(255,255,255,0.5)' }}>
+        <div style={{ marginTop: 'auto', paddingTop: '32px', textAlign: 'center' }}>
+          <p style={{ fontSize: '11px', color: '#7E7E7E' }}>
             Alta seguridad · Respaldo en la nube · Soporte especializado
           </p>
-          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          <p style={{ fontSize: '11px', color: '#7E7E7E', marginTop: '8px' }}>
             © {new Date().getFullYear()} {config.companyName || 'Sistema de Gestión'}. Todos los derechos reservados.
           </p>
         </div>
