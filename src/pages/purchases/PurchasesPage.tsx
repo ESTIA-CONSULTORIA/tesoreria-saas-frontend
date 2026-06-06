@@ -4,6 +4,7 @@ import { api } from "../../core/api/api";
 import CreateOrderModal from "./CreateOrderModal";
 import ReceiveOrderModal from "./ReceiveOrderModal";
 import CreateInvoiceModal from "./CreateInvoiceModal";
+import { useCompanyStore } from "../../core/store/useCompanyStore";
 
 interface PurchaseOrder {
   id: string;
@@ -44,6 +45,7 @@ interface Supplier {
 }
 
 export default function PurchasesPage() {
+  const { activeBranch } = useCompanyStore();
   const [activeTab, setActiveTab] = useState("ordenes");
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [invoices, setInvoices] = useState<Purchase[]>([]);
@@ -82,7 +84,7 @@ export default function PurchasesPage() {
     if (activeTab === "recepcion") loadOrders("ENVIADA");
     if (activeTab === "facturas") loadInvoices();
     if (activeTab === "cuentas-pagar") loadAccountsPayable();
-  }, [activeTab]);
+  }, [activeTab, activeBranch?.id]);
 
   function loadUserRole() {
     const auth = localStorage.getItem("access_token");

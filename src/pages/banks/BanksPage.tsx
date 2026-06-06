@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import CreateBankModal from "./CreateBankModal";
+import { useCompanyStore } from "../../core/store/useCompanyStore";
 
 interface BankAccount {
   id: string;
@@ -22,6 +23,7 @@ interface Branch {
 }
 
 export default function BanksPage() {
+  const { activeBranch } = useCompanyStore();
   const [banks, setBanks] = useState<BankAccount[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +34,7 @@ export default function BanksPage() {
   useEffect(() => {
     loadBanks();
     loadBranches();
-  }, []);
+  }, [activeBranch?.id]);
 
   async function loadBanks() {
     try {

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import CreateMovementModal from "./CreateMovementModal";
+import { useCompanyStore } from "../../core/store/useCompanyStore";
 
 interface Movement {
   id: string;
@@ -19,6 +20,7 @@ interface BankAccount {
 }
 
 export default function MovementsPage() {
+  const { activeBranch } = useCompanyStore();
   const [movements, setMovements] = useState<Movement[]>([]);
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +43,7 @@ export default function MovementsPage() {
 
   useEffect(() => {
     loadMovements();
-  }, [accountId, type, category, startDate, endDate, page]);
+  }, [accountId, type, category, startDate, endDate, page, activeBranch?.id]);
 
   async function loadAccounts() {
     try {

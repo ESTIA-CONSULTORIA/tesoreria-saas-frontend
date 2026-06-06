@@ -3,11 +3,13 @@ import { api } from "../../core/api/api";
 import MainLayout from "../../core/layout/MainLayout";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import ExecutiveKPI from "../../components/ExecutiveKPI";
+import { useCompanyStore } from "../../core/store/useCompanyStore";
 
 type TabType = "resumen" | "posicion" | "traslados" | "cxp" | "cxc" | "alertas";
 type PeriodType = "week" | "month" | "quarter";
 
 export default function TreasuryPage() {
+  const { activeBranch } = useCompanyStore();
   const [activeTab, setActiveTab] = useState<TabType>("resumen");
   const [period, setPeriod] = useState<PeriodType>("month");
   const [executiveSummary, setExecutiveSummary] = useState<any>(null);
@@ -26,7 +28,7 @@ export default function TreasuryPage() {
 
   useEffect(() => {
     loadData();
-  }, [activeTab, period]);
+  }, [activeTab, period, activeBranch?.id]);
 
   async function loadData() {
     try {

@@ -17,7 +17,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadKpis();
-  }, [period, viewMode]);
+  }, [period, viewMode, activeBranch?.id]);
 
   async function loadKpis() {
     try {
