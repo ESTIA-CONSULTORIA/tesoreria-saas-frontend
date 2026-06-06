@@ -1,262 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  /* Executive Graphite Design System */
-  --bg-primary: #0A0A0A;
-  --bg-secondary: #111111;
-  --bg-tertiary: #161616;
-  --bg-hover: #1F1F1F;
-  --border-primary: #2D2D2D;
-  --text-primary: #F5F5F5;
-  --text-secondary: #A3A3A3;
-  --text-tertiary: #7E7E7E;
-  --accent-silver: #C0C0C0;
-  --accent-silver-dark: #7E7E7E;
-  --financial-positive: #2F855A;
-  --financial-negative: #C53030;
-  --financial-warning: #B7791F;
-  --sidebar-selected: #222222;
-  --sidebar-selected-border: #C0C0C0;
-  
-  --font-family: 'Inter', sans-serif;
-  --btn-radius: 4px;
-  --button-primary: #C0C0C0;
-  --button-secondary: #2D2D2D;
-  --button-primary-hover: #E8E8E8;
-  --button-secondary-hover: #3D3D3D;
+* {
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
-/* Login Page Styles - Executive Graphite */
-.login-container {
-  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+body, #root {
+  background-color: #0A0A0A !important;
+  color: #F5F5F5 !important;
   min-height: 100vh;
 }
 
-.login-card {
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-primary);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+/* Sidebar y nav */
+aside, nav, [class*="sidebar"] {
+  background-color: #101010 !important;
 }
 
-.login-logo {
-  filter: drop-shadow(0 0 10px rgba(192, 192, 192, 0.2));
+/* Override Tailwind bg colors */
+.bg-white { background-color: #161616 !important; }
+.bg-gray-50 { background-color: #161616 !important; }
+.bg-gray-100 { background-color: #1B1B1B !important; }
+.bg-gray-200 { background-color: #222222 !important; }
+.bg-gray-800 { background-color: #161616 !important; }
+.bg-gray-900 { background-color: #101010 !important; }
+.bg-slate-50 { background-color: #161616 !important; }
+.bg-slate-100 { background-color: #1B1B1B !important; }
+.bg-slate-700 { background-color: #222222 !important; }
+.bg-slate-800 { background-color: #161616 !important; }
+.bg-slate-900 { background-color: #101010 !important; }
+.bg-slate-950 { background-color: #0A0A0A !important; }
+.bg-zinc-800 { background-color: #161616 !important; }
+.bg-zinc-900 { background-color: #101010 !important; }
+.bg-blue-600 { background-color: #2D2D2D !important; }
+.bg-blue-700 { background-color: #3A3A3A !important; }
+.bg-indigo-600 { background-color: #2D2D2D !important; }
+.bg-green-600 { background-color: #3B7A57 !important; }
+.bg-red-600 { background-color: #9B3A3A !important; }
+
+/* Override text colors */
+.text-white { color: #F5F5F5 !important; }
+.text-gray-100 { color: #F5F5F5 !important; }
+.text-gray-200 { color: #F5F5F5 !important; }
+.text-gray-400 { color: #9A9A9A !important; }
+.text-gray-500 { color: #9A9A9A !important; }
+.text-slate-100 { color: #F5F5F5 !important; }
+.text-slate-200 { color: #F5F5F5 !important; }
+.text-slate-300 { color: #BDBDBD !important; }
+.text-slate-400 { color: #9A9A9A !important; }
+.text-slate-500 { color: #9A9A9A !important; }
+.text-blue-400 { color: #BDBDBD !important; }
+.text-blue-300 { color: #BDBDBD !important; }
+.text-indigo-400 { color: #BDBDBD !important; }
+.text-green-400 { color: #3B7A57 !important; }
+.text-red-400 { color: #9B3A3A !important; }
+
+/* Override border colors */
+.border-gray-700 { border-color: #2D2D2D !important; }
+.border-slate-700 { border-color: #2D2D2D !important; }
+.border-slate-600 { border-color: #2D2D2D !important; }
+.border-zinc-700 { border-color: #2D2D2D !important; }
+
+/* Hover overrides */
+.hover\:bg-blue-700:hover { background-color: #3A3A3A !important; }
+.hover\:bg-blue-600:hover { background-color: #3A3A3A !important; }
+.hover\:bg-slate-700:hover { background-color: #222222 !important; }
+.hover\:bg-slate-800:hover { background-color: #1B1B1B !important; }
+.hover\:bg-gray-700:hover { background-color: #222222 !important; }
+
+/* Cards */
+.rounded-lg, .rounded-xl {
+  border-color: #2D2D2D;
 }
 
-.login-title {
-  color: var(--text-primary);
+/* Inputs */
+input, select, textarea {
+  background-color: #1B1B1B !important;
+  border-color: #2D2D2D !important;
+  color: #F5F5F5 !important;
 }
 
-.login-input {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-primary);
-  color: var(--text-primary);
-  border-radius: var(--btn-radius);
-  transition: all 0.15s ease;
+input::placeholder, textarea::placeholder {
+  color: #9A9A9A !important;
 }
 
-.login-input:focus {
-  border-color: var(--accent-silver);
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(192, 192, 192, 0.1);
-}
-
-.login-input::placeholder {
-  color: var(--text-tertiary);
-}
-
-.login-button {
-  background: var(--button-primary);
-  color: var(--bg-primary);
-  border: 1px solid var(--button-primary);
-  border-radius: var(--btn-radius);
-  transition: all 0.15s ease;
-}
-
-.login-button:hover {
-  background: var(--button-primary-hover);
-  transform: translateY(-1px);
-}
-
-.login-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.login-button.loading {
-  pointer-events: none;
-}
-
-.login-error {
-  background: rgba(197, 48, 48, 0.1);
-  border: 1px solid var(--financial-negative);
-  color: #FF6B6B;
-  border-radius: var(--btn-radius);
-}
-
-.btn-primary {
-  background-color: var(--button-primary) !important;
-  color: var(--bg-primary) !important;
-  border-radius: var(--btn-radius) !important;
-  border: 1px solid var(--border-primary) !important;
-  transition: background-color 0.15s ease !important;
-}
-
-.btn-primary:hover {
-  background-color: var(--button-primary-hover) !important;
-}
-
-.btn-secondary {
-  background-color: var(--button-secondary) !important;
-  color: var(--text-primary) !important;
-  border-radius: var(--btn-radius) !important;
-  border: 1px solid var(--border-primary) !important;
-  transition: background-color 0.15s ease !important;
-}
-
-.btn-secondary:hover {
-  background-color: var(--button-secondary-hover) !important;
-}
-
-/* Override Tailwind colors for Executive Graphite */
-.bg-blue-600 {
-  background-color: var(--button-primary) !important;
-  color: var(--bg-primary) !important;
-}
-
-.bg-blue-700 {
-  background-color: var(--button-primary) !important;
-  color: var(--bg-primary) !important;
-  filter: brightness(0.9);
-}
-
-.bg-blue-500 {
-  background-color: var(--button-primary) !important;
-  color: var(--bg-primary) !important;
-  filter: brightness(1.1);
-}
-
-/* Override slate backgrounds */
-.bg-slate-900 {
-  background-color: var(--bg-tertiary) !important;
-}
-
-.bg-slate-800 {
-  background-color: var(--bg-secondary) !important;
-}
-
-.bg-slate-700 {
-  background-color: var(--bg-hover) !important;
-}
-
-/* Override slate text */
-.text-slate-400 {
-  color: var(--text-secondary) !important;
-}
-
-.text-slate-300 {
-  color: var(--text-secondary) !important;
-}
-
-.text-slate-500 {
-  color: var(--text-tertiary) !important;
-}
-
-/* Override slate borders */
-.border-slate-800 {
-  border-color: var(--border-primary) !important;
-}
-
-.border-slate-700 {
-  border-color: var(--border-primary) !important;
-}
-
-html,
-body,
-#root {
-  width: 100%;
-  min-height: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  overflow-x: hidden;
-  background: var(--bg-primary);
-  font-family: var(--font-family);
-}
-
-/* Prevent iOS zoom on inputs */
-input,
-select,
-textarea {
-  font-size: 16px !important;
-}
-
-/* Print styles for reports */
-@media print {
-  body {
-    background: white !important;
-    color: black !important;
-  }
-
-  /* Hide sidebar, header, buttons */
-  aside,
-  header,
-  button,
-  .no-print {
-    display: none !important;
-  }
-
-  /* Show only content */
-  main {
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-
-  /* Print-friendly colors */
-  .bg-slate-900,
-  .bg-slate-800,
-  .bg-slate-700 {
-    background: white !important;
-    color: black !important;
-  }
-
-  .text-slate-400,
-  .text-slate-300 {
-    color: #666 !important;
-  }
-
-  .text-white {
-    color: black !important;
-  }
-
-  .border-slate-800,
-  .border-slate-700 {
-    border-color: #ccc !important;
-  }
-
-  /* Remove shadows and backgrounds */
-  .rounded-xl,
-  .rounded-lg {
-    border-radius: 0 !important;
-    box-shadow: none !important;
-  }
-
-  /* Ensure tables print correctly */
-  table {
-    width: 100% !important;
-    border-collapse: collapse !important;
-  }
-
-  th, td {
-    border: 1px solid #ccc !important;
-    padding: 8px !important;
-  }
-
-  /* Page breaks */
-  .page-break {
-    page-break-before: always;
-  }
+/* Modals */
+[role="dialog"], .modal {
+  background-color: #161616 !important;
 }
