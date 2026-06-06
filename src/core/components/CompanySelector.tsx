@@ -61,6 +61,18 @@ export default function CompanySelector() {
     setIsOpen(false);
   }
 
+  function handleViewAllCompany() {
+    setActiveBranch(null);
+    setIsOpen(false);
+  }
+
+  function handleGlobalView() {
+    setActiveCompany(null);
+    setActiveBranch(null);
+    setSelectedCompanyId(null);
+    setIsOpen(false);
+  }
+
   return (
     <div className="relative">
       <button
@@ -68,8 +80,9 @@ export default function CompanySelector() {
         className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800 text-white hover:bg-slate-700 transition-colors"
       >
         <span className="text-sm font-medium">
-          {activeCompany?.name || "Seleccionar empresa"}
-          {activeBranch && ` — ${activeBranch.name}`}
+          {!activeCompany ? "Seleccionar empresa" :
+           activeBranch ? `${activeCompany.name} — ${activeBranch.name}` :
+           `${activeCompany.name} — Todas las sucursales`}
         </span>
         <svg className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -86,6 +99,20 @@ export default function CompanySelector() {
             <div className="p-4 text-sm text-slate-400">Cargando...</div>
           ) : (
             <div className="p-2">
+              {/* Opción Vista Global */}
+              <button
+                onClick={handleGlobalView}
+                className="w-full text-left px-3 py-2 rounded hover:bg-slate-800 transition-colors mb-2"
+                style={{
+                  backgroundColor: !activeCompany ? '#1e3a5f' : 'transparent',
+                }}
+              >
+                <div className="text-sm font-medium text-white flex items-center gap-2">
+                  <span>🌐</span>
+                  <span>Vista Global</span>
+                </div>
+              </button>
+
               {companies.length === 0 ? (
                 <div className="p-4 text-sm text-slate-400">No hay empresas disponibles</div>
               ) : (
@@ -106,6 +133,20 @@ export default function CompanySelector() {
 
                     {selectedCompanyId === company.id && branches.length > 0 && (
                       <div className="ml-4 mt-1 space-y-1">
+                        {/* Opción Ver toda la empresa */}
+                        <button
+                          onClick={handleViewAllCompany}
+                          className="w-full text-left px-3 py-1.5 rounded text-sm hover:bg-slate-800 transition-colors"
+                          style={{
+                            backgroundColor: !activeBranch && activeCompany?.id === company.id ? '#1e3a5f' : 'transparent',
+                          }}
+                        >
+                          <span className="text-slate-300 flex items-center gap-2">
+                            <span>📊</span>
+                            <span>Ver toda la empresa</span>
+                          </span>
+                        </button>
+
                         {branches.map((branch) => (
                           <button
                             key={branch.id}

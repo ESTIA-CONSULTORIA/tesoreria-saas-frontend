@@ -111,7 +111,7 @@ export default function DashboardPage() {
             <h2 className="text-3xl font-bold" style={{ color: '#F5F5F5' }}>Dashboard</h2>
             <p style={{ color: '#A3A3A3', fontSize: '14px' }}>
               {viewMode === 'global' ? 'Vista Global (todas las empresas)' : 
-               viewMode === 'company' ? `Empresa: ${activeCompany?.name || 'Seleccionar empresa'}` :
+               viewMode === 'company' ? `${activeCompany?.name || 'Empresa'} — Todas las sucursales` :
                `${activeCompany?.name || 'Empresa'} — ${activeBranch?.name || 'Sucursal'}`}
             </p>
           </div>
