@@ -12,35 +12,36 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
   const [infoOpen, setInfoOpen] = useState(false);
   const [period, setPeriod] = useState<"today" | "week" | "month" | "year">("month");
-  const [viewMode, setViewMode] = useState<"consolidated" | "individual">("consolidated");
-  const { activeBranch } = useCompanyStore();
+  const { activeBranch, activeCompany, setActiveCompany, setActiveBranch } = useCompanyStore();
+
+  const isConsolidated = !activeBranch;
 
   useEffect(() => {
     loadKpis();
-  }, [period, viewMode, activeBranch?.id]);
+  }, [period, activeBranch?.id]);
 
   async function loadKpis() {
     try {
       setLoading(true);
       setError("");
-      
-      // En vista individual, usamos el header X-Branch-Id del interceptor
-      // En vista consolidada, necesitamos remover temporalmente el header
-      if (viewMode === "consolidated") {
-        const branchId = localStorage.getItem("active_branch_id");
-        localStorage.removeItem("active_branch_id");
-        const response = await api.get("/dashboard/kpis", { params: { period } });
-        if (branchId) localStorage.setItem("active_branch_id", branchId);
-        setKpis(response.data);
-      } else {
-        const response = await api.get("/dashboard/kpis", { params: { period } });
-        setKpis(response.data);
-      }
+      const response = await api.get("/dashboard/kpis", { params: { period } });
+      setKpis(response.data);
     } catch (err: any) {
       setError(err.response?.data?.message || "No fue posible cargar dashboard");
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleBackToGlobal() {
+    setActiveCompany(null);
+    setActiveBranch(null);
+  }
+
+  function handleSelectCompany(companyId: string) {
+    // Seleccionar empresa - el usuario luego seleccionará sucursal en el selector del header
+    // Por ahora, solo navegamos a la vista de esa empresa
+    // TODO: Implementar selección automática de primera sucursal
   }
 
   // Datos simulados para la mini gráfica de barras (últimos 7 días)
@@ -84,40 +85,26 @@ export default function DashboardPage() {
           <div>
             <h2 className="text-3xl font-bold" style={{ color: '#F5F5F5' }}>Dashboard</h2>
             <p style={{ color: '#A3A3A3', fontSize: '14px' }}>
-              {viewMode === 'consolidated' ? 'Vista consolidada (todas las empresas)' : `Vista por sucursal: ${activeBranch?.name || 'Seleccionar sucursal'}`}
+              {isConsolidated ? 'Vista Global (todas las empresas)' : `${activeCompany?.name || 'Empresa'} — ${activeBranch?.name || 'Sucursal'}`}
             </p>
           </div>
           <div className="flex gap-3">
-            <div className="flex gap-2">
+            {!isConsolidated && (
               <button
-                onClick={() => setViewMode('consolidated')}
+                onClick={handleBackToGlobal}
                 className="px-3 py-1.5 text-sm font-medium transition-colors"
                 style={{
-                  backgroundColor: viewMode === 'consolidated' ? '#C0C0C0' : '#2D2D2D',
-                  color: viewMode === 'consolidated' ? '#0A0A0A' : '#F5F5F5',
+                  backgroundColor: '#2D2D2D',
+                  color: '#F5F5F5',
                   borderRadius: '4px',
                   border: '1px solid #2D2D2D',
                 }}
-                onMouseEnter={(e) => { if (viewMode !== 'consolidated') e.currentTarget.style.backgroundColor = '#3D3D3D'; }}
-                onMouseLeave={(e) => { if (viewMode !== 'consolidated') e.currentTarget.style.backgroundColor = '#2D2D2D'; }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3D3D3D'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2D2D2D'}
               >
-                Vista Consolidada
+                Ver todas las empresas
               </button>
-              <button
-                onClick={() => setViewMode('individual')}
-                className="px-3 py-1.5 text-sm font-medium transition-colors"
-                style={{
-                  backgroundColor: viewMode === 'individual' ? '#C0C0C0' : '#2D2D2D',
-                  color: viewMode === 'individual' ? '#0A0A0A' : '#F5F5F5',
-                  borderRadius: '4px',
-                  border: '1px solid #2D2D2D',
-                }}
-                onMouseEnter={(e) => { if (viewMode !== 'individual') e.currentTarget.style.backgroundColor = '#3D3D3D'; }}
-                onMouseLeave={(e) => { if (viewMode !== 'individual') e.currentTarget.style.backgroundColor = '#2D2D2D'; }}
-              >
-                Vista por Sucursal
-              </button>
-            </div>
+            )}
             <div className="flex gap-2">
               {[
                 { value: 'today', label: 'Hoy' },
@@ -228,6 +215,66 @@ export default function DashboardPage() {
                 trend="neutral"
               />
             </div>
+
+            {/* Cards de empresas en vista consolidada */}
+            {isConsolidated && kpis?.companiesBreakdown && kpis.companiesBreakdown.length > 0 && (
+              <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '24px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '16px' }}>Desglose por Empresa</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {kpis.companiesBreakdown.map((company: any) => (
+                    <div
+                      key={company.companyId}
+                      className="p-4 transition-colors cursor-pointer"
+                      style={{
+                        backgroundColor: '#0F0F0F',
+                        borderRadius: '4px',
+                        border: '1px solid #2D2D2D',
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1F1F1F'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0F0F0F'}
+                      onClick={() => handleSelectCompany(company.companyId)}
+                    >
+                      <p style={{ fontSize: '14px', fontWeight: 600, color: '#F5F5F5', marginBottom: '12px' }}>
+                        {company.companyName}
+                      </p>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span style={{ fontSize: '12px', color: '#7E7E7E' }}>Saldo</span>
+                          <span style={{ fontSize: '14px', fontWeight: 600, color: '#C0C0C0' }}>
+                            ${Number(company.balance).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span style={{ fontSize: '12px', color: '#7E7E7E' }}>Ingresos</span>
+                          <span style={{ fontSize: '14px', fontWeight: 600, color: '#2F855A' }}>
+                            ${Number(company.income).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span style={{ fontSize: '12px', color: '#7E7E7E' }}>Egresos</span>
+                          <span style={{ fontSize: '14px', fontWeight: 600, color: '#C53030' }}>
+                            ${Number(company.expense).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        className="w-full mt-3 px-3 py-1.5 text-xs font-medium transition-colors"
+                        style={{
+                          backgroundColor: '#2D2D2D',
+                          color: '#F5F5F5',
+                          borderRadius: '4px',
+                          border: '1px solid #2D2D2D',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3D3D3D'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2D2D2D'}
+                      >
+                        Ver detalle
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Charts and Movements */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
