@@ -56,8 +56,8 @@ export default function MainLayout({ children }: Props) {
   ]);
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#0A0A0A', color: '#F5F5F5' }}>
-      <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} onSearchClick={() => setSearchOpen(true)} />
+    <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', color: '#F5F5F5' }}>
+      <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
       <div className="flex relative">
         {/* Mobile Overlay */}
