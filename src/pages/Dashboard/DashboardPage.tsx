@@ -8,24 +8,38 @@ import { useCompanyStore } from "../../core/store/useCompanyStore";
 
 export default function DashboardPage() {
   const [kpis, setKpis] = useState<any>(null);
+  const [companyKpis, setCompanyKpis] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [infoOpen, setInfoOpen] = useState(false);
   const [period, setPeriod] = useState<"today" | "week" | "month" | "year">("month");
   const { activeBranch, activeCompany, setActiveCompany, setActiveBranch } = useCompanyStore();
 
-  const isConsolidated = !activeBranch;
+  // Detectar vista actual
+  const viewMode = !activeCompany ? 'global' : !activeBranch ? 'company' : 'branch';
 
   useEffect(() => {
     loadKpis();
-  }, [period, activeBranch?.id]);
+  }, [period, activeBranch?.id, activeCompany?.id]);
 
   async function loadKpis() {
     try {
       setLoading(true);
       setError("");
-      const response = await api.get("/dashboard/kpis", { params: { period } });
-      setKpis(response.data);
+      
+      if (viewMode === 'global') {
+        const response = await api.get("/dashboard/kpis", { params: { period } });
+        setKpis(response.data);
+        setCompanyKpis(null);
+      } else if (viewMode === 'company' && activeCompany?.id) {
+        const response = await api.get(`/dashboard/company/${activeCompany.id}/kpis`, { params: { period } });
+        setCompanyKpis(response.data);
+        setKpis(null);
+      } else {
+        const response = await api.get("/dashboard/kpis", { params: { period } });
+        setKpis(response.data);
+        setCompanyKpis(null);
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || "No fue posible cargar dashboard");
     } finally {
@@ -44,34 +58,45 @@ export default function DashboardPage() {
     // TODO: Implementar selección automática de primera sucursal
   }
 
-  // Datos simulados para la mini gráfica de barras (últimos 7 días)
-  const miniChartData = useMemo(() => {
-    const data = [];
-    const today = new Date();
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(today.getDate() - i);
-      data.push({
-        day: date.toLocaleDateString('es', { weekday: 'short' }),
-        value: Math.random() * 1000 + 500,
-      });
-    }
-    return data;
-  }, []);
+  // Datos para gráfica de barras por empresa (vista Global)
+  const companyBarChartData = useMemo(() => {
+    if (!kpis?.companiesBreakdown) return [];
+    return kpis.companiesBreakdown.map((company: any) => ({
+      name: company.companyName,
+      saldo: Number(company.balance),
+      ingresos: Number(company.income),
+      egresos: Number(company.expense),
+    }));
+  }, [kpis?.companiesBreakdown]);
 
-  // Datos simulados para la gráfica de línea (últimos 6 meses)
-  const lineChartData = useMemo(() => {
+  // Datos para gráfica de barras por sucursal (vista Empresa)
+  const branchBarChartData = useMemo(() => {
+    if (!companyKpis?.branchesBreakdown) return [];
+    return companyKpis.branchesBreakdown.map((branch: any) => ({
+      name: branch.branchName,
+      saldo: Number(branch.balance),
+      ingresos: Number(branch.income),
+      egresos: Number(branch.expense),
+    }));
+  }, [companyKpis?.branchesBreakdown]);
+
+  // Datos para gráfica de línea de tendencia (vista Sucursal)
+  const trendLineChartData = useMemo(() => {
     const data = [];
-    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'];
-    for (let i = 0; i < 6; i++) {
+    const now = new Date();
+    const days = period === 'today' ? 1 : period === 'week' ? 7 : period === 'year' ? 30 : 30;
+    
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(now.getDate() - i);
       data.push({
-        month: months[i],
-        ingresos: Math.random() * 50000 + 30000,
-        egresos: Math.random() * 40000 + 20000,
+        date: date.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }),
+        ingresos: Math.random() * 5000 + 2000,
+        egresos: Math.random() * 4000 + 1500,
       });
     }
     return data;
-  }, []);
+  }, [period]);
 
   const totalBalance = Number(kpis?.totalBalance || 0);
   const balanceVariation = Number(kpis?.balanceVariation || 0);
@@ -85,11 +110,13 @@ export default function DashboardPage() {
           <div>
             <h2 className="text-3xl font-bold" style={{ color: '#F5F5F5' }}>Dashboard</h2>
             <p style={{ color: '#A3A3A3', fontSize: '14px' }}>
-              {isConsolidated ? 'Vista Global (todas las empresas)' : `${activeCompany?.name || 'Empresa'} — ${activeBranch?.name || 'Sucursal'}`}
+              {viewMode === 'global' ? 'Vista Global (todas las empresas)' : 
+               viewMode === 'company' ? `Empresa: ${activeCompany?.name || 'Seleccionar empresa'}` :
+               `${activeCompany?.name || 'Empresa'} — ${activeBranch?.name || 'Sucursal'}`}
             </p>
           </div>
           <div className="flex gap-3">
-            {!isConsolidated && (
+            {viewMode !== 'global' && (
               <button
                 onClick={handleBackToGlobal}
                 className="px-3 py-1.5 text-sm font-medium transition-colors"
@@ -217,7 +244,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Cards de empresas en vista consolidada */}
-            {isConsolidated && kpis?.companiesBreakdown && kpis.companiesBreakdown.length > 0 && (
+            {viewMode === 'global' && kpis?.companiesBreakdown && kpis.companiesBreakdown.length > 0 && (
               <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '24px' }}>
                 <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '16px' }}>Desglose por Empresa</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -278,22 +305,54 @@ export default function DashboardPage() {
 
             {/* Charts and Movements */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Gráfica de línea */}
+              {/* Gráfica según vista */}
               <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '24px' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '16px' }}>Ingresos vs Egresos (6 meses)</h3>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '16px' }}>
+                  {viewMode === 'global' ? 'Comparativa por Empresa' :
+                   viewMode === 'company' ? 'Comparativa por Sucursal' :
+                   'Tendencia de Ingresos vs Egresos'}
+                </h3>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={lineChartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#2D2D2D" />
-                      <XAxis dataKey="month" stroke="#A3A3A3" />
-                      <YAxis stroke="#A3A3A3" />
-                      <Tooltip
-                        contentStyle={{ backgroundColor: '#1F1F1F', border: '1px solid #2D2D2D', borderRadius: '4px', color: '#F5F5F5' }}
-                        itemStyle={{ color: '#F5F5F5' }}
-                      />
-                      <Line type="monotone" dataKey="ingresos" stroke="#C0C0C0" strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="egresos" stroke="#2F855A" strokeWidth={2} dot={false} />
-                    </LineChart>
+                    {viewMode === 'global' && companyBarChartData.length > 0 ? (
+                      <BarChart data={companyBarChartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#2D2D2D" />
+                        <XAxis dataKey="name" stroke="#A3A3A3" />
+                        <YAxis stroke="#A3A3A3" />
+                        <Tooltip
+                          contentStyle={{ backgroundColor: '#1F1F1F', border: '1px solid #2D2D2D', borderRadius: '4px', color: '#F5F5F5' }}
+                          itemStyle={{ color: '#F5F5F5' }}
+                        />
+                        <Bar dataKey="saldo" fill="#C0C0C0" name="Saldo" />
+                        <Bar dataKey="ingresos" fill="#2F855A" name="Ingresos" />
+                        <Bar dataKey="egresos" fill="#C53030" name="Egresos" />
+                      </BarChart>
+                    ) : viewMode === 'company' && branchBarChartData.length > 0 ? (
+                      <BarChart data={branchBarChartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#2D2D2D" />
+                        <XAxis dataKey="name" stroke="#A3A3A3" />
+                        <YAxis stroke="#A3A3A3" />
+                        <Tooltip
+                          contentStyle={{ backgroundColor: '#1F1F1F', border: '1px solid #2D2D2D', borderRadius: '4px', color: '#F5F5F5' }}
+                          itemStyle={{ color: '#F5F5F5' }}
+                        />
+                        <Bar dataKey="saldo" fill="#C0C0C0" name="Saldo" />
+                        <Bar dataKey="ingresos" fill="#2F855A" name="Ingresos" />
+                        <Bar dataKey="egresos" fill="#C53030" name="Egresos" />
+                      </BarChart>
+                    ) : (
+                      <LineChart data={trendLineChartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#2D2D2D" />
+                        <XAxis dataKey="date" stroke="#A3A3A3" />
+                        <YAxis stroke="#A3A3A3" />
+                        <Tooltip
+                          contentStyle={{ backgroundColor: '#1F1F1F', border: '1px solid #2D2D2D', borderRadius: '4px', color: '#F5F5F5' }}
+                          itemStyle={{ color: '#F5F5F5' }}
+                        />
+                        <Line type="monotone" dataKey="ingresos" stroke="#C0C0C0" strokeWidth={2} dot={false} name="Ingresos" />
+                        <Line type="monotone" dataKey="egresos" stroke="#2F855A" strokeWidth={2} dot={false} name="Egresos" />
+                      </LineChart>
+                    )}
                   </ResponsiveContainer>
                 </div>
               </div>
