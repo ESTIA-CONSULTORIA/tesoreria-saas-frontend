@@ -74,81 +74,156 @@ export default function CompaniesPage() {
         company={selectedCompany}
       />
 
-      <div className="space-y-6">
-        <div className="flex items-center justify-between gap-4">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
           <div>
-            <h2 className="text-3xl font-bold">Empresas</h2>
-            <p className="text-slate-400">
+            <h2 style={{ fontSize: '24px', fontWeight: 400, color: '#F5F5F5', marginBottom: '4px', letterSpacing: '0.01em' }}>
+              Empresas
+            </h2>
+            <p style={{ fontSize: '13px', color: '#9A9A9A' }}>
               Administración de empresas
             </p>
           </div>
 
           <button
             onClick={handleCreate}
-            className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+            style={{
+              padding: '10px 20px',
+              fontSize: '13px',
+              color: '#BDBDBD',
+              backgroundColor: '#1B1B1B',
+              border: '1px solid #3D3D3D',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              letterSpacing: '0.05em',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#BDBDBD'; e.currentTarget.style.color = '#F5F5F5'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.color = '#BDBDBD'; }}
           >
             + Nueva Empresa
           </button>
         </div>
 
         {error && (
-          <div className="rounded-xl border border-red-700 bg-red-900/30 p-4 text-red-300">
+          <div style={{ padding: '16px', backgroundColor: '#2D2D2D', border: '1px solid #9B3A3A', borderRadius: '8px', color: '#F5F5F5' }}>
             {error}
           </div>
         )}
 
         {loading ? (
-          <div className="rounded-xl bg-slate-900 p-6">
+          <div style={{ padding: '24px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '8px', color: '#9A9A9A' }}>
             Cargando empresas...
           </div>
         ) : (
-          <div className="space-y-4">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '16px' }}>
             {companies.length === 0 ? (
-              <div className="rounded-xl bg-slate-900 p-6">
+              <div style={{ padding: '24px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '8px', color: '#9A9A9A' }}>
                 No existen empresas registradas
               </div>
             ) : (
-              companies.map((company) => (
-                <div
-                  key={company.id}
-                  className="rounded-xl border border-slate-800 bg-slate-900 p-6"
-                >
-                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold">
-                        {company.legalName}
-                      </h3>
-
-                      <p className="text-sm text-slate-400">
-                        {company.tradeName}
-                      </p>
-
-                      <p className="text-xs text-slate-500">
-                        RFC: {company.taxId || "Sin RFC"} · Moneda:{" "}
-                        {company.baseCurrency}
-                      </p>
+              companies.map((company) => {
+                const initials = (company.legalName || company.tradeName || 'NA')
+                  .split(' ')
+                  .map((n: string) => n[0])
+                  .join('')
+                  .toUpperCase()
+                  .slice(0, 2);
+                
+                return (
+                  <div
+                    key={company.id}
+                    style={{
+                      backgroundColor: '#161616',
+                      border: '1px solid #2D2D2D',
+                      borderRadius: '12px',
+                      padding: '24px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '8px',
+                        backgroundColor: '#2D2D2D',
+                        color: '#BDBDBD',
+                        fontWeight: 600,
+                        fontSize: '14px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}>
+                        {initials}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <h3 style={{ fontSize: '15px', color: '#F5F5F5', fontWeight: 500, marginBottom: '4px' }}>
+                          {company.legalName}
+                        </h3>
+                        <p style={{ fontSize: '12px', color: '#9A9A9A', marginBottom: '4px' }}>
+                          {company.tradeName}
+                        </p>
+                        <p style={{ fontSize: '11px', color: '#7E7E7E', fontFamily: 'monospace' }}>
+                          RFC: {company.taxId || 'Sin RFC'}
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-green-900/40 px-3 py-1 text-sm text-green-300">
-                        {company.isActive ? "Activa" : "Inactiva"}
+                    <div style={{ height: '1px', backgroundColor: '#2D2D2D', margin: '12px 0' }} />
+
+                    <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', fontSize: '11px', color: '#9A9A9A' }}>
+                      <span>Moneda: {company.baseCurrency}</span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                      <span style={{
+                        padding: '4px 12px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        color: company.isActive ? '#3B7A57' : '#9B3A3A',
+                        backgroundColor: company.isActive ? '#1a2e22' : '#2e1a1a',
+                      }}>
+                        {company.isActive ? 'Activa' : 'Inactiva'}
                       </span>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px' }}>
                       <button
                         onClick={() => handleEdit(company)}
-                        className="rounded-lg bg-slate-700 px-3 py-2 text-sm text-white hover:bg-slate-600"
+                        style={{
+                          flex: 1,
+                          padding: '8px 16px',
+                          fontSize: '12px',
+                          color: '#BDBDBD',
+                          backgroundColor: 'transparent',
+                          border: '1px solid #2D2D2D',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.color = '#F5F5F5'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.color = '#BDBDBD'; }}
                       >
                         Editar
                       </button>
                       <button
                         onClick={() => deleteCompany(company.id)}
-                        className="rounded-lg bg-red-600 px-3 py-2 text-sm text-white hover:bg-red-700"
+                        style={{
+                          flex: 1,
+                          padding: '8px 16px',
+                          fontSize: '12px',
+                          color: '#9B3A3A',
+                          backgroundColor: 'transparent',
+                          border: '1px solid #2D2D2D',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#9B3A3A'; e.currentTarget.style.backgroundColor = '#2e1a1a'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.backgroundColor = 'transparent'; }}
                       >
                         Eliminar
                       </button>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         )}

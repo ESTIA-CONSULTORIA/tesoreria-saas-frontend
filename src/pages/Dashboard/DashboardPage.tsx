@@ -1,6 +1,7 @@
 import MainLayout from "../../core/layout/MainLayout";
 import React, { useEffect, useMemo, useState } from "react";
 import { api } from "../../core/api/api";
+import { useNavigate } from "react-router-dom";
 import DashboardInfoModal from "./DashboardInfoModal";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
@@ -8,6 +9,7 @@ import { useCompanyStore } from "../../core/store/useCompanyStore";
 type NavigationLevel = 'group' | 'company-selection' | 'company-detail' | 'branch-selection' | 'branch-detail';
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const [kpis, setKpis] = useState<any>(null);
   const [companyKpis, setCompanyKpis] = useState<any>(null);
   const [branchKpis, setBranchKpis] = useState<any>(null);
@@ -20,11 +22,22 @@ export default function DashboardPage() {
   const [navigationLevel, setNavigationLevel] = useState<NavigationLevel>('group');
   const [companies, setCompanies] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
+  const [pendingShifts, setPendingShifts] = useState<any[]>([]);
   const { activeBranch, activeCompany, setActiveCompany, setActiveBranch } = useCompanyStore();
 
   useEffect(() => {
     loadKpis();
+    loadPendingShifts();
   }, [period, navigationLevel, selectedCompany?.companyId, selectedBranch?.branchId]);
+
+  async function loadPendingShifts() {
+    try {
+      const response = await api.get("/pos/shifts", { params: { status: 'PENDIENTE_APROBACION' } });
+      setPendingShifts(Array.isArray(response.data) ? response.data : []);
+    } catch (err) {
+      setPendingShifts([]);
+    }
+  }
 
   async function loadKpis() {
     try {
@@ -260,6 +273,80 @@ export default function DashboardPage() {
             ))}
           </div>
         </div>
+
+        {/* Executive Alert Band */}
+        {(!loading && kpis) && (
+          <div style={{ padding: '16px 24px', borderBottom: '1px solid #2D2D2D', backgroundColor: '#0A0A0A' }}>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              {pendingShifts.length > 0 && (
+                <div
+                  onClick={() => navigate('/pos')}
+                  style={{
+                    padding: '8px 14px',
+                    border: '1px solid #8A6A3A44',
+                    background: '#8A6A3A11',
+                    borderRadius: '8px',
+                    fontSize: '11px',
+                    color: '#8A6A3A',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    gap: '8px',
+                    alignItems: 'center',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#8A6A3A88'; e.currentTarget.style.background = '#8A6A3A22'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#8A6A3A44'; e.currentTarget.style.background = '#8A6A3A11'; }}
+                >
+                  <span>⚠</span>
+                  <span>{pendingShifts.length} cortes pendientes de revisión</span>
+                </div>
+              )}
+              {(kpis.cxpVencidas && kpis.cxpVencidas > 0) && (
+                <div
+                  onClick={() => navigate('/treasury')}
+                  style={{
+                    padding: '8px 14px',
+                    border: '1px solid #8A6A3A44',
+                    background: '#8A6A3A11',
+                    borderRadius: '8px',
+                    fontSize: '11px',
+                    color: '#8A6A3A',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    gap: '8px',
+                    alignItems: 'center',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#8A6A3A88'; e.currentTarget.style.background = '#8A6A3A22'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#8A6A3A44'; e.currentTarget.style.background = '#8A6A3A11'; }}
+                >
+                  <span>⚠</span>
+                  <span>{kpis.cxpVencidas} facturas vencidas</span>
+                </div>
+              )}
+              {(kpis.saldoDisponible && kpis.saldoDisponible < 10000) && (
+                <div
+                  onClick={() => navigate('/banks')}
+                  style={{
+                    padding: '8px 14px',
+                    border: '1px solid #8A6A3A44',
+                    background: '#8A6A3A11',
+                    borderRadius: '8px',
+                    fontSize: '11px',
+                    color: '#8A6A3A',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    gap: '8px',
+                    alignItems: 'center',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#8A6A3A88'; e.currentTarget.style.background = '#8A6A3A22'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#8A6A3A44'; e.currentTarget.style.background = '#8A6A3A11'; }}
+                >
+                  <span>⚠</span>
+                  <span>Saldo bajo en cuentas</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {error && (
           <div style={{ padding: '24px' }}>
