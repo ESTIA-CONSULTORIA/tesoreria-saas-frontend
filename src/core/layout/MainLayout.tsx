@@ -12,29 +12,29 @@ interface Props {
 }
 
 const navItems = [
-  { label: "Dashboard", to: "/dashboard", icon: "📊", modulo: "dashboard", shortcut: "Alt+1", category: "OPERACIÓN" },
-  { label: "Empresas", to: "/companies", icon: "🏢", modulo: "empresas", category: "OPERACIÓN" },
-  { label: "Sucursales", to: "/branches", icon: "🏪", modulo: "sucursales", category: "OPERACIÓN" },
-  { label: "Bancos", to: "/banks", icon: "🏦", modulo: "bancos", category: "TESORERÍA" },
-  { label: "Movimientos", to: "/movements", icon: "🧾", modulo: "movimientos", shortcut: "Alt+2", category: "TESORERÍA" },
-  { label: "Transferencias", to: "/transfers", icon: "🔁", modulo: "transferencias", shortcut: "Alt+3", category: "TESORERÍA" },
-  { label: "Tesorería", to: "/treasury", icon: "💰", modulo: "tesoreria", category: "TESORERÍA" },
-  { label: "Conciliación", to: "/reconciliation", icon: "📋", modulo: "conciliacion", category: "TESORERÍA" },
-  { label: "Proveedores", to: "/suppliers", icon: "📦", modulo: "proveedores", category: "COMPRAS" },
-  { label: "Compras", to: "/purchases", icon: "🛒", modulo: "compras", category: "COMPRAS" },
-  { label: "Costos", to: "/costs", icon: "🏭", modulo: "costos", category: "COMPRAS" },
-  { label: "Reportes", to: "/reports", icon: "📑", modulo: "reportes", shortcut: "Alt+4", category: "ANÁLISIS" },
-  { label: "POS", to: "/pos", icon: "🖥️", modulo: "pos", category: "ANÁLISIS" },
-  { label: "Configuración", to: "/settings", icon: "⚙️", modulo: "configuracion", category: "CONTROL" },
-  { label: "Config. Login", to: "/settings/login-config", icon: "🔐", modulo: "configuracion", category: "CONTROL" },
+  { label: "Dashboard", to: "/dashboard", modulo: "dashboard", shortcut: "Alt+1", category: "OPERACIÓN" },
+  { label: "Empresas", to: "/companies", modulo: "empresas", category: "OPERACIÓN" },
+  { label: "Sucursales", to: "/branches", modulo: "sucursales", category: "OPERACIÓN" },
+  { label: "Bancos", to: "/banks", modulo: "bancos", category: "TESORERÍA" },
+  { label: "Movimientos", to: "/movements", modulo: "movimientos", shortcut: "Alt+2", category: "TESORERÍA" },
+  { label: "Transferencias", to: "/transfers", modulo: "transferencias", shortcut: "Alt+3", category: "TESORERÍA" },
+  { label: "Tesorería", to: "/treasury", modulo: "tesoreria", category: "TESORERÍA" },
+  { label: "Conciliación", to: "/reconciliation", modulo: "conciliacion", category: "TESORERÍA" },
+  { label: "Proveedores", to: "/suppliers", modulo: "proveedores", category: "COMPRAS" },
+  { label: "Compras", to: "/purchases", modulo: "compras", category: "COMPRAS" },
+  { label: "Costos", to: "/costs", modulo: "costos", category: "COMPRAS" },
+  { label: "Reportes", to: "/reports", modulo: "reportes", shortcut: "Alt+4", category: "ANÁLISIS" },
+  { label: "POS", to: "/pos", modulo: "pos", category: "ANÁLISIS" },
+  { label: "Configuración", to: "/settings", modulo: "configuracion", category: "CONTROL" },
+  { label: "Config. Login", to: "/settings/login-config", modulo: "configuracion", category: "CONTROL" },
 ];
 
 const soporteNavItems = [
-  { label: "Dashboard Soporte", to: "/soporte/dashboard", icon: "📊", modulo: "soporte-dashboard" },
-  { label: "Gestión de Clientes", to: "/soporte/clientes", icon: "👥", modulo: "soporte-clientes" },
-  { label: "Planes y Módulos", to: "/soporte/planes", icon: "📦", modulo: "soporte-planes" },
-  { label: "Monitoreo", to: "/soporte/monitoreo", icon: "📡", modulo: "soporte-monitoreo" },
-  { label: "Configuración Global", to: "/soporte/config", icon: "⚙️", modulo: "soporte-config" },
+  { label: "Dashboard Soporte", to: "/soporte/dashboard", modulo: "soporte-dashboard" },
+  { label: "Gestión de Clientes", to: "/soporte/clientes", modulo: "soporte-clientes" },
+  { label: "Planes y Módulos", to: "/soporte/planes", modulo: "soporte-planes" },
+  { label: "Monitoreo", to: "/soporte/monitoreo", modulo: "soporte-monitoreo" },
+  { label: "Configuración Global", to: "/soporte/config", modulo: "soporte-config" },
 ];
 
 export default function MainLayout({ children }: Props) {
@@ -96,7 +96,7 @@ export default function MainLayout({ children }: Props) {
                       key={item.to}
                       to={item.to}
                       onClick={() => setSidebarOpen(false)}
-                      className="flex items-center gap-3 px-3 py-2 text-sm font-medium transition-colors"
+                      className="px-4 py-2 text-sm font-medium transition-colors"
                       style={{
                         color: isActive ? '#F5F5F5' : '#9A9A9A',
                         borderLeft: isActive ? '2px solid #BDBDBD' : '2px solid transparent',
@@ -105,7 +105,6 @@ export default function MainLayout({ children }: Props) {
                       onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = '#222222'; e.currentTarget.style.color = '#F5F5F5'; } }}
                       onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#9A9A9A'; } }}
                     >
-                      <span>{item.icon}</span>
                       <span>{item.label}</span>
                     </Link>
                   );
@@ -120,7 +119,7 @@ export default function MainLayout({ children }: Props) {
                       key={item.to}
                       to={item.to}
                       onClick={() => setSidebarOpen(false)}
-                      className="flex items-center justify-between px-3 py-2 text-sm font-medium transition-colors"
+                      className="flex items-center justify-between px-4 py-2 text-sm font-medium transition-colors"
                       style={{
                         color: isActive ? '#F5F5F5' : '#9A9A9A',
                         borderLeft: isActive ? '2px solid #BDBDBD' : '2px solid transparent',
@@ -129,10 +128,7 @@ export default function MainLayout({ children }: Props) {
                       onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = '#222222'; e.currentTarget.style.color = '#F5F5F5'; } }}
                       onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#9A9A9A'; } }}
                     >
-                      <div className="flex items-center gap-3">
-                        <span>{item.icon}</span>
-                        <span>{item.label}</span>
-                      </div>
+                      <span>{item.label}</span>
                       {item.shortcut && (
                         <kbd className="text-xs px-1.5 py-0.5" style={{ backgroundColor: '#222222', color: '#7E7E7E' }}>{item.shortcut}</kbd>
                       )}
@@ -164,7 +160,7 @@ export default function MainLayout({ children }: Props) {
                             key={item.to}
                             to={item.to}
                             onClick={() => setSidebarOpen(false)}
-                            className="flex items-center justify-between px-3 py-2 text-sm font-medium transition-colors"
+                            className="flex items-center justify-between px-4 py-2 text-sm font-medium transition-colors"
                             style={{
                               color: isActive ? '#F5F5F5' : '#9A9A9A',
                               borderLeft: isActive ? '2px solid #BDBDBD' : '2px solid transparent',
@@ -173,10 +169,7 @@ export default function MainLayout({ children }: Props) {
                             onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = '#222222'; e.currentTarget.style.color = '#F5F5F5'; } }}
                             onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#9A9A9A'; } }}
                           >
-                            <div className="flex items-center gap-3">
-                              <span>{item.icon}</span>
-                              <span>{item.label}</span>
-                            </div>
+                            <span>{item.label}</span>
                             {item.shortcut && (
                               <kbd className="text-xs px-1.5 py-0.5" style={{ backgroundColor: '#222222', color: '#7E7E7E' }}>{item.shortcut}</kbd>
                             )}

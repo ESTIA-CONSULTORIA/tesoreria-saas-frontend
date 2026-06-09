@@ -1,505 +1,455 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from "recharts";
+import { useCompanyStore } from "../../core/store/useCompanyStore";
 
-const COLORS = {
-  verde: '#10B981',
-  rojo: '#EF4444',
-  azul: '#0EA5E9',
-  amarillo: '#F59E0B',
-  gris: '#64748B',
-};
+type View = 'login' | 'home' | 'dashboard' | 'tesoreria' | 'ventas' | 'gastos' | 'cxc' | 'cxp' | 'personal' | 'alertas';
 
-export default function MobileAnalyticsApp() {
-  const [activeTab, setActiveTab] = useState<'inicio' | 'ventas' | 'gastos' | 'flujo' | 'alertas'>('inicio');
-  const [period, setPeriod] = useState<'today' | 'week' | 'month' | 'year'>('month');
+export default function ESTIAExecutiveAccess() {
+  const [view, setView] = useState<View>('login');
+  const [selectedCompany, setSelectedCompany] = useState<any>(null);
+  const [pin, setPin] = useState('');
+  const [showPinError, setShowPinError] = useState(false);
   const [kpis, setKpis] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [companies, setCompanies] = useState<any[]>([]);
   const user = useAuthStore((state) => state.user);
+  const { activeCompany } = useCompanyStore();
 
   useEffect(() => {
-    loadData();
-  }, [period, activeTab]);
+    loadCompanies();
+  }, []);
 
-  async function loadData() {
+  async function loadCompanies() {
     try {
-      setLoading(true);
-      const response = await api.get("/dashboard/kpis", { params: { period } });
-      setKpis(response.data);
+      const response = await api.get("/companies");
+      setCompanies(response.data);
     } catch (error) {
-      console.error("Error loading data:", error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+      console.error("Error loading companies:", error);
     }
   }
 
-  function handleRefresh() {
-    setRefreshing(true);
-    loadData();
+  function handleCompanySelect(company: any) {
+    setSelectedCompany(company);
+    setView('login');
   }
 
-  // Datos simulados para gráficas
-  const salesChartData = [
-    { week: 'Sem 1', ventas: 45000 },
-    { week: 'Sem 2', ventas: 52000 },
-    { week: 'Sem 3', ventas: 48000 },
-    { week: 'Sem 4', ventas: 61000 },
-  ];
+  function handlePinSubmit() {
+    // Simulación de validación PIN - en producción validar contra backend
+    if (pin.length === 4) {
+      setShowPinError(false);
+      setView('home');
+      loadKpis();
+    } else {
+      setShowPinError(true);
+    }
+  }
 
-  const expenseChartData = [
-    { name: 'Operativo', value: 35, color: COLORS.azul },
-    { name: 'Personal', value: 25, color: COLORS.verde },
-    { name: 'Marketing', value: 20, color: COLORS.amarillo },
-    { name: 'Otros', value: 20, color: COLORS.gris },
-  ];
+  function handlePinChange(value: string) {
+    setPin(value);
+    setShowPinError(false);
+  }
 
-  const cashFlowChartData = [
-    { week: 'Sem 1', ingresos: 45000, egresos: 38000, saldo: 7000 },
-    { week: 'Sem 2', ingresos: 52000, egresos: 42000, saldo: 8000 },
-    { week: 'Sem 3', ingresos: 48000, egresos: 45000, saldo: 3000 },
-    { week: 'Sem 4', ingresos: 61000, egresos: 50000, saldo: 11000 },
-  ];
+  async function loadKpis() {
+    try {
+      setLoading(true);
+      const response = await api.get("/dashboard/kpis", { params: { period: 'month' } });
+      setKpis(response.data);
+    } catch (error) {
+      console.error("Error loading KPIs:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  const upcomingPayments = [
-    { date: '2026-06-05', concept: 'Rent oficina', amount: 15000, urgency: 'high' },
-    { date: '2026-06-10', concept: 'Proveedores', amount: 8500, urgency: 'medium' },
-    { date: '2026-06-15', concept: 'Servicios', amount: 3200, urgency: 'low' },
-  ];
+  function handleLogout() {
+    setView('login');
+    setPin('');
+    setSelectedCompany(null);
+    setKpis(null);
+  }
 
-  const alerts = [
-    { type: 'critical', title: 'Saldo bajo', description: 'Cuenta principal con saldo negativo', time: 'hace 2h' },
-    { type: 'important', title: 'Gasto alto', description: 'Marketing superó presupuesto mensual', time: 'hace 5h' },
-    { type: 'info', title: 'Meta alcanzada', description: 'Ventas semanales superaron objetivo', time: 'hace 1d' },
-  ];
-
-  const totalBalance = Number(kpis?.totalBalance || 0);
-  const balanceVariation = Number(kpis?.balanceVariation || 0);
-  const isPositive = balanceVariation >= 0;
-
-  return (
-    <div className="min-h-screen bg-slate-950 pb-20">
-      {/* Header */}
-      <div className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800 px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
-              {user?.name?.charAt(0) || 'U'}
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-white">Mi Empresa</p>
-              <p className="text-xs text-slate-400">{user?.name || 'Usuario'}</p>
-            </div>
+  // Vista: Selección de Empresa
+  if (view === 'login' && !selectedCompany) {
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+        <div style={{ maxWidth: '400px', width: '100%' }}>
+          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 400, color: '#F5F5F5', marginBottom: '8px', letterSpacing: '0.02em' }}>
+              ESTIA
+            </h1>
+            <p style={{ fontSize: '14px', color: '#9A9A9A', letterSpacing: '0.01em' }}>
+              Executive Access
+            </p>
           </div>
+
+          <p style={{ fontSize: '14px', color: '#7E7E7E', marginBottom: '24px', textAlign: 'center', letterSpacing: '0.01em' }}>
+            Selecciona una empresa
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {companies.map((company) => (
+              <button
+                key={company.id}
+                onClick={() => handleCompanySelect(company)}
+                style={{
+                  width: '100%',
+                  padding: '20px',
+                  backgroundColor: '#161616',
+                  border: '1px solid #2D2D2D',
+                  borderRadius: '4px',
+                  color: '#F5F5F5',
+                  fontSize: '14px',
+                  letterSpacing: '0.01em',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.backgroundColor = '#1B1B1B'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.backgroundColor = '#161616'; }}
+              >
+                {company.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Vista: PIN
+  if (view === 'login' && selectedCompany) {
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+        <div style={{ maxWidth: '400px', width: '100%' }}>
+          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+            <div style={{ width: '80px', height: '80px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+              <span style={{ fontSize: '32px', color: '#BDBDBD' }}>
+                {selectedCompany.name.charAt(0)}
+              </span>
+            </div>
+            <h2 style={{ fontSize: '18px', fontWeight: 400, color: '#F5F5F5', marginBottom: '8px', letterSpacing: '0.01em' }}>
+              {selectedCompany.name}
+            </h2>
+            <p style={{ fontSize: '12px', color: '#7E7E7E', letterSpacing: '0.01em' }}>
+              Ingresa tu PIN de acceso
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '32px' }}>
+            {[0, 1, 2, 3].map((index) => (
+              <div
+                key={index}
+                style={{
+                  width: '48px',
+                  height: '56px',
+                  backgroundColor: '#161616',
+                  border: showPinError ? '1px solid #9B3A3A' : '1px solid #2D2D2D',
+                  borderRadius: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '24px',
+                  color: '#F5F5F5',
+                  letterSpacing: '0.02em',
+                }}
+              >
+                {pin[index] ? '•' : ''}
+              </div>
+            ))}
+          </div>
+
+          {showPinError && (
+            <p style={{ textAlign: 'center', color: '#9B3A3A', fontSize: '12px', marginBottom: '24px', letterSpacing: '0.01em' }}>
+              PIN incorrecto
+            </p>
+          )}
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, '', 0, '⌫'].map((num) => (
+              <button
+                key={num}
+                onClick={() => {
+                  if (num === '⌫') {
+                    handlePinChange(pin.slice(0, -1));
+                  } else if (num === '') {
+                    // Espacio vacío
+                  } else if (pin.length < 4) {
+                    handlePinChange(pin + num);
+                  }
+                }}
+                disabled={num === ''}
+                style={{
+                  width: '100%',
+                  height: '64px',
+                  backgroundColor: '#161616',
+                  border: '1px solid #2D2D2D',
+                  borderRadius: '4px',
+                  color: '#F5F5F5',
+                  fontSize: '24px',
+                  cursor: num === '' ? 'default' : 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => { if (num !== '') e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.backgroundColor = '#1B1B1B'; }}
+                onMouseLeave={(e) => { if (num !== '') e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.backgroundColor = '#161616'; }}
+              >
+                {num}
+              </button>
+            ))}
+          </div>
+
           <button
-            onClick={handleRefresh}
-            className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition-colors"
-            disabled={refreshing}
+            onClick={() => setSelectedCompany(null)}
+            style={{
+              marginTop: '24px',
+              width: '100%',
+              padding: '12px',
+              backgroundColor: 'transparent',
+              border: 'none',
+              color: '#7E7E7E',
+              fontSize: '12px',
+              letterSpacing: '0.01em',
+              cursor: 'pointer',
+            }}
           >
-            🔄
+            Cambiar empresa
           </button>
         </div>
       </div>
+    );
+  }
 
-      {/* Content */}
-      <div className="px-4 py-4">
-        {loading && !kpis ? (
-          <div className="space-y-4">
-            <div className="h-48 bg-slate-900 rounded-2xl animate-pulse" />
-            <div className="grid grid-cols-2 gap-4">
-              <div className="h-24 bg-slate-900 rounded-xl animate-pulse" />
-              <div className="h-24 bg-slate-900 rounded-xl animate-pulse" />
+  // Vista: Home Ejecutivo (Mosaicos)
+  if (view === 'home') {
+    const modules = [
+      { id: 'dashboard', icon: '📊', label: 'Dashboard', description: 'Indicadores clave' },
+      { id: 'tesoreria', icon: '💰', label: 'Tesorería', description: 'Flujo de caja' },
+      { id: 'ventas', icon: '📈', label: 'Ventas', description: 'Ingresos y metas' },
+      { id: 'gastos', icon: '💸', label: 'Gastos', description: 'Egresos y control' },
+      { id: 'cxc', icon: '📄', label: 'CxC', description: 'Cuentas por cobrar' },
+      { id: 'cxp', icon: '📋', label: 'CxP', description: 'Cuentas por pagar' },
+      { id: 'personal', icon: '👥', label: 'Personal', description: 'Nómina y equipo' },
+      { id: 'alertas', icon: '🔔', label: 'Alertas', description: 'Notificaciones' },
+    ];
+
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', padding: '20px' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ width: '48px', height: '48px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: '20px', color: '#BDBDBD' }}>
+                {selectedCompany?.name.charAt(0) || 'E'}
+              </span>
+            </div>
+            <div>
+              <h1 style={{ fontSize: '16px', fontWeight: 400, color: '#F5F5F5', marginBottom: '2px', letterSpacing: '0.01em' }}>
+                {selectedCompany?.name || 'Empresa'}
+              </h1>
+              <p style={{ fontSize: '12px', color: '#7E7E7E', letterSpacing: '0.01em' }}>
+                {user?.name || 'Usuario'}
+              </p>
             </div>
           </div>
-        ) : (
-          <>
-            {activeTab === 'inicio' && (
-              <div className="space-y-4">
-                {/* Hero Card */}
-                <div className="rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-slate-700 p-5">
-                  <p className="text-sm text-slate-400 mb-2">Saldo total global</p>
-                  <p className="text-4xl font-bold font-mono text-white mb-3">
-                    ${totalBalance.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </p>
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className={`text-lg font-semibold ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
-                      {isPositive ? '↑' : '↓'} {Math.abs(balanceVariation).toFixed(1)}%
-                    </span>
-                    <span className="text-sm text-slate-400">vs período anterior</span>
-                  </div>
-                  <div className="flex gap-2">
-                    {[
-                      { value: 'today', label: 'Hoy' },
-                      { value: 'week', label: 'Semana' },
-                      { value: 'month', label: 'Mes' },
-                      { value: 'year', label: 'Año' },
-                    ].map((p) => (
-                      <button
-                        key={p.value}
-                        onClick={() => setPeriod(p.value as any)}
-                        className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          period === p.value
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-slate-700 text-slate-300'
-                        }`}
-                      >
-                        {p.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+          <button
+            onClick={handleLogout}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: 'transparent',
+              border: '1px solid #2D2D2D',
+              borderRadius: '2px',
+              color: '#7E7E7E',
+              fontSize: '12px',
+              letterSpacing: '0.01em',
+              cursor: 'pointer',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.color = '#BDBDBD'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.color = '#7E7E7E'; }}
+          >
+            Salir
+          </button>
+        </div>
 
-                {/* KPIs Grid */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl bg-slate-900 border border-slate-800 p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-green-400">↓</span>
-                      <p className="text-xs text-slate-400">Ingresos</p>
-                    </div>
-                    <p className="text-xl font-bold text-white">
-                      ${(kpis?.income || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}
-                    </p>
-                    <p className={`text-xs font-semibold ${kpis?.incomeVariation >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {kpis?.incomeVariation >= 0 ? '+' : ''}{kpis?.incomeVariation || 0}%
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-slate-900 border border-slate-800 p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-red-400">↑</span>
-                      <p className="text-xs text-slate-400">Egresos</p>
-                    </div>
-                    <p className="text-xl font-bold text-white">
-                      ${(kpis?.expense || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}
-                    </p>
-                    <p className={`text-xs font-semibold ${kpis?.expenseVariation <= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {kpis?.expenseVariation >= 0 ? '+' : ''}{kpis?.expenseVariation || 0}%
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-slate-900 border border-slate-800 p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-blue-400">📄</span>
-                      <p className="text-xs text-slate-400">CxC</p>
-                    </div>
-                    <p className="text-xl font-bold text-white">
-                      ${(kpis?.accountsReceivable || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}
-                    </p>
-                    <p className="text-xs text-slate-400">{kpis?.pendingInvoices || 0} facturas</p>
-                  </div>
-                  <div className="rounded-xl bg-slate-900 border border-slate-800 p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-yellow-400">📋</span>
-                      <p className="text-xs text-slate-400">CxP</p>
-                    </div>
-                    <p className="text-xl font-bold text-white">
-                      ${(kpis?.accountsPayable || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}
-                    </p>
-                    <p className="text-xs text-slate-400">Vence: {kpis?.nextDueDate || 'N/A'}</p>
-                  </div>
-                </div>
+        <h2 style={{ fontSize: '20px', fontWeight: 400, color: '#F5F5F5', marginBottom: '24px', letterSpacing: '0.01em' }}>
+          Consulta Ejecutiva
+        </h2>
 
-                {/* Últimos movimientos */}
-                <div className="rounded-xl bg-slate-900 border border-slate-800 p-4">
-                  <h3 className="text-lg font-semibold text-white mb-3">Últimos movimientos</h3>
-                  <div className="space-y-3">
-                    {(kpis?.latestMovements || []).slice(0, 5).map((movement: any) => (
-                      <div key={movement.id} className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/50">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                          movement.type === 'INCOME' ? 'bg-green-900/30' : 'bg-red-900/30'
-                        }`}>
-                          <span className={movement.type === 'INCOME' ? 'text-green-400' : 'text-red-400'}>
-                            {movement.type === 'INCOME' ? '↓' : '↑'}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-white truncate">{movement.concept}</p>
-                          <p className="text-xs text-slate-400">{movement.category}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className={`text-sm font-semibold ${
-                            movement.type === 'INCOME' ? 'text-green-400' : 'text-red-400'
-                          }`}>
-                            {movement.type === 'INCOME' ? '+' : '-'}${Number(movement.amount).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'ventas' && (
-              <div className="space-y-4">
-                <div className="rounded-xl bg-slate-900 border border-slate-800 p-4">
-                  <p className="text-sm text-slate-400 mb-1">Total ventas período</p>
-                  <p className="text-3xl font-bold text-white mb-2">
-                    ${(kpis?.income || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}
-                  </p>
-                  <p className={`text-sm font-semibold ${kpis?.incomeVariation >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {kpis?.incomeVariation >= 0 ? '+' : ''}{kpis?.incomeVariation || 0}% vs anterior
-                  </p>
-                </div>
-
-                <div className="rounded-xl bg-slate-900 border border-slate-800 p-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <p className="text-sm text-slate-400">Meta mensual</p>
-                    <p className="text-sm text-white">75%</p>
-                  </div>
-                  <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500 rounded-full" style={{ width: '75%' }} />
-                  </div>
-                </div>
-
-                <div className="rounded-xl bg-slate-900 border border-slate-800 p-4">
-                  <h3 className="text-lg font-semibold text-white mb-3">Ventas por semana</h3>
-                  <div className="h-48">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={salesChartData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                        <XAxis dataKey="week" stroke="#94a3b8" />
-                        <YAxis stroke="#94a3b8" />
-                        <Tooltip
-                          contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
-                          itemStyle={{ color: '#fff' }}
-                        />
-                        <Area type="monotone" dataKey="ventas" stroke={COLORS.azul} fill={COLORS.azul} fillOpacity={0.3} />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                <div className="rounded-xl bg-slate-900 border border-slate-800 p-4">
-                  <h3 className="text-lg font-semibold text-white mb-3">Top categorías</h3>
-                  <div className="space-y-3">
-                    {[
-                      { name: 'Ventas mostrador', amount: 45000, percent: 45 },
-                      { name: 'Pedidos online', amount: 35000, percent: 35 },
-                      { name: 'Catering', amount: 20000, percent: 20 },
-                    ].map((cat, i) => (
-                      <div key={i}>
-                        <div className="flex justify-between items-center mb-1">
-                          <p className="text-sm text-white">{cat.name}</p>
-                          <p className="text-sm text-slate-400">{cat.percent}%</p>
-                        </div>
-                        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-blue-500 rounded-full" style={{ width: `${cat.percent}%` }} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'gastos' && (
-              <div className="space-y-4">
-                <div className="rounded-xl bg-slate-900 border border-slate-800 p-4">
-                  <p className="text-sm text-slate-400 mb-1">Total gastos período</p>
-                  <p className="text-3xl font-bold text-white mb-2">
-                    ${(kpis?.expense || 0).toLocaleString('es-MX', { maximumFractionDigits: 0 })}
-                  </p>
-                  <p className={`text-sm font-semibold ${kpis?.expenseVariation <= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {kpis?.expenseVariation >= 0 ? '+' : ''}{kpis?.expenseVariation || 0}% vs anterior
-                  </p>
-                </div>
-
-                <div className="rounded-xl bg-slate-900 border border-slate-800 p-4">
-                  <h3 className="text-lg font-semibold text-white mb-3">Distribución por categoría</h3>
-                  <div className="h-48">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={expenseChartData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={40}
-                          outerRadius={70}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {expenseChartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
-                          itemStyle={{ color: '#fff' }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="mt-3 space-y-2">
-                    {expenseChartData.map((item, i) => (
-                      <div key={i} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                          <p className="text-sm text-slate-300">{item.name}</p>
-                        </div>
-                        <p className="text-sm text-white">{item.value}%</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-xl bg-slate-900 border border-slate-800 p-4">
-                  <h3 className="text-lg font-semibold text-white mb-3">Top 5 egresos</h3>
-                  <div className="space-y-3">
-                    {[
-                      { concept: 'Rent oficina', amount: 15000, status: 'green' },
-                      { concept: 'Nómina', amount: 12000, status: 'green' },
-                      { concept: 'Marketing', amount: 8500, status: 'yellow' },
-                      { concept: 'Servicios', amount: 3200, status: 'green' },
-                      { concept: 'Suministros', amount: 2100, status: 'red' },
-                    ].map((item, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50">
-                        <p className="text-sm text-white">{item.concept}</p>
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-semibold text-white">
-                            ${item.amount.toLocaleString('es-MX')}
-                          </p>
-                          <div className={`w-2 h-2 rounded-full ${
-                            item.status === 'green' ? 'bg-green-400' : 
-                            item.status === 'yellow' ? 'bg-yellow-400' : 'bg-red-400'
-                          }`} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'flujo' && (
-              <div className="space-y-4">
-                <div className="rounded-xl bg-slate-900 border border-slate-800 p-4">
-                  <h3 className="text-lg font-semibold text-white mb-3">Posición bancaria</h3>
-                  <div className="space-y-3">
-                    {[
-                      { name: 'Banco Principal', balance: 45000 },
-                      { name: 'Caja Chica', balance: 5000 },
-                      { name: 'Cuenta Ahorros', balance: 25000 },
-                    ].map((account, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50">
-                        <p className="text-sm text-white">{account.name}</p>
-                        <p className="text-sm font-semibold text-white">
-                          ${account.balance.toLocaleString('es-MX')}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-3 pt-3 border-t border-slate-700">
-                    <div className="flex justify-between items-center">
-                      <p className="text-sm text-slate-400">Total consolidado</p>
-                      <p className="text-lg font-bold text-white">
-                        ${totalBalance.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-xl bg-slate-900 border border-slate-800 p-4">
-                  <h3 className="text-lg font-semibold text-white mb-3">Flujo de caja</h3>
-                  <div className="h-48">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={cashFlowChartData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                        <XAxis dataKey="week" stroke="#94a3b8" />
-                        <YAxis stroke="#94a3b8" />
-                        <Tooltip
-                          contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
-                          itemStyle={{ color: '#fff' }}
-                        />
-                        <Line type="monotone" dataKey="ingresos" stroke={COLORS.verde} strokeWidth={2} dot={false} />
-                        <Line type="monotone" dataKey="egresos" stroke={COLORS.rojo} strokeWidth={2} dot={false} />
-                        <Line type="monotone" dataKey="saldo" stroke={COLORS.azul} strokeWidth={2} dot={false} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                <div className="rounded-xl bg-slate-900 border border-slate-800 p-4">
-                  <h3 className="text-lg font-semibold text-white mb-3">Próximos vencimientos</h3>
-                  <div className="space-y-3">
-                    {upcomingPayments.map((payment, i) => (
-                      <div key={i} className={`flex items-center justify-between p-3 rounded-lg ${
-                        payment.urgency === 'high' ? 'bg-red-900/20 border border-red-700' :
-                        payment.urgency === 'medium' ? 'bg-yellow-900/20 border border-yellow-700' :
-                        'bg-slate-800/50'
-                      }`}>
-                        <div>
-                          <p className="text-sm text-white">{payment.concept}</p>
-                          <p className="text-xs text-slate-400">{payment.date}</p>
-                        </div>
-                        <p className="text-sm font-semibold text-white">
-                          ${payment.amount.toLocaleString('es-MX')}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'alertas' && (
-              <div className="space-y-3">
-                {alerts.map((alert, i) => (
-                  <div key={i} className={`rounded-xl border p-4 ${
-                    alert.type === 'critical' ? 'bg-red-900/20 border-red-700' :
-                    alert.type === 'important' ? 'bg-yellow-900/20 border-yellow-700' :
-                    'bg-green-900/20 border-green-700'
-                  }`}>
-                    <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        alert.type === 'critical' ? 'bg-red-900/50' :
-                        alert.type === 'important' ? 'bg-yellow-900/50' :
-                        'bg-green-900/50'
-                      }`}>
-                        <span className="text-lg">
-                          {alert.type === 'critical' ? '🔴' :
-                           alert.type === 'important' ? '🟡' : '🟢'}
-                        </span>
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-white mb-1">{alert.title}</p>
-                        <p className="text-xs text-slate-300 mb-2">{alert.description}</p>
-                        <p className="text-xs text-slate-400">{alert.time}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-sm border-t border-slate-800 px-2 py-2">
-        <div className="flex justify-around">
-          {[
-            { id: 'inicio', icon: '🏠', label: 'Inicio' },
-            { id: 'ventas', icon: '📊', label: 'Ventas' },
-            { id: 'gastos', icon: '💸', label: 'Gastos' },
-            { id: 'flujo', icon: '💰', label: 'Flujo' },
-            { id: 'alertas', icon: '🔔', label: 'Alertas' },
-          ].map((tab) => (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+          {modules.map((module) => (
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors min-h-[44px] ${
-                activeTab === tab.id
-                  ? 'bg-blue-600/20 text-blue-400'
-                  : 'text-slate-400 hover:text-slate-300'
-              }`}
+              key={module.id}
+              onClick={() => setView(module.id as View)}
+              style={{
+                padding: '24px',
+                backgroundColor: '#161616',
+                border: '1px solid #2D2D2D',
+                borderRadius: '4px',
+                textAlign: 'left',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.backgroundColor = '#1B1B1B'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.backgroundColor = '#161616'; }}
             >
-              <span className="text-xl mb-1">{tab.icon}</span>
-              <span className="text-xs">{tab.label}</span>
+              <span style={{ fontSize: '32px', display: 'block', marginBottom: '12px' }}>
+                {module.icon}
+              </span>
+              <h3 style={{ fontSize: '16px', fontWeight: 400, color: '#F5F5F5', marginBottom: '4px', letterSpacing: '0.01em' }}>
+                {module.label}
+              </h3>
+              <p style={{ fontSize: '12px', color: '#7E7E7E', letterSpacing: '0.01em' }}>
+                {module.description}
+              </p>
             </button>
           ))}
         </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  // Vista: Dashboard (solo consulta)
+  if (view === 'dashboard') {
+    const ventas = Number(kpis?.income || 0);
+    const costo = Number(kpis?.expense || 0) * 0.6;
+    const gasto = Number(kpis?.expense || 0) * 0.4;
+    const uai = ventas - Number(kpis?.expense || 0);
+    const udi = uai * 0.75;
+
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', padding: '20px' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+          <button
+            onClick={() => setView('home')}
+            style={{
+              padding: '8px 12px',
+              backgroundColor: 'transparent',
+              border: 'none',
+              color: '#7E7E7E',
+              fontSize: '14px',
+              cursor: 'pointer',
+            }}
+          >
+            ← Volver
+          </button>
+          <h1 style={{ fontSize: '16px', fontWeight: 400, color: '#F5F5F5', letterSpacing: '0.01em' }}>
+            Dashboard
+          </h1>
+          <div style={{ width: '60px' }} />
+        </div>
+
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '40px', color: '#7E7E7E' }}>
+            Cargando...
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* KPIs */}
+            <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '4px', padding: '20px' }}>
+              <p style={{ fontSize: '12px', color: '#7E7E7E', marginBottom: '16px', letterSpacing: '0.01em' }}>
+                Resumen del mes
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                <div>
+                  <p style={{ fontSize: '11px', color: '#7E7E7E', marginBottom: '4px', letterSpacing: '0.01em' }}>Ventas</p>
+                  <p style={{ fontSize: '24px', color: '#F5F5F5', fontWeight: 400, letterSpacing: '0.01em' }}>
+                    ${ventas.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                  </p>
+                </div>
+                <div>
+                  <p style={{ fontSize: '11px', color: '#7E7E7E', marginBottom: '4px', letterSpacing: '0.01em' }}>UAI</p>
+                  <p style={{ fontSize: '24px', color: uai >= 0 ? '#3B7A57' : '#9B3A3A', fontWeight: 400, letterSpacing: '0.01em' }}>
+                    ${uai.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                  </p>
+                </div>
+                <div>
+                  <p style={{ fontSize: '11px', color: '#7E7E7E', marginBottom: '4px', letterSpacing: '0.01em' }}>Costo</p>
+                  <p style={{ fontSize: '24px', color: '#F5F5F5', fontWeight: 400, letterSpacing: '0.01em' }}>
+                    ${costo.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                  </p>
+                </div>
+                <div>
+                  <p style={{ fontSize: '11px', color: '#7E7E7E', marginBottom: '4px', letterSpacing: '0.01em' }}>UDI</p>
+                  <p style={{ fontSize: '24px', color: udi >= 0 ? '#3B7A57' : '#9B3A3A', fontWeight: 400, letterSpacing: '0.01em' }}>
+                    ${udi.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Movimientos recientes */}
+            <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '4px', padding: '20px' }}>
+              <p style={{ fontSize: '12px', color: '#7E7E7E', marginBottom: '16px', letterSpacing: '0.01em' }}>
+                Movimientos recientes
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {(kpis?.latestMovements || []).slice(0, 5).map((movement: any) => (
+                  <div key={movement.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#1B1B1B', borderRadius: '2px' }}>
+                    <div>
+                      <p style={{ fontSize: '13px', color: '#F5F5F5', marginBottom: '2px', letterSpacing: '0.01em' }}>{movement.concept}</p>
+                      <p style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>{movement.category}</p>
+                    </div>
+                    <p style={{ fontSize: '14px', color: movement.type === 'INCOME' ? '#3B7A57' : '#9B3A3A', fontWeight: 400, letterSpacing: '0.01em' }}>
+                      {movement.type === 'INCOME' ? '+' : '-'}${Number(movement.amount).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Vistas placeholder para otros módulos
+  const placeholderViews: View[] = ['tesoreria', 'ventas', 'gastos', 'cxc', 'cxp', 'personal', 'alertas'];
+  if (placeholderViews.includes(view)) {
+    const viewNames: Record<View, string> = {
+      login: 'Acceso',
+      home: 'Inicio',
+      dashboard: 'Dashboard',
+      tesoreria: 'Tesorería',
+      ventas: 'Ventas',
+      gastos: 'Gastos',
+      cxc: 'Cuentas por Cobrar',
+      cxp: 'Cuentas por Pagar',
+      personal: 'Personal',
+      alertas: 'Alertas',
+    };
+
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', padding: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+          <button
+            onClick={() => setView('home')}
+            style={{
+              padding: '8px 12px',
+              backgroundColor: 'transparent',
+              border: 'none',
+              color: '#7E7E7E',
+              fontSize: '14px',
+              cursor: 'pointer',
+            }}
+          >
+            ← Volver
+          </button>
+          <h1 style={{ fontSize: '16px', fontWeight: 400, color: '#F5F5F5', letterSpacing: '0.01em' }}>
+            {viewNames[view]}
+          </h1>
+          <div style={{ width: '60px' }} />
+        </div>
+
+        <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <p style={{ fontSize: '14px', color: '#7E7E7E', marginBottom: '8px', letterSpacing: '0.01em' }}>
+            Módulo en desarrollo
+          </p>
+          <p style={{ fontSize: '12px', color: '#9A9A9A', letterSpacing: '0.01em' }}>
+            Esta sección estará disponible próximamente
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 }

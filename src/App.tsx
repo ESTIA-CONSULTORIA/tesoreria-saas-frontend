@@ -16,7 +16,7 @@ import SuppliersPage from "./pages/suppliers/SuppliersPage";
 import PurchasesPage from "./pages/purchases/PurchasesPage";
 import CostsPage from "./pages/costs/CostsPage";
 import LogsPage from "./pages/administration/LogsPage";
-import MobileAnalyticsApp from "./pages/mobile-analytics/MobileAnalyticsApp";
+import ESTIAExecutiveAccess from "./pages/mobile-analytics/MobileAnalyticsApp";
 import POSPage from "./pages/pos/POSPage";
 
 import LoginPage from "./pages/Login/LoginPage";
@@ -78,11 +78,11 @@ function App() {
     applyTheme();
   }, [tenantId]);
 
-  // Si es móvil y el usuario tiene rol permitido, mostrar MobileAnalyticsApp
+  // Si es móvil y el usuario tiene rol permitido, mostrar ESTIAExecutiveAccess
   if (isMobile && user) {
     const allowedRoles = ['ADMIN', 'SOPORTE', 'GERENTE', 'SUPER_ADMIN'];
     if (allowedRoles.includes(user.roleCode || '')) {
-      return <MobileAnalyticsApp />;
+      return <ESTIAExecutiveAccess />;
     }
     // Si el rol no es permitido en móvil, mostrar mensaje
     return (

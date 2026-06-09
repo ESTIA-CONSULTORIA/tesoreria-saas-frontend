@@ -160,7 +160,8 @@ export default function LoginPage() {
         width: '45%',
         position: 'relative',
         overflow: 'hidden',
-        backgroundImage: config.backgroundImage ? `url(${config.backgroundImage})` : 'url(https://images.unsplash.com/photo-1514190051997-0f6f39ca5cde?w=800&q=80)',
+        backgroundImage: config.backgroundImage ? `url(${config.backgroundImage})` : undefined,
+        background: config.backgroundImage ? undefined : '#0A0A0A',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         display: 'flex',
@@ -168,16 +169,44 @@ export default function LoginPage() {
         justifyContent: 'space-between',
         padding: '48px',
       }}>
-        {/* Overlay */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%)',
-          zIndex: 0,
-        }} />
+        {/* SVG Background Pattern (solo si no hay imagen personalizada) */}
+        {!config.backgroundImage && (
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 0,
+            opacity: 0.03,
+          }}>
+            <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+              <line x1="0" y1="20" x2="100" y2="20" stroke="#BDBDBD" strokeWidth="0.5" />
+              <line x1="0" y1="40" x2="100" y2="40" stroke="#BDBDBD" strokeWidth="0.5" />
+              <line x1="0" y1="60" x2="100" y2="60" stroke="#BDBDBD" strokeWidth="0.5" />
+              <line x1="0" y1="80" x2="100" y2="80" stroke="#BDBDBD" strokeWidth="0.5" />
+              <line x1="20" y1="0" x2="20" y2="100" stroke="#BDBDBD" strokeWidth="0.5" />
+              <line x1="40" y1="0" x2="40" y2="100" stroke="#BDBDBD" strokeWidth="0.5" />
+              <line x1="60" y1="0" x2="60" y2="100" stroke="#BDBDBD" strokeWidth="0.5" />
+              <line x1="80" y1="0" x2="80" y2="100" stroke="#BDBDBD" strokeWidth="0.5" />
+              <rect x="25" y="25" width="10" height="10" stroke="#BDBDBD" strokeWidth="0.5" fill="none" />
+              <rect x="65" y="65" width="10" height="10" stroke="#BDBDBD" strokeWidth="0.5" fill="none" />
+            </svg>
+          </div>
+        )}
+
+        {/* Overlay (solo si hay imagen personalizada) */}
+        {config.backgroundImage && (
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%)',
+            zIndex: 0,
+          }} />
+        )}
 
         {/* Logo del cliente */}
         {config.logoUrl && (
@@ -193,16 +222,14 @@ export default function LoginPage() {
 
         {/* Contenido central */}
         <div style={{ position: 'relative', zIndex: 1, marginTop: 'auto', marginBottom: 'auto' }}>
-          <p style={{ fontSize: '12px', color: '#BDBDBD', letterSpacing: '0.15em', marginBottom: '16px' }}>
+          <p style={{ fontSize: '10px', color: '#BDBDBD', letterSpacing: '0.15em', marginBottom: '16px' }}>
             BIENVENIDO A
           </p>
-          <h1 style={{ fontSize: '48px', fontWeight: 300, color: '#F5F5F5', letterSpacing: '0.1em', marginBottom: '8px' }}>
+          <h1 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 200, color: '#F5F5F5', letterSpacing: '0.12em', marginBottom: '8px' }}>
             {config.companyName || 'Sistema de Gestión'}
           </h1>
-          <p style={{ fontSize: '14px', color: '#BDBDBD', letterSpacing: '0.2em', marginBottom: '16px' }}>
-            CONSULTORÍA
-          </p>
-          <p style={{ fontSize: '14px', color: '#9A9A9A' }}>
+          <div style={{ width: '40px', height: '1px', backgroundColor: '#BDBDBD', margin: '16px 0' }} />
+          <p style={{ fontSize: '13px', color: '#9A9A9A' }}>
             {config.tagline || 'Solución integral para tu negocio'}
           </p>
         </div>
@@ -246,7 +273,7 @@ export default function LoginPage() {
             {/* Tarjeta Sistema Principal */}
             <div
               style={{
-                backgroundColor: '#161616',
+                backgroundColor: 'rgba(22,22,22,0.95)',
                 border: '1px solid #2D2D2D',
                 borderRadius: '12px',
                 padding: '32px 24px',
@@ -284,12 +311,13 @@ export default function LoginPage() {
                   width: '100%',
                   padding: '12px',
                   fontSize: '12px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
                   color: '#BDBDBD',
                   backgroundColor: '#1B1B1B',
                   border: '1px solid #3D3D3D',
                   borderRadius: '6px',
                   cursor: 'pointer',
-                  letterSpacing: '0.1em',
                   transition: 'all 0.2s',
                 }}
                 onMouseEnter={(e) => {
@@ -301,14 +329,14 @@ export default function LoginPage() {
                   e.currentTarget.style.color = '#BDBDBD';
                 }}
               >
-                INGRESAR →
+                INGRESAR
               </button>
             </div>
 
             {/* Tarjeta POS */}
             <div
               style={{
-                backgroundColor: '#161616',
+                backgroundColor: 'rgba(22,22,22,0.95)',
                 border: '1px solid #2D2D2D',
                 borderRadius: '12px',
                 padding: '32px 24px',
@@ -346,12 +374,13 @@ export default function LoginPage() {
                   width: '100%',
                   padding: '12px',
                   fontSize: '12px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
                   color: '#BDBDBD',
                   backgroundColor: '#1B1B1B',
                   border: '1px solid #3D3D3D',
                   borderRadius: '6px',
                   cursor: 'pointer',
-                  letterSpacing: '0.1em',
                   transition: 'all 0.2s',
                 }}
                 onMouseEnter={(e) => {
@@ -363,7 +392,7 @@ export default function LoginPage() {
                   e.currentTarget.style.color = '#BDBDBD';
                 }}
               >
-                INGRESAR →
+                INGRESAR
               </button>
             </div>
           </div>
@@ -412,15 +441,28 @@ export default function LoginPage() {
                     padding: '12px',
                     fontSize: '14px',
                     fontWeight: 500,
-                    color: loading ? '#9A9A9A' : '#F5F5F5',
-                    backgroundColor: loading ? '#2D2D2D' : '#2D2D2D',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    color: loading ? '#9A9A9A' : '#BDBDBD',
+                    backgroundColor: loading ? '#2D2D2D' : '#1B1B1B',
                     border: '1px solid #3D3D3D',
                     borderRadius: '6px',
                     cursor: loading ? 'not-allowed' : 'pointer',
-                    letterSpacing: '0.05em',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!loading) {
+                      e.currentTarget.style.borderColor = '#BDBDBD';
+                      e.currentTarget.style.color = '#F5F5F5';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!loading) {
+                      e.currentTarget.style.borderColor = '#3D3D3D';
+                      e.currentTarget.style.color = '#BDBDBD';
+                    }
                   }}
                 >
-                  {loading ? "Entrando..." : "INGRESAR →"}
+                  {loading ? "Entrando..." : "INGRESAR"}
                 </button>
               </>
             ) : (
