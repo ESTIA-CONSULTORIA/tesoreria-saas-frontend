@@ -202,9 +202,9 @@ export default function DashboardPage() {
 
   const formatPercent = (value: number) => {
     const pct = Math.round(value);
-    const pctDisplay = pct > 999 ? '+999%' : 
-                       pct < -999 ? '-999%' : 
-                       `${pct > 0 ? '+' : ''}${pct}%`;
+    const pctDisplay = pct >= 999 ? '+999%' : 
+                       pct <= -999 ? '-999%' : 
+                       `${pct >= 0 ? '+' : ''}${pct}%`;
     return pctDisplay;
   };
 
