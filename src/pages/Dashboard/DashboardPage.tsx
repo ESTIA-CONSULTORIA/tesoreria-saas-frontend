@@ -500,7 +500,7 @@ export default function DashboardPage() {
                       {formatCurrency(ventas)}
                     </div>
                     <div style={{ fontSize: '11px', color: '#3B7A57', letterSpacing: '0.01em' }}>
-                      {kpis?.incomeVariation >= 0 ? '+' : ''}{formatPercent(kpis?.incomeVariation || 0)}
+                      {formatPercent(kpis?.incomeVariation || 0)}
                     </div>
                   </div>
 
@@ -515,7 +515,7 @@ export default function DashboardPage() {
                       {formatCurrency(costo)}
                     </div>
                     <div style={{ fontSize: '11px', color: '#9B3A3A', letterSpacing: '0.01em' }}>
-                      {kpis?.expenseVariation >= 0 ? '+' : ''}{formatPercent(kpis?.expenseVariation || 0)}
+                      {formatPercent(kpis?.expenseVariation || 0)}
                     </div>
                   </div>
 
@@ -530,7 +530,7 @@ export default function DashboardPage() {
                       {formatCurrency(gasto)}
                     </div>
                     <div style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>
-                      {kpis?.expenseVariation >= 0 ? '+' : ''}{formatPercent(kpis?.expenseVariation || 0)}
+                      {formatPercent(kpis?.expenseVariation || 0)}
                     </div>
                   </div>
 
@@ -545,7 +545,7 @@ export default function DashboardPage() {
                       {formatCurrency(uai)}
                     </div>
                     <div style={{ fontSize: '11px', color: uai >= 0 ? '#3B7A57' : '#9B3A3A', letterSpacing: '0.01em' }}>
-                      {uai >= 0 ? '+' : ''}{formatPercent((uai / ventas) * 100)}
+                      {formatPercent((uai / ventas) * 100)}
                     </div>
                   </div>
 
@@ -560,7 +560,7 @@ export default function DashboardPage() {
                       {formatCurrency(udi)}
                     </div>
                     <div style={{ fontSize: '11px', color: udi >= 0 ? '#3B7A57' : '#9B3A3A', letterSpacing: '0.01em' }}>
-                      {udi >= 0 ? '+' : ''}{formatPercent((udi / ventas) * 100)}
+                      {formatPercent((udi / ventas) * 100)}
                     </div>
                   </div>
                 </div>
