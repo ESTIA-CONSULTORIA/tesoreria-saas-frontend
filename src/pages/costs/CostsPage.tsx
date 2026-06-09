@@ -3,6 +3,7 @@ import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import CreateInsumoModal from "./CreateInsumoModal";
 import CreateRecipeModal from "./CreateRecipeModal";
+import { useCompanyStore } from "../../core/store/useCompanyStore";
 
 interface Insumo {
   id: string;
@@ -91,6 +92,7 @@ interface FamiliaInsumo {
 }
 
 export default function CostsPage() {
+  const { activeCompany } = useCompanyStore();
   const [activeTab, setActiveTab] = useState("insumos");
   const [insumos, setInsumos] = useState<Insumo[]>([]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -150,7 +152,7 @@ export default function CostsPage() {
     }
     if (activeTab === "almacenes") loadAlmacenes();
     if (activeTab === "familias") loadFamilias();
-  }, [activeTab, periodo]);
+  }, [activeTab, periodo, activeCompany?.id]);
 
   async function loadSuppliers() {
     try {
@@ -593,7 +595,12 @@ export default function CostsPage() {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
+      {!activeCompany ? (
+        <div style={{ padding: '24px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '8px', color: '#8A6A3A', textAlign: 'center' }}>
+          Selecciona una empresa para ver los datos
+        </div>
+      ) : (
+        <div className="space-y-6">
         <div>
           <h2 className="text-3xl font-bold">Costos y Producción</h2>
           <p className="text-slate-400">Gestión de insumos, recetas y costos de venta</p>
@@ -1976,6 +1983,7 @@ export default function CostsPage() {
           </div>
         )}
       </div>
+      )}
     </MainLayout>
   );
 }

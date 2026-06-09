@@ -25,6 +25,12 @@ export default function CompanySelector() {
     loadCompanies();
   }, []);
 
+  useEffect(() => {
+    if (companies.length > 0 && !activeCompany) {
+      handleCompanyClick(companies[0]);
+    }
+  }, [companies, activeCompany]);
+
   async function loadCompanies() {
     try {
       setLoading(true);

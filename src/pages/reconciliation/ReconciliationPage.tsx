@@ -3,6 +3,7 @@ import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import ImportModal from "./ImportModal";
 import ExecutiveKPI from "../../components/ExecutiveKPI";
+import { useCompanyStore } from "../../core/store/useCompanyStore";
 
 interface Invoice {
   id: string;
@@ -39,6 +40,7 @@ interface ReconciliationData {
 }
 
 export default function ReconciliationPage() {
+  const { activeCompany } = useCompanyStore();
   const [reconciliationData, setReconciliationData] = useState<ReconciliationData | null>(null);
   const [summary, setSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -68,7 +70,7 @@ export default function ReconciliationPage() {
 
   useEffect(() => {
     loadData();
-  }, [filters]);
+  }, [filters, activeCompany?.id]);
 
   async function loadData() {
     try {
@@ -165,7 +167,12 @@ export default function ReconciliationPage() {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
+      {!activeCompany ? (
+        <div style={{ padding: '24px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '8px', color: '#8A6A3A', textAlign: 'center' }}>
+          Selecciona una empresa para ver los datos
+        </div>
+      ) : (
+        <div className="space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-bold" style={{ color: '#F5F5F5' }}>Conciliación Bancaria</h2>
@@ -773,6 +780,7 @@ export default function ReconciliationPage() {
           onImported={loadData}
         />
       </div>
+      )}
     </MainLayout>
   );
 }

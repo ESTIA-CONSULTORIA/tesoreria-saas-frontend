@@ -45,7 +45,7 @@ interface Supplier {
 }
 
 export default function PurchasesPage() {
-  const { activeBranch } = useCompanyStore();
+  const { activeBranch, activeCompany } = useCompanyStore();
   const [activeTab, setActiveTab] = useState("ordenes");
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [invoices, setInvoices] = useState<Purchase[]>([]);
@@ -84,7 +84,7 @@ export default function PurchasesPage() {
     if (activeTab === "recepcion") loadOrders("ENVIADA");
     if (activeTab === "facturas") loadInvoices();
     if (activeTab === "cuentas-pagar") loadAccountsPayable();
-  }, [activeTab, activeBranch?.id]);
+  }, [activeTab, activeBranch?.id, activeCompany?.id]);
 
   function loadUserRole() {
     const auth = localStorage.getItem("access_token");
@@ -338,7 +338,12 @@ export default function PurchasesPage() {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
+      {!activeCompany ? (
+        <div style={{ padding: '24px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '8px', color: '#8A6A3A', textAlign: 'center' }}>
+          Selecciona una empresa para ver los datos
+        </div>
+      ) : (
+        <div className="space-y-6">
         <div>
           <h2 className="text-3xl font-bold">Compras</h2>
           <p className="text-slate-400">Gestión de órdenes de compra y facturas</p>
@@ -1009,6 +1014,7 @@ export default function PurchasesPage() {
           </div>
         )}
       </div>
+      )}
     </MainLayout>
   );
 }

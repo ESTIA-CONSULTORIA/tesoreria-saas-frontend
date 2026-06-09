@@ -9,7 +9,7 @@ type TabType = "resumen" | "posicion" | "traslados" | "cxp" | "cxc" | "alertas";
 type PeriodType = "week" | "month" | "quarter";
 
 export default function TreasuryPage() {
-  const { activeBranch } = useCompanyStore();
+  const { activeBranch, activeCompany } = useCompanyStore();
   const [activeTab, setActiveTab] = useState<TabType>("resumen");
   const [period, setPeriod] = useState<PeriodType>("month");
   const [executiveSummary, setExecutiveSummary] = useState<any>(null);
@@ -28,7 +28,7 @@ export default function TreasuryPage() {
 
   useEffect(() => {
     loadData();
-  }, [activeTab, period, activeBranch?.id]);
+  }, [activeTab, period, activeBranch?.id, activeCompany?.id]);
 
   async function loadData() {
     try {
@@ -97,7 +97,12 @@ export default function TreasuryPage() {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
+      {!activeCompany ? (
+        <div style={{ padding: '24px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '8px', color: '#8A6A3A', textAlign: 'center' }}>
+          Selecciona una empresa para ver los datos
+        </div>
+      ) : (
+        <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold" style={{ color: '#F5F5F5' }}>Tesorería</h1>
@@ -914,6 +919,7 @@ export default function TreasuryPage() {
         </>
       )}
     </div>
+      )}
     </MainLayout>
   );
 }

@@ -20,7 +20,7 @@ interface BankAccount {
 }
 
 export default function MovementsPage() {
-  const { activeBranch } = useCompanyStore();
+  const { activeBranch, activeCompany } = useCompanyStore();
   const [movements, setMovements] = useState<Movement[]>([]);
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +43,7 @@ export default function MovementsPage() {
 
   useEffect(() => {
     loadMovements();
-  }, [accountId, type, category, startDate, endDate, page, activeBranch?.id]);
+  }, [accountId, type, category, startDate, endDate, page, activeBranch?.id, activeCompany?.id]);
 
   async function loadAccounts() {
     try {
@@ -84,7 +84,12 @@ export default function MovementsPage() {
   return (
     <MainLayout>
       <CreateMovementModal open={modalOpen} onClose={() => setModalOpen(false)} onCreated={loadMovements} />
-      <div className="space-y-6">
+      {!activeCompany ? (
+        <div style={{ padding: '24px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '8px', color: '#8A6A3A', textAlign: 'center' }}>
+          Selecciona una empresa para ver los datos
+        </div>
+      ) : (
+        <div className="space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-bold">Movimientos</h2>
@@ -231,6 +236,7 @@ export default function MovementsPage() {
           </div>
         )}
       </div>
+      )}
     </MainLayout>
   );
 }

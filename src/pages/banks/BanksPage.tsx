@@ -23,7 +23,7 @@ interface Branch {
 }
 
 export default function BanksPage() {
-  const { activeBranch } = useCompanyStore();
+  const { activeBranch, activeCompany } = useCompanyStore();
   const [banks, setBanks] = useState<BankAccount[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +34,7 @@ export default function BanksPage() {
   useEffect(() => {
     loadBanks();
     loadBranches();
-  }, [activeBranch?.id]);
+  }, [activeBranch?.id, activeCompany?.id]);
 
   async function loadBanks() {
     try {
@@ -95,7 +95,12 @@ export default function BanksPage() {
         onCreated={loadBanks} 
         bankAccount={selectedBankAccount}
       />
-      <div className="space-y-6">
+      {!activeCompany ? (
+        <div style={{ padding: '24px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '8px', color: '#8A6A3A', textAlign: 'center' }}>
+          Selecciona una empresa para ver los datos
+        </div>
+      ) : (
+        <div className="space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-bold">Bancos</h2>
@@ -149,6 +154,7 @@ export default function BanksPage() {
           </div>
         )}
       </div>
+      )}
     </MainLayout>
   );
 }

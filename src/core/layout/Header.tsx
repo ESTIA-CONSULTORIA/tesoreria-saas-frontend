@@ -21,13 +21,13 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <span style={{
           fontSize: '13px',
-          color: '#9A9A9A',
+          color: activeCompany ? '#9A9A9A' : '#8A6A3A',
           fontWeight: 400,
           letterSpacing: '0.02em',
         }}>
           {activeCompany 
             ? `${activeCompany.name}${activeBranch ? ` · ${activeBranch.name}` : ' · Todas las sucursales'}` 
-            : 'Vista Global'
+            : 'Selecciona una empresa'
           }
         </span>
       </div>

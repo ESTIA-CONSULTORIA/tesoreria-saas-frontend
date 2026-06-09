@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import CreateSupplierModal from "./CreateSupplierModal";
+import { useCompanyStore } from "../../core/store/useCompanyStore";
 
 interface Supplier {
   id: string;
@@ -23,6 +24,7 @@ interface Supplier {
 }
 
 export default function SuppliersPage() {
+  const { activeCompany } = useCompanyStore();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -34,7 +36,7 @@ export default function SuppliersPage() {
 
   useEffect(() => {
     loadSuppliers();
-  }, [search, filterActive]);
+  }, [search, filterActive, activeCompany?.id]);
 
   async function loadSuppliers() {
     try {
@@ -84,7 +86,12 @@ export default function SuppliersPage() {
         supplier={selectedSupplier}
       />
 
-      <div className="space-y-6">
+      {!activeCompany ? (
+        <div style={{ padding: '24px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '8px', color: '#8A6A3A', textAlign: 'center' }}>
+          Selecciona una empresa para ver los datos
+        </div>
+      ) : (
+        <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-bold">Proveedores</h2>
@@ -325,6 +332,7 @@ export default function SuppliersPage() {
           </div>
         )}
       </div>
+      )}
     </MainLayout>
   );
 }

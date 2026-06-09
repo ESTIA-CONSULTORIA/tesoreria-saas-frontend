@@ -3,10 +3,12 @@ import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import ReportsFiltersModal from "./ReportsFiltersModal";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { useCompanyStore } from "../../core/store/useCompanyStore";
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
 export default function ReportsPage() {
+  const { activeCompany } = useCompanyStore();
   const [activeTab, setActiveTab] = useState("general");
   const [period, setPeriod] = useState("mes");
   const [startDate, setStartDate] = useState("");
@@ -26,7 +28,7 @@ export default function ReportsPage() {
 
   useEffect(() => {
     loadReports();
-  }, [startDate, endDate]);
+  }, [startDate, endDate, activeCompany?.id]);
 
   function setDatesByPeriod(selectedPeriod: string) {
     const now = new Date();
@@ -112,7 +114,12 @@ export default function ReportsPage() {
           setEndDate(end);
         }}
       />
-      <div className="space-y-6">
+      {!activeCompany ? (
+        <div style={{ padding: '24px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '8px', color: '#8A6A3A', textAlign: 'center' }}>
+          Selecciona una empresa para ver los datos
+        </div>
+      ) : (
+        <div className="space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-bold">Reportes</h2>
@@ -464,6 +471,7 @@ export default function ReportsPage() {
           </div>
         )}
       </div>
+      )}
     </MainLayout>
   );
 }
