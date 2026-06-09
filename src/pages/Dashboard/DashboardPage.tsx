@@ -201,7 +201,11 @@ export default function DashboardPage() {
   };
 
   const formatPercent = (value: number) => {
-    return `${Math.round(value)}%`;
+    const pct = Math.round(value);
+    const pctDisplay = pct > 999 ? '+999%' : 
+                       pct < -999 ? '-999%' : 
+                       `${pct > 0 ? '+' : ''}${pct}%`;
+    return pctDisplay;
   };
 
   const formatPercentDecimal = (value: number) => {
@@ -615,8 +619,8 @@ export default function DashboardPage() {
                           formatter={(value: string) => <span style={{ color: '#BDBDBD', fontSize: '11px' }}>{value}</span>}
                         />
                         <Bar dataKey="Ingresos" fill="#BDBDBD" name="Ingresos" radius={[0, 0, 0, 0]} />
-                        <Bar dataKey="Egresos" fill="#9A9A9A" name="Egresos" radius={[0, 0, 0, 0]} />
-                        <Bar dataKey="Saldo" fill="#7E7E7E" name="Saldo" radius={[0, 0, 0, 0]} />
+                        <Bar dataKey="Egresos" fill="#7E7E7E" name="Egresos" radius={[0, 0, 0, 0]} />
+                        <Bar dataKey="Saldo" fill="#4A4A4A" name="Saldo" radius={[0, 0, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
