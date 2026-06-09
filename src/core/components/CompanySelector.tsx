@@ -31,23 +31,20 @@ export default function CompanySelector() {
 
   useEffect(() => {
     if (companies.length > 0 && !activeCompany) {
-      if (userBranchId) {
-        // User has branch restriction - find company and branch
-        const userCompany = companies.find(c => c.id === userCompanyId);
-        if (userCompany) {
-          setActiveCompany({ id: userCompany.id, name: userCompany.tradeName || userCompany.legalName });
-          loadBranches(userCompany.id).then(() => {
-            const userBranch = branches.find(b => b.id === userBranchId);
-            if (userBranch) {
-              setActiveBranch({ id: userBranch.id, name: userBranch.name });
-            }
-          });
-        }
-      } else if (userCompanyId) {
-        // User has company restriction - find company
-        const userCompany = companies.find(c => c.id === userCompanyId);
-        if (userCompany) {
-          handleCompanyClick(userCompany);
+      if (userCompanyId) {
+        // User has company restriction - find exact company
+        const myCompany = companies.find(c => c.id === userCompanyId);
+        if (myCompany) {
+          handleCompanyClick(myCompany);
+          // If also has branch restriction, load branches and select it
+          if (userBranchId) {
+            loadBranches(myCompany.id).then(() => {
+              const myBranch = branches.find(b => b.id === userBranchId);
+              if (myBranch) {
+                setActiveBranch({ id: myBranch.id, name: myBranch.name });
+              }
+            });
+          }
         }
       } else {
         // No restriction - auto-select first company

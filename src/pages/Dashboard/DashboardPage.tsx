@@ -5,11 +5,13 @@ import { useNavigate } from "react-router-dom";
 import DashboardInfoModal from "./DashboardInfoModal";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
+import { useAuthStore } from "../../core/store/useAuthStore";
 
 type NavigationLevel = 'group' | 'company-selection' | 'company-detail' | 'branch-selection' | 'branch-detail';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const { companyId: userCompanyId } = useAuthStore();
   const [kpis, setKpis] = useState<any>(null);
   const [companyKpis, setCompanyKpis] = useState<any>(null);
   const [branchKpis, setBranchKpis] = useState<any>(null);
@@ -121,11 +123,17 @@ export default function DashboardPage() {
 
   // Auto-salto lógica
   useEffect(() => {
-    if (companies.length === 1 && navigationLevel === 'group') {
+    // If user has companyId restriction, skip group view and go directly to company detail
+    if (userCompanyId && navigationLevel === 'group') {
+      const myCompany = companies.find(c => c.companyId === userCompanyId);
+      if (myCompany) {
+        handleSelectCompany(myCompany);
+      }
+    } else if (companies.length === 1 && navigationLevel === 'group') {
       // Si solo hay 1 empresa, saltar a detalle de empresa automáticamente
       handleSelectCompany(companies[0]);
     }
-  }, [companies, navigationLevel]);
+  }, [companies, navigationLevel, userCompanyId]);
 
   useEffect(() => {
     if (branches.length === 1 && navigationLevel === 'company-detail') {
@@ -800,6 +808,7 @@ export default function DashboardPage() {
                               <Tooltip
                                 contentStyle={{ backgroundColor: '#1B1B1B', border: '1px solid #2D2D2D', borderRadius: '2px', color: '#F5F5F5', fontSize: '11px', padding: '6px 10px' }}
                                 itemStyle={{ color: '#F5F5F5', fontSize: '10px' }}
+                                formatter={(value) => [`$${Number(value).toLocaleString('es-MX')}`, 'Ventas']}
                               />
                               <Line type="monotone" dataKey="value" stroke="#BDBDBD" strokeWidth={1.5} dot={false} />
                             </LineChart>
@@ -877,6 +886,7 @@ export default function DashboardPage() {
                               <Tooltip
                                 contentStyle={{ backgroundColor: '#1B1B1B', border: '1px solid #2D2D2D', borderRadius: '2px', color: '#F5F5F5', fontSize: '11px', padding: '6px 10px' }}
                                 itemStyle={{ color: '#F5F5F5', fontSize: '10px' }}
+                                formatter={(value) => [`$${Number(value).toLocaleString('es-MX')}`, 'Ventas']}
                               />
                               <Line type="monotone" dataKey="value" stroke="#BDBDBD" strokeWidth={1.5} dot={false} />
                             </LineChart>
