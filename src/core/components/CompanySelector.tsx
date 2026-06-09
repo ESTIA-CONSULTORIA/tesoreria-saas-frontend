@@ -59,11 +59,17 @@ export default function CompanySelector() {
     setSelectedCompanyId(company.id);
     setActiveCompany({ id: company.id, name: company.tradeName || company.legalName });
     setActiveBranch(null);
+    localStorage.setItem('active_company_id', company.id);
+    localStorage.setItem('active_company_name', company.tradeName || company.legalName);
+    localStorage.removeItem('active_branch_id');
+    localStorage.removeItem('active_branch_name');
     loadBranches(company.id);
   }
 
   function handleBranchClick(branch: Branch) {
     setActiveBranch({ id: branch.id, name: branch.name });
+    localStorage.setItem('active_branch_id', branch.id);
+    localStorage.setItem('active_branch_name', branch.name);
     setIsOpen(false);
   }
 
@@ -76,6 +82,10 @@ export default function CompanySelector() {
     setActiveCompany(null);
     setActiveBranch(null);
     setSelectedCompanyId(null);
+    localStorage.removeItem('active_company_id');
+    localStorage.removeItem('active_company_name');
+    localStorage.removeItem('active_branch_id');
+    localStorage.removeItem('active_branch_name');
     setIsOpen(false);
   }
 
