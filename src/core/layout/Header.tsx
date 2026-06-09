@@ -1,10 +1,33 @@
 import { useAuthStore } from '../store/useAuthStore'
-import { useCompanyStore } from '../store/useCompanyStore'
-import CompanySelector from '../components/CompanySelector'
+import { useLocation } from 'react-router-dom'
 
 export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const { user, logout } = useAuthStore()
-  const { activeCompany, activeBranch } = useCompanyStore()
+  const location = useLocation()
+
+  // Get module name from pathname
+  const getModuleName = () => {
+    const path = location.pathname
+    const navItems = [
+      { label: 'Dashboard', to: '/dashboard' },
+      { label: 'Empresas', to: '/companies' },
+      { label: 'Sucursales', to: '/branches' },
+      { label: 'Bancos', to: '/banks' },
+      { label: 'Movimientos', to: '/movements' },
+      { label: 'Transferencias', to: '/transfers' },
+      { label: 'Tesorería', to: '/treasury' },
+      { label: 'Conciliación', to: '/reconciliation' },
+      { label: 'Proveedores', to: '/suppliers' },
+      { label: 'Compras', to: '/purchases' },
+      { label: 'Costos', to: '/costs' },
+      { label: 'Reportes', to: '/reports' },
+      { label: 'POS', to: '/pos' },
+      { label: 'Configuración', to: '/settings' },
+      { label: 'Config. Login', to: '/settings/login-config' },
+    ]
+    const item = navItems.find(i => path.startsWith(i.to))
+    return item?.label || 'Tesorería SaaS'
+  }
 
   return (
     <header style={{
@@ -20,20 +43,17 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
       {/* Izquierda — módulo actual */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <span style={{
-          fontSize: '13px',
-          color: activeCompany ? '#9A9A9A' : '#8A6A3A',
-          fontWeight: 400,
+          fontSize: '14px',
+          color: '#F5F5F5',
+          fontWeight: 500,
           letterSpacing: '0.02em',
         }}>
-          {activeCompany 
-            ? `${activeCompany.name}${activeBranch ? ` · ${activeBranch.name}` : ' · Todas las sucursales'}` 
-            : 'Selecciona una empresa'
-          }
+          {getModuleName()}
         </span>
       </div>
 
-      {/* Centro — selector */}
-      <CompanySelector />
+      {/* Centro — espacio vacío */}
+      <div />
 
       {/* Derecha — usuario */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>

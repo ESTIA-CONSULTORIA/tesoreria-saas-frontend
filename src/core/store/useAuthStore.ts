@@ -6,6 +6,8 @@ interface User {
   name?: string;
   roleCode?: string;
   tenantId?: string;
+  companyId?: string | null;
+  branchId?: string | null;
 }
 
 interface AuthState {
@@ -13,6 +15,8 @@ interface AuthState {
   tenantId: string | null;
   user: User | null;
   modulosActivos: string[];
+  companyId: string | null;
+  branchId: string | null;
 
   login: (
     token: string,
@@ -29,6 +33,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   tenantId: localStorage.getItem("tenant_id"),
   user: JSON.parse(localStorage.getItem("user") || "null"),
   modulosActivos: JSON.parse(localStorage.getItem("modulos_activos") || "[]"),
+  companyId: localStorage.getItem("user_company_id"),
+  branchId: localStorage.getItem("user_branch_id"),
 
   login: (token, tenantId, user, modulosActivos = []) => {
     localStorage.setItem("access_token", token);
@@ -39,12 +45,26 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
     localStorage.setItem("user", JSON.stringify(user));
     localStorage.setItem("modulos_activos", JSON.stringify(modulosActivos));
+    
+    if (user.companyId) {
+      localStorage.setItem("user_company_id", user.companyId);
+    } else {
+      localStorage.removeItem("user_company_id");
+    }
+    
+    if (user.branchId) {
+      localStorage.setItem("user_branch_id", user.branchId);
+    } else {
+      localStorage.removeItem("user_branch_id");
+    }
 
     set({
       token,
       tenantId,
       user,
       modulosActivos,
+      companyId: user.companyId || null,
+      branchId: user.branchId || null,
     });
   },
 
@@ -53,12 +73,16 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.removeItem("tenant_id");
     localStorage.removeItem("user");
     localStorage.removeItem("modulos_activos");
+    localStorage.removeItem("user_company_id");
+    localStorage.removeItem("user_branch_id");
 
     set({
       token: null,
       tenantId: null,
       user: null,
       modulosActivos: [],
+      companyId: null,
+      branchId: null,
     });
   },
 }));

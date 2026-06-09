@@ -6,6 +6,7 @@ import { useModulo } from "../hooks/useModulo";
 import { useAuthStore } from "../store/useAuthStore";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import GlobalSearchModal from "../components/GlobalSearchModal";
+import CompanySelector from "../components/CompanySelector";
 
 interface Props {
   children: React.ReactNode;
@@ -80,6 +81,11 @@ export default function MainLayout({ children }: Props) {
             <h2 className="text-sm font-semibold" style={{ color: '#F5F5F5' }}>
               {localStorage.getItem("tenant_name") || "Tesorería SaaS"}
             </h2>
+          </div>
+
+          {/* Selector de Empresa/Sucursal */}
+          <div className="px-4 pb-4 border-b" style={{ borderColor: '#2D2D2D' }}>
+            <CompanySelector />
           </div>
 
           <nav className="flex flex-col gap-0 px-2 flex-1 overflow-y-auto">
