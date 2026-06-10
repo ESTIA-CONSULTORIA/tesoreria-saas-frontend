@@ -13,6 +13,13 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const { companyId: userCompanyId, branchId: userBranchId, user } = useAuthStore();
   const isRestricted = !!userCompanyId || !!userBranchId;
+
+  console.log('=== DASHBOARD DEBUG ===');
+  console.log('user email:', user?.email);
+  console.log('userCompanyId:', userCompanyId);
+  console.log('userBranchId:', userBranchId);
+  console.log('isRestricted:', isRestricted);
+
   const [kpis, setKpis] = useState<any>(null);
   const [companyKpis, setCompanyKpis] = useState<any>(null);
   const [branchKpis, setBranchKpis] = useState<any>(null);
@@ -175,7 +182,7 @@ export default function DashboardPage() {
   const trendLineChartData = useMemo(() => {
     const data = [];
     const now = new Date();
-    
+
     for (let i = 5; i >= 0; i--) {
       const date = new Date(now);
       date.setDate(now.getDate() - i);
@@ -187,10 +194,22 @@ export default function DashboardPage() {
     return data;
   }, []);
 
-  const ventas = Number(kpis?.income || 0);
-  const costo = Number(kpis?.expense || 0) * 0.6;
-  const gasto = Number(kpis?.expense || 0) * 0.4;
-  const uai = ventas - Number(kpis?.expense || 0);
+  const safePercent = (num: number, den: number) => {
+    return den > 0 ? ((num / den) * 100).toFixed(1) : '0';
+  };
+
+  const ventas = isRestricted
+    ? (companyKpis?.income || 0)
+    : (kpis?.ingresos || 0);
+  const egresos = isRestricted
+    ? (companyKpis?.expense || 0)
+    : (kpis?.egresos || 0);
+  const saldo = isRestricted
+    ? (companyKpis?.balance || 0)
+    : (kpis?.saldoDisponible || 0);
+  const costo = Number(egresos) * 0.6;
+  const gasto = Number(egresos) * 0.4;
+  const uai = Number(ventas) - Number(egresos);
   const udi = uai * 0.75;
 
   const companyVentas = Number(companyKpis?.income || 0);
@@ -554,7 +573,7 @@ export default function DashboardPage() {
                       {formatCurrency(uai)}
                     </div>
                     <div style={{ fontSize: '11px', color: uai >= 0 ? '#3B7A57' : '#9B3A3A', letterSpacing: '0.01em' }}>
-                      {formatPercent((uai / ventas) * 100)}
+                      {formatPercent(Number(safePercent(uai, ventas)))}
                     </div>
                   </div>
 
@@ -569,7 +588,7 @@ export default function DashboardPage() {
                       {formatCurrency(udi)}
                     </div>
                     <div style={{ fontSize: '11px', color: udi >= 0 ? '#3B7A57' : '#9B3A3A', letterSpacing: '0.01em' }}>
-                      {formatPercent((udi / ventas) * 100)}
+                      {formatPercent(Number(safePercent(udi, ventas)))}
                     </div>
                   </div>
                 </div>

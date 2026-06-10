@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { jwtDecode } from "jwt-decode";
 
 interface User {
   id: string;
@@ -37,26 +38,51 @@ export const useAuthStore = create<AuthState>((set) => ({
   branchId: localStorage.getItem("user_branch_id"),
 
   login: (token, tenantId, user, modulosActivos = []) => {
+    console.log('LOGIN RESPONSE:', JSON.stringify({ token, tenantId, user, modulosActivos }));
+    console.log('user object:', JSON.stringify(user));
+    console.log('token decoded check companyId:', user?.companyId);
+    console.log('token decoded check branchId:', user?.branchId);
+
+    // Decode JWT to extract companyId/branchId
+    let companyId = null;
+    let branchId = null;
+    try {
+      const decoded: any = jwtDecode(token);
+      companyId = decoded.companyId || null;
+      branchId = decoded.branchId || null;
+      console.log('JWT decoded companyId:', companyId);
+      console.log('JWT decoded branchId:', branchId);
+    } catch (e) {
+      console.error('JWT decode error:', e);
+    }
+
+    // Enrich user with JWT data
+    const enrichedUser = {
+      ...user,
+      companyId,
+      branchId,
+    };
+
     localStorage.setItem("access_token", token);
     if (tenantId) {
       localStorage.setItem("tenant_id", tenantId);
     } else {
       localStorage.removeItem("tenant_id");
     }
-    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("user", JSON.stringify(enrichedUser));
     localStorage.setItem("modulos_activos", JSON.stringify(modulosActivos));
     
-    if (user.companyId) {
-      localStorage.setItem("user_company_id", user.companyId);
-      localStorage.setItem("active_company_id", user.companyId);
+    if (companyId) {
+      localStorage.setItem("user_company_id", companyId);
+      localStorage.setItem("active_company_id", companyId);
     } else {
       localStorage.removeItem("user_company_id");
       localStorage.removeItem("active_company_id");
     }
     
-    if (user.branchId) {
-      localStorage.setItem("user_branch_id", user.branchId);
-      localStorage.setItem("active_branch_id", user.branchId);
+    if (branchId) {
+      localStorage.setItem("user_branch_id", branchId);
+      localStorage.setItem("active_branch_id", branchId);
     } else {
       localStorage.removeItem("user_branch_id");
       localStorage.removeItem("active_branch_id");
@@ -65,10 +91,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({
       token,
       tenantId,
-      user,
+      user: enrichedUser,
       modulosActivos,
-      companyId: user.companyId || null,
-      branchId: user.branchId || null,
+      companyId,
+      branchId,
     });
   },
 
