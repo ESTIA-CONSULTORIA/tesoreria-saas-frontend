@@ -11,7 +11,8 @@ type NavigationLevel = 'group' | 'company-selection' | 'company-detail' | 'branc
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { companyId: userCompanyId } = useAuthStore();
+  const { companyId: userCompanyId, branchId: userBranchId, user } = useAuthStore();
+  const isRestricted = !!userCompanyId || !!userBranchId;
   const [kpis, setKpis] = useState<any>(null);
   const [companyKpis, setCompanyKpis] = useState<any>(null);
   const [branchKpis, setBranchKpis] = useState<any>(null);
@@ -575,8 +576,9 @@ export default function DashboardPage() {
 
                 {/* ZONA 2+3 - Comparativo y Detalle */}
                 <div style={{ display: 'flex', flex: 1, overflow: 'hidden', backgroundColor: '#0A0A0A' }}>
-                  {/* ZONA 2 - Comparativo Empresas (65%) */}
-                  <div style={{ flex: '0 0 65%', display: 'flex', flexDirection: 'column', padding: '20px 24px', overflow: 'hidden', minWidth: 0 }}>
+                  {/* ZONA 2 - Comparativo Empresas (65%) - Ocultar para usuarios restringidos */}
+                  {!isRestricted && (
+                    <div style={{ flex: '0 0 65%', display: 'flex', flexDirection: 'column', padding: '20px 24px', overflow: 'hidden', minWidth: 0 }}>
                     <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <h2 style={{ fontSize: '14px', fontWeight: 400, color: '#F5F5F5', marginBottom: '2px', letterSpacing: '0.01em' }}>
@@ -739,10 +741,11 @@ export default function DashboardPage() {
                     </tbody>
                   </table>
                 </div>
-                  </div>
+                </div>
+                  )}
 
-                  {/* ZONA 3 - Detalle Empresa (35%) */}
-                  <div style={{ flex: '0 0 35%', backgroundColor: '#161616', borderLeft: '1px solid #2D2D2D', padding: '20px 24px', overflowY: 'auto', minWidth: 0 }}>
+                  {/* ZONA 3 - Detalle Empresa (35% o 100% para restringidos) */}
+                  <div style={{ flex: isRestricted ? '1' : '0 0 35%', backgroundColor: '#161616', borderLeft: isRestricted ? 'none' : '1px solid #2D2D2D', padding: '20px 24px', overflowY: 'auto', minWidth: 0 }}>
                     {selectedCompany ? (
                       <>
                         <h2 style={{ fontSize: '16px', fontWeight: 400, color: '#F5F5F5', marginBottom: '2px', letterSpacing: '0.01em' }}>
