@@ -53,8 +53,23 @@ export default function DashboardPage() {
     try {
       setLoading(true);
       setError("");
-      
-      if (navigationLevel === 'group' || navigationLevel === 'company-selection') {
+
+      if (isRestricted && (navigationLevel === 'group' || navigationLevel === 'company-selection')) {
+        // For restricted users, load their company KPIs directly
+        if (userCompanyId) {
+          const response = await api.get(`/dashboard/company/${userCompanyId}/kpis`, { params: { period } });
+          setCompanyKpis(response.data);
+          setKpis(null);
+          setBranchKpis(null);
+          // Set selected company for display
+          setSelectedCompany({ companyId: userCompanyId, companyName: response.data?.companyName || 'Mi Empresa' });
+          setNavigationLevel('company-detail');
+          // Cargar lista de sucursales
+          if (response.data?.branchesBreakdown) {
+            setBranches(response.data.branchesBreakdown);
+          }
+        }
+      } else if (navigationLevel === 'group' || navigationLevel === 'company-selection') {
         const response = await api.get("/dashboard/kpis", { params: { period } });
         setKpis(response.data);
         setCompanyKpis(null);
@@ -816,7 +831,7 @@ export default function DashboardPage() {
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Participación %</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatPercentDecimal((selectedCompany.income / ventas) * 100)}
+                              {formatPercentDecimal(Number(safePercent(selectedCompany.income, ventas)))}
                             </span>
                           </div>
                         </div>
