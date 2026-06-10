@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import CreateCompanyModal from "./CreateCompanyModal";
+import { useAuthStore } from "../../core/store/useAuthStore";
 
 interface Company {
   id: string;
@@ -13,6 +14,7 @@ interface Company {
 }
 
 export default function CompaniesPage() {
+  const { companyId: userCompanyId, user } = useAuthStore();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -29,7 +31,14 @@ export default function CompaniesPage() {
       setError("");
 
       const response = await api.get("/companies");
-      setCompanies(Array.isArray(response.data) ? response.data : []);
+      const allCompanies = Array.isArray(response.data) ? response.data : [];
+      
+      // If user has companyId restriction, show only their company
+      if (userCompanyId) {
+        setCompanies(allCompanies.filter((c: Company) => c.id === userCompanyId));
+      } else {
+        setCompanies(allCompanies);
+      }
     } catch (err: any) {
       setError(
         err.response?.data?.message ||

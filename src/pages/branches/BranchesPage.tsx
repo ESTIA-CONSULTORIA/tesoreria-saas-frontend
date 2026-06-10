@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import CreateBranchModal from "./CreateBranchModal";
+import { useCompanyStore } from "../../core/store/useCompanyStore";
 
 interface Branch {
   id: string;
@@ -13,6 +14,7 @@ interface Branch {
 }
 
 export default function BranchesPage() {
+  const { activeCompany } = useCompanyStore();
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -21,7 +23,7 @@ export default function BranchesPage() {
 
   useEffect(() => {
     loadBranches();
-  }, []);
+  }, [activeCompany?.id]);
 
   async function loadBranches() {
     try {
