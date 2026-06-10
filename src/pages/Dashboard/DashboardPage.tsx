@@ -216,15 +216,28 @@ export default function DashboardPage() {
       }), { income: 0, expense: 0, balance: 0 })
     : null;
 
+  // Calcular totales para ADMIN sumando todas las empresas
+  const adminTotals = !isRestricted && kpis?.companiesBreakdown
+    ? kpis.companiesBreakdown.reduce((acc: any, c: any) => ({
+        income: acc.income + (c.income || 0),
+        expense: acc.expense + (c.expense || 0),
+        balance: acc.balance + (c.balance || 0),
+      }), { income: 0, expense: 0, balance: 0 })
+    : null;
+
+  // Total de ventas del grupo para cálculo de Participación %
+  const totalVentasGrupo = kpis?.companiesBreakdown
+    ?.reduce((sum: number, c: any) => sum + (c.income || 0), 0) || 0;
+
   const ventasDisplay = isRestricted
     ? (companyTotals?.income || 0)
-    : (kpis?.ingresos || 0);
+    : (adminTotals?.income || kpis?.ingresos || 0);
   const egresosDisplay = isRestricted
     ? (companyTotals?.expense || 0)
-    : (kpis?.egresos || 0);
+    : (adminTotals?.expense || kpis?.egresos || 0);
   const saldoDisplay = isRestricted
     ? (companyTotals?.balance || 0)
-    : (kpis?.saldoDisponible || 0);
+    : (adminTotals?.balance || kpis?.saldoDisponible || 0);
   const costo = Number(egresosDisplay) * 0.6;
   const gasto = Number(egresosDisplay) * 0.4;
   const uaiDisplay = Number(ventasDisplay) - Number(egresosDisplay);
@@ -834,7 +847,7 @@ export default function DashboardPage() {
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Participación %</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatPercentDecimal(Number(safePercent(isRestricted ? companyTotals?.income : selectedCompany.income, ventasDisplay)))}
+                              {formatPercentDecimal(Number(safePercent(isRestricted ? companyTotals?.income : selectedCompany.income, totalVentasGrupo)))}
                             </span>
                           </div>
                         </div>

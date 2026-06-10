@@ -47,7 +47,11 @@ export default function CompanySelector() {
           }
         }
       } else if (isAdmin) {
-        // Admin starts with global view
+        // Admin starts with global view - clear localStorage to ensure no previous selection
+        localStorage.removeItem('active_company_id');
+        localStorage.removeItem('active_company_name');
+        localStorage.removeItem('active_branch_id');
+        localStorage.removeItem('active_branch_name');
         setActiveCompany(null);
         setActiveBranch(null);
       }

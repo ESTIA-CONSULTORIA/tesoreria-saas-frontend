@@ -38,11 +38,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   branchId: localStorage.getItem("user_branch_id"),
 
   login: (token, tenantId, user, modulosActivos = []) => {
-    console.log('LOGIN RESPONSE:', JSON.stringify({ token, tenantId, user, modulosActivos }));
-    console.log('user object:', JSON.stringify(user));
-    console.log('token decoded check companyId:', user?.companyId);
-    console.log('token decoded check branchId:', user?.branchId);
-
     // Decode JWT to extract companyId/branchId
     let companyId = null;
     let branchId = null;
@@ -50,8 +45,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       const decoded: any = jwtDecode(token);
       companyId = decoded.companyId || null;
       branchId = decoded.branchId || null;
-      console.log('JWT decoded companyId:', companyId);
-      console.log('JWT decoded branchId:', branchId);
     } catch (e) {
       console.error('JWT decode error:', e);
     }
