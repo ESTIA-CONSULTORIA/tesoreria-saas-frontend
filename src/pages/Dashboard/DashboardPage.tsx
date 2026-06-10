@@ -14,12 +14,6 @@ export default function DashboardPage() {
   const { companyId: userCompanyId, branchId: userBranchId, user } = useAuthStore();
   const isRestricted = !!userCompanyId || !!userBranchId;
 
-  console.log('=== DASHBOARD DEBUG ===');
-  console.log('user email:', user?.email);
-  console.log('userCompanyId:', userCompanyId);
-  console.log('userBranchId:', userBranchId);
-  console.log('isRestricted:', isRestricted);
-
   const [kpis, setKpis] = useState<any>(null);
   const [companyKpis, setCompanyKpis] = useState<any>(null);
   const [branchKpis, setBranchKpis] = useState<any>(null);
@@ -213,19 +207,28 @@ export default function DashboardPage() {
     return den > 0 ? ((num / den) * 100).toFixed(1) : '0';
   };
 
-  const ventas = isRestricted
-    ? (companyKpis?.income || 0)
+  // Calcular totales sumando todas las sucursales
+  const companyTotals = isRestricted && companyKpis?.branchesBreakdown
+    ? companyKpis.branchesBreakdown.reduce((acc: any, branch: any) => ({
+        income: acc.income + (branch.income || 0),
+        expense: acc.expense + (branch.expense || 0),
+        balance: acc.balance + (branch.balance || 0),
+      }), { income: 0, expense: 0, balance: 0 })
+    : null;
+
+  const ventasDisplay = isRestricted
+    ? (companyTotals?.income || 0)
     : (kpis?.ingresos || 0);
-  const egresos = isRestricted
-    ? (companyKpis?.expense || 0)
+  const egresosDisplay = isRestricted
+    ? (companyTotals?.expense || 0)
     : (kpis?.egresos || 0);
-  const saldo = isRestricted
-    ? (companyKpis?.balance || 0)
+  const saldoDisplay = isRestricted
+    ? (companyTotals?.balance || 0)
     : (kpis?.saldoDisponible || 0);
-  const costo = Number(egresos) * 0.6;
-  const gasto = Number(egresos) * 0.4;
-  const uai = Number(ventas) - Number(egresos);
-  const udi = uai * 0.75;
+  const costo = Number(egresosDisplay) * 0.6;
+  const gasto = Number(egresosDisplay) * 0.4;
+  const uaiDisplay = Number(ventasDisplay) - Number(egresosDisplay);
+  const udiDisplay = uaiDisplay * 0.75;
 
   const companyVentas = Number(companyKpis?.income || 0);
   const companyCosto = Number(companyKpis?.expense || 0) * 0.6;
@@ -540,7 +543,7 @@ export default function DashboardPage() {
                       Ventas
                     </div>
                     <div style={{ fontSize: '28px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '4px', letterSpacing: '-0.01em' }}>
-                      {formatCurrency(ventas)}
+                      {formatCurrency(ventasDisplay)}
                     </div>
                     <div style={{ fontSize: '11px', color: '#3B7A57', letterSpacing: '0.01em' }}>
                       {formatPercent(kpis?.incomeVariation || 0)}
@@ -585,10 +588,10 @@ export default function DashboardPage() {
                       UAI
                     </div>
                     <div style={{ fontSize: '28px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '4px', letterSpacing: '-0.01em' }}>
-                      {formatCurrency(uai)}
+                      {formatCurrency(uaiDisplay)}
                     </div>
-                    <div style={{ fontSize: '11px', color: uai >= 0 ? '#3B7A57' : '#9B3A3A', letterSpacing: '0.01em' }}>
-                      {formatPercent(Number(safePercent(uai, ventas)))}
+                    <div style={{ fontSize: '11px', color: uaiDisplay >= 0 ? '#3B7A57' : '#9B3A3A', letterSpacing: '0.01em' }}>
+                      {formatPercent(Number(safePercent(uaiDisplay, ventasDisplay)))}
                     </div>
                   </div>
 
@@ -600,10 +603,10 @@ export default function DashboardPage() {
                       UDI
                     </div>
                     <div style={{ fontSize: '28px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '4px', letterSpacing: '-0.01em' }}>
-                      {formatCurrency(udi)}
+                      {formatCurrency(udiDisplay)}
                     </div>
-                    <div style={{ fontSize: '11px', color: udi >= 0 ? '#3B7A57' : '#9B3A3A', letterSpacing: '0.01em' }}>
-                      {formatPercent(Number(safePercent(udi, ventas)))}
+                    <div style={{ fontSize: '11px', color: udiDisplay >= 0 ? '#3B7A57' : '#9B3A3A', letterSpacing: '0.01em' }}>
+                      {formatPercent(Number(safePercent(udiDisplay, ventasDisplay)))}
                     </div>
                   </div>
                 </div>
@@ -717,7 +720,7 @@ export default function DashboardPage() {
                         const compUai = compVentas - Number(company.expense);
                         const compUdi = compUai * 0.75;
                         const compMargen = compVentas > 0 ? (compUai / compVentas) * 100 : 0;
-                        const compPart = ventas > 0 ? (compVentas / ventas) * 100 : 0;
+                        const compPart = ventasDisplay > 0 ? (compVentas / ventasDisplay) * 100 : 0;
                         
                         return (
                           <tr
@@ -795,43 +798,43 @@ export default function DashboardPage() {
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Ventas</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(selectedCompany.income)}
+                              {formatCurrency(isRestricted ? companyTotals?.income : selectedCompany.income)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Costo</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(selectedCompany.expense * 0.6)}
+                              {formatCurrency(isRestricted ? companyTotals?.expense * 0.6 : selectedCompany.expense * 0.6)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Gasto</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(selectedCompany.expense * 0.4)}
+                              {formatCurrency(isRestricted ? companyTotals?.expense * 0.4 : selectedCompany.expense * 0.4)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>UAI</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(selectedCompany.income - selectedCompany.expense)}
+                              {formatCurrency(isRestricted ? (companyTotals?.income - companyTotals?.expense) : (selectedCompany.income - selectedCompany.expense))}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>UDI</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency((selectedCompany.income - selectedCompany.expense) * 0.75)}
+                              {formatCurrency(isRestricted ? ((companyTotals?.income - companyTotals?.expense) * 0.75) : ((selectedCompany.income - selectedCompany.expense) * 0.75))}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Margen Neto</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatPercentDecimal(((selectedCompany.income - selectedCompany.expense) / selectedCompany.income) * 100)}
+                              {formatPercentDecimal(isRestricted ? ((companyTotals?.income - companyTotals?.expense) / companyTotals?.income) * 100 : ((selectedCompany.income - selectedCompany.expense) / selectedCompany.income) * 100)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Participación %</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatPercentDecimal(Number(safePercent(selectedCompany.income, ventas)))}
+                              {formatPercentDecimal(Number(safePercent(isRestricted ? companyTotals?.income : selectedCompany.income, ventasDisplay)))}
                             </span>
                           </div>
                         </div>
@@ -885,7 +888,7 @@ export default function DashboardPage() {
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Ventas Totales</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(ventas)}
+                              {formatCurrency(ventasDisplay)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -903,13 +906,13 @@ export default function DashboardPage() {
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>UAI Consolidada</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(uai)}
+                              {formatCurrency(uaiDisplay)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>UDI Consolidada</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(udi)}
+                              {formatCurrency(udiDisplay)}
                             </span>
                           </div>
                         </div>
