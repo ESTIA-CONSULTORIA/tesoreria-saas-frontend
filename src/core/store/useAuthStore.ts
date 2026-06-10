@@ -48,14 +48,18 @@ export const useAuthStore = create<AuthState>((set) => ({
     
     if (user.companyId) {
       localStorage.setItem("user_company_id", user.companyId);
+      localStorage.setItem("active_company_id", user.companyId);
     } else {
       localStorage.removeItem("user_company_id");
+      localStorage.removeItem("active_company_id");
     }
     
     if (user.branchId) {
       localStorage.setItem("user_branch_id", user.branchId);
+      localStorage.setItem("active_branch_id", user.branchId);
     } else {
       localStorage.removeItem("user_branch_id");
+      localStorage.removeItem("active_branch_id");
     }
 
     set({
@@ -75,6 +79,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.removeItem("modulos_activos");
     localStorage.removeItem("user_company_id");
     localStorage.removeItem("user_branch_id");
+    localStorage.removeItem("active_company_id");
+    localStorage.removeItem("active_branch_id");
 
     set({
       token: null,
