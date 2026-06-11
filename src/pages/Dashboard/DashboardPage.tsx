@@ -15,7 +15,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [infoOpen, setInfoOpen] = useState(false);
-  const [period, setPeriod] = useState<"today" | "week" | "month" | "year">("month");
+  const [period, setPeriod] = useState<"today" | "week" | "month" | "quarter" | "year">("month");
   const [pendingShifts, setPendingShifts] = useState<any[]>([]);
 
   useEffect(() => {
@@ -194,11 +194,12 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
             {[
               { value: 'today', label: 'Hoy' },
               { value: 'week', label: 'Semana' },
               { value: 'month', label: 'Mes' },
+              { value: 'quarter', label: 'Trimestre' },
               { value: 'year', label: 'Año' },
             ].map((p) => (
               <button
@@ -314,7 +315,7 @@ export default function DashboardPage() {
         ) : (
           <>
                 {/* ZONA 1 - Resumen Consolidado */}
-                <div style={{ padding: '20px 24px', borderBottom: '1px solid #2D2D2D', display: 'flex', alignItems: 'center', backgroundColor: '#0A0A0A' }}>
+                <div style={{ padding: '20px 24px', borderBottom: '1px solid #2D2D2D', display: 'flex', alignItems: 'center', backgroundColor: '#0A0A0A', overflowX: 'auto', minWidth: 0 }}>
                   {/* Ventas */}
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '6px' }}>
@@ -399,7 +400,7 @@ export default function DashboardPage() {
                           {activeBranch ? 'Sucursales' : activeCompany ? 'Sucursales' : 'Comparativo por Empresa'}
                         </h2>
                         <p style={{ fontSize: '12px', color: '#7E7E7A', letterSpacing: '0.01em' }}>
-                          {period === 'today' ? 'Hoy' : period === 'week' ? 'Esta semana' : period === 'month' ? 'Este mes' : 'Este año'}
+                          {period === 'today' ? 'Hoy' : period === 'week' ? 'Esta semana' : period === 'month' ? 'Este mes' : period === 'quarter' ? 'Este trimestre' : 'Este año'}
                         </p>
                       </div>
                     </div>
@@ -437,8 +438,9 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Tabla */}
-                <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '4px', overflow: 'hidden', flex: 1, overflowY: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '4px', flex: 1, overflow: 'auto' }}>
+                  <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse' }}>
                     <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                       <tr style={{ backgroundColor: '#1B1B1B' }}>
                         <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
@@ -516,6 +518,7 @@ export default function DashboardPage() {
                       })}
                     </tbody>
                   </table>
+                  </div>
                 </div>
                 </div>
 

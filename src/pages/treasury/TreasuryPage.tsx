@@ -672,8 +672,9 @@ export default function TreasuryPage() {
                     No hay facturas pendientes de pago
                   </div>
                 ) : (
-                  <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', overflow: 'hidden' }}>
-                    <table className="w-full">
+                  <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px' }}>
+                    <div style={{ overflowX: 'auto' }}>
+                    <table className="w-full" style={{ minWidth: '700px' }}>
                       <thead style={{ backgroundColor: '#0F0F0F', borderBottom: '1px solid #2D2D2D' }}>
                         <tr>
                           <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Proveedor</th>
@@ -767,6 +768,7 @@ export default function TreasuryPage() {
                         })}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 )}
               </div>
@@ -793,8 +795,9 @@ export default function TreasuryPage() {
                   No hay cuentas por cobrar
                 </div>
               ) : (
-                <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', overflow: 'hidden' }}>
-                  <table className="w-full">
+                <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px' }}>
+                  <div style={{ overflowX: 'auto' }}>
+                  <table className="w-full" style={{ minWidth: '600px' }}>
                     <thead style={{ backgroundColor: '#0F0F0F', borderBottom: '1px solid #2D2D2D' }}>
                       <tr>
                         <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Concepto</th>
@@ -842,6 +845,7 @@ export default function TreasuryPage() {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               )}
             </div>
