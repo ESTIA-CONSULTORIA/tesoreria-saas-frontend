@@ -220,37 +220,48 @@ export default function DashboardPage() {
     return den > 0 ? ((num / den) * 100).toFixed(1) : '0';
   };
 
-  // Calcular totales sumando todas las sucursales
-  const companyTotals = isRestricted && companyKpis?.branchesBreakdown
-    ? companyKpis.branchesBreakdown.reduce((acc: any, branch: any) => ({
-        income: acc.income + (branch.income || 0),
-        expense: acc.expense + (branch.expense || 0),
-        balance: acc.balance + (branch.balance || 0),
-      }), { income: 0, expense: 0, balance: 0 })
-    : null;
-
-  // Calcular totales para ADMIN sumando todas las empresas
-  const adminTotals = !isRestricted && kpis?.companiesBreakdown
-    ? kpis.companiesBreakdown.reduce((acc: any, c: any) => ({
-        income: acc.income + (c.income || 0),
-        expense: acc.expense + (c.expense || 0),
-        balance: acc.balance + (c.balance || 0),
-      }), { income: 0, expense: 0, balance: 0 })
-    : null;
-
   // Total de ventas del grupo para cálculo de Participación %
   const totalVentasGrupo = kpis?.companiesBreakdown
     ?.reduce((sum: number, c: any) => sum + (c.income || 0), 0) || 0;
 
-  const ventasDisplay = isRestricted
-    ? (companyTotals?.income || 0)
-    : (adminTotals?.income || kpis?.ingresos || 0);
-  const egresosDisplay = isRestricted
-    ? (companyTotals?.expense || 0)
-    : (adminTotals?.expense || kpis?.egresos || 0);
-  const saldoDisplay = isRestricted
-    ? (companyTotals?.balance || 0)
-    : (adminTotals?.balance || kpis?.saldoDisponible || 0);
+  // Unificar lógica de KPIs
+  const displayTotals = (() => {
+    // Usuario restringido: usar companyKpis
+    if (isRestricted && companyKpis?.branchesBreakdown) {
+      return companyKpis.branchesBreakdown.reduce(
+        (acc, b) => ({
+          income: acc.income + (Number(b.income) || 0),
+          expense: acc.expense + (Number(b.expense) || 0),
+          balance: acc.balance + (Number(b.balance) || 0),
+        }), { income: 0, expense: 0, balance: 0 }
+      );
+    }
+    // ADMIN con empresa seleccionada: usar companyKpis
+    if (companyKpis?.branchesBreakdown) {
+      return companyKpis.branchesBreakdown.reduce(
+        (acc, b) => ({
+          income: acc.income + (Number(b.income) || 0),
+          expense: acc.expense + (Number(b.expense) || 0),
+          balance: acc.balance + (Number(b.balance) || 0),
+        }), { income: 0, expense: 0, balance: 0 }
+      );
+    }
+    // Vista Global: usar kpis?.companiesBreakdown
+    if (kpis?.companiesBreakdown) {
+      return kpis.companiesBreakdown.reduce(
+        (acc, c) => ({
+          income: acc.income + (Number(c.income) || 0),
+          expense: acc.expense + (Number(c.expense) || 0),
+          balance: acc.balance + (Number(c.balance) || 0),
+        }), { income: 0, expense: 0, balance: 0 }
+      );
+    }
+    return { income: 0, expense: 0, balance: 0 };
+  })();
+
+  const ventasDisplay = displayTotals.income;
+  const egresosDisplay = displayTotals.expense;
+  const saldoDisplay = displayTotals.balance;
   const costo = Number(egresosDisplay) * 0.6;
   const gasto = Number(egresosDisplay) * 0.4;
   const uaiDisplay = Number(ventasDisplay) - Number(egresosDisplay);
@@ -824,43 +835,43 @@ export default function DashboardPage() {
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Ventas</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(isRestricted ? companyTotals?.income : selectedCompany.income)}
+                              {formatCurrency(isRestricted ? displayTotals?.income : selectedCompany.income)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Costo</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(isRestricted ? companyTotals?.expense * 0.6 : selectedCompany.expense * 0.6)}
+                              {formatCurrency(isRestricted ? displayTotals?.expense * 0.6 : selectedCompany.expense * 0.6)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Gasto</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(isRestricted ? companyTotals?.expense * 0.4 : selectedCompany.expense * 0.4)}
+                              {formatCurrency(isRestricted ? displayTotals?.expense * 0.4 : selectedCompany.expense * 0.4)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>UAI</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(isRestricted ? (companyTotals?.income - companyTotals?.expense) : (selectedCompany.income - selectedCompany.expense))}
+                              {formatCurrency(isRestricted ? (displayTotals?.income - displayTotals?.expense) : (selectedCompany.income - selectedCompany.expense))}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>UDI</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(isRestricted ? ((companyTotals?.income - companyTotals?.expense) * 0.75) : ((selectedCompany.income - selectedCompany.expense) * 0.75))}
+                              {formatCurrency(isRestricted ? ((displayTotals?.income - displayTotals?.expense) * 0.75) : ((selectedCompany.income - selectedCompany.expense) * 0.75))}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Margen Neto</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatPercentDecimal(isRestricted ? ((companyTotals?.income - companyTotals?.expense) / companyTotals?.income) * 100 : ((selectedCompany.income - selectedCompany.expense) / selectedCompany.income) * 100)}
+                              {formatPercentDecimal(isRestricted ? ((displayTotals?.income - displayTotals?.expense) / displayTotals?.income) * 100 : ((selectedCompany.income - selectedCompany.expense) / selectedCompany.income) * 100)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Participación %</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatPercentDecimal(Number(safePercent(isRestricted ? companyTotals?.income : selectedCompany.income, totalVentasGrupo)))}
+                              {formatPercentDecimal(Number(safePercent(isRestricted ? displayTotals?.income : selectedCompany.income, totalVentasGrupo)))}
                             </span>
                           </div>
                         </div>
