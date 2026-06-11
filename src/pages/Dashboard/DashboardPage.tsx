@@ -32,20 +32,28 @@ export default function DashboardPage() {
   useEffect(() => {
     loadKpis();
     loadPendingShifts();
-  }, [period, navigationLevel, selectedCompany?.companyId, selectedBranch?.branchId, activeCompany?.id]);
+  }, [period, navigationLevel, selectedCompany?.companyId, selectedBranch?.branchId, activeCompany?.id, activeBranch?.id]);
 
   useEffect(() => {
-    if (activeCompany && !isRestricted) {
+    if (activeBranch && !isRestricted) {
+      setNavigationLevel('branch-detail');
+      setSelectedBranch({
+        branchId: activeBranch.id,
+        branchName: activeBranch.name,
+      });
+    } else if (activeCompany && !isRestricted) {
       setNavigationLevel('company-detail');
       setSelectedCompany({
         companyId: activeCompany.id,
         companyName: activeCompany.name,
       });
+      setSelectedBranch(null);
     } else if (!activeCompany && !isRestricted) {
       setNavigationLevel('group');
       setSelectedCompany(null);
+      setSelectedBranch(null);
     }
-  }, [activeCompany?.id]);
+  }, [activeBranch?.id, activeCompany?.id]);
 
   async function loadPendingShifts() {
     try {
@@ -95,19 +103,14 @@ export default function DashboardPage() {
           setBranches(response.data.branchesBreakdown);
         }
       } else if (navigationLevel === 'branch-detail' && selectedBranch) {
-        // Fallback: endpoint de sucursal no existe aún, usar endpoint de empresa
-        if (selectedCompany) {
-          const response = await api.get(`/dashboard/company/${selectedCompany.companyId}/kpis`, { params: { period } });
-          setCompanyKpis(response.data);
-          setKpis(null);
-          setBranchKpis(null);
-        } else {
-          // Si no hay empresa seleccionada, usar endpoint global
-          const response = await api.get("/dashboard/kpis", { params: { period } });
-          setKpis(response.data);
-          setCompanyKpis(null);
-          setBranchKpis(null);
-        }
+        // Load branch KPIs with X-Branch-Id header
+        const response = await api.get("/dashboard/kpis", {
+          params: { period },
+          headers: { 'X-Branch-Id': selectedBranch.branchId }
+        });
+        setBranchKpis(response.data);
+        setKpis(null);
+        setCompanyKpis(null);
       }
     } catch (err: any) {
       setError(err.response?.data?.message || "No fue posible cargar dashboard");
@@ -266,6 +269,15 @@ export default function DashboardPage() {
   const gasto = Number(egresosDisplay) * 0.4;
   const uaiDisplay = Number(ventasDisplay) - Number(egresosDisplay);
   const udiDisplay = uaiDisplay * 0.75;
+
+  // Panel derecho usando displayTotals
+  const panelVentas = displayTotals.income;
+  const panelEgresos = displayTotals.expense;
+  const panelUAI = panelVentas - panelEgresos;
+  const panelUDI = panelUAI * 0.75;
+  const panelMargen = panelVentas > 0
+    ? Number(((panelUAI / panelVentas) * 100).toFixed(1))
+    : 0;
 
   const companyVentas = Number(companyKpis?.income || 0);
   const companyCosto = Number(companyKpis?.expense || 0) * 0.6;
@@ -835,43 +847,43 @@ export default function DashboardPage() {
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Ventas</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(isRestricted ? displayTotals?.income : selectedCompany.income)}
+                              {formatCurrency(panelVentas)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Costo</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(isRestricted ? displayTotals?.expense * 0.6 : selectedCompany.expense * 0.6)}
+                              {formatCurrency(panelEgresos * 0.6)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Gasto</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(isRestricted ? displayTotals?.expense * 0.4 : selectedCompany.expense * 0.4)}
+                              {formatCurrency(panelEgresos * 0.4)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>UAI</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(isRestricted ? (displayTotals?.income - displayTotals?.expense) : (selectedCompany.income - selectedCompany.expense))}
+                              {formatCurrency(panelUAI)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>UDI</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(isRestricted ? ((displayTotals?.income - displayTotals?.expense) * 0.75) : ((selectedCompany.income - selectedCompany.expense) * 0.75))}
+                              {formatCurrency(panelUDI)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Margen Neto</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatPercentDecimal(isRestricted ? ((displayTotals?.income - displayTotals?.expense) / displayTotals?.income) * 100 : ((selectedCompany.income - selectedCompany.expense) / selectedCompany.income) * 100)}
+                              {formatPercentDecimal(panelMargen)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Participación %</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatPercentDecimal(Number(safePercent(isRestricted ? displayTotals?.income : selectedCompany.income, totalVentasGrupo)))}
+                              {formatPercentDecimal(Number(safePercent(panelVentas, totalVentasGrupo)))}
                             </span>
                           </div>
                         </div>
