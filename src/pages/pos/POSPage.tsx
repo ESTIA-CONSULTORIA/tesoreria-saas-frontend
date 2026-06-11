@@ -52,6 +52,9 @@ interface Sale {
   hora: string;
   items: TicketItem[];
   total: number;
+  subtotal?: number;
+  descuento?: number;
+  impuestos?: number;
   formaPago: string;
   formasPago?: Array<{
     forma: string;
@@ -83,6 +86,7 @@ export default function POSPage() {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const token = useAuthStore((state) => state.token);
+  const branchId = useAuthStore((state) => state.branchId);
   const { config } = useLoginConfigStore();
   const isAdminOrSoporte = user?.roleCode === "ADMIN" || user?.roleCode === "SOPORTE";
 
@@ -111,6 +115,9 @@ export default function POSPage() {
   const [courtesyReason, setCourtesyReason] = useState("");
   const [courtesyAuthorizedBy, setCourtesyAuthorizedBy] = useState("");
   const [cardValidationError, setCardValidationError] = useState("");
+  const [showCancelSaleModal, setShowCancelSaleModal] = useState(false);
+  const [cancelSaleId, setCancelSaleId] = useState<string | null>(null);
+  const [cancelSaleReason, setCancelSaleReason] = useState("");
   
   // Enhanced discount modal state
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
@@ -345,7 +352,6 @@ export default function POSPage() {
   async function loadAreas() {
     try {
       const response = await api.get('/pos/areas');
-      console.log('áreas:', JSON.stringify(response.data[0]));
       setAreas(response.data || []);
     } catch (error) {
       console.error('Error loading areas:', error);
@@ -356,12 +362,6 @@ export default function POSPage() {
     try {
       const user = JSON.parse(localStorage.getItem('user') || 'null');
       const savedCashier = localStorage.getItem('selected_cashier');
-      
-      console.log('loadOpenShift params:', {
-        cajero: savedCashier || user?.id,
-        tenantId: user?.tenantId
-      });
-      
       const response = await api.get("/pos/shifts/open", {
         params: {
           cajero: savedCashier || user?.id || "current-user-id",
@@ -424,12 +424,11 @@ export default function POSPage() {
     }
     try {
       const response = await api.post("/pos/shifts", {
-        cajero: selectedCashier || "current-user-id",
-        sucursalId: "default-branch-id",
+        cajero: selectedCashier || user?.id,
+        sucursalId: user?.branchId || branchId,
         fondoInicial: Number(initialFund) || 0,
         notas: shiftNotes,
       });
-      console.log('Turno creado:', response.data);
       setShowOpenShiftModal(false);
       setInitialFund("");
       setShiftNotes("");
@@ -635,7 +634,7 @@ export default function POSPage() {
   }
 
   function getTaxes() {
-    return getSubtotal() * 0.16;
+    return (getSubtotal() - getTotalDiscount()) * 0.16;
   }
 
   function getTotal() {
@@ -784,13 +783,10 @@ export default function POSPage() {
         impuestos: getTaxes(),
         total: getTotal(),
         formasPago: paymentForms,
-        cajero: "current-user-id",
+        cajero: selectedCashier || user?.id,
         turnoId: shift.id,
-        sucursalId: "default-branch-id",
+        sucursalId: user?.branchId || branchId,
       };
-      console.log('turnoActivo:', shift);
-      console.log('body venta:', saleData);
-
       const response = await api.post("/pos/sales", saleData);
       const sale = response.data;
 
@@ -806,12 +802,19 @@ export default function POSPage() {
     }
   }
 
-  async function cancelSale(saleId: string) {
-    const motivo = prompt("Motivo de cancelación:");
-    if (!motivo) return;
+  function cancelSale(saleId: string) {
+    setCancelSaleId(saleId);
+    setCancelSaleReason("");
+    setShowCancelSaleModal(true);
+  }
 
+  async function confirmCancelSale() {
+    if (!cancelSaleId || !cancelSaleReason.trim()) return;
     try {
-      await api.put(`/pos/sales/${saleId}/cancel`, { motivo });
+      await api.put(`/pos/sales/${cancelSaleId}/cancel`, { motivo: cancelSaleReason });
+      setShowCancelSaleModal(false);
+      setCancelSaleId(null);
+      setCancelSaleReason("");
       loadSalesHistory();
     } catch (error) {
       console.error("Error canceling sale:", error);
@@ -2811,11 +2814,17 @@ export default function POSPage() {
             <div className="border-t border-slate-300 pt-2 mt-2 space-y-1 text-sm">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>${(Number(currentSale.total) / 1.16).toFixed(2)}</span>
+                <span>${Number(currentSale.subtotal ?? Number(currentSale.total) / 1.16).toFixed(2)}</span>
               </div>
+              {(currentSale.descuento ?? 0) > 0 && (
+                <div className="flex justify-between text-red-600">
+                  <span>Descuento</span>
+                  <span>-${Number(currentSale.descuento).toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span>IVA (16%)</span>
-                <span>${((Number(currentSale.total) / 1.16) * 0.16).toFixed(2)}</span>
+                <span>${Number(currentSale.impuestos ?? (Number(currentSale.total) / 1.16) * 0.16).toFixed(2)}</span>
               </div>
               <div className="flex justify-between font-bold text-lg border-t border-slate-300 pt-2 mt-2">
                 <span>TOTAL</span>
@@ -3779,6 +3788,45 @@ export default function POSPage() {
                   className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
                 >
                   Guardar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CANCELAR VENTA */}
+      {showCancelSaleModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
+            <div className="mb-6">
+              <h3 className="text-2xl font-bold text-white">Cancelar Venta</h3>
+              <p className="text-sm text-slate-400">Ingresa el motivo de la cancelación</p>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-slate-400 mb-2">Motivo de cancelación</label>
+                <textarea
+                  value={cancelSaleReason}
+                  onChange={(e) => setCancelSaleReason(e.target.value)}
+                  placeholder="Describe el motivo..."
+                  rows={3}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                />
+              </div>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => { setShowCancelSaleModal(false); setCancelSaleId(null); setCancelSaleReason(""); }}
+                  className="px-4 py-2 rounded-lg bg-slate-700 text-white font-medium hover:bg-slate-600"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmCancelSale}
+                  disabled={!cancelSaleReason.trim()}
+                  className="px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Confirmar Cancelación
                 </button>
               </div>
             </div>
