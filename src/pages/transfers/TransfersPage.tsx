@@ -32,6 +32,9 @@ export default function TransfersPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null);
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectTransferId, setRejectTransferId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
   const user = useAuthStore((state) => state.user);
   const isAdminOrSoporte = user?.roleCode === "ADMIN" || user?.roleCode === "SOPORTE";
 
@@ -71,15 +74,29 @@ export default function TransfersPage() {
     }
   }
 
-  async function rejectTransfer(id: string) {
-    const motivo = prompt("Motivo del rechazo:");
-    if (!motivo) return;
+  function openRejectModal(id: string) {
+    setRejectTransferId(id);
+    setRejectReason("");
+    setRejectModalOpen(true);
+  }
+
+  async function confirmReject() {
+    if (!rejectTransferId || !rejectReason.trim()) return;
     try {
-      await api.put(`/transfers/${id}/reject`, { motivo });
+      await api.put(`/transfers/${rejectTransferId}/reject`, { motivo: rejectReason });
+      setRejectModalOpen(false);
+      setRejectTransferId(null);
+      setRejectReason("");
       loadTransfers();
     } catch (err: any) {
       alert(err.response?.data?.message || "Error al rechazar traslado");
     }
+  }
+
+  function cancelReject() {
+    setRejectModalOpen(false);
+    setRejectTransferId(null);
+    setRejectReason("");
   }
 
   function getAccountName(accountId: string): string {
@@ -156,7 +173,7 @@ export default function TransfersPage() {
                           Autorizar
                         </button>
                         <button
-                          onClick={(e) => { e.stopPropagation(); rejectTransfer(transfer.id); }}
+                          onClick={(e) => { e.stopPropagation(); openRejectModal(transfer.id); }}
                           className="px-3 py-1 rounded bg-red-600 text-white text-xs hover:bg-red-700"
                         >
                           Rechazar
@@ -167,6 +184,46 @@ export default function TransfersPage() {
                 </div>
               ))
             )}
+          </div>
+        )}
+
+        {/* Modal de rechazo */}
+        {rejectModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+            <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold text-white">Rechazar Traslado</h3>
+                <p className="text-sm text-slate-400">Por favor, ingrese el motivo del rechazo</p>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-slate-400 mb-2">Motivo del rechazo</label>
+                  <textarea
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                    placeholder="Describa el motivo..."
+                    rows={4}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                    required
+                  />
+                </div>
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={cancelReject}
+                    className="px-4 py-2 rounded-lg bg-slate-700 text-white font-medium hover:bg-slate-600"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={confirmReject}
+                    disabled={!rejectReason.trim()}
+                    className="px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Confirmar Rechazo
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

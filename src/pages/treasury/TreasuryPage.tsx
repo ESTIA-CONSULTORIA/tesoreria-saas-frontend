@@ -25,6 +25,18 @@ export default function TreasuryPage() {
   const [showScheduledPayments, setShowScheduledPayments] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [transferForm, setTransferForm] = useState({
+    tipo: "INTERNA" as "INTERNA" | "INTERCOMPAÑIA",
+    fromAccountId: "",
+    toAccountId: "",
+    amount: "",
+    concept: "",
+    referencia: "",
+  });
+  const [alertForm, setAlertForm] = useState({
+    saldoMinimo: "",
+    diasAnticipacionAlerta: "",
+  });
 
   useEffect(() => {
     loadData();
@@ -58,9 +70,6 @@ export default function TreasuryPage() {
           const cxpRes = await api.get("/treasury/accounts-payable");
           const cxpData = Array.isArray(cxpRes.data) ? cxpRes.data : [];
           setAccountsPayable(cxpData);
-          if (cxpData.length > 0) {
-            console.log('Primera CxP:', JSON.stringify(cxpData[0]));
-          }
           const suppliersRes = await api.get("/suppliers");
           setSuppliers(Array.isArray(suppliersRes.data) ? suppliersRes.data : []);
           break;
@@ -93,6 +102,43 @@ export default function TreasuryPage() {
     if (days < 7) return "bg-red-500";
     if (days < 15) return "bg-yellow-500";
     return "bg-green-500";
+  }
+
+  async function handleTransferSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      await api.post("/treasury/transfers", {
+        ...transferForm,
+        amount: Number(transferForm.amount),
+      });
+      setError("");
+      alert("Traslado realizado exitosamente");
+      setTransferForm({
+        tipo: "INTERNA",
+        fromAccountId: "",
+        toAccountId: "",
+        amount: "",
+        concept: "",
+        referencia: "",
+      });
+      loadData();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible realizar el traslado");
+    }
+  }
+
+  async function handleAlertConfigSave(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      await api.put("/treasury/alert-config", {
+        saldoMinimo: Number(alertForm.saldoMinimo),
+        diasAnticipacionAlerta: Number(alertForm.diasAnticipacionAlerta),
+      });
+      alert("Configuración de alertas guardada exitosamente");
+      loadData();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible guardar la configuración");
+    }
   }
 
   return (
@@ -444,10 +490,13 @@ export default function TreasuryPage() {
                 {/* Formulario de traslado */}
                 <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '24px' }}>
                   <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '16px' }}>Nuevo Traslado</h3>
-                  <form className="space-y-4">
+                  <form onSubmit={handleTransferSubmit} className="space-y-4">
                     <div>
                       <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Tipo de Traslado</label>
-                      <select className="w-full" style={{
+                      <select 
+                        value={transferForm.tipo}
+                        onChange={(e) => setTransferForm({ ...transferForm, tipo: e.target.value as any })}
+                        className="w-full" style={{
                         backgroundColor: '#0F0F0F',
                         color: '#F5F5F5',
                         borderRadius: '4px',
@@ -461,7 +510,10 @@ export default function TreasuryPage() {
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Cuenta Origen</label>
-                      <select className="w-full" style={{
+                      <select 
+                        value={transferForm.fromAccountId}
+                        onChange={(e) => setTransferForm({ ...transferForm, fromAccountId: e.target.value })}
+                        className="w-full" style={{
                         backgroundColor: '#0F0F0F',
                         color: '#F5F5F5',
                         borderRadius: '4px',
@@ -479,7 +531,10 @@ export default function TreasuryPage() {
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Cuenta Destino</label>
-                      <select className="w-full" style={{
+                      <select 
+                        value={transferForm.toAccountId}
+                        onChange={(e) => setTransferForm({ ...transferForm, toAccountId: e.target.value })}
+                        className="w-full" style={{
                         backgroundColor: '#0F0F0F',
                         color: '#F5F5F5',
                         borderRadius: '4px',
@@ -500,7 +555,10 @@ export default function TreasuryPage() {
                       <input
                         type="number"
                         step="0.01"
+                        value={transferForm.amount}
+                        onChange={(e) => setTransferForm({ ...transferForm, amount: e.target.value })}
                         placeholder="0.00"
+                        required
                         style={{
                           width: '100%',
                           backgroundColor: '#0F0F0F',
@@ -516,7 +574,10 @@ export default function TreasuryPage() {
                       <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Concepto</label>
                       <input
                         type="text"
+                        value={transferForm.concept}
+                        onChange={(e) => setTransferForm({ ...transferForm, concept: e.target.value })}
                         placeholder="Descripción del traslado"
+                        required
                         style={{
                           width: '100%',
                           backgroundColor: '#0F0F0F',
@@ -532,6 +593,8 @@ export default function TreasuryPage() {
                       <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Referencia (opcional)</label>
                       <input
                         type="text"
+                        value={transferForm.referencia}
+                        onChange={(e) => setTransferForm({ ...transferForm, referencia: e.target.value })}
                         placeholder="Número de referencia"
                         style={{
                           width: '100%',
@@ -790,12 +853,15 @@ export default function TreasuryPage() {
               {/* Configuración de alertas */}
               <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '24px' }}>
                 <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '16px' }}>Configuración de Alertas</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <form onSubmit={handleAlertConfigSave} className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Saldo Mínimo ($)</label>
                     <input
                       type="number"
-                      defaultValue={alertConfig?.saldoMinimo || 0}
+                      value={alertForm.saldoMinimo}
+                      onChange={(e) => setAlertForm({ ...alertForm, saldoMinimo: e.target.value })}
+                      placeholder={alertConfig?.saldoMinimo || 0}
+                      required
                       style={{
                         width: '100%',
                         backgroundColor: '#0F0F0F',
@@ -811,7 +877,10 @@ export default function TreasuryPage() {
                     <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Días Anticipación</label>
                     <input
                       type="number"
-                      defaultValue={alertConfig?.diasAnticipacionAlerta || 7}
+                      value={alertForm.diasAnticipacionAlerta}
+                      onChange={(e) => setAlertForm({ ...alertForm, diasAnticipacionAlerta: e.target.value })}
+                      placeholder={alertConfig?.diasAnticipacionAlerta || 7}
+                      required
                       style={{
                         width: '100%',
                         backgroundColor: '#0F0F0F',
@@ -825,6 +894,7 @@ export default function TreasuryPage() {
                   </div>
                   <div className="flex items-end">
                     <button 
+                      type="submit"
                       style={{
                         width: '100%',
                         padding: '12px',
@@ -841,7 +911,7 @@ export default function TreasuryPage() {
                       Guardar Configuración
                     </button>
                   </div>
-                </div>
+                </form>
               </div>
 
               {/* Alertas activas */}
