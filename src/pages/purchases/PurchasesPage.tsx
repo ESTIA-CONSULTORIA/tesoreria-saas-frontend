@@ -122,9 +122,6 @@ export default function PurchasesPage() {
       const response = await api.get("/purchases/orders", { params: { status } });
       const ordersData = Array.isArray(response.data) ? response.data : [];
       setOrders(ordersData);
-      if (ordersData.length > 0) {
-        console.log('Primera OC:', JSON.stringify(ordersData[0]));
-      }
     } catch (err: any) {
       setError(err.response?.data?.message || "No fue posible cargar órdenes");
     } finally {
@@ -441,7 +438,7 @@ export default function PurchasesPage() {
                                 Ver
                               </button>
                               {order.status === "BORRADOR" && (
-                                <button className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700">
+                                <button className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700" onClick={() => handleViewOrder(order)}>
                                   Editar
                                 </button>
                               )}

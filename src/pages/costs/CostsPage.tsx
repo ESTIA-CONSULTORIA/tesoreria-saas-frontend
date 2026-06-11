@@ -124,6 +124,10 @@ export default function CostsPage() {
     responsable: "",
   });
   const [physicalCountItems, setPhysicalCountItems] = useState<any[]>([]);
+  const [viewRecipeModalOpen, setViewRecipeModalOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteConfirmType, setDeleteConfirmType] = useState<"almacen" | "familia" | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   // CSV Import states
   const [insumoImportModalOpen, setInsumoImportModalOpen] = useState(false);
@@ -348,18 +352,10 @@ export default function CostsPage() {
     }
   }
 
-  async function deleteAlmacen(id: string) {
-    if (!confirm("¿Estás seguro de eliminar este almacén?")) return;
-    try {
-      setLoading(true);
-      setError("");
-      await api.delete(`/costs/almacenes/${id}`);
-      loadAlmacenes();
-    } catch (err: any) {
-      setError(err.response?.data?.message || "No fue posible eliminar el almacén");
-    } finally {
-      setLoading(false);
-    }
+  function deleteAlmacen(id: string) {
+    setDeleteConfirmType("almacen");
+    setDeleteConfirmId(id);
+    setDeleteConfirmOpen(true);
   }
 
   // Familias CRUD
@@ -393,17 +389,31 @@ export default function CostsPage() {
     }
   }
 
-  async function deleteFamilia(id: string) {
-    if (!confirm("¿Estás seguro de eliminar esta familia?")) return;
+  function deleteFamilia(id: string) {
+    setDeleteConfirmType("familia");
+    setDeleteConfirmId(id);
+    setDeleteConfirmOpen(true);
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deleteConfirmId || !deleteConfirmType) return;
+    setDeleteConfirmOpen(false);
     try {
       setLoading(true);
       setError("");
-      await api.delete(`/costs/familias/${id}`);
-      loadFamilias();
+      if (deleteConfirmType === "almacen") {
+        await api.delete(`/costs/almacenes/${deleteConfirmId}`);
+        loadAlmacenes();
+      } else {
+        await api.delete(`/costs/familias/${deleteConfirmId}`);
+        loadFamilias();
+      }
     } catch (err: any) {
-      setError(err.response?.data?.message || "No fue posible eliminar la familia");
+      setError(err.response?.data?.message || "No fue posible eliminar");
     } finally {
       setLoading(false);
+      setDeleteConfirmId(null);
+      setDeleteConfirmType(null);
     }
   }
 
@@ -807,7 +817,7 @@ export default function CostsPage() {
                           <td className="p-2">{(Number(recipe.margenDeseado) * 100).toFixed(0)}%</td>
                           <td className="p-2">
                             <div className="flex gap-2">
-                              <button className="rounded bg-slate-700 px-2 py-1 text-xs text-white hover:bg-slate-600">
+                              <button className="rounded bg-slate-700 px-2 py-1 text-xs text-white hover:bg-slate-600" onClick={() => { setSelectedRecipe(recipe); setViewRecipeModalOpen(true); }}>
                                 Ver
                               </button>
                               <button className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700" onClick={() => { setSelectedRecipe(recipe); setRecipeModalOpen(true); }}>
@@ -836,7 +846,7 @@ export default function CostsPage() {
                         <p><span className="text-slate-500">Margen:</span> {(Number(recipe.margenDeseado) * 100).toFixed(0)}%</p>
                       </div>
                       <div className="flex gap-2">
-                        <button className="flex-1 rounded bg-slate-700 px-2 py-1 text-xs text-white hover:bg-slate-600">
+                        <button className="flex-1 rounded bg-slate-700 px-2 py-1 text-xs text-white hover:bg-slate-600" onClick={() => { setSelectedRecipe(recipe); setViewRecipeModalOpen(true); }}>
                           Ver
                         </button>
                         <button className="flex-1 rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700" onClick={() => { setSelectedRecipe(recipe); setRecipeModalOpen(true); }}>
@@ -871,7 +881,6 @@ export default function CostsPage() {
                         <th className="p-2">Salidas</th>
                         <th className="p-2">Inv. Final</th>
                         <th className="p-2">Costo Promedio</th>
-                        <th className="p-2">Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -883,11 +892,6 @@ export default function CostsPage() {
                           <td className="p-2">{Number(inv.salidas).toFixed(2)}</td>
                           <td className="p-2">{Number(inv.inventarioFinal).toFixed(2)}</td>
                           <td className="p-2">{Number(inv.costoPromedio).toFixed(2)}</td>
-                          <td className="p-2">
-                            <button className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700">
-                              Editar
-                            </button>
-                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -904,9 +908,6 @@ export default function CostsPage() {
                         <p><span className="text-slate-500">Inv. Final:</span> {Number(inv.inventarioFinal).toFixed(2)}</p>
                         <p><span className="text-slate-500">Costo Promedio:</span> {Number(inv.costoPromedio).toFixed(2)}</p>
                       </div>
-                      <button className="w-full rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700">
-                        Editar
-                      </button>
                     </div>
                   ))}
                 </div>
@@ -1169,7 +1170,7 @@ export default function CostsPage() {
                       onChange={(e) => setPeriodo(e.target.value)}
                       className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
                     />
-                    <button className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">
+                    <button className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700" onClick={() => window.print()}>
                       Exportar PDF
                     </button>
                   </div>
@@ -1870,6 +1871,104 @@ export default function CostsPage() {
                   className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-40"
                 >
                   {isImporting ? "Importando..." : "Importar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Detalle de Receta */}
+        {viewRecipeModalOpen && selectedRecipe && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden">
+              <div className="flex-shrink-0 p-6 border-b border-slate-800 flex items-center justify-between">
+                <div>
+                  <h3 className="text-2xl font-bold text-white">{selectedRecipe.nombre}</h3>
+                  <p className="text-sm text-slate-400">{selectedRecipe.tipo}</p>
+                </div>
+                <button
+                  onClick={() => { setViewRecipeModalOpen(false); setSelectedRecipe(null); }}
+                  className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700"
+                >
+                  Cerrar
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                {selectedRecipe.descripcion && (
+                  <p className="text-slate-300 text-sm">{selectedRecipe.descripcion}</p>
+                )}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-xs text-slate-400">Rendimiento</p>
+                    <p className="text-white">{Number(selectedRecipe.rendimiento).toFixed(2)} {selectedRecipe.unidadRendimiento}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Costo Total</p>
+                    <p className="text-white font-bold">{Number(selectedRecipe.costoTotal).toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Precio Sugerido</p>
+                    <p className="text-white">{Number(selectedRecipe.precioVentaSugerido).toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Margen Deseado</p>
+                    <p className="text-white">{(Number(selectedRecipe.margenDeseado) * 100).toFixed(0)}%</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Estado</p>
+                    <span className={`text-xs px-2 py-1 rounded ${selectedRecipe.isActive ? 'bg-green-900/40 text-green-300' : 'bg-slate-700 text-slate-300'}`}>
+                      {selectedRecipe.isActive ? 'Activo' : 'Inactivo'}
+                    </span>
+                  </div>
+                </div>
+                {selectedRecipe.items && selectedRecipe.items.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-white mb-2">Ingredientes</h4>
+                    <table className="min-w-full text-sm">
+                      <thead className="text-slate-400">
+                        <tr>
+                          <th className="p-2 text-left">Insumo</th>
+                          <th className="p-2 text-left">Cantidad</th>
+                          <th className="p-2 text-left">Unidad</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedRecipe.items.map((item: any, i: number) => (
+                          <tr key={i} className="border-t border-slate-800">
+                            <td className="p-2 text-white">{getInsumoName(item.insumoId)}</td>
+                            <td className="p-2 text-slate-300">{item.cantidad}</td>
+                            <td className="p-2 text-slate-300">{item.unidadMedida || '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Confirmación de Eliminación */}
+        {deleteConfirmOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-sm rounded-xl border border-slate-800 bg-slate-900 p-6">
+              <h3 className="text-lg font-bold text-white mb-3">Confirmar eliminación</h3>
+              <p className="text-slate-400 text-sm mb-6">
+                ¿Estás seguro de que deseas eliminar este {deleteConfirmType === "almacen" ? "almacén" : "familia"}? Esta acción no se puede deshacer.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => { setDeleteConfirmOpen(false); setDeleteConfirmId(null); setDeleteConfirmType(null); }}
+                  className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDeleteConfirm}
+                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                >
+                  Eliminar
                 </button>
               </div>
             </div>
