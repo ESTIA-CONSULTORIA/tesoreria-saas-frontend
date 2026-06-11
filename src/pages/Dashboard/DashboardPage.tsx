@@ -32,7 +32,7 @@ export default function DashboardPage() {
   useEffect(() => {
     loadKpis();
     loadPendingShifts();
-  }, [period, navigationLevel, selectedCompany?.companyId, selectedBranch?.branchId]);
+  }, [period, navigationLevel, selectedCompany?.companyId, selectedBranch?.branchId, activeCompany?.id]);
 
   async function loadPendingShifts() {
     try {
