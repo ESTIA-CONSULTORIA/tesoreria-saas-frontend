@@ -3,6 +3,7 @@ import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import CreateUserModal from "./CreateUserModal";
 import CreateRoleModal from "../roles/CreateRoleModal";
+import { useCompanyStore } from "../../core/store/useCompanyStore";
 
 interface User {
   id: string;
@@ -33,6 +34,7 @@ interface Role {
 }
 
 export default function UsersPage() {
+  const { activeCompany } = useCompanyStore();
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,10 +46,12 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [localPermissions, setLocalPermissions] = useState<Permission[]>([]);
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [activeCompany?.id]);
 
   async function loadData() {
     try {
@@ -83,13 +87,21 @@ export default function UsersPage() {
     setPermissionsModalOpen(true);
   }
 
-  async function deleteUser(id: string) {
-    if (!confirm("¿Estás seguro de eliminar este usuario?")) return;
+  function deleteUser(id: string) {
+    setDeleteConfirmId(id);
+    setDeleteConfirmOpen(true);
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deleteConfirmId) return;
+    setDeleteConfirmOpen(false);
     try {
-      await api.delete(`/users/${id}`);
+      await api.delete(`/users/${deleteConfirmId}`);
       loadData();
     } catch (err: any) {
       setError(err.response?.data?.message || "No fue posible eliminar el usuario");
+    } finally {
+      setDeleteConfirmId(null);
     }
   }
 
@@ -365,6 +377,29 @@ export default function UsersPage() {
         onClose={() => setRoleModalOpen(false)}
         onCreated={loadData}
       />
+
+      {deleteConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-sm rounded-xl border border-slate-700 bg-slate-900 p-6">
+            <h3 className="text-base font-semibold text-white mb-2">Eliminar usuario</h3>
+            <p className="text-sm text-slate-400 mb-6">¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.</p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => { setDeleteConfirmOpen(false); setDeleteConfirmId(null); }}
+                className="rounded-lg bg-slate-700 px-4 py-2 text-sm text-white hover:bg-slate-600"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-6">
         <div className="flex items-center justify-between gap-4">

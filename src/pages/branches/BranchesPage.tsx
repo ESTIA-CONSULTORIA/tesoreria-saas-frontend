@@ -20,6 +20,8 @@ export default function BranchesPage() {
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   useEffect(() => {
     loadBranches();
@@ -39,13 +41,21 @@ export default function BranchesPage() {
     }
   }
 
-  async function deleteBranch(id: string) {
-    if (!confirm("¿Estás seguro de eliminar esta sucursal?")) return;
+  function deleteBranch(id: string) {
+    setDeleteConfirmId(id);
+    setDeleteConfirmOpen(true);
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deleteConfirmId) return;
+    setDeleteConfirmOpen(false);
     try {
-      await api.delete(`/branches/${id}`);
+      await api.delete(`/branches/${deleteConfirmId}`);
       loadBranches();
     } catch (err: any) {
       setError(err.response?.data?.message || "No fue posible eliminar la sucursal");
+    } finally {
+      setDeleteConfirmId(null);
     }
   }
 
@@ -72,6 +82,29 @@ export default function BranchesPage() {
         onCreated={loadBranches}
         branch={selectedBranch}
       />
+
+      {deleteConfirmOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.7)', padding: '16px' }}>
+          <div style={{ backgroundColor: '#161616', border: '1px solid #3D3D3D', borderRadius: '12px', padding: '24px', width: '100%', maxWidth: '400px' }}>
+            <h3 style={{ fontSize: '16px', color: '#F5F5F5', marginBottom: '8px' }}>Eliminar sucursal</h3>
+            <p style={{ fontSize: '13px', color: '#9A9A9A', marginBottom: '24px' }}>¿Estás seguro de eliminar esta sucursal? Esta acción no se puede deshacer.</p>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => { setDeleteConfirmOpen(false); setDeleteConfirmId(null); }}
+                style={{ padding: '8px 16px', fontSize: '13px', color: '#BDBDBD', backgroundColor: 'transparent', border: '1px solid #3D3D3D', borderRadius: '6px', cursor: 'pointer' }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                style={{ padding: '8px 16px', fontSize: '13px', color: '#fff', backgroundColor: '#9B3A3A', border: '1px solid #9B3A3A', borderRadius: '6px', cursor: 'pointer' }}
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
