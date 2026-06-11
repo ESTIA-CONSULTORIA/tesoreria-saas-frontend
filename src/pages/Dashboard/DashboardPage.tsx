@@ -5,55 +5,23 @@ import { useNavigate } from "react-router-dom";
 import DashboardInfoModal from "./DashboardInfoModal";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
-import { useAuthStore } from "../../core/store/useAuthStore";
-
-type NavigationLevel = 'group' | 'company-selection' | 'company-detail' | 'branch-selection' | 'branch-detail';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { companyId: userCompanyId, branchId: userBranchId, user } = useAuthStore();
-  const isRestricted = !!userCompanyId || !!userBranchId;
+  const { activeBranch, activeCompany } = useCompanyStore();
 
   const [kpis, setKpis] = useState<any>(null);
   const [companyKpis, setCompanyKpis] = useState<any>(null);
-  const [branchKpis, setBranchKpis] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [infoOpen, setInfoOpen] = useState(false);
   const [period, setPeriod] = useState<"today" | "week" | "month" | "year">("month");
-  const [selectedCompany, setSelectedCompany] = useState<any>(null);
-  const [selectedBranch, setSelectedBranch] = useState<any>(null);
-  const [navigationLevel, setNavigationLevel] = useState<NavigationLevel>('group');
-  const [companies, setCompanies] = useState<any[]>([]);
-  const [branches, setBranches] = useState<any[]>([]);
   const [pendingShifts, setPendingShifts] = useState<any[]>([]);
-  const { activeBranch, activeCompany, setActiveCompany, setActiveBranch } = useCompanyStore();
 
   useEffect(() => {
-    loadKpis();
+    loadData();
     loadPendingShifts();
-  }, [period, navigationLevel, selectedCompany?.companyId, selectedBranch?.branchId, activeCompany?.id, activeBranch?.id]);
-
-  useEffect(() => {
-    if (activeBranch && !isRestricted) {
-      setNavigationLevel('branch-detail');
-      setSelectedBranch({
-        branchId: activeBranch.id,
-        branchName: activeBranch.name,
-      });
-    } else if (activeCompany && !isRestricted) {
-      setNavigationLevel('company-detail');
-      setSelectedCompany({
-        companyId: activeCompany.id,
-        companyName: activeCompany.name,
-      });
-      setSelectedBranch(null);
-    } else if (!activeCompany && !isRestricted) {
-      setNavigationLevel('group');
-      setSelectedCompany(null);
-      setSelectedBranch(null);
-    }
-  }, [activeBranch?.id, activeCompany?.id]);
+  }, [period, activeCompany?.id, activeBranch?.id]);
 
   async function loadPendingShifts() {
     try {
@@ -64,127 +32,42 @@ export default function DashboardPage() {
     }
   }
 
-  async function loadKpis() {
+  async function loadData() {
     try {
       setLoading(true);
       setError("");
 
-      if (isRestricted && (navigationLevel === 'group' || navigationLevel === 'company-selection')) {
-        // For restricted users, load their company KPIs directly
-        if (userCompanyId) {
-          const response = await api.get(`/dashboard/company/${userCompanyId}/kpis`, { params: { period } });
-          setCompanyKpis(response.data);
-          setKpis(null);
-          setBranchKpis(null);
-          // Set selected company for display
-          setSelectedCompany({ companyId: userCompanyId, companyName: response.data?.companyName || 'Mi Empresa' });
-          setNavigationLevel('company-detail');
-          // Cargar lista de sucursales
-          if (response.data?.branchesBreakdown) {
-            setBranches(response.data.branchesBreakdown);
-          }
-        }
-      } else if (navigationLevel === 'group' || navigationLevel === 'company-selection') {
-        const response = await api.get("/dashboard/kpis", { params: { period } });
-        setKpis(response.data);
-        setCompanyKpis(null);
-        setBranchKpis(null);
-        // Cargar lista de empresas
-        if (response.data?.companiesBreakdown) {
-          setCompanies(response.data.companiesBreakdown);
-        }
-      } else if (navigationLevel === 'company-detail' && selectedCompany) {
-        const response = await api.get(`/dashboard/company/${selectedCompany.companyId}/kpis`, { params: { period } });
-        setCompanyKpis(response.data);
-        setKpis(null);
-        setBranchKpis(null);
-        // Cargar lista de sucursales
-        if (response.data?.branchesBreakdown) {
-          setBranches(response.data.branchesBreakdown);
-        }
-      } else if (navigationLevel === 'branch-detail' && selectedBranch) {
-        // Load branch KPIs with X-Branch-Id header
-        const response = await api.get("/dashboard/kpis", {
+      if (activeBranch) {
+        // Nivel sucursal: cargar KPIs con branchId
+        const res = await api.get('/dashboard/kpis', {
           params: { period },
-          headers: { 'X-Branch-Id': selectedBranch.branchId }
+          headers: { 'X-Branch-Id': activeBranch.id }
         });
-        setBranchKpis(response.data);
+        setKpis(res.data);
+        setCompanyKpis(null);
+      } else if (activeCompany) {
+        // Nivel empresa: cargar KPIs de esa empresa
+        const res = await api.get(
+          `/dashboard/company/${activeCompany.id}/kpis`,
+          { params: { period } }
+        );
+        setCompanyKpis(res.data);
         setKpis(null);
+      } else {
+        // Vista global: cargar KPIs de todo el tenant
+        const res = await api.get('/dashboard/kpis', {
+          params: { period }
+        });
+        setKpis(res.data);
         setCompanyKpis(null);
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || "No fue posible cargar dashboard");
+    } catch (e) {
+      console.error('Error cargando dashboard:', e);
+      setError("No fue posible cargar dashboard");
     } finally {
       setLoading(false);
     }
   }
-
-  function handleBackToGlobal() {
-    setNavigationLevel('group');
-    setSelectedCompany(null);
-    setSelectedBranch(null);
-  }
-
-  function handleGoToCompanySelection() {
-    setNavigationLevel('company-selection');
-  }
-
-  function handleSelectCompany(company: any) {
-    setSelectedCompany(company);
-    setNavigationLevel('company-detail');
-  }
-
-  function handleGoToBranchSelection() {
-    setNavigationLevel('branch-selection');
-  }
-
-  function handleSelectBranch(branch: any) {
-    setSelectedBranch(branch);
-    setNavigationLevel('branch-detail');
-  }
-
-  function handleNavigateToBreadcrumb(level: NavigationLevel) {
-    if (level === 'group') {
-      setNavigationLevel('group');
-      setSelectedCompany(null);
-      setSelectedBranch(null);
-    } else if (level === 'company-detail' && selectedCompany) {
-      setNavigationLevel('company-detail');
-      setSelectedBranch(null);
-    }
-  }
-
-  // Auto-salto lógica
-  useEffect(() => {
-    // If user has companyId restriction, skip group view and go directly to company detail
-    if (userCompanyId && navigationLevel === 'group') {
-      const myCompany = companies.find(c => c.companyId === userCompanyId);
-      if (myCompany) {
-        handleSelectCompany(myCompany);
-      }
-    } else if (companies.length === 1 && navigationLevel === 'group') {
-      // Si solo hay 1 empresa, saltar a detalle de empresa automáticamente
-      handleSelectCompany(companies[0]);
-    }
-  }, [companies, navigationLevel, userCompanyId]);
-
-  useEffect(() => {
-    if (branches.length === 1 && navigationLevel === 'company-detail') {
-      // Si solo hay 1 sucursal, saltar a detalle de sucursal automáticamente
-      handleSelectBranch(branches[0]);
-    }
-  }, [branches, navigationLevel]);
-
-  const getBreadcrumbItems = () => {
-    const items = [{ label: 'Grupo', level: 'group' as NavigationLevel }];
-    if (selectedCompany) {
-      items.push({ label: selectedCompany.companyName, level: 'company-detail' as NavigationLevel });
-    }
-    if (selectedBranch) {
-      items.push({ label: selectedBranch.branchName, level: 'branch-detail' as NavigationLevel });
-    }
-    return items;
-  };
 
   const companyBarChartData = useMemo(() => {
     if (kpis?.companiesBreakdown?.length > 0) {
@@ -227,10 +110,10 @@ export default function DashboardPage() {
   const totalVentasGrupo = kpis?.companiesBreakdown
     ?.reduce((sum: number, c: any) => sum + (c.income || 0), 0) || 0;
 
-  // Unificar lógica de KPIs
+  // Lógica limpia de display
   const displayTotals = (() => {
-    // Usuario restringido: usar companyKpis
-    if (isRestricted && companyKpis?.branchesBreakdown) {
+    // Con empresa o sucursal: sumar branchesBreakdown
+    if (companyKpis?.branchesBreakdown?.length) {
       return companyKpis.branchesBreakdown.reduce(
         (acc, b) => ({
           income: acc.income + (Number(b.income) || 0),
@@ -239,18 +122,8 @@ export default function DashboardPage() {
         }), { income: 0, expense: 0, balance: 0 }
       );
     }
-    // ADMIN con empresa seleccionada: usar companyKpis
-    if (companyKpis?.branchesBreakdown) {
-      return companyKpis.branchesBreakdown.reduce(
-        (acc, b) => ({
-          income: acc.income + (Number(b.income) || 0),
-          expense: acc.expense + (Number(b.expense) || 0),
-          balance: acc.balance + (Number(b.balance) || 0),
-        }), { income: 0, expense: 0, balance: 0 }
-      );
-    }
-    // Vista Global: usar kpis?.companiesBreakdown
-    if (kpis?.companiesBreakdown) {
+    // Vista global: sumar companiesBreakdown
+    if (kpis?.companiesBreakdown?.length) {
       return kpis.companiesBreakdown.reduce(
         (acc, c) => ({
           income: acc.income + (Number(c.income) || 0),
@@ -267,7 +140,7 @@ export default function DashboardPage() {
   const saldoDisplay = displayTotals.balance;
   const costo = Number(egresosDisplay) * 0.6;
   const gasto = Number(egresosDisplay) * 0.4;
-  const uaiDisplay = Number(ventasDisplay) - Number(egresosDisplay);
+  const uaiDisplay = ventasDisplay - egresosDisplay;
   const udiDisplay = uaiDisplay * 0.75;
 
   // Panel derecho usando displayTotals
@@ -278,18 +151,6 @@ export default function DashboardPage() {
   const panelMargen = panelVentas > 0
     ? Number(((panelUAI / panelVentas) * 100).toFixed(1))
     : 0;
-
-  const companyVentas = Number(companyKpis?.income || 0);
-  const companyCosto = Number(companyKpis?.expense || 0) * 0.6;
-  const companyGasto = Number(companyKpis?.expense || 0) * 0.4;
-  const companyUai = companyVentas - Number(companyKpis?.expense || 0);
-  const companyUdi = companyUai * 0.75;
-
-  const branchVentas = Number(branchKpis?.income || 0);
-  const branchCosto = Number(branchKpis?.expense || 0) * 0.6;
-  const branchGasto = Number(branchKpis?.expense || 0) * 0.4;
-  const branchUai = branchVentas - Number(branchKpis?.expense || 0);
-  const branchUdi = branchUai * 0.75;
 
   const formatCurrency = (value: number) => {
     return `$${Math.round(value).toLocaleString('es-MX')}`;
@@ -310,7 +171,7 @@ export default function DashboardPage() {
   return (
     <MainLayout>
       <DashboardInfoModal open={infoOpen} onClose={() => setInfoOpen(false)} />
-      
+
       <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 48px)', backgroundColor: '#0A0A0A' }}>
         {/* Header del módulo */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid #2D2D2D', backgroundColor: '#0A0A0A' }}>
@@ -318,32 +179,13 @@ export default function DashboardPage() {
             <h1 style={{ fontSize: '18px', fontWeight: 400, color: '#F5F5F5', marginBottom: '2px', letterSpacing: '0.02em' }}>
               Dashboard Ejecutivo
             </h1>
-            {/* Breadcrumb */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-              {getBreadcrumbItems().map((item, index) => (
-                <React.Fragment key={item.level}>
-                  {index > 0 && <span style={{ color: '#7E7E7E', fontSize: '12px' }}>/</span>}
-                  <button
-                    onClick={() => handleNavigateToBreadcrumb(item.level)}
-                    style={{
-                      fontSize: '12px',
-                      color: index === getBreadcrumbItems().length - 1 ? '#F5F5F5' : '#7E7E7E',
-                      backgroundColor: 'transparent',
-                      border: 'none',
-                      cursor: index === getBreadcrumbItems().length - 1 ? 'default' : 'pointer',
-                      padding: 0,
-                      letterSpacing: '0.01em',
-                    }}
-                    onMouseEnter={(e) => { if (index < getBreadcrumbItems().length - 1) e.currentTarget.style.color = '#BDBDBD'; }}
-                    onMouseLeave={(e) => { if (index < getBreadcrumbItems().length - 1) e.currentTarget.style.color = '#7E7E7E'; }}
-                  >
-                    {item.label}
-                  </button>
-                </React.Fragment>
-              ))}
+              <span style={{ fontSize: '12px', color: '#7E7E7E', letterSpacing: '0.01em' }}>
+                {activeBranch ? activeBranch.name : activeCompany ? activeCompany.name : 'Vista Global'}
+              </span>
             </div>
           </div>
-          
+
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             {[
               { value: 'today', label: 'Hoy' },
@@ -463,127 +305,6 @@ export default function DashboardPage() {
           </div>
         ) : (
           <>
-            {/* VISTA: Selección de Empresa (Nivel 2) */}
-            {navigationLevel === 'company-selection' && (
-              <div style={{ padding: '24px' }}>
-                <h2 style={{ fontSize: '16px', fontWeight: 400, color: '#F5F5F5', marginBottom: '8px', letterSpacing: '0.01em' }}>
-                  Selecciona una empresa
-                </h2>
-                <p style={{ fontSize: '12px', color: '#7E7E7E', marginBottom: '24px', letterSpacing: '0.01em' }}>
-                  {companies.length} empresas disponibles
-                </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-                  {companies.map((company) => {
-                    const compVentas = Number(company.income);
-                    const compUai = compVentas - Number(company.expense);
-                    const compMargen = compVentas > 0 ? (compUai / compVentas) * 100 : 0;
-                    return (
-                      <div
-                        key={company.companyId}
-                        onClick={() => handleSelectCompany(company)}
-                        style={{
-                          backgroundColor: '#161616',
-                          border: '1px solid #2D2D2D',
-                          borderRadius: '4px',
-                          padding: '20px',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.backgroundColor = '#1B1B1B'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.backgroundColor = '#161616'; }}
-                      >
-                        <h3 style={{ fontSize: '14px', fontWeight: 400, color: '#F5F5F5', marginBottom: '12px', letterSpacing: '0.01em' }}>
-                          {company.companyName}
-                        </h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Ventas</span>
-                            <span style={{ fontSize: '12px', color: '#F5F5F5', fontVariantNumeric: 'tabular-nums' }}>
-                              {formatCurrency(compVentas)}
-                            </span>
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: '#7E7E7E' }}>UAI</span>
-                            <span style={{ fontSize: '12px', color: compUai >= 0 ? '#3B7A57' : '#9B3A3A', fontVariantNumeric: 'tabular-nums' }}>
-                              {formatCurrency(compUai)}
-                            </span>
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Margen</span>
-                            <span style={{ fontSize: '12px', color: '#F5F5F5', fontVariantNumeric: 'tabular-nums' }}>
-                              {formatPercentDecimal(compMargen)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* VISTA: Selección de Sucursal (Nivel 4) */}
-            {navigationLevel === 'branch-selection' && (
-              <div style={{ padding: '24px' }}>
-                <h2 style={{ fontSize: '16px', fontWeight: 400, color: '#F5F5F5', marginBottom: '8px', letterSpacing: '0.01em' }}>
-                  Selecciona una sucursal
-                </h2>
-                <p style={{ fontSize: '12px', color: '#7E7E7E', marginBottom: '24px', letterSpacing: '0.01em' }}>
-                  {branches.length} sucursales disponibles
-                </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-                  {branches.map((branch) => {
-                    const branchVentas = Number(branch.income);
-                    const branchUai = branchVentas - Number(branch.expense);
-                    const branchMargen = branchVentas > 0 ? (branchUai / branchVentas) * 100 : 0;
-                    return (
-                      <div
-                        key={branch.branchId}
-                        onClick={() => handleSelectBranch(branch)}
-                        style={{
-                          backgroundColor: '#161616',
-                          border: '1px solid #2D2D2D',
-                          borderRadius: '4px',
-                          padding: '20px',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.backgroundColor = '#1B1B1B'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.backgroundColor = '#161616'; }}
-                      >
-                        <h3 style={{ fontSize: '14px', fontWeight: 400, color: '#F5F5F5', marginBottom: '12px', letterSpacing: '0.01em' }}>
-                          {branch.branchName}
-                        </h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Ventas</span>
-                            <span style={{ fontSize: '12px', color: '#F5F5F5', fontVariantNumeric: 'tabular-nums' }}>
-                              {formatCurrency(branchVentas)}
-                            </span>
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: '#7E7E7E' }}>UAI</span>
-                            <span style={{ fontSize: '12px', color: branchUai >= 0 ? '#3B7A57' : '#9B3A3A', fontVariantNumeric: 'tabular-nums' }}>
-                              {formatCurrency(branchUai)}
-                            </span>
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Margen</span>
-                            <span style={{ fontSize: '12px', color: '#F5F5F5', fontVariantNumeric: 'tabular-nums' }}>
-                              {formatPercentDecimal(branchMargen)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* VISTA: Grupo / Empresa / Sucursal (Dashboard actual) */}
-            {(navigationLevel === 'group' || navigationLevel === 'company-detail' || navigationLevel === 'branch-detail') && (
-              <>
                 {/* ZONA 1 - Resumen Consolidado */}
                 <div style={{ padding: '20px 24px', borderBottom: '1px solid #2D2D2D', display: 'flex', alignItems: 'center', backgroundColor: '#0A0A0A' }}>
                   {/* Ventas */}
@@ -662,37 +383,17 @@ export default function DashboardPage() {
 
                 {/* ZONA 2+3 - Comparativo y Detalle */}
                 <div style={{ display: 'flex', flex: 1, overflow: 'hidden', backgroundColor: '#0A0A0A' }}>
-                  {/* ZONA 2 - Comparativo Empresas (65%) - Ocultar para usuarios restringidos */}
-                  {!isRestricted && (
-                    <div style={{ flex: '0 0 65%', display: 'flex', flexDirection: 'column', padding: '20px 24px', overflow: 'hidden', minWidth: 0 }}>
+                  {/* ZONA 2 - Comparativo Empresas (65%) */}
+                  <div style={{ flex: '0 0 65%', display: 'flex', flexDirection: 'column', padding: '20px 24px', overflow: 'hidden', minWidth: 0 }}>
                     <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <h2 style={{ fontSize: '14px', fontWeight: 400, color: '#F5F5F5', marginBottom: '2px', letterSpacing: '0.01em' }}>
-                          Comparativo por Empresa
+                          {activeBranch ? 'Sucursales' : activeCompany ? 'Sucursales' : 'Comparativo por Empresa'}
                         </h2>
                         <p style={{ fontSize: '12px', color: '#7E7E7A', letterSpacing: '0.01em' }}>
                           {period === 'today' ? 'Hoy' : period === 'week' ? 'Esta semana' : period === 'month' ? 'Este mes' : 'Este año'}
                         </p>
                       </div>
-                      {navigationLevel === 'group' && companies.length > 1 && (
-                        <button
-                          onClick={handleGoToCompanySelection}
-                          style={{
-                            padding: '8px 16px',
-                            fontSize: '12px',
-                            color: '#BDBDBD',
-                            backgroundColor: 'transparent',
-                            border: '1px solid #2D2D2D',
-                            borderRadius: '2px',
-                            cursor: 'pointer',
-                            letterSpacing: '0.01em',
-                          }}
-                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.color = '#F5F5F5'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.color = '#BDBDBD'; }}
-                        >
-                          Ver empresas →
-                        </button>
-                      )}
                     </div>
 
                 {/* BarChart */}
@@ -770,14 +471,13 @@ export default function DashboardPage() {
                         const compUdi = compUai * 0.75;
                         const compMargen = compVentas > 0 ? (compUai / compVentas) * 100 : 0;
                         const compPart = ventasDisplay > 0 ? (compVentas / ventasDisplay) * 100 : 0;
-                        
+
                         return (
                           <tr
                             key={company.companyId}
-                            style={{ borderBottom: '1px solid #2D2D2D', cursor: 'pointer' }}
+                            style={{ borderBottom: '1px solid #2D2D2D' }}
                             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1B1B1B'}
                             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                            onClick={() => handleSelectCompany(company)}
                           >
                             <td style={{ padding: '10px 12px', color: '#F5F5F5', fontSize: '12px', letterSpacing: '0.01em' }}>
                               {company.companyName}
@@ -803,24 +503,6 @@ export default function DashboardPage() {
                             <td style={{ padding: '10px 12px', textAlign: 'right', color: '#F5F5F5', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatPercentDecimal(compPart)}
                             </td>
-                            <td style={{ padding: '10px 12px', textAlign: 'center' }}>
-                              <button
-                                style={{
-                                  padding: '3px 10px',
-                                  fontSize: '10px',
-                                  color: '#BDBDBD',
-                                  backgroundColor: 'transparent',
-                                  border: '1px solid #2D2D2D',
-                                  borderRadius: '2px',
-                                  cursor: 'pointer',
-                                  letterSpacing: '0.01em',
-                                }}
-                                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.color = '#F5F5F5'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.color = '#BDBDBD'; }}
-                              >
-                                Ver
-                              </button>
-                            </td>
                           </tr>
                         );
                       })}
@@ -828,14 +510,13 @@ export default function DashboardPage() {
                   </table>
                 </div>
                 </div>
-                  )}
 
-                  {/* ZONA 3 - Detalle Empresa (35% o 100% para restringidos) */}
-                  <div style={{ flex: isRestricted ? '1' : '0 0 35%', backgroundColor: '#161616', borderLeft: isRestricted ? 'none' : '1px solid #2D2D2D', padding: '20px 24px', overflowY: 'auto', minWidth: 0 }}>
-                    {selectedCompany ? (
+                  {/* ZONA 3 - Detalle Empresa (35%) */}
+                  <div style={{ flex: '0 0 35%', backgroundColor: '#161616', borderLeft: '1px solid #2D2D2D', padding: '20px 24px', overflowY: 'auto', minWidth: 0 }}>
+                    {activeCompany ? (
                       <>
                         <h2 style={{ fontSize: '16px', fontWeight: 400, color: '#F5F5F5', marginBottom: '2px', letterSpacing: '0.01em' }}>
-                          {selectedCompany.companyName}
+                          {activeCompany.name}
                         </h2>
                         <p style={{ fontSize: '11px', color: '#7E7E7E', marginBottom: '20px', letterSpacing: '0.01em' }}>
                           Restaurantes y Servicios
@@ -990,8 +671,6 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </>
-            )}
-          </>
         )}
       </div>
     </MainLayout>
