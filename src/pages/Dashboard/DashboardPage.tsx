@@ -132,6 +132,14 @@ export default function DashboardPage() {
         }), { income: 0, expense: 0, balance: 0 }
       );
     }
+    // Sucursal o empresa sin breakdown: usar campos directos
+    if (kpis?.income !== undefined || kpis?.expense !== undefined) {
+      return {
+        income: Number(kpis.income || 0),
+        expense: Number(kpis.expense || 0),
+        balance: Number(kpis.totalBalance || 0),
+      };
+    }
     return { income: 0, expense: 0, balance: 0 };
   })();
 
