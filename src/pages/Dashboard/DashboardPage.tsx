@@ -34,6 +34,19 @@ export default function DashboardPage() {
     loadPendingShifts();
   }, [period, navigationLevel, selectedCompany?.companyId, selectedBranch?.branchId, activeCompany?.id]);
 
+  useEffect(() => {
+    if (activeCompany && !isRestricted) {
+      setNavigationLevel('company-detail');
+      setSelectedCompany({
+        companyId: activeCompany.id,
+        companyName: activeCompany.name,
+      });
+    } else if (!activeCompany && !isRestricted) {
+      setNavigationLevel('group');
+      setSelectedCompany(null);
+    }
+  }, [activeCompany?.id]);
+
   async function loadPendingShifts() {
     try {
       const response = await api.get("/pos/shifts", { params: { status: 'PENDIENTE_APROBACION' } });

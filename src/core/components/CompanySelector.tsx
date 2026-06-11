@@ -62,7 +62,12 @@ export default function CompanySelector() {
     try {
       setLoading(true);
       const response = await api.get("/companies");
-      setCompanies(Array.isArray(response.data) ? response.data : []);
+      const data = Array.isArray(response.data) ? response.data : [];
+      // Deduplicar por id
+      const unique = data.filter((company, index, self) =>
+        index === self.findIndex(c => c.id === company.id)
+      );
+      setCompanies(unique);
     } catch {
       setCompanies([]);
     } finally {
