@@ -72,28 +72,28 @@ export default function MainLayout({ children }: Props) {
 
         {/* Sidebar */}
         <aside
-          className={`fixed lg:static z-50 lg:z-auto w-[220px] min-h-[calc(100vh-48px)] border-r flex-col py-4 transition-transform duration-300
+          className={`fixed lg:static z-50 lg:z-auto w-[220px] min-h-[calc(100vh-48px)] border-r flex-col py-2 transition-transform duration-300
             ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
             ${sidebarOpen ? "flex" : "hidden lg:flex"}`}
           style={{ backgroundColor: '#101010', borderColor: '#2D2D2D' }}
         >
           {/* Logo del cliente */}
-          <div className="px-4 pb-4 border-b" style={{ borderColor: '#2D2D2D' }}>
-            <h2 className="text-sm font-semibold" style={{ color: '#F5F5F5' }}>
+          <div className="px-4 pb-2 border-b" style={{ borderColor: '#2D2D2D' }}>
+            <h2 className="text-xs font-semibold" style={{ color: '#F5F5F5' }}>
               {localStorage.getItem("tenant_name") || "Tesorería SaaS"}
             </h2>
           </div>
 
           {/* Selector de Empresa/Sucursal */}
-          <div className="px-4 pb-4 border-b" style={{ borderColor: '#2D2D2D' }}>
+          <div className="px-4 pb-2 border-b" style={{ borderColor: '#2D2D2D' }}>
             <CompanySelector />
           </div>
 
-          <nav className="flex flex-col gap-0 px-2 flex-1 overflow-y-auto">
+          <nav className="flex flex-col gap-0 px-2 flex-1 overflow-hidden">
             {isSoporte ? (
               // Navegación para SOPORTE
               <>
-                <div className="px-3 py-2 text-xs font-semibold" style={{ color: '#7E7E7E', letterSpacing: '0.08em' }}>
+                <div className="px-3 py-1 text-xs font-semibold" style={{ color: '#7E7E7E', letterSpacing: '0.08em' }}>
                   PANEL DE SOPORTE
                 </div>
                 {soporteNavItems.map((item) => {
@@ -103,7 +103,7 @@ export default function MainLayout({ children }: Props) {
                       key={item.to}
                       to={item.to}
                       onClick={() => setSidebarOpen(false)}
-                      className="px-4 py-2 text-sm font-medium transition-colors"
+                      className="px-4 py-1 text-xs font-medium transition-colors"
                       style={{
                         color: isActive ? '#F5F5F5' : '#9A9A9A',
                         borderLeft: isActive ? '2px solid #BDBDBD' : '2px solid transparent',
@@ -116,7 +116,7 @@ export default function MainLayout({ children }: Props) {
                     </Link>
                   );
                 })}
-                <div className="mt-4 px-3 py-2 text-xs font-semibold border-t" style={{ color: '#7E7E7E', letterSpacing: '0.08em', borderColor: '#2D2D2D' }}>
+                <div className="mt-2 px-3 py-1 text-xs font-semibold border-t" style={{ color: '#7E7E7E', letterSpacing: '0.08em', borderColor: '#2D2D2D' }}>
                   MÓDULOS DEL SISTEMA
                 </div>
                 {navItems.map((item) => {
@@ -126,7 +126,7 @@ export default function MainLayout({ children }: Props) {
                       key={item.to}
                       to={item.to}
                       onClick={() => setSidebarOpen(false)}
-                      className="flex items-center justify-between px-4 py-2 text-sm font-medium transition-colors"
+                      className="flex items-center justify-between px-4 py-1 text-xs font-medium transition-colors"
                       style={{
                         color: isActive ? '#F5F5F5' : '#9A9A9A',
                         borderLeft: isActive ? '2px solid #BDBDBD' : '2px solid transparent',
@@ -153,7 +153,7 @@ export default function MainLayout({ children }: Props) {
 
                   return (
                     <div key={category}>
-                      <div className="px-3 py-2 text-xs font-semibold" style={{ color: '#7E7E7E', letterSpacing: '0.08em' }}>
+                      <div className="px-3 py-1 text-xs font-semibold" style={{ color: '#7E7E7E', letterSpacing: '0.08em' }}>
                         {category}
                       </div>
                       {categoryItems.map((item) => {
@@ -167,7 +167,7 @@ export default function MainLayout({ children }: Props) {
                             key={item.to}
                             to={item.to}
                             onClick={() => setSidebarOpen(false)}
-                            className="flex items-center justify-between px-4 py-2 text-sm font-medium transition-colors"
+                            className="flex items-center justify-between px-4 py-1 text-xs font-medium transition-colors"
                             style={{
                               color: isActive ? '#F5F5F5' : '#9A9A9A',
                               borderLeft: isActive ? '2px solid #BDBDBD' : '2px solid transparent',
@@ -191,7 +191,7 @@ export default function MainLayout({ children }: Props) {
           </nav>
 
           {/* Footer del sidebar */}
-          <div className="px-4 py-3 border-t mt-auto" style={{ borderColor: '#2D2D2D' }}>
+          <div className="px-4 py-2 border-t mt-auto" style={{ borderColor: '#2D2D2D' }}>
             <p className="text-xs" style={{ color: '#7E7E7E' }}>
               powered by ESTIA
             </p>

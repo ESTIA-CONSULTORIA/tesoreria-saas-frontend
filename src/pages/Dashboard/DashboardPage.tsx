@@ -182,7 +182,7 @@ export default function DashboardPage() {
 
       <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 48px)', backgroundColor: '#0A0A0A', overflowX: 'hidden' }}>
         {/* Header del módulo */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid #2D2D2D', backgroundColor: '#0A0A0A' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 24px', borderBottom: '1px solid #2D2D2D', backgroundColor: '#0A0A0A' }}>
           <div>
             <h1 style={{ fontSize: '18px', fontWeight: 400, color: '#F5F5F5', marginBottom: '2px', letterSpacing: '0.02em' }}>
               Dashboard Ejecutivo
@@ -226,7 +226,7 @@ export default function DashboardPage() {
 
         {/* Executive Alert Band */}
         {(!loading && kpis) && (
-          <div style={{ padding: '16px 24px', borderBottom: '1px solid #2D2D2D', backgroundColor: '#0A0A0A' }}>
+          <div style={{ padding: '8px 24px', borderBottom: '1px solid #2D2D2D', backgroundColor: '#0A0A0A' }}>
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               {pendingShifts.length > 0 && (
                 <div
@@ -315,13 +315,13 @@ export default function DashboardPage() {
         ) : (
           <>
                 {/* ZONA 1 - Resumen Consolidado */}
-                <div style={{ padding: '20px 24px', borderBottom: '1px solid #2D2D2D', display: 'flex', alignItems: 'center', backgroundColor: '#0A0A0A', overflowX: 'auto', minWidth: 0 }}>
+                <div style={{ padding: '10px 24px', borderBottom: '1px solid #2D2D2D', display: 'flex', alignItems: 'center', backgroundColor: '#0A0A0A', overflowX: 'auto', minWidth: 0 }}>
                   {/* Ventas */}
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '6px' }}>
+                    <div style={{ fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
                       Ventas
                     </div>
-                    <div style={{ fontSize: '28px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '4px', letterSpacing: '-0.01em' }}>
+                    <div style={{ fontSize: '22px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
                       {formatCurrency(ventasDisplay)}
                     </div>
                     <div style={{ fontSize: '11px', color: '#3B7A57', letterSpacing: '0.01em' }}>
@@ -329,14 +329,14 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  <div style={{ width: '1px', height: '40px', backgroundColor: '#2D2D2D', margin: '0 20px' }} />
+                  <div style={{ width: '1px', height: '32px', backgroundColor: '#2D2D2D', margin: '0 16px' }} />
 
                   {/* Costo */}
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '6px' }}>
+                    <div style={{ fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
                       Costo
                     </div>
-                    <div style={{ fontSize: '28px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '4px', letterSpacing: '-0.01em' }}>
+                    <div style={{ fontSize: '22px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
                       {formatCurrency(costo)}
                     </div>
                     <div style={{ fontSize: '11px', color: '#9B3A3A', letterSpacing: '0.01em' }}>
@@ -344,14 +344,14 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  <div style={{ width: '1px', height: '40px', backgroundColor: '#2D2D2D', margin: '0 20px' }} />
+                  <div style={{ width: '1px', height: '32px', backgroundColor: '#2D2D2D', margin: '0 16px' }} />
 
                   {/* Gasto */}
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '6px' }}>
+                    <div style={{ fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
                       Gasto
                     </div>
-                    <div style={{ fontSize: '28px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '4px', letterSpacing: '-0.01em' }}>
+                    <div style={{ fontSize: '22px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
                       {formatCurrency(gasto)}
                     </div>
                     <div style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>
@@ -359,14 +359,14 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  <div style={{ width: '1px', height: '40px', backgroundColor: '#2D2D2D', margin: '0 20px' }} />
+                  <div style={{ width: '1px', height: '32px', backgroundColor: '#2D2D2D', margin: '0 16px' }} />
 
                   {/* UAI */}
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '6px' }}>
+                    <div style={{ fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
                       UAI
                     </div>
-                    <div style={{ fontSize: '28px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '4px', letterSpacing: '-0.01em' }}>
+                    <div style={{ fontSize: '22px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
                       {formatCurrency(uaiDisplay)}
                     </div>
                     <div style={{ fontSize: '11px', color: uaiDisplay >= 0 ? '#3B7A57' : '#9B3A3A', letterSpacing: '0.01em' }}>
@@ -374,14 +374,14 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  <div style={{ width: '1px', height: '40px', backgroundColor: '#2D2D2D', margin: '0 20px' }} />
+                  <div style={{ width: '1px', height: '32px', backgroundColor: '#2D2D2D', margin: '0 16px' }} />
 
                   {/* UDI */}
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '6px' }}>
+                    <div style={{ fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
                       UDI
                     </div>
-                    <div style={{ fontSize: '28px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '4px', letterSpacing: '-0.01em' }}>
+                    <div style={{ fontSize: '22px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
                       {formatCurrency(udiDisplay)}
                     </div>
                     <div style={{ fontSize: '11px', color: udiDisplay >= 0 ? '#3B7A57' : '#9B3A3A', letterSpacing: '0.01em' }}>
@@ -393,8 +393,8 @@ export default function DashboardPage() {
                 {/* ZONA 2+3 - Comparativo y Detalle */}
                 <div style={{ display: 'flex', flex: 1, overflow: 'hidden', backgroundColor: '#0A0A0A' }}>
                   {/* ZONA 2 - Comparativo Empresas (65%) */}
-                  <div style={{ flex: '0 0 65%', display: 'flex', flexDirection: 'column', padding: '20px 24px', overflow: 'auto', minWidth: 0 }}>
-                    <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ flex: '0 0 65%', display: 'flex', flexDirection: 'column', padding: '12px 16px', overflow: 'auto', minWidth: 0 }}>
+                    <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <h2 style={{ fontSize: '14px', fontWeight: 400, color: '#F5F5F5', marginBottom: '2px', letterSpacing: '0.01em' }}>
                           {activeBranch ? 'Sucursales' : activeCompany ? 'Sucursales' : 'Comparativo por Empresa'}
@@ -406,10 +406,10 @@ export default function DashboardPage() {
                     </div>
 
                 {/* BarChart */}
-                <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '4px', padding: '20px', marginBottom: '12px', flex: '0 0 auto', minWidth: 0 }}>
+                <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '4px', padding: '12px 20px', marginBottom: '8px', flex: '0 0 auto', minWidth: 0 }}>
                   {companyBarChartData.length > 0 ? (
-                    <div style={{ height: '220px' }}>
-                      <ResponsiveContainer width="100%" height={220}>
+                    <div style={{ height: '170px' }}>
+                      <ResponsiveContainer width="100%" height={170}>
                         <BarChart data={companyBarChartData}>
                         <CartesianGrid strokeDasharray="4 4" stroke="#2D2D2D" vertical={false} />
                         <XAxis dataKey="name" stroke="#7E7E7E" fontSize="11" tick={{ fill: '#7E7E7E' }} />
@@ -431,7 +431,7 @@ export default function DashboardPage() {
                     </ResponsiveContainer>
                   </div>
                   ) : (
-                    <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7E7E7E', fontSize: '12px' }}>
+                    <div style={{ height: '170px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7E7E7E', fontSize: '12px' }}>
                       Sin datos para mostrar
                     </div>
                   )}
@@ -523,19 +523,19 @@ export default function DashboardPage() {
                 </div>
 
                   {/* ZONA 3 - Detalle Empresa (35%) */}
-                  <div style={{ flex: '0 0 35%', backgroundColor: '#161616', borderLeft: '1px solid #2D2D2D', padding: '20px 24px', overflowY: 'auto', minWidth: 0 }}>
+                  <div style={{ flex: '0 0 35%', backgroundColor: '#161616', borderLeft: '1px solid #2D2D2D', padding: '12px 16px', overflowY: 'auto', minWidth: 0 }}>
                     {activeCompany ? (
                       <>
                         <h2 style={{ fontSize: '16px', fontWeight: 400, color: '#F5F5F5', marginBottom: '2px', letterSpacing: '0.01em' }}>
                           {activeCompany.name}
                         </h2>
-                        <p style={{ fontSize: '11px', color: '#7E7E7E', marginBottom: '20px', letterSpacing: '0.01em' }}>
+                        <p style={{ fontSize: '11px', color: '#7E7E7E', marginBottom: '8px', letterSpacing: '0.01em' }}>
                           Restaurantes y Servicios
                         </p>
 
-                        <div style={{ borderBottom: '1px solid #2D2D2D', marginBottom: '20px' }} />
+                        <div style={{ borderBottom: '1px solid #2D2D2D', marginBottom: '10px' }} />
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Ventas</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
@@ -580,8 +580,8 @@ export default function DashboardPage() {
                           </div>
                         </div>
 
-                        <div style={{ height: '100px', marginBottom: '20px', minWidth: 0 }}>
-                          <ResponsiveContainer width="100%" height={100}>
+                        <div style={{ height: '80px', marginBottom: '10px', minWidth: 0 }}>
+                          <ResponsiveContainer width="100%" height={80}>
                             <LineChart data={trendLineChartData}>
                               <CartesianGrid strokeDasharray="4 4" stroke="#2D2D2D" vertical={false} />
                               <XAxis dataKey="date" stroke="#7E7E7E" fontSize="10" tick={{ fill: '#7E7E7E' }} />
@@ -619,13 +619,13 @@ export default function DashboardPage() {
                         <h2 style={{ fontSize: '16px', fontWeight: 400, color: '#F5F5F5', marginBottom: '2px', letterSpacing: '0.01em' }}>
                           Resumen del Grupo
                         </h2>
-                        <p style={{ fontSize: '11px', color: '#7E7E7E', marginBottom: '20px', letterSpacing: '0.01em' }}>
+                        <p style={{ fontSize: '11px', color: '#7E7E7E', marginBottom: '8px', letterSpacing: '0.01em' }}>
                           Vista consolidada de todas las empresas
                         </p>
 
-                        <div style={{ borderBottom: '1px solid #2D2D2D', marginBottom: '20px' }} />
+                        <div style={{ borderBottom: '1px solid #2D2D2D', marginBottom: '10px' }} />
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Ventas Totales</span>
                             <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
@@ -658,8 +658,8 @@ export default function DashboardPage() {
                           </div>
                         </div>
 
-                        <div style={{ height: '100px', marginBottom: '20px', minWidth: 0 }}>
-                          <ResponsiveContainer width="100%" height={100}>
+                        <div style={{ height: '80px', marginBottom: '10px', minWidth: 0 }}>
+                          <ResponsiveContainer width="100%" height={80}>
                             <LineChart data={trendLineChartData}>
                               <CartesianGrid strokeDasharray="4 4" stroke="#2D2D2D" vertical={false} />
                               <XAxis dataKey="date" stroke="#7E7E7E" fontSize="10" tick={{ fill: '#7E7E7E' }} />
