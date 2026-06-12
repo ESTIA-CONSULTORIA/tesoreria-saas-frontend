@@ -180,7 +180,7 @@ export default function DashboardPage() {
     <MainLayout>
       <DashboardInfoModal open={infoOpen} onClose={() => setInfoOpen(false)} />
 
-      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 96px)', backgroundColor: '#0A0A0A', overflowX: 'hidden' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 48px)', backgroundColor: '#0A0A0A', overflowX: 'hidden' }}>
         {/* Header del módulo */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid #2D2D2D', backgroundColor: '#0A0A0A' }}>
           <div>

@@ -61,7 +61,7 @@ export default function MainLayout({ children }: Props) {
     <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', color: '#F5F5F5' }}>
       <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
-      <div className="flex relative">
+      <div className="flex relative overflow-x-hidden min-w-0">
         {/* Mobile Overlay */}
         {sidebarOpen && (
           <div
@@ -199,7 +199,7 @@ export default function MainLayout({ children }: Props) {
         </aside>
 
         {/* Content */}
-        <main className="flex-1 overflow-auto w-full" style={{ backgroundColor: '#0A0A0A', padding: '24px' }}>
+        <main className="flex-1 overflow-y-auto overflow-x-hidden w-full min-w-0" style={{ backgroundColor: '#0A0A0A' }}>
           {children}
         </main>
       </div>

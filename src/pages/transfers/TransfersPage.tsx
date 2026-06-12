@@ -112,7 +112,7 @@ export default function TransfersPage() {
   return (
     <MainLayout>
       <CreateTransferModal open={modalOpen} onClose={() => setModalOpen(false)} onCreated={loadTransfers} />
-      <div className="space-y-6">
+      <div className="p-6 space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-bold">Traslado de Fondos</h2>

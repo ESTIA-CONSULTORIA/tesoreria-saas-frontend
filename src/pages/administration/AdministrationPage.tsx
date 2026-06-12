@@ -156,7 +156,7 @@ export default function AdministrationPage() {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
+      <div className="p-6 space-y-6">
         <div>
           <h2 className="text-3xl font-bold">Administración</h2>
           <p className="text-slate-400">Panel de control del sistema</p>
