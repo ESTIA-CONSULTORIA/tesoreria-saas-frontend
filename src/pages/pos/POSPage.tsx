@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
 import { useLoginConfigStore } from "../../core/store/useLoginConfigStore";
+import PosChatPanel from "./PosChatPanel";
 
 type TabType = "terminal" | "productos" | "categorias" | "areas" | "turnos" | "hardware" | "parametros";
 
@@ -148,6 +149,7 @@ export default function POSPage() {
   const [cashierPin, setCashierPin] = useState<string>("");
   const [selectedCashier, setSelectedCashier] = useState<string>(localStorage.getItem("selected_cashier") || "");
   const [shiftNotes, setShiftNotes] = useState<string>("");
+  const [showChatPanel, setShowChatPanel] = useState(false);
   
   // Precorte/Corte modals
   const [showPrecutModal, setShowPrecutModal] = useState(false);
@@ -1066,6 +1068,14 @@ export default function POSPage() {
                   >
                     {shift?.precorteGuardado ? '✓ Precorte realizado' : '📊 Precorte'}
                   </button>
+                  {shift?.precorteGuardado && (
+                    <button
+                      onClick={() => setShowChatPanel(true)}
+                      className="px-3 py-2 rounded bg-yellow-700 text-white text-sm hover:bg-yellow-600"
+                    >
+                      💬 Chat Supervisor
+                    </button>
+                  )}
                   <button
                     onClick={async () => {
                       if (!shift) return;
@@ -3936,6 +3946,16 @@ export default function POSPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Chat de aprobación de corte */}
+      {showChatPanel && shift?.id && (
+        <PosChatPanel
+          turnoId={shift.id}
+          onClose={() => setShowChatPanel(false)}
+          onApproved={() => setShowChatPanel(false)}
+          onRejected={() => setShowChatPanel(false)}
+        />
       )}
     </div>
   );
