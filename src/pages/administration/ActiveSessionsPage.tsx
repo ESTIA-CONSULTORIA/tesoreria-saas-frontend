@@ -99,8 +99,8 @@ export default function ActiveSessionsPage() {
       </div>
 
       {/* Tabla de sesiones */}
-      <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
-        <table className="w-full">
+      <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-x-auto">
+        <table className="w-full min-w-[700px]">
           <thead className="bg-slate-800">
             <tr>
               <th className="px-6 py-3 text-left text-sm font-semibold text-white">Usuario</th>

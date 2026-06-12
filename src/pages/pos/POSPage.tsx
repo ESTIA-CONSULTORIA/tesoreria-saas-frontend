@@ -1310,8 +1310,8 @@ export default function POSPage() {
               </button>
             </div>
           </div>
-          <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
-            <table className="w-full">
+          <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-x-auto">
+            <table className="w-full min-w-[700px]">
               <thead className="bg-slate-800">
                 <tr>
                   <th className="px-4 py-3 text-left text-sm">Código</th>
@@ -2140,8 +2140,8 @@ export default function POSPage() {
                 Canceladas
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto">
-              <table className="w-full">
+            <div className="flex-1 overflow-auto">
+              <table className="w-full min-w-[500px]">
                 <thead className="bg-slate-700 sticky top-0">
                   <tr>
                     <th className="px-4 py-2 text-left text-sm">Folio</th>
