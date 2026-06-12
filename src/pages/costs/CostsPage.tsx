@@ -1511,7 +1511,7 @@ export default function CostsPage() {
                 )}
 
                 <div className="overflow-x-auto">
-                  <table className="w-full table-fixed text-sm">
+                  <table className="w-full min-w-[600px] table-fixed text-sm">
                     <thead className="text-slate-400 border-b border-slate-800">
                       <tr>
                         <th className="p-2 w-16">Código</th>
