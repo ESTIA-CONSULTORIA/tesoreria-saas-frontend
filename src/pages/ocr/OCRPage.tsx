@@ -10,6 +10,7 @@ interface OcrDocument {
   status: "PENDING" | "VALIDATED" | "REJECTED";
   extractedData: Record<string, string>;
   validatedData: Record<string, string> | null;
+  rawText: string | null;
   uploadedAt: string;
   validatedAt: string | null;
   validatedBy: string | null;
@@ -107,9 +108,24 @@ export default function OCRPage() {
     [tenantId, companyId]
   );
 
-  const openModal = (doc: OcrDocument) => {
+  const openModal = async (doc: OcrDocument) => {
+    // Mostrar el modal inmediatamente con datos del caché
     setSelectedDoc(doc);
     setFormData({ ...(doc.extractedData ?? {}) });
+    setModalLoading(true);
+    try {
+      // Refrescar desde el servidor para garantizar extractedData actualizado
+      const res = await api.get(`/ocr/documents/${doc.id}`, {
+        headers: { "x-tenant-id": tenantId ?? "", "x-company-id": companyId ?? "" },
+      });
+      const fresh: OcrDocument = res.data;
+      setSelectedDoc(fresh);
+      setFormData({ ...(fresh.extractedData ?? {}) });
+    } catch {
+      // Mantener datos del caché si falla el refresh
+    } finally {
+      setModalLoading(false);
+    }
   };
 
   const closeModal = () => {
@@ -433,6 +449,11 @@ export default function OCRPage() {
 
             {/* Modal body */}
             <div style={{ padding: "20px" }}>
+              {modalLoading && (
+                <div style={{ fontSize: 12, color: "#7E7E7E", marginBottom: 12 }}>
+                  Cargando datos extraídos...
+                </div>
+              )}
               {selectedDoc.status !== "PENDING" && (
                 <div
                   style={{
@@ -474,6 +495,37 @@ export default function OCRPage() {
                   />
                 </div>
               ))}
+
+              {/* Texto crudo extraído — diagnóstico */}
+              {selectedDoc.rawText && !selectedDoc.rawText.startsWith('[OCR') && (
+                <details style={{ marginTop: 16 }}>
+                  <summary style={{ fontSize: 11, color: "#7E7E7E", cursor: "pointer", userSelect: "none" }}>
+                    Ver texto extraído por OCR
+                  </summary>
+                  <pre
+                    style={{
+                      marginTop: 8,
+                      padding: "8px 12px",
+                      background: "#111",
+                      border: "1px solid #2D2D2D",
+                      borderRadius: 6,
+                      fontSize: 11,
+                      color: "#BDBDBD",
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word",
+                      maxHeight: 180,
+                      overflowY: "auto",
+                    }}
+                  >
+                    {selectedDoc.rawText.slice(0, 1000)}
+                  </pre>
+                </details>
+              )}
+              {selectedDoc.rawText?.startsWith('[OCR') && (
+                <div style={{ marginTop: 12, padding: "8px 12px", background: "#1A1010", border: "1px solid #EF444433", borderRadius: 6, fontSize: 11, color: "#EF4444" }}>
+                  {selectedDoc.rawText}
+                </div>
+              )}
 
               {selectedDoc.status === "PENDING" && (
                 <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
