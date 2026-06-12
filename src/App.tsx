@@ -20,6 +20,7 @@ import ESTIAExecutiveAccess from "./pages/mobile-analytics/MobileAnalyticsApp";
 import POSPage from "./pages/pos/POSPage";
 import OCRPage from "./pages/ocr/OCRPage";
 import HRPage from "./pages/hr/HRPage";
+import OnboardingWizard from "./components/OnboardingWizard";
 
 import LoginPage from "./pages/Login/LoginPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
@@ -38,6 +39,7 @@ import ConfiguracionGlobal from "./pages/soporte/ConfiguracionGlobal";
 
 function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [showWizard, setShowWizard] = useState(false);
   const user = useAuthStore((state) => state.user);
   const tenantId = useAuthStore((state) => state.tenantId);
 
@@ -46,6 +48,30 @@ function App() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      if (!user || !tenantId) return;
+      if (user.roleCode === 'SOPORTE') return;
+      try {
+        const res = await api.get(`/tenants/${tenantId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+        });
+        if (res.data && res.data.isOnboarded === false) {
+          const companiesRes = await api.get(`/companies`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+          });
+          const companies = companiesRes.data ?? [];
+          if (companies.length === 0) {
+            setShowWizard(true);
+          }
+        }
+      } catch {
+        // silently skip
+      }
+    };
+    checkOnboarding();
+  }, [user, tenantId]);
 
   useEffect(() => {
     const applyTheme = async () => {
@@ -98,6 +124,10 @@ function App() {
   }
 
   return (
+    <>
+    {showWizard && (
+      <OnboardingWizard onComplete={() => setShowWizard(false)} />
+    )}
     <Routes>
       <Route path="/" element={<LoginPage />} />
 
@@ -369,6 +399,7 @@ function App() {
         }
       />
     </Routes>
+    </>
   );
 }
 
