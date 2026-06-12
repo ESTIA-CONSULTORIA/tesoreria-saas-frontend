@@ -29,11 +29,11 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 const FIELD_LABELS: Record<string, string> = {
-  documentNumber: "Número de documento",
-  date: "Fecha",
-  provider: "Proveedor / Emisor",
-  totalAmount: "Monto total",
-  concept: "Concepto / Descripción",
+  numeroDocumento: "Número de documento",
+  fecha: "Fecha",
+  proveedor: "Proveedor / Emisor",
+  montoTotal: "Monto total",
+  concepto: "Concepto / Descripción",
 };
 
 export default function OCRPage() {
@@ -322,8 +322,8 @@ export default function OCRPage() {
                         </span>
                       </td>
                       <td style={{ padding: "10px 14px", color: "#BDBDBD" }}>
-                        {doc.extractedData?.totalAmount
-                          ? `$${Number(doc.extractedData.totalAmount).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`
+                        {doc.extractedData?.montoTotal
+                          ? `$${Number(doc.extractedData.montoTotal).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`
                           : "—"}
                       </td>
                       <td style={{ padding: "10px 14px", color: "#7E7E7E", whiteSpace: "nowrap" }}>
