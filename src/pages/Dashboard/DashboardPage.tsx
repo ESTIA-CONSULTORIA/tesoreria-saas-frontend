@@ -180,7 +180,7 @@ export default function DashboardPage() {
     <MainLayout>
       <DashboardInfoModal open={infoOpen} onClose={() => setInfoOpen(false)} />
 
-      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 48px)', backgroundColor: '#0A0A0A' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 96px)', backgroundColor: '#0A0A0A', overflowX: 'hidden' }}>
         {/* Header del módulo */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid #2D2D2D', backgroundColor: '#0A0A0A' }}>
           <div>
@@ -393,7 +393,7 @@ export default function DashboardPage() {
                 {/* ZONA 2+3 - Comparativo y Detalle */}
                 <div style={{ display: 'flex', flex: 1, overflow: 'hidden', backgroundColor: '#0A0A0A' }}>
                   {/* ZONA 2 - Comparativo Empresas (65%) */}
-                  <div style={{ flex: '0 0 65%', display: 'flex', flexDirection: 'column', padding: '20px 24px', overflow: 'hidden', minWidth: 0 }}>
+                  <div style={{ flex: '0 0 65%', display: 'flex', flexDirection: 'column', padding: '20px 24px', overflow: 'auto', minWidth: 0 }}>
                     <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <h2 style={{ fontSize: '14px', fontWeight: 400, color: '#F5F5F5', marginBottom: '2px', letterSpacing: '0.01em' }}>
