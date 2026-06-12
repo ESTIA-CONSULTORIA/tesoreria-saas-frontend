@@ -1,7 +1,7 @@
 import { useAuthStore } from "../store/useAuthStore";
 
 // Modules always shown regardless of plan configuration
-const BUILT_IN_MODULES = ['ocr'];
+const BUILT_IN_MODULES = ['ocr', 'rh'];
 
 export function useModulo(modulo: string): boolean {
   const modulosActivos = useAuthStore((state) => state.modulosActivos);

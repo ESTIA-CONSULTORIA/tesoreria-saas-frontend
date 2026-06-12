@@ -27,6 +27,7 @@ const navItems = [
   { label: "OCR Documentos", to: "/ocr", modulo: "ocr", category: "COMPRAS" },
   { label: "Reportes", to: "/reports", modulo: "reportes", shortcut: "Alt+4", category: "ANÁLISIS" },
   { label: "POS", to: "/pos", modulo: "pos", category: "ANÁLISIS" },
+  { label: "Recursos Humanos", to: "/hr", modulo: "rh", category: "RRHH" },
   { label: "Configuración", to: "/settings", modulo: "configuracion", category: "CONTROL" },
   { label: "Config. Login", to: "/settings/login-config", modulo: "configuracion", category: "CONTROL" },
 ];
@@ -146,7 +147,7 @@ export default function MainLayout({ children }: Props) {
             ) : (
               // Navegación para CLIENTE (ADMIN) - Agrupada por categorías
               (() => {
-                const categories = ['OPERACIÓN', 'TESORERÍA', 'COMPRAS', 'ANÁLISIS', 'CONTROL'] as const;
+                const categories = ['OPERACIÓN', 'TESORERÍA', 'COMPRAS', 'ANÁLISIS', 'RRHH', 'CONTROL'] as const;
                 return categories.map((category) => {
                   const categoryItems = navItems.filter((item) => item.category === category);
                   if (categoryItems.length === 0) return null;

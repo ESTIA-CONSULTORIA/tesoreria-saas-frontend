@@ -19,6 +19,7 @@ import LogsPage from "./pages/administration/LogsPage";
 import ESTIAExecutiveAccess from "./pages/mobile-analytics/MobileAnalyticsApp";
 import POSPage from "./pages/pos/POSPage";
 import OCRPage from "./pages/ocr/OCRPage";
+import HRPage from "./pages/hr/HRPage";
 
 import LoginPage from "./pages/Login/LoginPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
@@ -310,6 +311,14 @@ function App() {
         element={
           <ProtectedRoute>
             <OCRPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/hr"
+        element={
+          <ProtectedRoute>
+            <HRPage />
           </ProtectedRoute>
         }
       />
