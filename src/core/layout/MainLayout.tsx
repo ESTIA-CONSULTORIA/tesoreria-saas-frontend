@@ -24,6 +24,7 @@ const navItems = [
   { label: "Proveedores", to: "/suppliers", modulo: "proveedores", category: "COMPRAS" },
   { label: "Compras", to: "/purchases", modulo: "compras", category: "COMPRAS" },
   { label: "Costos", to: "/costs", modulo: "costos", category: "COMPRAS" },
+  { label: "OCR Documentos", to: "/ocr", modulo: "ocr", category: "COMPRAS" },
   { label: "Reportes", to: "/reports", modulo: "reportes", shortcut: "Alt+4", category: "ANÁLISIS" },
   { label: "POS", to: "/pos", modulo: "pos", category: "ANÁLISIS" },
   { label: "Configuración", to: "/settings", modulo: "configuracion", category: "CONTROL" },
