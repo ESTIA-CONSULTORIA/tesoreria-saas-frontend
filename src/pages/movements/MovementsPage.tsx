@@ -3,6 +3,7 @@ import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import CreateMovementModal from "./CreateMovementModal";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
+import { useAuthStore } from "../../core/store/useAuthStore";
 
 interface Movement {
   id: string;
@@ -11,6 +12,9 @@ interface Movement {
   category: string;
   concept: string;
   amount: number;
+  status: string; // APPROVED | PENDING_APPROVAL | REJECTED
+  approvedBy?: string;
+  rejectionReason?: string;
   createdAt: string;
 }
 
@@ -19,8 +23,16 @@ interface BankAccount {
   name: string;
 }
 
+const STATUS_BADGE: Record<string, { label: string; color: string }> = {
+  APPROVED: { label: "Aprobado", color: "#22C55E" },
+  PENDING_APPROVAL: { label: "Pend. Aprobación", color: "#F59E0B" },
+  REJECTED: { label: "Rechazado", color: "#EF4444" },
+};
+
 export default function MovementsPage() {
   const { activeBranch, activeCompany } = useCompanyStore();
+  const user = useAuthStore((s) => s.user);
+  const canApprove = user?.roleCode === "ADMIN" || user?.roleCode === "SOPORTE" || user?.roleCode === "GERENTE";
   const [movements, setMovements] = useState<Movement[]>([]);
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,6 +93,26 @@ export default function MovementsPage() {
     setDetailModalOpen(true);
   }
 
+  async function handleApprove(id: string) {
+    try {
+      await api.put(`/movements/${id}/approve`);
+      loadMovements();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Error al aprobar");
+    }
+  }
+
+  async function handleReject(id: string) {
+    const reason = prompt("Motivo del rechazo:");
+    if (!reason) return;
+    try {
+      await api.put(`/movements/${id}/reject`, { reason });
+      loadMovements();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Error al rechazar");
+    }
+  }
+
   return (
     <MainLayout>
       <CreateMovementModal open={modalOpen} onClose={() => setModalOpen(false)} onCreated={loadMovements} />
@@ -128,13 +160,17 @@ export default function MovementsPage() {
                     <th className="p-2">Fecha</th>
                     <th className="p-2">Cuenta</th>
                     <th className="p-2">Tipo</th>
-                    <th className="p-2">Categoria</th>
+                    <th className="p-2">Categoría</th>
                     <th className="p-2">Concepto</th>
                     <th className="p-2">Monto</th>
+                    <th className="p-2">Estado</th>
+                    {canApprove && <th className="p-2">Acciones</th>}
                   </tr>
                 </thead>
                 <tbody>
-                  {movements.map((item) => (
+                  {movements.map((item) => {
+                    const badge = STATUS_BADGE[item.status] ?? STATUS_BADGE.APPROVED;
+                    return (
                     <tr
                       key={item.id}
                       className="border-t border-slate-800 cursor-pointer hover:bg-slate-800/50"
@@ -145,9 +181,25 @@ export default function MovementsPage() {
                       <td className="p-2">{item.type === "INCOME" ? "INGRESO" : "EGRESO"}</td>
                       <td className="p-2">{item.category}</td>
                       <td className="p-2">{item.concept}</td>
-                      <td className="p-2">{Number(item.amount)}</td>
+                      <td className="p-2">{Number(item.amount).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</td>
+                      <td className="p-2">
+                        <span style={{ background: badge.color + "22", color: badge.color, border: `1px solid ${badge.color}44`, borderRadius: 4, padding: "2px 7px", fontSize: 11, whiteSpace: "nowrap" }}>
+                          {badge.label}
+                        </span>
+                      </td>
+                      {canApprove && (
+                        <td className="p-2" onClick={(e) => e.stopPropagation()}>
+                          {item.status === "PENDING_APPROVAL" && (
+                            <div className="flex gap-1">
+                              <button onClick={() => handleApprove(item.id)} className="rounded bg-green-700 px-2 py-1 text-xs text-white hover:bg-green-600">Aprobar</button>
+                              <button onClick={() => handleReject(item.id)} className="rounded bg-red-700 px-2 py-1 text-xs text-white hover:bg-red-600">Rechazar</button>
+                            </div>
+                          )}
+                        </td>
+                      )}
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
