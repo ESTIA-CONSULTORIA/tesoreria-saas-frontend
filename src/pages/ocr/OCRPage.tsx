@@ -43,6 +43,8 @@ export default function OCRPage() {
   const [documents, setDocuments] = useState<OcrDocument[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadTotal, setUploadTotal] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedDoc, setSelectedDoc] = useState<OcrDocument | null>(null);
@@ -71,39 +73,47 @@ export default function OCRPage() {
     fetchDocuments();
   }
 
-  const uploadFile = async (file: File) => {
-    if (!file) return;
+  const uploadFiles = async (files: File[]) => {
     const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"];
-    if (!allowed.includes(file.type)) {
+    const valid = files.filter((f) => allowed.includes(f.type));
+    if (valid.length === 0) {
       setError("Tipo de archivo no permitido. Use JPG, PNG, WEBP, GIF o PDF.");
       return;
     }
+    const invalid = files.length - valid.length;
+    if (invalid > 0) setError(`${invalid} archivo(s) omitido(s) por tipo no permitido.`);
+    else setError(null);
+
     setUploading(true);
-    setError(null);
-    try {
-      const form = new FormData();
-      form.append("file", file);
-      await api.post("/ocr/upload", form, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          "x-tenant-id": tenantId ?? "",
-          "x-company-id": companyId ?? "",
-        },
-      });
-      await fetchDocuments();
-    } catch {
-      setError("Error al subir el archivo");
-    } finally {
-      setUploading(false);
+    setUploadTotal(valid.length);
+    setUploadProgress(0);
+    for (let i = 0; i < valid.length; i++) {
+      setUploadProgress(i);
+      try {
+        const form = new FormData();
+        form.append("file", valid[i]);
+        await api.post("/ocr/upload", form, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "x-tenant-id": tenantId ?? "",
+            "x-company-id": companyId ?? "",
+          },
+        });
+      } catch {
+        setError(`Error al subir "${valid[i].name}"`);
+      }
     }
+    setUploadProgress(valid.length);
+    setUploading(false);
+    await fetchDocuments();
   };
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
       setDragging(false);
-      const file = e.dataTransfer.files[0];
-      if (file) uploadFile(file);
+      const files = Array.from(e.dataTransfer.files);
+      if (files.length) uploadFiles(files);
     },
     [tenantId, companyId]
   );
@@ -221,18 +231,30 @@ export default function OCRPage() {
             ref={fileInputRef}
             type="file"
             accept=".jpg,.jpeg,.png,.webp,.gif,.pdf"
+            multiple
             style={{ display: "none" }}
-            onChange={(e) => { if (e.target.files?.[0]) uploadFile(e.target.files[0]); }}
+            onChange={(e) => { if (e.target.files?.length) uploadFiles(Array.from(e.target.files)); e.target.value = ""; }}
           />
           <div style={{ fontSize: 36, marginBottom: 8 }}>📄</div>
           {uploading ? (
-            <p style={{ color: "#F5F5F5", fontSize: 15 }}>Procesando documento...</p>
+            <>
+              <p style={{ color: "#F5F5F5", fontSize: 15 }}>
+                {uploadTotal > 1
+                  ? `Procesando archivo ${uploadProgress + 1} de ${uploadTotal}...`
+                  : "Procesando documento..."}
+              </p>
+              {uploadTotal > 1 && (
+                <div style={{ marginTop: 10, background: "#2D2D2D", borderRadius: 4, height: 6, width: 200, margin: "10px auto 0" }}>
+                  <div style={{ background: "#3B82F6", height: 6, borderRadius: 4, width: `${Math.round((uploadProgress / uploadTotal) * 100)}%`, transition: "width 0.3s" }} />
+                </div>
+              )}
+            </>
           ) : (
             <>
               <p style={{ color: "#F5F5F5", fontSize: 15, marginBottom: 4 }}>
-                Arrastra aquí tu archivo o haz clic para seleccionar
+                Arrastra archivos aquí o haz clic para seleccionar
               </p>
-              <p style={{ color: "#7E7E7E", fontSize: 13 }}>JPG, PNG, WEBP, GIF, PDF — máximo 10 MB</p>
+              <p style={{ color: "#7E7E7E", fontSize: 13 }}>JPG, PNG, WEBP, GIF, PDF — máximo 10 MB · Selección múltiple permitida</p>
             </>
           )}
         </div>

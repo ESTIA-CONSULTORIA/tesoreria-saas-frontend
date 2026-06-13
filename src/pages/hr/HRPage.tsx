@@ -58,6 +58,12 @@ export default function HRPage() {
   const [showDocForm, setShowDocForm] = useState(false);
   const [docForm, setDocForm] = useState({ tipo: "INE", nombre: "", fileData: "", notas: "" });
 
+  // Carga masiva
+  const [showBulkPanel, setShowBulkPanel] = useState(false);
+  const [bulkFiles, setBulkFiles] = useState<{ file: File; tipo: string; status: "pending" | "uploading" | "done" | "error" }[]>([]);
+  const [bulkProgress, setBulkProgress] = useState(0);
+  const [bulkRunning, setBulkRunning] = useState(false);
+
   const tenantId = useAuthStore((s) => s.tenantId);
   const companyId = useAuthStore((s) => s.companyId);
 
@@ -79,6 +85,40 @@ export default function HRPage() {
       const res = await api.get(`/hr/employees/${empId}/documents`, { headers });
       setDocs(Array.isArray(res.data) ? res.data : []);
     } catch { setDocs([]); }
+  }
+
+  function handleBulkSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []);
+    setBulkFiles(files.map((f) => ({ file: f, tipo: "OTRO", status: "pending" })));
+    e.target.value = "";
+  }
+
+  async function runBulkUpload() {
+    if (!selectedEmp || bulkFiles.length === 0 || bulkRunning) return;
+    setBulkRunning(true);
+    setBulkProgress(0);
+    for (let i = 0; i < bulkFiles.length; i++) {
+      setBulkFiles((prev) => prev.map((bf, idx) => idx === i ? { ...bf, status: "uploading" } : bf));
+      try {
+        const fileData = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(bulkFiles[i].file);
+        });
+        await api.post(`/hr/employees/${selectedEmp.id}/documents`, {
+          tipo: bulkFiles[i].tipo,
+          nombre: bulkFiles[i].file.name,
+          fileData,
+        });
+        setBulkFiles((prev) => prev.map((bf, idx) => idx === i ? { ...bf, status: "done" } : bf));
+      } catch {
+        setBulkFiles((prev) => prev.map((bf, idx) => idx === i ? { ...bf, status: "error" } : bf));
+      }
+      setBulkProgress(i + 1);
+    }
+    setBulkRunning(false);
+    loadDocs(selectedEmp.id);
   }
 
   function handleDocFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -253,7 +293,10 @@ export default function HRPage() {
                     <h3 className="font-semibold text-lg">{selectedEmp.nombre} {selectedEmp.apellidos}</h3>
                     <p className="text-sm text-slate-400">{selectedEmp.puesto} · {selectedEmp.departamento}</p>
                   </div>
-                  <button onClick={() => setShowDocForm(true)} className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700">+ Agregar Documento</button>
+                  <div className="flex gap-2">
+                    <button onClick={() => { setShowBulkPanel(false); setShowDocForm(true); }} className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700">+ Agregar Documento</button>
+                    <button onClick={() => { setShowDocForm(false); setBulkFiles([]); setBulkProgress(0); setShowBulkPanel(true); }} className="rounded-lg border border-blue-600 px-4 py-2 text-sm text-blue-400 hover:bg-blue-900/30">Carga masiva</button>
+                  </div>
                 </div>
 
                 {showDocForm && (
@@ -294,6 +337,73 @@ export default function HRPage() {
                     <div className="flex gap-2 justify-end">
                       <button onClick={() => setShowDocForm(false)} className="rounded border border-slate-700 px-3 py-1.5 text-sm text-slate-400 hover:text-white">Cancelar</button>
                       <button onClick={addDocument} className="rounded bg-blue-600 px-4 py-1.5 text-sm text-white hover:bg-blue-700">Guardar</button>
+                    </div>
+                  </div>
+                )}
+
+                {showBulkPanel && (
+                  <div className="rounded-xl border border-slate-700 bg-slate-900 p-5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium text-sm">Carga masiva de documentos</h4>
+                      <button onClick={() => setShowBulkPanel(false)} className="text-slate-400 hover:text-white text-lg leading-none">×</button>
+                    </div>
+
+                    <div>
+                      <label className="text-xs text-slate-400 block mb-1">Seleccionar archivos (PDF, JPG, PNG)</label>
+                      <input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        multiple
+                        onChange={handleBulkSelect}
+                        className="w-full text-sm text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer"
+                      />
+                    </div>
+
+                    {bulkFiles.length > 0 && (
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {bulkFiles.map((bf, i) => (
+                          <div key={i} className="flex items-center gap-3 rounded border border-slate-700 bg-slate-800 px-3 py-2">
+                            <span className="flex-1 text-xs text-slate-300 truncate">{bf.file.name}</span>
+                            <select
+                              value={bf.tipo}
+                              disabled={bulkRunning}
+                              onChange={(e) => setBulkFiles((prev) => prev.map((x, idx) => idx === i ? { ...x, tipo: e.target.value } : x))}
+                              className="rounded border border-slate-600 bg-slate-700 px-2 py-1 text-xs text-white"
+                            >
+                              {TIPOS_DOC.map((t) => <option key={t} value={t}>{t}</option>)}
+                            </select>
+                            <span className="text-xs w-16 text-right" style={{
+                              color: bf.status === "done" ? "#22C55E" : bf.status === "error" ? "#EF4444" : bf.status === "uploading" ? "#3B82F6" : "#7E7E7E"
+                            }}>
+                              {bf.status === "done" ? "✓ Listo" : bf.status === "error" ? "✗ Error" : bf.status === "uploading" ? "..." : "Pendiente"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {bulkRunning && (
+                      <div>
+                        <p className="text-xs text-slate-400 mb-1">Subiendo {bulkProgress} de {bulkFiles.length}...</p>
+                        <div className="bg-slate-700 rounded h-1.5">
+                          <div className="bg-blue-500 h-1.5 rounded transition-all" style={{ width: `${Math.round((bulkProgress / bulkFiles.length) * 100)}%` }} />
+                        </div>
+                      </div>
+                    )}
+
+                    {!bulkRunning && bulkProgress === bulkFiles.length && bulkFiles.length > 0 && (
+                      <p className="text-xs text-green-400">Carga completada: {bulkFiles.filter(f => f.status === "done").length} exitosos, {bulkFiles.filter(f => f.status === "error").length} errores.</p>
+                    )}
+
+                    <div className="flex gap-2 justify-end">
+                      <button onClick={() => setShowBulkPanel(false)} className="rounded border border-slate-700 px-3 py-1.5 text-sm text-slate-400 hover:text-white">Cerrar</button>
+                      <button
+                        onClick={runBulkUpload}
+                        disabled={bulkRunning || bulkFiles.length === 0}
+                        className="rounded bg-blue-600 px-4 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {bulkRunning ? `Subiendo ${bulkProgress}/${bulkFiles.length}...` : `Subir todos (${bulkFiles.length})`}
+                      </button>
                     </div>
                   </div>
                 )}
