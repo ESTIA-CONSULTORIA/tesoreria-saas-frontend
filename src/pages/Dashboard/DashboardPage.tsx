@@ -81,9 +81,9 @@ export default function DashboardPage() {
     // Fallback: datos consolidados si no hay empresas
     return [{
       name: 'Grupo Consolidado',
-      Ingresos: Number(kpis?.ingresos || 0),
-      Egresos: Number(kpis?.egresos || 0),
-      Saldo: Number(kpis?.saldoDisponible || 0),
+      Ingresos: Number(kpis?.income || 0),
+      Egresos: Number(kpis?.expense || 0),
+      Saldo: Number(kpis?.totalBalance || 0),
     }];
   }, [kpis?.companiesBreakdown, kpis?.ingresos, kpis?.egresos, kpis?.saldoDisponible]);
 

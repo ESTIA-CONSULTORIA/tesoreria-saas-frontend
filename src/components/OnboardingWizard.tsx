@@ -22,6 +22,7 @@ export default function OnboardingWizard({ onComplete }: Props) {
 
   // Step 1 — empresa
   const [empresa, setEmpresa] = useState({ razonSocial: "", rfc: "", giro: "" });
+  // legalName = razonSocial, taxId = rfc (mapped at submit time)
   const [companyId, setCompanyId] = useState<string | null>(null);
 
   // Step 2 — sucursal
@@ -44,9 +45,9 @@ export default function OnboardingWizard({ onComplete }: Props) {
     setLoading(true);
     try {
       const res = await api.post("/companies", {
-        name: empresa.razonSocial,
-        rfc: empresa.rfc,
-        giro: empresa.giro,
+        legalName: empresa.razonSocial,
+        tradeName: empresa.razonSocial,
+        taxId: empresa.rfc,
         tenantId,
       }, authHeaders());
       setCompanyId(res.data.id);
@@ -65,10 +66,10 @@ export default function OnboardingWizard({ onComplete }: Props) {
     try {
       const res = await api.post("/branches", {
         name: sucursal.nombre,
+        code: sucursal.nombre.toUpperCase().replace(/\s+/g, '-').slice(0, 10),
         city: sucursal.ciudad,
         state: sucursal.estado,
         companyId,
-        tenantId,
       }, authHeaders());
       setBranchId(res.data.id);
       setStep(2);
@@ -88,12 +89,13 @@ export default function OnboardingWizard({ onComplete }: Props) {
     setLoading(true);
     try {
       await api.post("/banks", {
-        bankName: cuenta.banco,
+        bank: cuenta.banco,
         accountNumber: cuenta.numeroCuenta,
-        alias: cuenta.alias || cuenta.banco,
+        name: cuenta.alias || cuenta.banco,
         currency: cuenta.moneda,
-        companyId,
-        tenantId,
+        initialBalance: 0,
+        type: "BANCO",
+        branchId,
       }, authHeaders());
       setStep(3);
     } catch {
@@ -116,9 +118,6 @@ export default function OnboardingWizard({ onComplete }: Props) {
         email: gerente.email,
         password: gerente.password,
         roleCode: "GERENTE",
-        companyId,
-        branchId,
-        tenantId,
       }, authHeaders());
       setStep(4);
     } catch {

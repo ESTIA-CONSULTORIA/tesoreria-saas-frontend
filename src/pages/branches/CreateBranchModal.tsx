@@ -66,9 +66,9 @@ export default function CreateBranchModal({ open, onClose, onCreated, branch }: 
         });
       } else {
         await api.post("/branches", {
-          companyId: localStorage.getItem("tenant_id") || "test-tenant",
+          companyId: localStorage.getItem("active_company_id") || "",
           name,
-          code,
+          code: code || name.toUpperCase().replace(/\s+/g, '-').slice(0, 10),
           city,
           address,
           state,
