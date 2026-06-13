@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
+import { useBrandingStore } from "../../core/store/useBrandingStore";
 
 interface AppearanceSettings {
   // Identidad
@@ -48,6 +49,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const updateBranding = useBrandingStore((s) => s.update);
 
   useEffect(() => {
     loadSettings();
@@ -128,6 +130,7 @@ export default function SettingsPage() {
         buttonBorderRadius: settings.buttonBorderRadius,
       });
 
+      updateBranding(settings.systemName, settings.logoUrl, settings.accentColor);
       setSuccess("Configuración guardada correctamente");
       setTimeout(() => setSuccess(""), 3000);
     } catch (err: any) {
@@ -135,6 +138,17 @@ export default function SettingsPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleLogoFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const base64 = ev.target?.result as string;
+      setSettings((s) => ({ ...s, logoUrl: base64 }));
+    };
+    reader.readAsDataURL(file);
   }
 
   function restoreDefaults() {
@@ -207,11 +221,18 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label className="block text-sm text-slate-400 mb-2">URL del Logo</label>
+                <label className="block text-sm text-slate-400 mb-2">Logo del sistema</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoFile}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-slate-300 outline-none focus:border-blue-500 file:mr-3 file:rounded file:border-0 file:bg-slate-700 file:px-3 file:py-1 file:text-sm file:text-slate-200"
+                />
+                <p className="mt-1 text-xs text-slate-500">O pega una URL directamente:</p>
                 <input
                   value={settings.logoUrl}
                   onChange={(e) => setSettings({ ...settings, logoUrl: e.target.value })}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                  className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
                   placeholder="https://example.com/logo.png"
                 />
                 {settings.logoUrl && (

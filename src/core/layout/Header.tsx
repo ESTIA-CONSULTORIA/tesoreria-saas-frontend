@@ -1,9 +1,11 @@
 import { useAuthStore } from '../store/useAuthStore'
+import { useBrandingStore } from '../store/useBrandingStore'
 import { useLocation } from 'react-router-dom'
 
 export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const { user, logout } = useAuthStore()
   const location = useLocation()
+  const { systemName, logoUrl } = useBrandingStore()
 
   // Get module name from pathname
   const getModuleName = () => {
@@ -26,7 +28,7 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
       { label: 'Config. Login', to: '/settings/login-config' },
     ]
     const item = navItems.find(i => path.startsWith(i.to))
-    return item?.label || 'Tesorería SaaS'
+    return item?.label || systemName
   }
 
   return (
@@ -40,8 +42,11 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
       padding: '0 24px',
       flexShrink: 0,
     }}>
-      {/* Izquierda — módulo actual */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      {/* Izquierda — logo pequeño + módulo actual */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {logoUrl && (
+          <img src={logoUrl} alt={systemName} style={{ height: '22px', maxWidth: '80px', objectFit: 'contain' }} />
+        )}
         <span style={{
           fontSize: '14px',
           color: '#F5F5F5',

@@ -28,6 +28,7 @@ import LoginConfigPage from "./pages/settings/LoginConfigPage";
 import ProtectedRoute from "./core/router/ProtectedRoute";
 import ModuloRoute from "./core/router/ModuloRoute";
 import { useAuthStore } from "./core/store/useAuthStore";
+import { useBrandingStore } from "./core/store/useBrandingStore";
 import { api } from "./core/api/api";
 
 // Páginas de SOPORTE
@@ -42,12 +43,17 @@ function App() {
   const [showWizard, setShowWizard] = useState(false);
   const user = useAuthStore((state) => state.user);
   const tenantId = useAuthStore((state) => state.tenantId);
+  const loadBranding = useBrandingStore((state) => state.load);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    if (user) loadBranding();
+  }, [user, loadBranding]);
 
   useEffect(() => {
     const checkOnboarding = async () => {

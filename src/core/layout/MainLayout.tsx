@@ -4,6 +4,7 @@ import Header from "./Header";
 import { theme } from "../theme/theme";
 import { useModulo } from "../hooks/useModulo";
 import { useAuthStore } from "../store/useAuthStore";
+import { useBrandingStore } from "../store/useBrandingStore";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import GlobalSearchModal from "../components/GlobalSearchModal";
 import CompanySelector from "../components/CompanySelector";
@@ -47,6 +48,7 @@ export default function MainLayout({ children }: Props) {
   const [searchOpen, setSearchOpen] = useState(false);
   const user = useAuthStore((state) => state.user);
   const isSoporte = user?.roleCode === "SOPORTE";
+  const { systemName, logoUrl } = useBrandingStore();
 
   // Atajos globales
   useKeyboardShortcuts([
@@ -80,9 +82,13 @@ export default function MainLayout({ children }: Props) {
         >
           {/* Logo del cliente */}
           <div className="px-4 pb-2 border-b" style={{ borderColor: '#2D2D2D' }}>
-            <h2 className="text-xs font-semibold" style={{ color: '#F5F5F5' }}>
-              {localStorage.getItem("tenant_name") || "Tesorería SaaS"}
-            </h2>
+            {logoUrl ? (
+              <img src={logoUrl} alt={systemName} style={{ height: '28px', maxWidth: '160px', objectFit: 'contain' }} />
+            ) : (
+              <h2 className="text-xs font-semibold" style={{ color: '#F5F5F5' }}>
+                {systemName}
+              </h2>
+            )}
           </div>
 
           {/* Selector de Empresa/Sucursal */}
