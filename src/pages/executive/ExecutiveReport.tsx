@@ -378,16 +378,17 @@ export default function ExecutiveReport({
   }, [token, module, period, selectedCompanyId]);
 
   return (
-    <div
-      style={{
-        height: "100vh",
-        background: t.bg,
-        display: "flex",
-        flexDirection: "column",
-        fontFamily: "'Inter', sans-serif",
-        overflow: "hidden",
-      }}
-    >
+    <div style={{ position: "fixed", inset: 0, background: t.bg, overflowY: "auto", overflowX: "hidden" }}>
+      <div
+        style={{
+          height: "100%",
+          maxWidth: 430,
+          margin: "0 auto",
+          display: "flex",
+          flexDirection: "column",
+          fontFamily: "'Inter', sans-serif",
+        }}
+      >
       {/* Header */}
       <div
         style={{
@@ -608,6 +609,7 @@ export default function ExecutiveReport({
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }

@@ -30,16 +30,17 @@ export default function ExecutiveConfig({ config, onSave, onBack, onLogout }: Pr
   }
 
   return (
-    <div
-      style={{
-        height: "100vh",
-        background: t.bg,
-        display: "flex",
-        flexDirection: "column",
-        fontFamily: "'Inter', sans-serif",
-        overflow: "hidden",
-      }}
-    >
+    <div style={{ position: "fixed", inset: 0, background: t.bg, overflowY: "auto", overflowX: "hidden" }}>
+      <div
+        style={{
+          height: "100%",
+          maxWidth: 430,
+          margin: "0 auto",
+          display: "flex",
+          flexDirection: "column",
+          fontFamily: "'Inter', sans-serif",
+        }}
+      >
       {/* Header */}
       <div
         style={{
@@ -207,6 +208,7 @@ export default function ExecutiveConfig({ config, onSave, onBack, onLogout }: Pr
         >
           Cerrar sesión
         </button>
+      </div>
       </div>
     </div>
   );

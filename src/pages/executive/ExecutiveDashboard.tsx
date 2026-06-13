@@ -107,18 +107,17 @@ export default function ExecutiveDashboard({
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: t.bg,
-        display: "flex",
-        flexDirection: "column",
-        fontFamily: "'Inter', sans-serif",
-        overflow: "hidden",
-        maxWidth: 430,
-        margin: "0 auto",
-      }}
-    >
+    <div style={{ position: "fixed", inset: 0, background: t.bg, overflowY: "auto", overflowX: "hidden" }}>
+      <div
+        style={{
+          height: "100%",
+          maxWidth: 430,
+          margin: "0 auto",
+          display: "flex",
+          flexDirection: "column",
+          fontFamily: "'Inter', sans-serif",
+        }}
+      >
       {/* Header — greeting + real-time clock */}
       <div
         style={{
@@ -301,6 +300,7 @@ export default function ExecutiveDashboard({
         >
           Salir
         </button>
+      </div>
       </div>
     </div>
   );

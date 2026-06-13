@@ -24,6 +24,8 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
       .then((r) => {
         if (r.data) {
           const lu = r.data.logoUrl || r.data.logo_url || r.data.logoURL || "";
+          console.log("tenant-settings:", JSON.stringify(r.data));
+          console.log("logo length:", lu?.length, "preview:", lu?.slice(0, 50));
           setBrandLogo(lu);
           setBrandName(r.data.name || "Vista Ejecutiva");
         }
@@ -81,17 +83,18 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
   }
 
   return (
-    <div
-      style={{
-        height: "100vh",
-        background: gradient,
-        display: "flex",
-        flexDirection: "column",
-        fontFamily: "'Inter', sans-serif",
-        overflow: "hidden",
-        userSelect: "none",
-      }}
-    >
+    <div style={{ position: "fixed", inset: 0, background: gradient, overflowY: "auto", overflowX: "hidden" }}>
+      <div
+        style={{
+          height: "100%",
+          maxWidth: 430,
+          margin: "0 auto",
+          display: "flex",
+          flexDirection: "column",
+          fontFamily: "'Inter', sans-serif",
+          userSelect: "none",
+        }}
+      >
       {/* ── TOP ZONE 40% — branding ── */}
       <div
         style={{
@@ -300,6 +303,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
             </button>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

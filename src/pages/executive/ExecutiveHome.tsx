@@ -45,16 +45,17 @@ export default function ExecutiveHome({
   const rows = Math.ceil(visibleKeys.length / 3);
 
   return (
-    <div
-      style={{
-        height: "100vh",
-        background: t.bg,
-        display: "flex",
-        flexDirection: "column",
-        fontFamily: "'Inter', sans-serif",
-        overflow: "hidden",
-      }}
-    >
+    <div style={{ position: "fixed", inset: 0, background: t.bg, overflowY: "auto", overflowX: "hidden" }}>
+      <div
+        style={{
+          height: "100%",
+          maxWidth: 430,
+          margin: "0 auto",
+          display: "flex",
+          flexDirection: "column",
+          fontFamily: "'Inter', sans-serif",
+        }}
+      >
       {/* Header */}
       <div
         style={{
@@ -204,6 +205,7 @@ export default function ExecutiveHome({
             Salir
           </button>
         </div>
+      </div>
       </div>
     </div>
   );
