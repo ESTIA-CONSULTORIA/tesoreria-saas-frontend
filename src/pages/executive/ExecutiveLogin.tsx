@@ -9,12 +9,17 @@ interface Props {
   config: ExecConfig;
 }
 
+const STORAGE_KEY = "exec_tenant_id";
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "del"];
 
 export default function ExecutiveLogin({ onLogin, config }: Props) {
   const t = getTheme(config.theme);
   const { systemName, logoUrl } = useBrandingStore();
-  const storedTenant = localStorage.getItem("tenant_id") || "";
+
+  // Reactive so "Cambiar empresa" can clear it and show the input
+  const [storedTenant, setStoredTenant] = useState(
+    () => localStorage.getItem(STORAGE_KEY) || "",
+  );
   const [tenantId, setTenantId] = useState(storedTenant);
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
@@ -35,6 +40,9 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
         tenantId: tenantId.trim(),
         pin: p,
       });
+      // Persist tenant and token on success
+      localStorage.setItem(STORAGE_KEY, tenantId.trim());
+      setStoredTenant(tenantId.trim());
       onLogin(res.data.access_token);
     } catch {
       setError("PIN incorrecto");
@@ -50,6 +58,14 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
     const next = pin + k;
     setPin(next);
     if (next.length === 4) submit(next);
+  }
+
+  function handleChangeTenant() {
+    localStorage.removeItem(STORAGE_KEY);
+    setStoredTenant("");
+    setTenantId("");
+    setPin("");
+    setError("");
   }
 
   return (
@@ -81,11 +97,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
             <img
               src={logoUrl}
               alt="logo"
-              style={{
-                maxHeight: 80,
-                maxWidth: "80%",
-                objectFit: "contain",
-              }}
+              style={{ maxHeight: 80, maxWidth: "80%", objectFit: "contain" }}
             />
             {systemName && (
               <p
@@ -117,7 +129,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
         )}
       </div>
 
-      {/* ── MIDDLE ZONE 20% — "Acceso Ejecutivo" + PIN dots ── */}
+      {/* ── MIDDLE ZONE 20% — label + dots ── */}
       <div
         style={{
           height: "20%",
@@ -129,11 +141,13 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
           padding: "0 32px",
         }}
       >
+        {/* Tenant input — only when no stored tenant */}
         {!storedTenant && (
           <input
             value={tenantId}
             onChange={(e) => setTenantId(e.target.value)}
             placeholder="ID de empresa"
+            autoComplete="off"
             style={{
               width: 160,
               padding: "8px 12px",
@@ -192,56 +206,88 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
         )}
       </div>
 
-      {/* ── BOTTOM ZONE 40% — keypad ── */}
+      {/* ── BOTTOM ZONE 40% — keypad + cambiar empresa ── */}
       <div
         style={{
           height: "40%",
-          padding: "0 12px 8px",
           display: "flex",
-          alignItems: "stretch",
+          flexDirection: "column",
+          padding: "0 12px",
         }}
       >
-        <div
-          style={{
-            width: "100%",
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gridTemplateRows: "repeat(4, 1fr)",
-          }}
-        >
-          {KEYS.map((k, i) =>
-            k === "" ? (
-              <div key={i} />
-            ) : (
-              <button
-                key={k + i}
-                onClick={() => press(k)}
-                onPointerDown={() => setPressedKey(k)}
-                onPointerUp={() => setPressedKey(null)}
-                onPointerLeave={() => setPressedKey(null)}
-                disabled={loading}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: k === "del" ? t.secondary : t.text,
-                  fontSize: k === "del" ? "1.3rem" : "1.8rem",
-                  fontWeight: 300,
-                  fontFamily: "'Inter', sans-serif",
-                  cursor: loading ? "wait" : "pointer",
-                  WebkitTapHighlightColor: "transparent",
-                  outline: "none",
-                  opacity: pressedKey === k ? 0.3 : 1,
-                  transition: "opacity 0.08s",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                {k === "del" ? "⌫" : k}
-              </button>
-            )
-          )}
+        {/* Keypad grid */}
+        <div style={{ flex: 1, display: "flex", alignItems: "stretch" }}>
+          <div
+            style={{
+              width: "100%",
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gridTemplateRows: "repeat(4, 1fr)",
+            }}
+          >
+            {KEYS.map((k, i) =>
+              k === "" ? (
+                <div key={i} />
+              ) : (
+                <button
+                  key={k + i}
+                  onClick={() => press(k)}
+                  onPointerDown={() => setPressedKey(k)}
+                  onPointerUp={() => setPressedKey(null)}
+                  onPointerLeave={() => setPressedKey(null)}
+                  disabled={loading}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: k === "del" ? t.secondary : t.text,
+                    fontSize: k === "del" ? "1.3rem" : "1.8rem",
+                    fontWeight: 300,
+                    fontFamily: "'Inter', sans-serif",
+                    cursor: loading ? "wait" : "pointer",
+                    WebkitTapHighlightColor: "transparent",
+                    outline: "none",
+                    opacity: pressedKey === k ? 0.3 : 1,
+                    transition: "opacity 0.08s",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {k === "del" ? "⌫" : k}
+                </button>
+              )
+            )}
+          </div>
         </div>
+
+        {/* "Cambiar empresa" — only when there's a stored tenant */}
+        {storedTenant && (
+          <div
+            style={{
+              flexShrink: 0,
+              textAlign: "center",
+              paddingBottom: 14,
+              paddingTop: 4,
+            }}
+          >
+            <button
+              onClick={handleChangeTenant}
+              style={{
+                background: "none",
+                border: "none",
+                color: t.secondary,
+                fontSize: "0.7rem",
+                letterSpacing: "0.1em",
+                cursor: "pointer",
+                fontFamily: "'Inter', sans-serif",
+                WebkitTapHighlightColor: "transparent",
+                padding: "4px 8px",
+              }}
+            >
+              Cambiar empresa
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
