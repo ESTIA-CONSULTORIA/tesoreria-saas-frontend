@@ -45,15 +45,30 @@ export default function ExecutiveHome({
   const rows = Math.ceil(visibleKeys.length / 3);
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: t.bg, overflowY: "auto", overflowX: "hidden" }}>
+    <>
+      <div style={{
+        position: "fixed",
+        top: 0, left: 0, right: 0, bottom: 0,
+        backgroundImage: config.theme === "dark"
+          ? "linear-gradient(160deg, #0A0A0A 0%, #111111 50%, #0D0D0D 100%)"
+          : "linear-gradient(160deg, #F8F8F6 0%, #F2F2EF 50%, #F5F5F2 100%)",
+        zIndex: 0,
+      }} />
       <div
         style={{
-          height: "100%",
+          position: "fixed",
+          top: 0,
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: "100%",
           maxWidth: 430,
-          margin: "0 auto",
+          height: "100%",
           display: "flex",
           flexDirection: "column",
           fontFamily: "'Inter', sans-serif",
+          zIndex: 1,
+          overflowY: "auto",
+          overflowX: "hidden",
         }}
       >
       {/* Header */}
@@ -207,6 +222,6 @@ export default function ExecutiveHome({
         </div>
       </div>
       </div>
-    </div>
+    </>
   );
 }

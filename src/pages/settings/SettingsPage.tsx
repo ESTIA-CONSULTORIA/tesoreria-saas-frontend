@@ -112,7 +112,7 @@ export default function SettingsPage() {
       setSuccess("");
 
       const tenantId = localStorage.getItem("tenant_id") || "test-tenant";
-      await api.post(`/tenant-settings/${tenantId}`, {
+      await api.put(`/tenant-settings/${tenantId}`, {
         name: settings.systemName,
         logoUrl: settings.logoUrl,
         faviconUrl: settings.faviconUrl,
