@@ -138,12 +138,20 @@ export default function HRPage() {
   function openDoc(doc: HrDocument) {
     const src = doc.fileData || doc.url;
     if (!src) return;
-    const win = window.open();
-    if (!win) return;
-    if (src.startsWith("data:image")) {
-      win.document.write(`<img src="${src}" style="max-width:100%" />`);
+
+    if (src.startsWith("data:")) {
+      const [header, base64] = src.split(",");
+      const mimeType = header.match(/:(.*?);/)?.[1] || "application/octet-stream";
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: mimeType });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, "_blank");
     } else {
-      win.location.href = src;
+      window.open(src, "_blank");
     }
   }
 
