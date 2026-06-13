@@ -26,6 +26,7 @@ interface HrDocument {
   tipo: string;
   nombre?: string;
   url?: string;
+  fileData?: string;
   notas?: string;
   uploadedAt: string;
 }
@@ -55,7 +56,7 @@ export default function HRPage() {
   const [selectedEmp, setSelectedEmp] = useState<Employee | null>(null);
   const [docs, setDocs] = useState<HrDocument[]>([]);
   const [showDocForm, setShowDocForm] = useState(false);
-  const [docForm, setDocForm] = useState({ tipo: "INE", nombre: "", url: "", notas: "" });
+  const [docForm, setDocForm] = useState({ tipo: "INE", nombre: "", fileData: "", notas: "" });
 
   const tenantId = useAuthStore((s) => s.tenantId);
   const companyId = useAuthStore((s) => s.companyId);
@@ -80,6 +81,32 @@ export default function HRPage() {
     } catch { setDocs([]); }
   }
 
+  function handleDocFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setDocForm((p) => ({
+        ...p,
+        fileData: reader.result as string,
+        nombre: p.nombre || file.name,
+      }));
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function openDoc(doc: HrDocument) {
+    const src = doc.fileData || doc.url;
+    if (!src) return;
+    const win = window.open();
+    if (!win) return;
+    if (src.startsWith("data:image")) {
+      win.document.write(`<img src="${src}" style="max-width:100%" />`);
+    } else {
+      win.location.href = src;
+    }
+  }
+
   async function saveEmployee() {
     try {
       if (isEdit && editingEmp.id) {
@@ -102,7 +129,7 @@ export default function HRPage() {
     if (!selectedEmp) return;
     try {
       await api.post(`/hr/employees/${selectedEmp.id}/documents`, docForm);
-      setDocForm({ tipo: "INE", nombre: "", url: "", notas: "" });
+      setDocForm({ tipo: "INE", nombre: "", fileData: "", notas: "" });
       setShowDocForm(false);
       loadDocs(selectedEmp.id);
     } catch { setError("Error al agregar documento"); }
@@ -244,8 +271,20 @@ export default function HRPage() {
                         <input value={docForm.nombre} onChange={(e) => setDocForm((p) => ({ ...p, nombre: e.target.value }))} placeholder="Ej: INE frente" className="w-full rounded border border-slate-700 bg-slate-800 p-2 text-sm text-white" />
                       </div>
                       <div className="col-span-2">
-                        <label className="text-xs text-slate-400 block mb-1">URL / referencia</label>
-                        <input value={docForm.url} onChange={(e) => setDocForm((p) => ({ ...p, url: e.target.value }))} placeholder="https://..." className="w-full rounded border border-slate-700 bg-slate-800 p-2 text-sm text-white" />
+                        <label className="text-xs text-slate-400 block mb-1">Archivo (PDF, JPG, PNG)</label>
+                        <input
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={handleDocFile}
+                          className="w-full text-sm text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer"
+                        />
+                        {docForm.fileData && (
+                          docForm.fileData.startsWith("data:image") ? (
+                            <img src={docForm.fileData} alt="preview" className="mt-2 max-h-24 rounded border border-slate-700 object-contain" />
+                          ) : (
+                            <p className="mt-1 text-xs text-green-400">Archivo cargado correctamente</p>
+                          )
+                        )}
                       </div>
                       <div className="col-span-2">
                         <label className="text-xs text-slate-400 block mb-1">Notas</label>
@@ -263,7 +302,7 @@ export default function HRPage() {
                   <table className="min-w-full text-sm">
                     <thead className="text-slate-400 border-b border-slate-800">
                       <tr>
-                        {["Tipo", "Nombre", "URL", "Notas", "Fecha", ""].map((h) => <th key={h} className="p-3 text-left font-medium">{h}</th>)}
+                        {["Tipo", "Nombre", "Documento", "Notas", "Fecha", ""].map((h) => <th key={h} className="p-3 text-left font-medium">{h}</th>)}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800">
@@ -272,7 +311,19 @@ export default function HRPage() {
                         <tr key={d.id} className="hover:bg-slate-800/50">
                           <td className="p-3 font-medium">{d.tipo}</td>
                           <td className="p-3 text-slate-300">{d.nombre || "—"}</td>
-                          <td className="p-3 text-slate-400">{d.url ? <a href={d.url} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">Ver</a> : "—"}</td>
+                          <td className="p-3">
+                            {d.fileData ? (
+                              d.fileData.startsWith("data:image") ? (
+                                <button onClick={() => openDoc(d)} className="focus:outline-none">
+                                  <img src={d.fileData} alt={d.nombre || d.tipo} className="max-h-10 rounded border border-slate-700 object-contain hover:opacity-80" />
+                                </button>
+                              ) : (
+                                <button onClick={() => openDoc(d)} className="text-blue-400 hover:underline text-sm">Ver PDF</button>
+                              )
+                            ) : d.url ? (
+                              <a href={d.url} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline text-sm">Ver enlace</a>
+                            ) : "—"}
+                          </td>
                           <td className="p-3 text-slate-400">{d.notas || "—"}</td>
                           <td className="p-3 text-slate-500 whitespace-nowrap">{new Date(d.uploadedAt).toLocaleDateString("es-MX")}</td>
                           <td className="p-3"><button onClick={() => removeDoc(d.id)} className="rounded bg-red-700 px-2 py-1 text-xs hover:bg-red-600">Eliminar</button></td>
