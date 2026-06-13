@@ -19,6 +19,12 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pressedKey, setPressedKey] = useState<string | null>(null);
+
+  const gradient =
+    config.theme === "dark"
+      ? "linear-gradient(180deg, #080808 0%, #111111 100%)"
+      : "linear-gradient(180deg, #F8F8F6 0%, #EFEFED 100%)";
 
   async function submit(p: string) {
     if (!tenantId.trim()) { setError("Ingresa el ID de empresa"); return; }
@@ -50,7 +56,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
     <div
       style={{
         height: "100vh",
-        background: t.bg,
+        background: gradient,
         display: "flex",
         flexDirection: "column",
         fontFamily: "'Inter', sans-serif",
@@ -58,37 +64,69 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
         userSelect: "none",
       }}
     >
-      {/* Branding */}
+      {/* ── TOP ZONE 40% — branding ── */}
       <div
         style={{
-          flexShrink: 0,
-          paddingTop: 52,
-          paddingBottom: 0,
-          textAlign: "center",
-          padding: "52px 24px 0",
-        }}
-      >
-        {logoUrl && (
-          <img
-            src={logoUrl}
-            alt="logo"
-            style={{ height: 40, marginBottom: 10, objectFit: "contain" }}
-          />
-        )}
-        <p style={{ color: t.text, fontSize: 16, fontWeight: 500, letterSpacing: "0.03em" }}>
-          {systemName || "Vista Ejecutiva"}
-        </p>
-      </div>
-
-      {/* PIN area — grows to push keypad down */}
-      <div
-        style={{
-          flex: 1,
+          height: "40%",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          gap: 16,
+          padding: "0 32px",
+          gap: 12,
+        }}
+      >
+        {logoUrl ? (
+          <>
+            <img
+              src={logoUrl}
+              alt="logo"
+              style={{
+                maxHeight: 80,
+                maxWidth: "80%",
+                objectFit: "contain",
+              }}
+            />
+            {systemName && (
+              <p
+                style={{
+                  color: t.secondary,
+                  fontSize: "0.85rem",
+                  fontWeight: 300,
+                  letterSpacing: "0.14em",
+                  textAlign: "center",
+                }}
+              >
+                {systemName}
+              </p>
+            )}
+          </>
+        ) : (
+          <p
+            style={{
+              color: t.text,
+              fontSize: "1.8rem",
+              fontWeight: 200,
+              letterSpacing: "0.08em",
+              textAlign: "center",
+              lineHeight: 1.25,
+            }}
+          >
+            {systemName || "Vista Ejecutiva"}
+          </p>
+        )}
+      </div>
+
+      {/* ── MIDDLE ZONE 20% — "Acceso Ejecutivo" + PIN dots ── */}
+      <div
+        style={{
+          height: "20%",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 14,
+          padding: "0 32px",
         }}
       >
         {!storedTenant && (
@@ -97,13 +135,13 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
             onChange={(e) => setTenantId(e.target.value)}
             placeholder="ID de empresa"
             style={{
-              width: 180,
-              padding: "9px 14px",
+              width: 160,
+              padding: "8px 12px",
               background: "transparent",
               border: `1px solid ${t.border}`,
-              borderRadius: 8,
+              borderRadius: 6,
               color: t.text,
-              fontSize: 14,
+              fontSize: 13,
               fontFamily: "'Inter', sans-serif",
               outline: "none",
               textAlign: "center",
@@ -111,35 +149,64 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
           />
         )}
 
+        <p
+          style={{
+            color: t.secondary,
+            fontSize: "0.6rem",
+            letterSpacing: "0.28em",
+            textTransform: "uppercase",
+          }}
+        >
+          Acceso Ejecutivo
+        </p>
+
         {/* PIN dots */}
-        <div style={{ display: "flex", gap: 22 }}>
+        <div style={{ display: "flex", gap: 24 }}>
           {[0, 1, 2, 3].map((i) => (
             <div
               key={i}
               style={{
-                width: 15,
-                height: 15,
+                width: 18,
+                height: 18,
                 borderRadius: "50%",
-                background: i < pin.length ? t.text : "transparent",
-                border: `2px solid ${i < pin.length ? t.text : t.secondary}`,
-                transition: "background 0.12s",
+                background: i < pin.length ? t.accent : "transparent",
+                border: `1px solid ${i < pin.length ? t.accent : t.secondary}`,
+                transition: "background 0.15s, border-color 0.15s",
               }}
             />
           ))}
         </div>
 
         {error && (
-          <p style={{ color: "#EF4444", fontSize: 13, textAlign: "center" }}>{error}</p>
+          <p
+            style={{
+              color: "#EF4444",
+              fontSize: "0.75rem",
+              textAlign: "center",
+              letterSpacing: "0.02em",
+              marginTop: -4,
+            }}
+          >
+            {error}
+          </p>
         )}
       </div>
 
-      {/* Keypad */}
-      <div style={{ flexShrink: 0, padding: "0 16px 36px" }}>
+      {/* ── BOTTOM ZONE 40% — keypad ── */}
+      <div
+        style={{
+          height: "40%",
+          padding: "0 12px 8px",
+          display: "flex",
+          alignItems: "stretch",
+        }}
+      >
         <div
           style={{
+            width: "100%",
             display: "grid",
             gridTemplateColumns: "repeat(3, 1fr)",
-            gap: 4,
+            gridTemplateRows: "repeat(4, 1fr)",
           }}
         >
           {KEYS.map((k, i) =>
@@ -149,18 +216,25 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
               <button
                 key={k + i}
                 onClick={() => press(k)}
+                onPointerDown={() => setPressedKey(k)}
+                onPointerUp={() => setPressedKey(null)}
+                onPointerLeave={() => setPressedKey(null)}
                 disabled={loading}
                 style={{
-                  height: 68,
                   background: "none",
                   border: "none",
                   color: k === "del" ? t.secondary : t.text,
-                  fontSize: k === "del" ? "1.4rem" : "2rem",
+                  fontSize: k === "del" ? "1.3rem" : "1.8rem",
                   fontWeight: 300,
                   fontFamily: "'Inter', sans-serif",
                   cursor: loading ? "wait" : "pointer",
                   WebkitTapHighlightColor: "transparent",
                   outline: "none",
+                  opacity: pressedKey === k ? 0.3 : 1,
+                  transition: "opacity 0.08s",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
                 {k === "del" ? "⌫" : k}
