@@ -89,6 +89,7 @@ export default function ExecutivePage() {
       config={config}
       onReport={(mod) => { setActiveModule(mod); setView("report"); }}
       onConfig={() => setView("config")}
+      onLogout={onLogout}
       onAuthError={onAuthError}
     />
   );

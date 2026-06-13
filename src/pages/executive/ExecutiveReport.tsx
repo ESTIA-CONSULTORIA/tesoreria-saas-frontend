@@ -33,6 +33,7 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
 
   useEffect(() => {
     const eApi = execApi(token);
+
     async function load() {
       try {
         let val = 0;
@@ -40,24 +41,26 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
 
         if (module === "VENTAS" || module === "GASTOS") {
           const type = module === "VENTAS" ? "INCOME" : "EXPENSE";
-          const movs = await eApi.get("/movements").then((r) => r.data).catch(() => []);
+          // Primary call — let errors surface
+          const movs = await eApi.get("/movements").then((r) => r.data);
           const list = Array.isArray(movs) ? movs.filter((m: any) => m.type === type) : [];
           val = list.reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
+          // Secondary call — optional, swallow quietly
           const kpis = await eApi.get("/dashboard/kpis").then((r) => r.data).catch(() => ({}));
           varPct = module === "VENTAS"
             ? Number(kpis.incomeVariation || 0)
             : Number(kpis.expenseVariation || 0);
         } else if (module === "SALDOS") {
-          const banks = await eApi.get("/banks").then((r) => r.data).catch(() => []);
+          const banks = await eApi.get("/banks").then((r) => r.data);
           val = Array.isArray(banks)
             ? banks.reduce((s: number, b: any) => s + Number(b.balance || 0), 0)
             : 0;
         } else if (module === "NOMINA") {
-          const emps = await eApi.get("/hr/employees").then((r) => r.data).catch(() => []);
+          const emps = await eApi.get("/hr/employees").then((r) => r.data);
           const activos = Array.isArray(emps) ? emps.filter((e: any) => e.status === "ACTIVO") : [];
           val = activos.reduce((s: number, e: any) => s + Number(e.salarioQuincenal || 0), 0);
         } else if (module === "ROTACION" || module === "VACANTES") {
-          const emps = await eApi.get("/hr/employees").then((r) => r.data).catch(() => []);
+          const emps = await eApi.get("/hr/employees").then((r) => r.data);
           const list = Array.isArray(emps) ? emps : [];
           if (module === "ROTACION") {
             const bajas = list.filter((e: any) => e.status === "BAJA");
@@ -65,17 +68,23 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
           } else {
             val = list.filter((e: any) => e.status === "VACANTE").length;
           }
+        } else {
+          // COSTOS / PRESUPUESTO — no endpoint yet, show 0
+          val = 0;
         }
 
         setValue(val);
         setVariation(varPct);
       } catch (err: any) {
         if (err.response?.status === 401) { onAuthError(); return; }
-        setError("Error al cargar datos");
+        const status = err.response?.status;
+        const msg = err.response?.data?.message || err.message || "Error de red";
+        setError(status ? `${status} — ${msg}` : msg);
       } finally {
         setLoading(false);
       }
     }
+
     load();
   }, [token, module]);
 
@@ -126,30 +135,31 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
       </div>
 
       {loading ? (
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <p style={{ color: t.secondary, fontSize: 13 }}>Cargando...</p>
         </div>
       ) : error ? (
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <p style={{ color: "#EF4444", fontSize: 13 }}>{error}</p>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 32px", gap: 16 }}>
+          <p style={{ color: "#EF4444", fontSize: 13, textAlign: "center", lineHeight: 1.6 }}>{error}</p>
+          <button
+            onClick={onBack}
+            style={{
+              background: "none",
+              border: `1px solid ${t.border}`,
+              borderRadius: 8,
+              color: t.secondary,
+              fontSize: 12,
+              padding: "8px 20px",
+              cursor: "pointer",
+              fontFamily: "'Inter', sans-serif",
+            }}
+          >
+            Volver
+          </button>
         </div>
       ) : (
         <>
-          {/* Main value — centered */}
+          {/* Main value */}
           <div
             style={{
               flexShrink: 0,
@@ -180,13 +190,7 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
                 {variation.toFixed(1)}%
               </p>
             )}
-            <p
-              style={{
-                color: t.secondary,
-                fontSize: 12,
-                marginTop: 6,
-              }}
-            >
+            <p style={{ color: t.secondary, fontSize: 12, marginTop: 6 }}>
               {modDef.desc}
             </p>
           </div>
