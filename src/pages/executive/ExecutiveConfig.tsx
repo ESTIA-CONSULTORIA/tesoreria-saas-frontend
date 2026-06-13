@@ -24,10 +24,6 @@ export default function ExecutiveConfig({ config, onSave, onBack, onLogout }: Pr
     }));
   }
 
-  function setTheme(theme: "dark" | "light") {
-    setDraft((prev) => ({ ...prev, theme }));
-  }
-
   function save() {
     onSave(draft);
     onBack();
@@ -36,184 +32,177 @@ export default function ExecutiveConfig({ config, onSave, onBack, onLogout }: Pr
   return (
     <div
       style={{
-        minHeight: "100vh",
+        height: "100vh",
         background: t.bg,
+        display: "flex",
+        flexDirection: "column",
         fontFamily: "'Inter', sans-serif",
-        padding: "24px 24px 48px",
-        transition: "background 0.2s",
+        overflow: "hidden",
       }}
     >
-      <div style={{ maxWidth: 430, margin: "0 auto" }}>
-        {/* Header */}
-        <div
+      {/* Header */}
+      <div
+        style={{
+          flexShrink: 0,
+          padding: "20px 24px 12px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <button
+          onClick={onBack}
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 36,
+            color: t.secondary,
+            background: "none",
+            border: "none",
+            fontSize: 13,
+            cursor: "pointer",
+            fontFamily: "'Inter', sans-serif",
+            padding: 0,
           }}
         >
-          <button
-            onClick={onBack}
-            style={{
-              color: t.secondary,
-              background: "none",
-              border: "none",
-              fontSize: 13,
-              cursor: "pointer",
-              padding: 0,
-              fontFamily: "'Inter', sans-serif",
-            }}
-          >
-            Volver
-          </button>
-          <p style={{ color: t.text, fontSize: 16, fontWeight: 600 }}>Configuración</p>
-          <button
-            onClick={save}
-            style={{
-              color: t.accent,
-              background: "none",
-              border: "none",
-              fontSize: 13,
-              cursor: "pointer",
-              padding: 0,
-              fontFamily: "'Inter', sans-serif",
-            }}
-          >
-            Guardar
-          </button>
-        </div>
+          Cancelar
+        </button>
+        <p style={{ color: t.text, fontSize: 14, fontWeight: 500 }}>Configuración</p>
+        <button
+          onClick={save}
+          style={{
+            color: t.accent,
+            background: "none",
+            border: "none",
+            fontSize: 13,
+            cursor: "pointer",
+            fontFamily: "'Inter', sans-serif",
+            padding: 0,
+          }}
+        >
+          Guardar
+        </button>
+      </div>
 
-        {/* Apariencia */}
+      {/* Theme selector */}
+      <div style={{ flexShrink: 0, padding: "4px 24px 10px" }}>
         <p
           style={{
             color: t.secondary,
             fontSize: 10,
-            letterSpacing: "0.12em",
-            marginBottom: 10,
+            letterSpacing: "0.1em",
+            marginBottom: 8,
           }}
         >
           APARIENCIA
         </p>
-        <div
-          style={{
-            background: t.card,
-            border: `1px solid ${t.border}`,
-            borderRadius: 12,
-            marginBottom: 28,
-            overflow: "hidden",
-          }}
-        >
-          {(["dark", "light"] as const).map((mode, i) => (
+        <div style={{ display: "flex" }}>
+          {(["dark", "light"] as const).map((mode) => (
             <button
               key={mode}
-              onClick={() => setTheme(mode)}
+              onClick={() => setDraft((prev) => ({ ...prev, theme: mode }))}
               style={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "16px 20px",
+                flex: 1,
+                padding: "10px 0",
                 background: "none",
                 border: "none",
-                borderBottom: i === 0 ? `1px solid ${t.border}` : "none",
+                borderBottom: `2px solid ${draft.theme === mode ? t.accent : t.border}`,
+                color: draft.theme === mode ? t.text : t.secondary,
+                fontSize: 13,
                 cursor: "pointer",
                 fontFamily: "'Inter', sans-serif",
+                WebkitTapHighlightColor: "transparent",
               }}
             >
-              <span style={{ color: t.text, fontSize: 14 }}>
-                {mode === "dark" ? "Oscuro" : "Claro"}
-              </span>
-              {draft.theme === mode && (
-                <span style={{ color: t.accent, fontSize: 11 }}>activo</span>
-              )}
+              {mode === "dark" ? "Oscuro" : "Claro"}
             </button>
           ))}
         </div>
+      </div>
 
-        {/* Módulos */}
-        <p
-          style={{
-            color: t.secondary,
-            fontSize: 10,
-            letterSpacing: "0.12em",
-            marginBottom: 10,
-          }}
-        >
+      {/* Module label */}
+      <div style={{ flexShrink: 0, padding: "4px 24px 6px" }}>
+        <p style={{ color: t.secondary, fontSize: 10, letterSpacing: "0.1em" }}>
           MÓDULOS VISIBLES
         </p>
-        <div
-          style={{
-            background: t.card,
-            border: `1px solid ${t.border}`,
-            borderRadius: 12,
-            marginBottom: 40,
-            overflow: "hidden",
-          }}
-        >
-          {MODULES.map((mod, i) => {
-            const isOn = draft.modules[mod.key] !== false;
-            return (
-              <button
-                key={mod.key}
-                onClick={() => toggleModule(mod.key)}
+      </div>
+
+      {/* Module list — fills remaining space */}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          padding: "0 24px",
+          minHeight: 0,
+          overflow: "hidden",
+        }}
+      >
+        {MODULES.map((mod, i) => {
+          const isOn = draft.modules[mod.key] !== false;
+          const isLast = i === MODULES.length - 1;
+          return (
+            <button
+              key={mod.key}
+              onClick={() => toggleModule(mod.key)}
+              style={{
+                flex: 1,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                background: "none",
+                border: "none",
+                borderBottom: isLast ? "none" : `1px solid ${t.border}`,
+                padding: 0,
+                cursor: "pointer",
+                fontFamily: "'Inter', sans-serif",
+                WebkitTapHighlightColor: "transparent",
+                minHeight: 0,
+                outline: "none",
+              }}
+            >
+              <span style={{ color: t.text, fontSize: 13 }}>{mod.label}</span>
+              {/* Toggle pill */}
+              <div
                 style={{
-                  width: "100%",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: "16px 20px",
-                  background: "none",
-                  border: "none",
-                  borderBottom: i < MODULES.length - 1 ? `1px solid ${t.border}` : "none",
-                  cursor: "pointer",
-                  fontFamily: "'Inter', sans-serif",
+                  width: 40,
+                  height: 22,
+                  borderRadius: 11,
+                  background: isOn ? t.accent : t.border,
+                  position: "relative",
+                  transition: "background 0.2s",
+                  flexShrink: 0,
                 }}
               >
-                <span style={{ color: t.text, fontSize: 14 }}>{mod.label}</span>
-                {/* Toggle pill */}
                 <div
                   style={{
-                    width: 44,
-                    height: 24,
-                    borderRadius: 12,
-                    background: isOn ? t.accent : t.border,
-                    position: "relative",
-                    transition: "background 0.2s",
-                    flexShrink: 0,
+                    position: "absolute",
+                    top: 3,
+                    left: isOn ? 21 : 3,
+                    width: 16,
+                    height: 16,
+                    borderRadius: "50%",
+                    background: t.bg,
+                    transition: "left 0.2s",
                   }}
-                >
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: 3,
-                      left: isOn ? 23 : 3,
-                      width: 18,
-                      height: 18,
-                      borderRadius: "50%",
-                      background: t.bg,
-                      transition: "left 0.2s",
-                    }}
-                  />
-                </div>
-              </button>
-            );
-          })}
-        </div>
+                />
+              </div>
+            </button>
+          );
+        })}
+      </div>
 
-        {/* Logout */}
+      {/* Logout */}
+      <div style={{ flexShrink: 0, padding: "10px 24px 34px" }}>
         <button
           onClick={onLogout}
           style={{
             width: "100%",
-            padding: "16px",
-            borderRadius: 12,
-            border: "1px solid rgba(239,68,68,0.35)",
+            padding: "14px 0",
             background: "none",
+            border: "none",
             color: "#EF4444",
             fontSize: 14,
             cursor: "pointer",
             fontFamily: "'Inter', sans-serif",
+            WebkitTapHighlightColor: "transparent",
           }}
         >
           Cerrar sesión

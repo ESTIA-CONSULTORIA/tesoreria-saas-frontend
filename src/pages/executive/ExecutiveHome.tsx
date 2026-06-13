@@ -22,15 +22,13 @@ export default function ExecutiveHome({ token, config, onReport, onConfig, onAut
   const [error, setError] = useState("");
 
   const today = new Date().toLocaleDateString("es-MX", {
-    weekday: "long",
+    weekday: "short",
     day: "numeric",
-    month: "long",
+    month: "short",
   });
-  const dateLabel = today.charAt(0).toUpperCase() + today.slice(1);
 
   useEffect(() => {
     const eApi = execApi(token);
-
     async function load() {
       try {
         const [kpisData, banksData, empsData] = await Promise.all([
@@ -38,17 +36,14 @@ export default function ExecutiveHome({ token, config, onReport, onConfig, onAut
           eApi.get("/banks").then((r) => r.data).catch(() => []),
           eApi.get("/hr/employees").then((r) => r.data).catch(() => []),
         ]);
-
         const banks = Array.isArray(banksData) ? banksData : [];
         const emps = Array.isArray(empsData) ? empsData : [];
-
         const saldos = banks.reduce((s: number, b: any) => s + Number(b.balance || 0), 0);
         const activos = emps.filter((e: any) => e.status === "ACTIVO");
         const nomina = activos.reduce((s: number, e: any) => s + Number(e.salarioQuincenal || 0), 0);
         const vacantes = emps.filter((e: any) => e.status === "VACANTE").length;
         const bajas = emps.filter((e: any) => e.status === "BAJA").length;
         const rotacion = emps.length > 0 ? Math.round((bajas / emps.length) * 100) : 0;
-
         setValues({
           VENTAS: Number(kpisData.income || 0),
           SALDOS: saldos,
@@ -70,7 +65,6 @@ export default function ExecutiveHome({ token, config, onReport, onConfig, onAut
         setLoading(false);
       }
     }
-
     load();
   }, [token]);
 
@@ -79,116 +73,158 @@ export default function ExecutiveHome({ token, config, onReport, onConfig, onAut
   return (
     <div
       style={{
-        minHeight: "100vh",
+        height: "100vh",
         background: t.bg,
+        display: "flex",
+        flexDirection: "column",
         fontFamily: "'Inter', sans-serif",
-        padding: "24px 24px 48px",
+        overflow: "hidden",
       }}
     >
-      <div style={{ maxWidth: 430, margin: "0 auto" }}>
-        {/* Header */}
+      {/* Header — single line */}
+      <div
+        style={{
+          flexShrink: 0,
+          padding: "20px 24px 14px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <p style={{ color: t.text, fontSize: 15, fontWeight: 500 }}>
+          {systemName || "Vista Ejecutiva"}
+        </p>
+        <p style={{ color: t.secondary, fontSize: 12 }}>{today}</p>
+      </div>
+
+      {/* Module list */}
+      {loading ? (
         <div
           style={{
+            flex: 1,
             display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            marginBottom: 36,
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          <div>
-            <p style={{ color: t.secondary, fontSize: 11, letterSpacing: "0.1em", marginBottom: 4 }}>
-              {dateLabel}
-            </p>
-            <p style={{ color: t.text, fontSize: 17, fontWeight: 600 }}>
-              {systemName || "Vista Ejecutiva"}
-            </p>
-          </div>
-          <button
-            onClick={onConfig}
-            style={{
-              color: t.secondary,
-              background: "none",
-              border: "none",
-              fontSize: 13,
-              cursor: "pointer",
-              padding: "4px 0",
-              fontFamily: "'Inter', sans-serif",
-            }}
-          >
-            Configuración
-          </button>
+          <p style={{ color: t.secondary, fontSize: 13 }}>Cargando...</p>
         </div>
-
-        {loading ? (
-          <p style={{ color: t.secondary, textAlign: "center", marginTop: 80 }}>Cargando...</p>
-        ) : error ? (
-          <p style={{ color: "#EF4444", textAlign: "center", marginTop: 80 }}>{error}</p>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {visibleModules.map((mod) => {
-              const value = values[mod.key] ?? 0;
-              const variation = variations[mod.key];
-              return (
-                <button
-                  key={mod.key}
-                  onClick={() => onReport(mod.key)}
+      ) : error ? (
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <p style={{ color: "#EF4444", fontSize: 13 }}>{error}</p>
+        </div>
+      ) : (
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            padding: "0 24px",
+            minHeight: 0,
+            overflow: "hidden",
+          }}
+        >
+          {visibleModules.map((mod, i) => {
+            const value = values[mod.key] ?? 0;
+            const variation = variations[mod.key];
+            const isLast = i === visibleModules.length - 1;
+            return (
+              <button
+                key={mod.key}
+                onClick={() => onReport(mod.key)}
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  background: "none",
+                  border: "none",
+                  borderBottom: isLast ? "none" : `1px solid ${t.border}`,
+                  padding: 0,
+                  cursor: "pointer",
+                  fontFamily: "'Inter', sans-serif",
+                  WebkitTapHighlightColor: "transparent",
+                  outline: "none",
+                  minHeight: 0,
+                }}
+              >
+                <span
                   style={{
-                    background: t.card,
-                    border: `1px solid ${t.border}`,
-                    borderRadius: 16,
-                    padding: "20px 24px 18px",
+                    color: t.secondary,
+                    fontSize: 10,
+                    letterSpacing: "0.1em",
                     textAlign: "left",
-                    cursor: "pointer",
-                    width: "100%",
-                    fontFamily: "'Inter', sans-serif",
+                    flexShrink: 0,
                   }}
                 >
-                  <p
-                    style={{
-                      color: t.secondary,
-                      fontSize: 10,
-                      letterSpacing: "0.12em",
-                      marginBottom: 10,
-                    }}
-                  >
-                    {mod.label}
-                  </p>
-                  <p
+                  {mod.label}
+                </span>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    flexShrink: 0,
+                  }}
+                >
+                  {variation !== undefined && (
+                    <span
+                      style={{
+                        fontSize: 11,
+                        color: variationColor(variation, mod.positiveGood, t),
+                      }}
+                    >
+                      {variation >= 0 ? "+" : ""}
+                      {variation.toFixed(1)}%
+                    </span>
+                  )}
+                  <span
                     style={{
                       color: t.text,
-                      fontSize: "2.6rem",
+                      fontSize: "1.45rem",
                       fontWeight: 300,
                       lineHeight: 1,
-                      marginBottom: 10,
                     }}
                   >
                     {fmtValue(value, mod.format)}
-                  </p>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <p style={{ color: t.secondary, fontSize: 12 }}>{mod.desc}</p>
-                    {variation !== undefined && (
-                      <p
-                        style={{
-                          fontSize: 12,
-                          color: variationColor(variation, mod.positiveGood, t),
-                        }}
-                      >
-                        {variation >= 0 ? "+" : ""}
-                        {variation.toFixed(1)}%
-                      </p>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        )}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Footer */}
+      <div
+        style={{
+          flexShrink: 0,
+          padding: "10px 24px 30px",
+          textAlign: "center",
+        }}
+      >
+        <button
+          onClick={onConfig}
+          style={{
+            background: "none",
+            border: "none",
+            color: t.secondary,
+            fontSize: 12,
+            cursor: "pointer",
+            fontFamily: "'Inter', sans-serif",
+            letterSpacing: "0.06em",
+            WebkitTapHighlightColor: "transparent",
+          }}
+        >
+          Configuración
+        </button>
       </div>
     </div>
   );

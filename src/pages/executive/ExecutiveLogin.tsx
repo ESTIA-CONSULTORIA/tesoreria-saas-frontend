@@ -21,10 +21,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
   const [loading, setLoading] = useState(false);
 
   async function submit(p: string) {
-    if (!tenantId.trim()) {
-      setError("Ingresa el ID de empresa");
-      return;
-    }
+    if (!tenantId.trim()) { setError("Ingresa el ID de empresa"); return; }
     setLoading(true);
     setError("");
     try {
@@ -43,10 +40,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
 
   function press(k: string) {
     if (loading) return;
-    if (k === "del") {
-      setPin((p) => p.slice(0, -1));
-      return;
-    }
+    if (k === "del") { setPin((p) => p.slice(0, -1)); return; }
     const next = pin + k;
     setPin(next);
     if (next.length === 4) submit(next);
@@ -55,119 +49,125 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
   return (
     <div
       style={{
-        minHeight: "100vh",
+        height: "100vh",
         background: t.bg,
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
         fontFamily: "'Inter', sans-serif",
-        padding: "24px",
+        overflow: "hidden",
+        userSelect: "none",
       }}
     >
-      {logoUrl && (
-        <img
-          src={logoUrl}
-          alt="logo"
-          style={{ height: 52, marginBottom: 12, objectFit: "contain" }}
-        />
-      )}
-      <p
+      {/* Branding */}
+      <div
         style={{
-          color: t.secondary,
-          fontSize: 13,
-          letterSpacing: "0.08em",
-          marginBottom: 48,
+          flexShrink: 0,
+          paddingTop: 52,
+          paddingBottom: 0,
           textAlign: "center",
+          padding: "52px 24px 0",
         }}
       >
-        {systemName || "Vista Ejecutiva"}
-      </p>
+        {logoUrl && (
+          <img
+            src={logoUrl}
+            alt="logo"
+            style={{ height: 40, marginBottom: 10, objectFit: "contain" }}
+          />
+        )}
+        <p style={{ color: t.text, fontSize: 16, fontWeight: 500, letterSpacing: "0.03em" }}>
+          {systemName || "Vista Ejecutiva"}
+        </p>
+      </div>
 
-      {!storedTenant && (
-        <div style={{ marginBottom: 32, width: "100%", maxWidth: 216 }}>
+      {/* PIN area — grows to push keypad down */}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 16,
+        }}
+      >
+        {!storedTenant && (
           <input
             value={tenantId}
             onChange={(e) => setTenantId(e.target.value)}
             placeholder="ID de empresa"
             style={{
-              width: "100%",
-              padding: "10px 14px",
-              borderRadius: 10,
+              width: 180,
+              padding: "9px 14px",
+              background: "transparent",
               border: `1px solid ${t.border}`,
-              background: t.card,
+              borderRadius: 8,
               color: t.text,
               fontSize: 14,
               fontFamily: "'Inter', sans-serif",
               outline: "none",
-              boxSizing: "border-box",
+              textAlign: "center",
             }}
           />
-        </div>
-      )}
+        )}
 
-      {/* PIN dots */}
-      <div style={{ display: "flex", gap: 18, marginBottom: 36 }}>
-        {[0, 1, 2, 3].map((i) => (
-          <div
-            key={i}
-            style={{
-              width: 14,
-              height: 14,
-              borderRadius: "50%",
-              background: i < pin.length ? t.text : "transparent",
-              border: `2px solid ${i < pin.length ? t.text : t.border}`,
-              transition: "background 0.15s",
-            }}
-          />
-        ))}
+        {/* PIN dots */}
+        <div style={{ display: "flex", gap: 22 }}>
+          {[0, 1, 2, 3].map((i) => (
+            <div
+              key={i}
+              style={{
+                width: 15,
+                height: 15,
+                borderRadius: "50%",
+                background: i < pin.length ? t.text : "transparent",
+                border: `2px solid ${i < pin.length ? t.text : t.secondary}`,
+                transition: "background 0.12s",
+              }}
+            />
+          ))}
+        </div>
+
+        {error && (
+          <p style={{ color: "#EF4444", fontSize: 13, textAlign: "center" }}>{error}</p>
+        )}
       </div>
 
-      {error && (
-        <p
+      {/* Keypad */}
+      <div style={{ flexShrink: 0, padding: "0 16px 36px" }}>
+        <div
           style={{
-            color: "#EF4444",
-            fontSize: 13,
-            marginBottom: 16,
-            textAlign: "center",
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: 4,
           }}
         >
-          {error}
-        </p>
-      )}
-
-      {/* Keypad */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 72px)",
-          gap: 10,
-        }}
-      >
-        {KEYS.map((k, i) =>
-          k === "" ? (
-            <div key={i} />
-          ) : (
-            <button
-              key={k + i}
-              onClick={() => press(k)}
-              disabled={loading}
-              style={{
-                height: 72,
-                borderRadius: 14,
-                border: `1px solid ${t.border}`,
-                background: t.card,
-                color: k === "del" ? t.secondary : t.text,
-                fontSize: k === "del" ? 18 : 24,
-                fontWeight: 300,
-                fontFamily: "'Inter', sans-serif",
-                cursor: loading ? "wait" : "pointer",
-              }}
-            >
-              {k === "del" ? "⌫" : k}
-            </button>
-          )
-        )}
+          {KEYS.map((k, i) =>
+            k === "" ? (
+              <div key={i} />
+            ) : (
+              <button
+                key={k + i}
+                onClick={() => press(k)}
+                disabled={loading}
+                style={{
+                  height: 68,
+                  background: "none",
+                  border: "none",
+                  color: k === "del" ? t.secondary : t.text,
+                  fontSize: k === "del" ? "1.4rem" : "2rem",
+                  fontWeight: 300,
+                  fontFamily: "'Inter', sans-serif",
+                  cursor: loading ? "wait" : "pointer",
+                  WebkitTapHighlightColor: "transparent",
+                  outline: "none",
+                }}
+              >
+                {k === "del" ? "⌫" : k}
+              </button>
+            )
+          )}
+        </div>
       </div>
     </div>
   );
