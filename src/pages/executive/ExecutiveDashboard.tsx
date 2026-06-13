@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { execApi } from "./execApi";
 import { getTheme } from "./theme";
 import { fmtValue } from "./modules";
-import { useBrandingStore } from "../../core/store/useBrandingStore";
 import type { ExecConfig } from "./ExecutivePage";
 import type { Company } from "./ExecutivePage";
 
@@ -30,25 +29,27 @@ function companyName(c: Company): string {
 }
 
 export default function ExecutiveDashboard({
-  token, config, companies, selectedCompanyId,
+  token, config, companies,
   onSelectCompany, onCompaniesLoaded, onViewModules, onLogout, onAuthError,
 }: Props) {
   const t = getTheme(config.theme);
-  const { systemName } = useBrandingStore();
   const [kpis, setKpis] = useState<KPIs>({ venta: 0, costo: 0, gasto: 0, flujo: 0 });
   const [costoLabel, setCostoLabel] = useState("COSTO");
   const [loading, setLoading] = useState(true);
+  const [now, setNow] = useState(new Date());
+  const [pressedCompany, setPressedCompany] = useState<string | null>(null);
 
-  const selectedCompany = companies.find((c) => String(c.id) === selectedCompanyId);
-  const headerName = selectedCompany
-    ? companyName(selectedCompany)
-    : (systemName || "Vista Ejecutiva");
+  const userName = sessionStorage.getItem("exec_user_name") || "";
 
-  const today = new Date().toLocaleDateString("es-MX", {
-    weekday: "long", day: "numeric", month: "long",
-  });
+  // Real-time clock — refresh every 60 s
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
 
-  const canViewModules = selectedCompanyId !== null;
+  const timeStr = now.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false });
+  const dateStr = now.toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "short" });
+  const clockLabel = `${timeStr} · ${dateStr}`;
 
   // Load companies once
   useEffect(() => {
@@ -62,9 +63,9 @@ export default function ExecutiveDashboard({
       .catch(() => {});
   }, []);
 
-  // Load KPIs when company changes
+  // Load KPIs — always consolidated (no company filter)
   useEffect(() => {
-    const eApi = execApi(token, selectedCompanyId);
+    const eApi = execApi(token);
     setLoading(true);
     Promise.all([
       eApi.get("/dashboard/kpis").then((r) => r.data).catch(() => ({})),
@@ -95,23 +96,7 @@ export default function ExecutiveDashboard({
         if (err.response?.status === 401) onAuthError();
       })
       .finally(() => setLoading(false));
-  }, [token, selectedCompanyId]);
-
-  const chipStyle = (active: boolean) => ({
-    flexShrink: 0,
-    background: active ? t.accent : "transparent",
-    color: active ? "#111111" : t.secondary,
-    border: `1px solid ${active ? t.accent : t.border}`,
-    borderRadius: 20,
-    padding: "6px 14px",
-    fontSize: "0.65rem",
-    letterSpacing: "0.1em",
-    textTransform: "uppercase" as const,
-    cursor: "pointer",
-    fontFamily: "'Inter', sans-serif",
-    WebkitTapHighlightColor: "transparent",
-    whiteSpace: "nowrap" as const,
-  });
+  }, [token]);
 
   const cardKeys = ["venta", "costo", "gasto", "flujo"] as const;
   const cardLabels: Record<string, string> = {
@@ -134,23 +119,45 @@ export default function ExecutiveDashboard({
         margin: "0 auto",
       }}
     >
-      {/* Header */}
+      {/* Header — greeting + real-time clock */}
       <div
         style={{
           flexShrink: 0,
-          padding: "32px 24px 16px",
+          padding: "36px 24px 16px",
           textAlign: "center",
         }}
       >
-        <p style={{ color: t.text, fontSize: "0.9rem", fontWeight: 300, letterSpacing: "0.05em" }}>
-          {headerName}
+        <p
+          style={{
+            color: t.secondary,
+            fontSize: "0.6rem",
+            fontWeight: 400,
+            letterSpacing: "0.2em",
+            textTransform: "uppercase",
+            marginBottom: 6,
+          }}
+        >
+          BIENVENIDO
         </p>
-        <p style={{ color: t.secondary, fontSize: "0.65rem", marginTop: 4, letterSpacing: "0.08em" }}>
-          {today}
+        {userName && (
+          <p
+            style={{
+              color: t.text,
+              fontSize: "1.1rem",
+              fontWeight: 300,
+              letterSpacing: "0.02em",
+              marginBottom: 6,
+            }}
+          >
+            {userName}
+          </p>
+        )}
+        <p style={{ color: t.secondary, fontSize: "0.65rem", letterSpacing: "0.06em" }}>
+          {clockLabel}
         </p>
       </div>
 
-      {/* KPI 2×2 grid — 50vh */}
+      {/* KPI 2×2 grid — consolidated totals */}
       <div
         style={{
           flexShrink: 0,
@@ -204,8 +211,8 @@ export default function ExecutiveDashboard({
         ))}
       </div>
 
-      {/* Company selector */}
-      <div style={{ flexShrink: 0, padding: "18px 20px 0" }}>
+      {/* Company selector — each button navigates directly to grid */}
+      <div style={{ flexShrink: 0, padding: "24px 20px 0", textAlign: "center" }}>
         <p
           style={{
             color: t.secondary,
@@ -213,10 +220,10 @@ export default function ExecutiveDashboard({
             fontWeight: 400,
             letterSpacing: "0.2em",
             textTransform: "uppercase",
-            marginBottom: 8,
+            marginBottom: 12,
           }}
         >
-          Empresa
+          SELECCIONA UNA EMPRESA
         </p>
         <div
           style={{
@@ -224,55 +231,75 @@ export default function ExecutiveDashboard({
             flexWrap: "wrap",
             justifyContent: "center",
             gap: 8,
-            paddingBottom: 6,
           }}
         >
-          {companies.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => onSelectCompany(String(c.id))}
-              style={chipStyle(selectedCompanyId === String(c.id))}
-            >
-              {companyName(c).slice(0, 22)}
-            </button>
-          ))}
+          {companies.map((c) => {
+            const cId = String(c.id);
+            const isPressed = pressedCompany === cId;
+            return (
+              <button
+                key={cId}
+                onClick={() => {
+                  onSelectCompany(cId);
+                  onViewModules();
+                }}
+                onPointerDown={() => setPressedCompany(cId)}
+                onPointerUp={() => setPressedCompany(null)}
+                onPointerLeave={() => setPressedCompany(null)}
+                style={{
+                  background: "transparent",
+                  border: `1px solid ${t.border}`,
+                  borderRadius: 6,
+                  padding: "10px 20px",
+                  color: t.text,
+                  fontSize: "0.7rem",
+                  fontWeight: 300,
+                  letterSpacing: "0.05em",
+                  textAlign: "center",
+                  cursor: "pointer",
+                  fontFamily: "'Inter', sans-serif",
+                  WebkitTapHighlightColor: "transparent",
+                  outline: "none",
+                  opacity: isPressed ? 0.5 : 1,
+                  transform: isPressed ? "scale(0.97)" : "scale(1)",
+                  transition: "opacity 0.1s, transform 0.1s",
+                }}
+              >
+                {companyName(c)}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Footer — VER MÓDULOS (disabled when no company selected) */}
+      {/* Spacer */}
+      <div style={{ flex: 1 }} />
+
+      {/* Footer — logout only */}
       <div
         style={{
-          flex: 1,
+          flexShrink: 0,
+          padding: "10px 20px 28px",
           display: "flex",
-          alignItems: "flex-end",
-          justifyContent: "center",
-          padding: "0 24px 36px",
+          justifyContent: "flex-end",
         }}
       >
         <button
-          onClick={canViewModules ? onViewModules : undefined}
+          onClick={onLogout}
           style={{
             background: "none",
             border: "none",
-            color: canViewModules ? t.accent : t.secondary,
-            fontSize: "0.65rem",
-            letterSpacing: "0.2em",
+            color: t.secondary,
+            fontSize: "0.6rem",
+            letterSpacing: "0.15em",
             textTransform: "uppercase",
-            cursor: canViewModules ? "pointer" : "default",
+            cursor: "pointer",
             fontFamily: "'Inter', sans-serif",
             WebkitTapHighlightColor: "transparent",
-            padding: "8px 0",
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            opacity: canViewModules ? 1 : 0.5,
+            padding: 0,
           }}
         >
-          {canViewModules ? (
-            <>VER MÓDULOS <span style={{ fontSize: "0.8rem" }}>→</span></>
-          ) : (
-            "SELECCIONA UNA EMPRESA"
-          )}
+          Salir
         </button>
       </div>
     </div>

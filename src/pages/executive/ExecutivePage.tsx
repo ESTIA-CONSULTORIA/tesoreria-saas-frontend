@@ -45,8 +45,9 @@ export default function ExecutivePage() {
     }
   });
 
-  function onLogin(t: string) {
+  function onLogin(t: string, name?: string) {
     sessionStorage.setItem("executive_token", t);
+    sessionStorage.setItem("exec_user_name", name || "");
     setToken(t);
     setView("dashboard");
   }

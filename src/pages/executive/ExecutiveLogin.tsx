@@ -4,7 +4,7 @@ import type { ExecConfig } from "./ExecutivePage";
 import { getTheme } from "./theme";
 
 interface Props {
-  onLogin: (token: string) => void;
+  onLogin: (token: string, name?: string) => void;
   config: ExecConfig;
 }
 
@@ -55,7 +55,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
       // Persist tenant and token on success
       localStorage.setItem(STORAGE_KEY, tenantId.trim());
       setStoredTenant(tenantId.trim());
-      onLogin(res.data.access_token);
+      onLogin(res.data.access_token, res.data.user?.name || "");
     } catch {
       setError("PIN incorrecto");
       setPin("");
