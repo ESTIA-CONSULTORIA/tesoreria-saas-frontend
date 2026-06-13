@@ -1,5 +1,5 @@
 import MainLayout from "../../core/layout/MainLayout";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "../../core/api/api";
 import { useNavigate } from "react-router-dom";
 import DashboardInfoModal from "./DashboardInfoModal";
@@ -18,21 +18,16 @@ export default function DashboardPage() {
   const [period, setPeriod] = useState<"today" | "week" | "month" | "quarter" | "year">("month");
   const [pendingShifts, setPendingShifts] = useState<any[]>([]);
 
-  useEffect(() => {
-    loadData();
-    loadPendingShifts();
-  }, [period, activeCompany?.id, activeBranch?.id]);
-
-  async function loadPendingShifts() {
+  const loadPendingShifts = useCallback(async () => {
     try {
       const response = await api.get("/pos/shifts", { params: { status: 'PENDIENTE_APROBACION' } });
       setPendingShifts(Array.isArray(response.data) ? response.data : []);
-    } catch (err) {
+    } catch {
       setPendingShifts([]);
     }
-  }
+  }, []);
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -62,12 +57,16 @@ export default function DashboardPage() {
         setCompanyKpis(null);
       }
     } catch (e) {
-      console.error('Error cargando dashboard:', e);
       setError("No fue posible cargar dashboard");
     } finally {
       setLoading(false);
     }
-  }
+  }, [period, activeBranch, activeCompany]);
+
+  useEffect(() => {
+    loadData();
+    loadPendingShifts();
+  }, [loadData, loadPendingShifts]);
 
   const companyBarChartData = useMemo(() => {
     if (kpis?.companiesBreakdown?.length > 0) {
@@ -85,7 +84,7 @@ export default function DashboardPage() {
       Egresos: Number(kpis?.expense || 0),
       Saldo: Number(kpis?.totalBalance || 0),
     }];
-  }, [kpis?.companiesBreakdown, kpis?.ingresos, kpis?.egresos, kpis?.saldoDisponible]);
+  }, [kpis?.companiesBreakdown, kpis?.income, kpis?.expense, kpis?.totalBalance]);
 
   const trendLineChartData = useMemo(() => {
     const data = [];
@@ -111,11 +110,11 @@ export default function DashboardPage() {
     ?.reduce((sum: number, c: any) => sum + (c.income || 0), 0) || 0;
 
   // Lógica limpia de display
-  const displayTotals = (() => {
+  const displayTotals = useMemo(() => {
     // Con empresa o sucursal: sumar branchesBreakdown
     if (companyKpis?.branchesBreakdown?.length) {
       return companyKpis.branchesBreakdown.reduce(
-        (acc, b) => ({
+        (acc: any, b: any) => ({
           income: acc.income + (Number(b.income) || 0),
           expense: acc.expense + (Number(b.expense) || 0),
           balance: acc.balance + (Number(b.balance) || 0),
@@ -125,7 +124,7 @@ export default function DashboardPage() {
     // Vista global: sumar companiesBreakdown
     if (kpis?.companiesBreakdown?.length) {
       return kpis.companiesBreakdown.reduce(
-        (acc, c) => ({
+        (acc: any, c: any) => ({
           income: acc.income + (Number(c.income) || 0),
           expense: acc.expense + (Number(c.expense) || 0),
           balance: acc.balance + (Number(c.balance) || 0),
@@ -141,7 +140,7 @@ export default function DashboardPage() {
       };
     }
     return { income: 0, expense: 0, balance: 0 };
-  })();
+  }, [companyKpis?.branchesBreakdown, kpis?.companiesBreakdown, kpis?.income, kpis?.expense, kpis?.totalBalance]);
 
   const ventasDisplay = displayTotals.income;
   const egresosDisplay = displayTotals.expense;

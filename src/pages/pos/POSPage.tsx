@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
@@ -627,35 +627,37 @@ export default function POSPage() {
     );
   }
 
-  function getSubtotal() {
-    return ticket.reduce((sum, item) => sum + item.cantidad * Number(item.precioUnitario), 0);
-  }
+  const subtotalMemo = useMemo(
+    () => ticket.reduce((sum, item) => sum + item.cantidad * Number(item.precioUnitario), 0),
+    [ticket]
+  );
 
-  function getTotalDiscount() {
-    return ticket.reduce((sum, item) => sum + (item.cantidad * Number(item.precioUnitario) * Number(item.descuento)) / 100, 0);
-  }
+  const totalDiscountMemo = useMemo(
+    () => ticket.reduce((sum, item) => sum + (item.cantidad * Number(item.precioUnitario) * Number(item.descuento)) / 100, 0),
+    [ticket]
+  );
 
-  function getTaxes() {
-    return (getSubtotal() - getTotalDiscount()) * 0.16;
-  }
+  const taxesMemo = useMemo(() => (subtotalMemo - totalDiscountMemo) * 0.16, [subtotalMemo, totalDiscountMemo]);
 
-  function getTotal() {
-    return getSubtotal() - getTotalDiscount() + getTaxes();
-  }
+  const totalMemo = useMemo(() => subtotalMemo - totalDiscountMemo + taxesMemo, [subtotalMemo, totalDiscountMemo, taxesMemo]);
 
-  function getTotalCovered() {
-    return paymentForms.reduce((sum, pf) => sum + pf.monto, 0);
-  }
+  const totalCoveredMemo = useMemo(() => paymentForms.reduce((sum, pf) => sum + pf.monto, 0), [paymentForms]);
 
-  function getPending() {
-    return getTotal() - getTotalCovered();
-  }
+  const pendingMemo = useMemo(() => totalMemo - totalCoveredMemo, [totalMemo, totalCoveredMemo]);
 
-  function getChange() {
+  const changeMemo = useMemo(() => {
     const cashPayment = paymentForms.find(pf => pf.forma === "EFECTIVO");
     if (!cashPayment) return 0;
-    return cashPayment.monto - getTotal();
-  }
+    return cashPayment.monto - totalMemo;
+  }, [paymentForms, totalMemo]);
+
+  function getSubtotal() { return subtotalMemo; }
+  function getTotalDiscount() { return totalDiscountMemo; }
+  function getTaxes() { return taxesMemo; }
+  function getTotal() { return totalMemo; }
+  function getTotalCovered() { return totalCoveredMemo; }
+  function getPending() { return pendingMemo; }
+  function getChange() { return changeMemo; }
 
   function addPaymentForm(forma: "EFECTIVO" | "TARJETA" | "DEBITO" | "CREDITO" | "TRANSFERENCIA" | "CORTESIA", monto?: number) {
     const newForm: PaymentForm = {
