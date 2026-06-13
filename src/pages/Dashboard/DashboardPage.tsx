@@ -95,7 +95,7 @@ export default function DashboardPage() {
       date.setDate(now.getDate() - i);
       data.push({
         date: date.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }),
-        value: Math.random() * 5000 + 2000,
+        value: 0,
       });
     }
     return data;

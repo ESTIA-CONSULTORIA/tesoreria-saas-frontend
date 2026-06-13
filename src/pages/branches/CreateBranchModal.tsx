@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "../../core/api/api";
+import { useCompanyStore } from "../../core/store/useCompanyStore";
 
 interface Branch {
   id: string;
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export default function CreateBranchModal({ open, onClose, onCreated, branch }: Props) {
+  const { activeCompany } = useCompanyStore();
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [city, setCity] = useState("");
@@ -66,7 +68,7 @@ export default function CreateBranchModal({ open, onClose, onCreated, branch }: 
         });
       } else {
         await api.post("/branches", {
-          companyId: localStorage.getItem("active_company_id") || "",
+          companyId: activeCompany?.id ?? "",
           name,
           code: code || name.toUpperCase().replace(/\s+/g, '-').slice(0, 10),
           city,

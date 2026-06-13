@@ -75,7 +75,7 @@ export default function HRPage() {
 
   async function loadDocs(empId: string) {
     try {
-      const res = await api.get(`/hr/employees/${empId}/documents`);
+      const res = await api.get(`/hr/employees/${empId}/documents`, { headers });
       setDocs(Array.isArray(res.data) ? res.data : []);
     } catch { setDocs([]); }
   }

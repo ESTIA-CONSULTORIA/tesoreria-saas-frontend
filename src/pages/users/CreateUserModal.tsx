@@ -52,7 +52,7 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
 
   useEffect(() => {
     if (user) {
-      const nameParts = user.name.split(" ");
+      const nameParts = (user.name || "").split(" ");
       setFirstName(nameParts[0] || "");
       setLastName(nameParts.slice(1).join(" ") || "");
       setEmail(user.email);

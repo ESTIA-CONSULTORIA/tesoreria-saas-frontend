@@ -33,7 +33,7 @@ const STATUS_BADGE: Record<string, { label: string; color: string }> = {
 export default function MovementsPage() {
   const { activeBranch, activeCompany } = useCompanyStore();
   const user = useAuthStore((s) => s.user);
-  const canApprove = user?.roleCode === "ADMIN" || user?.roleCode === "SOPORTE" || user?.roleCode === "GERENTE";
+  const canApprove = user?.roleCode === "ADMIN" || user?.roleCode === "GERENTE";
   const [movements, setMovements] = useState<Movement[]>([]);
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState(true);

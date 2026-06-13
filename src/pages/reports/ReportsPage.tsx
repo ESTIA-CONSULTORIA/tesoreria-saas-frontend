@@ -64,11 +64,11 @@ export default function ReportsPage() {
       setLoading(true);
       setError("");
       const [cashRes, balanceRes, categoryRes, incomeRes, breakEvenRes] = await Promise.all([
-        api.get("/reports/cash-flow", { params: { startDate, endDate } }),
-        api.get("/reports/balance-by-account"),
-        api.get("/reports/category-summary", { params: { startDate, endDate } }),
-        api.get("/reports/income-statement", { params: { startDate, endDate } }),
-        api.get("/reports/break-even-point", { params: { startDate, endDate } }),
+        api.get("/reports/cash-flow", { params: { startDate, endDate }, headers: { 'x-company-id': activeCompany?.id } }),
+        api.get("/reports/balance-by-account", { headers: { 'x-company-id': activeCompany?.id } }),
+        api.get("/reports/category-summary", { params: { startDate, endDate }, headers: { 'x-company-id': activeCompany?.id } }),
+        api.get("/reports/income-statement", { params: { startDate, endDate }, headers: { 'x-company-id': activeCompany?.id } }),
+        api.get("/reports/break-even-point", { params: { startDate, endDate }, headers: { 'x-company-id': activeCompany?.id } }),
       ]);
 
       setCashFlow(cashRes.data);

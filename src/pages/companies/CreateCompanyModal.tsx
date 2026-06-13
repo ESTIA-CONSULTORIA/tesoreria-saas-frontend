@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "../../core/api/api";
+import { useAuthStore } from "../../core/store/useAuthStore";
 
 interface Company {
   id: string;
@@ -23,6 +24,7 @@ export default function CreateCompanyModal({
   onCreated,
   company,
 }: Props) {
+  const tenantId = useAuthStore((s) => s.tenantId);
   const [legalName, setLegalName] = useState("");
   const [tradeName, setTradeName] = useState("");
   const [taxId, setTaxId] = useState("");
@@ -66,7 +68,7 @@ export default function CreateCompanyModal({
         });
       } else {
         await api.post("/companies", {
-          tenantId: localStorage.getItem("tenant_id") || "test-tenant",
+          tenantId: tenantId ?? "",
           legalName,
           tradeName,
           taxId,

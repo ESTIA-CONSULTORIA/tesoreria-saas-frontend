@@ -70,7 +70,7 @@ export default function TransfersPage() {
       await api.put(`/transfers/${id}/authorize`);
       loadTransfers();
     } catch (err: any) {
-      alert(err.response?.data?.message || "Error al autorizar traslado");
+      setError(err.response?.data?.message || "Error al autorizar traslado");
     }
   }
 
@@ -89,7 +89,7 @@ export default function TransfersPage() {
       setRejectReason("");
       loadTransfers();
     } catch (err: any) {
-      alert(err.response?.data?.message || "Error al rechazar traslado");
+      setError(err.response?.data?.message || "Error al rechazar traslado");
     }
   }
 

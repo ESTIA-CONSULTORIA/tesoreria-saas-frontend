@@ -27,8 +27,8 @@ export default function TreasuryPage() {
   const [error, setError] = useState("");
   const [transferForm, setTransferForm] = useState({
     tipo: "INTERNA" as "INTERNA" | "INTERCOMPAÑIA",
-    fromAccountId: "",
-    toAccountId: "",
+    cuentaOrigenId: "",
+    cuentaDestinoId: "",
     amount: "",
     concept: "",
     referencia: "",
@@ -115,8 +115,8 @@ export default function TreasuryPage() {
       alert("Traslado realizado exitosamente");
       setTransferForm({
         tipo: "INTERNA",
-        fromAccountId: "",
-        toAccountId: "",
+        cuentaOrigenId: "",
+        cuentaDestinoId: "",
         amount: "",
         concept: "",
         referencia: "",
@@ -511,8 +511,8 @@ export default function TreasuryPage() {
                     <div>
                       <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Cuenta Origen</label>
                       <select 
-                        value={transferForm.fromAccountId}
-                        onChange={(e) => setTransferForm({ ...transferForm, fromAccountId: e.target.value })}
+                        value={transferForm.cuentaOrigenId}
+                        onChange={(e) => setTransferForm({ ...transferForm, cuentaOrigenId: e.target.value })}
                         className="w-full" style={{
                         backgroundColor: '#0F0F0F',
                         color: '#F5F5F5',
@@ -532,8 +532,8 @@ export default function TreasuryPage() {
                     <div>
                       <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Cuenta Destino</label>
                       <select 
-                        value={transferForm.toAccountId}
-                        onChange={(e) => setTransferForm({ ...transferForm, toAccountId: e.target.value })}
+                        value={transferForm.cuentaDestinoId}
+                        onChange={(e) => setTransferForm({ ...transferForm, cuentaDestinoId: e.target.value })}
                         className="w-full" style={{
                         backgroundColor: '#0F0F0F',
                         color: '#F5F5F5',

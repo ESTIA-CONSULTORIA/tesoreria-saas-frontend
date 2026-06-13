@@ -15,6 +15,15 @@ export default function ProtectedRoute({
     return <Navigate to="/" replace />;
   }
 
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (payload.exp && payload.exp < Date.now() / 1000) {
+      return <Navigate to="/" replace />;
+    }
+  } catch {
+    return <Navigate to="/" replace />;
+  }
+
   // SOPORTE tiene acceso a todos los módulos sin verificación
   if (user?.roleCode === 'SOPORTE') {
     return <>{children}</>;

@@ -48,6 +48,7 @@ export default function OnboardingWizard({ onComplete }: Props) {
         legalName: empresa.razonSocial,
         tradeName: empresa.razonSocial,
         taxId: empresa.rfc,
+        giro: empresa.giro,
         tenantId,
       }, authHeaders());
       setCompanyId(res.data.id);

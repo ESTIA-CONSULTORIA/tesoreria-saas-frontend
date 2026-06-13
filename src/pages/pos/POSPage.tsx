@@ -454,14 +454,18 @@ export default function POSPage() {
     }
   }
 
-  function handleLogin() {
-    // Simple PIN validation (in production, this would validate against backend)
-    if (cashierPin.length >= 4) {
+  async function handleLogin() {
+    if (cashierPin.length < 4) {
+      alert("PIN debe tener al menos 4 dígitos");
+      return;
+    }
+    try {
+      await api.post("/pos/cashiers/nip", { nip: cashierPin });
       setShowLoginScreen(false);
       setShowOpenShiftModal(true);
       setCashierPin("");
-    } else {
-      alert("PIN debe tener al menos 4 dígitos");
+    } catch {
+      alert("PIN incorrecto o cajero no autorizado");
     }
   }
 
