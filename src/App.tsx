@@ -17,6 +17,7 @@ import PurchasesPage from "./pages/purchases/PurchasesPage";
 import CostsPage from "./pages/costs/CostsPage";
 import LogsPage from "./pages/administration/LogsPage";
 import ESTIAExecutiveAccess from "./pages/mobile-analytics/MobileAnalyticsApp";
+import ExecutivePage from "./pages/executive/ExecutivePage";
 import POSPage from "./pages/pos/POSPage";
 import OCRPage from "./pages/ocr/OCRPage";
 import HRPage from "./pages/hr/HRPage";
@@ -111,6 +112,11 @@ function App() {
     };
     applyTheme();
   }, [tenantId]);
+
+  // Vista ejecutiva — tiene su propio auth, bypass de todos los checks
+  if (window.location.pathname.startsWith("/executive")) {
+    return <ExecutivePage />;
+  }
 
   // Si es móvil y el usuario tiene rol permitido, mostrar ESTIAExecutiveAccess
   if (isMobile && user) {
