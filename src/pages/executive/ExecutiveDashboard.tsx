@@ -124,12 +124,14 @@ export default function ExecutiveDashboard({
   return (
     <div
       style={{
-        height: "100vh",
+        minHeight: "100vh",
         background: t.bg,
         display: "flex",
         flexDirection: "column",
         fontFamily: "'Inter', sans-serif",
         overflow: "hidden",
+        maxWidth: 430,
+        margin: "0 auto",
       }}
     >
       {/* Header */}
@@ -219,14 +221,11 @@ export default function ExecutiveDashboard({
         <div
           style={{
             display: "flex",
-            flexWrap: "nowrap",
+            flexWrap: "wrap",
+            justifyContent: "center",
             gap: 8,
-            overflowX: "auto",
-            WebkitOverflowScrolling: "touch",
             paddingBottom: 6,
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-          } as React.CSSProperties}
+          }}
         >
           {companies.map((c) => (
             <button

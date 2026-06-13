@@ -228,13 +228,6 @@ export default function SettingsPage() {
                   onChange={handleLogoFile}
                   className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-slate-300 outline-none focus:border-blue-500 file:mr-3 file:rounded file:border-0 file:bg-slate-700 file:px-3 file:py-1 file:text-sm file:text-slate-200"
                 />
-                <p className="mt-1 text-xs text-slate-500">O pega una URL directamente:</p>
-                <input
-                  value={settings.logoUrl}
-                  onChange={(e) => setSettings({ ...settings, logoUrl: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
-                  placeholder="https://example.com/logo.png"
-                />
                 {settings.logoUrl && (
                   <div className="mt-2">
                     <img src={settings.logoUrl} alt="Logo preview" className="h-12 rounded" onError={(e) => (e.currentTarget.style.display = 'none')} />

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { execPublicApi } from "./execApi";
-import { useBrandingStore } from "../../core/store/useBrandingStore";
 import type { ExecConfig } from "./ExecutivePage";
 import { getTheme } from "./theme";
 
@@ -14,7 +13,8 @@ const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "del"];
 
 export default function ExecutiveLogin({ onLogin, config }: Props) {
   const t = getTheme(config.theme);
-  const { systemName, logoUrl } = useBrandingStore();
+  const [brandLogo, setBrandLogo] = useState("");
+  const [brandName, setBrandName] = useState("Vista Ejecutiva");
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -22,15 +22,10 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
     execPublicApi
       .get(`/tenant-settings/${stored}`)
       .then((r) => {
-        console.log("tenant-settings response:", r.data);
         if (r.data) {
-          const { name, accentColor } = r.data;
           const lu = r.data.logoUrl || r.data.logo_url || r.data.logoURL || "";
-          useBrandingStore.getState().update(
-            name || "Vista Ejecutiva",
-            lu,
-            accentColor || "#2563eb",
-          );
+          setBrandLogo(lu);
+          setBrandName(r.data.name || "Vista Ejecutiva");
         }
       })
       .catch(() => {});
@@ -109,14 +104,14 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
           gap: 12,
         }}
       >
-        {logoUrl ? (
+        {brandLogo ? (
           <>
             <img
-              src={logoUrl}
+              src={brandLogo}
               alt="logo"
               style={{ maxHeight: 80, maxWidth: "80%", objectFit: "contain" }}
             />
-            {systemName && (
+            {brandName && (
               <p
                 style={{
                   color: t.secondary,
@@ -126,7 +121,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
                   textAlign: "center",
                 }}
               >
-                {systemName}
+                {brandName}
               </p>
             )}
           </>
@@ -141,7 +136,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
               lineHeight: 1.25,
             }}
           >
-            {systemName || "Vista Ejecutiva"}
+            {brandName}
           </p>
         )}
       </div>

@@ -48,8 +48,9 @@ export default function ExecutiveReport({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [period, setPeriod] = useState<Period>("Semana");
+  const [giroDetected, setGiroDetected] = useState<"restaurant" | "retail" | "default">("default");
 
-  const showPeriodSelector = module === "VENTA";
+  const showPeriodSelector = module === "VENTA" && giroDetected === "default";
   const showChart = module === "FLUJO" && chartDays !== null;
 
   useEffect(() => {
@@ -66,36 +67,110 @@ export default function ExecutiveReport({
         let chart: { day: string; value: number }[] | null = null;
 
         if (module === "VENTA") {
-          const [kpisData, movsData] = await Promise.all([
-            eApi.get("/dashboard/kpis", { params: { period: PERIOD_PARAM[period] } })
-              .then((r) => r.data),
-            eApi.get("/movements").then((r) => r.data).catch(() => []),
-          ]);
+          const RESTAURANT_KEYS = ["restaurante","restaurant","food","alimento","cocina","bar","café","cafeteria"];
+          const RETAIL_KEYS = ["retail","comercio","tienda"];
 
-          val = Number(kpisData.income || 0);
+          let giro: "restaurant" | "retail" | "default" = "default";
+          if (selectedCompanyId) {
+            const compData = await eApi.get(`/companies/${selectedCompanyId}`)
+              .then((r) => r.data).catch(() => null);
+            if (compData) {
+              const g = (compData.giro || compData.businessType || compData.tipo || "").toLowerCase();
+              if (RESTAURANT_KEYS.some((k) => g.includes(k))) giro = "restaurant";
+              else if (RETAIL_KEYS.some((k) => g.includes(k))) giro = "retail";
+            }
+          }
+          setGiroDetected(giro);
 
-          const allMovs = Array.isArray(movsData) ? movsData : [];
-          const incomes = allMovs.filter((m: any) => m.type === "INCOME");
+          if (giro === "restaurant") {
+            const salesData = await eApi.get("/pos/sales").then((r) => r.data).catch(() => null);
+            const allSales = Array.isArray(salesData) ? salesData : [];
+            val = allSales.reduce((s: number, sale: any) => s + Number(sale.total || 0), 0);
+            const ticketProm = allSales.length > 0 ? Math.round(val / allSales.length) : 0;
 
-          const todayStart = new Date();
-          todayStart.setHours(0, 0, 0, 0);
-          const todayVal = incomes
-            .filter((m: any) => new Date(m.date || m.createdAt) >= todayStart)
-            .reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
+            const todayStr = new Date().toISOString().slice(0, 10);
+            const yd = new Date(); yd.setDate(yd.getDate() - 1);
+            const yesterdayStr = yd.toISOString().slice(0, 10);
 
-          const conceptMap: Record<string, number> = {};
-          incomes.forEach((m: any) => {
-            const k = m.concept || m.description || "Sin concepto";
-            conceptMap[k] = (conceptMap[k] || 0) + Number(m.amount || 0);
-          });
-          const top3 = Object.entries(conceptMap)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 3);
+            const hoy = allSales
+              .filter((s: any) => (s.date || s.createdAt || "").slice(0, 10) === todayStr)
+              .reduce((s: number, sale: any) => s + Number(sale.total || 0), 0);
+            const ayer = allSales
+              .filter((s: any) => (s.date || s.createdAt || "").slice(0, 10) === yesterdayStr)
+              .reduce((s: number, sale: any) => s + Number(sale.total || 0), 0);
 
-          items = [
-            { label: "HOY", value: fmt(todayVal) },
-            ...top3.map(([k, v]) => ({ label: k.toUpperCase().slice(0, 18), value: fmt(v) })),
-          ];
+            const productMap: Record<string, number> = {};
+            allSales.forEach((sale: any) => {
+              const saleItems = sale.items || sale.productos || [];
+              if (Array.isArray(saleItems)) {
+                saleItems.forEach((item: any) => {
+                  const name = item.productName || item.nombre || item.product || "Producto";
+                  productMap[name] = (productMap[name] || 0) + Number(item.quantity || item.cantidad || 1);
+                });
+              }
+            });
+            const top2 = Object.entries(productMap).sort((a, b) => b[1] - a[1]).slice(0, 2);
+
+            setMainDesc("Ventas punto de venta");
+            items = [
+              { label: "TICKET PROMEDIO", value: fmt(ticketProm) },
+              { label: "VENTAS HOY", value: fmt(hoy) },
+              { label: "VENTAS AYER", value: fmt(ayer) },
+              ...top2.map(([name, qty]) => ({ label: name.toUpperCase().slice(0, 18), value: `×${qty}` })),
+            ];
+          } else if (giro === "retail") {
+            const [kpisData, movsData] = await Promise.all([
+              eApi.get("/dashboard/kpis").then((r) => r.data).catch(() => ({})),
+              eApi.get("/movements").then((r) => r.data).catch(() => []),
+            ]);
+            val = Number(kpisData.income || 0);
+
+            const incomes = Array.isArray(movsData)
+              ? movsData.filter((m: any) => m.type === "INCOME")
+              : [];
+            const conceptMap: Record<string, number> = {};
+            incomes.forEach((m: any) => {
+              const k = m.concept || m.description || "Sin concepto";
+              conceptMap[k] = (conceptMap[k] || 0) + Number(m.amount || 0);
+            });
+            const topEntry = Object.entries(conceptMap).sort((a, b) => b[1] - a[1])[0];
+
+            items = [
+              { label: "MARGEN EST.", value: fmt(Math.round(val * 0.4)) },
+              {
+                label: topEntry ? topEntry[0].toUpperCase().slice(0, 18) : "SIN DATOS",
+                value: topEntry ? fmt(topEntry[1]) : "—",
+              },
+            ];
+          } else {
+            const [kpisData, movsData] = await Promise.all([
+              eApi.get("/dashboard/kpis", { params: { period: PERIOD_PARAM[period] } })
+                .then((r) => r.data),
+              eApi.get("/movements").then((r) => r.data).catch(() => []),
+            ]);
+
+            val = Number(kpisData.income || 0);
+            const allMovs = Array.isArray(movsData) ? movsData : [];
+            const incomes = allMovs.filter((m: any) => m.type === "INCOME");
+
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+            const todayVal = incomes
+              .filter((m: any) => new Date(m.date || m.createdAt) >= todayStart)
+              .reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
+
+            const conceptMap: Record<string, number> = {};
+            incomes.forEach((m: any) => {
+              const k = m.concept || m.description || "Sin concepto";
+              conceptMap[k] = (conceptMap[k] || 0) + Number(m.amount || 0);
+            });
+            const top3 = Object.entries(conceptMap).sort((a, b) => b[1] - a[1]).slice(0, 3);
+
+            items = [
+              { label: "HOY", value: fmt(todayVal) },
+              ...top3.map(([k, v]) => ({ label: k.toUpperCase().slice(0, 18), value: fmt(v) })),
+            ];
+          }
         }
 
         else if (module === "COSTO") {
