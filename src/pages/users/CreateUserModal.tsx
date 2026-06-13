@@ -9,6 +9,7 @@ interface User {
   roleCode?: string;
   branchId?: string;
   isActive: boolean;
+  executivePin?: string;
 }
 
 interface Props {
@@ -38,6 +39,7 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
   const [roleCode, setRoleCode] = useState("USER");
   const [branchId, setBranchId] = useState("");
   const [isActive, setIsActive] = useState(true);
+  const [executivePin, setExecutivePin] = useState("");
   const [roles, setRoles] = useState<Role[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(false);
@@ -60,6 +62,7 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
       setRoleCode(user.roleCode || "USER");
       setBranchId(user.branchId || "");
       setIsActive(user.isActive);
+      setExecutivePin(user.executivePin || "");
       setPassword("");
     } else {
       setFirstName("");
@@ -70,6 +73,7 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
       setRoleCode("USER");
       setBranchId("");
       setIsActive(true);
+      setExecutivePin("");
     }
   }, [user, open]);
 
@@ -104,12 +108,15 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
 
       const fullName = `${firstName} ${lastName}`.trim();
 
+      const isExecRole = roleCode === "ADMIN" || roleCode === "GERENTE";
+
       if (user) {
         await api.put(`/users/${user.id}`, {
           name: fullName,
           roleId: roleId || undefined,
           roleCode,
           isActive,
+          ...(isExecRole ? { executivePin: executivePin || undefined } : {}),
         });
       } else {
         await api.post("/users", {
@@ -119,6 +126,7 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
           roleId: roleId || undefined,
           roleCode,
           branchId: branchId || undefined,
+          ...(isExecRole ? { executivePin: executivePin || undefined } : {}),
         });
       }
 
@@ -133,6 +141,7 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
       setRoleCode("USER");
       setBranchId("");
       setIsActive(true);
+      setExecutivePin("");
     } catch (err: any) {
       setError(err.response?.data?.message || "No fue posible guardar el usuario");
     } finally {
@@ -241,6 +250,23 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
                   </option>
                 ))}
               </select>
+            )}
+
+            {(roleCode === "ADMIN" || roleCode === "GERENTE") && (
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">PIN Ejecutivo (4 dígitos)</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]{4}"
+                  maxLength={4}
+                  value={executivePin}
+                  onChange={(e) => setExecutivePin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                  placeholder="1234"
+                  className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                />
+                <p className="text-xs text-slate-500 mt-1">Se usa para acceder a la vista ejecutiva móvil</p>
+              </div>
             )}
 
             {user && (
