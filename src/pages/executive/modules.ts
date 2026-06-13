@@ -7,14 +7,15 @@ export interface ModuleDef {
 }
 
 export const MODULES: ModuleDef[] = [
-  { key: "VENTAS",      label: "VENTAS",      desc: "Ingresos del período",     format: "currency", positiveGood: true  },
-  { key: "SALDOS",      label: "SALDOS",      desc: "Saldo total en cuentas",   format: "currency", positiveGood: true  },
-  { key: "COSTOS",      label: "COSTOS",      desc: "Costo de ventas",          format: "currency", positiveGood: false },
-  { key: "GASTOS",      label: "GASTOS",      desc: "Egresos del período",      format: "currency", positiveGood: false },
-  { key: "NOMINA",      label: "NÓMINA",      desc: "Nómina quincenal activa",  format: "currency", positiveGood: null  },
-  { key: "PRESUPUESTO", label: "PRESUPUESTO", desc: "Presupuesto asignado",     format: "currency", positiveGood: null  },
-  { key: "ROTACION",    label: "ROTACIÓN",    desc: "Empleados con baja",       format: "percent",  positiveGood: false },
-  { key: "VACANTES",    label: "VACANTES",    desc: "Posiciones abiertas",      format: "number",   positiveGood: null  },
+  { key: "VENTA",       label: "VENTA",       desc: "Total ventas del período",   format: "currency", positiveGood: true  },
+  { key: "COSTO",       label: "COSTO",       desc: "Costo de ventas",            format: "currency", positiveGood: false },
+  { key: "GASTO",       label: "GASTO",       desc: "Egresos del período",        format: "currency", positiveGood: false },
+  { key: "PRESUPUESTO", label: "PRESUPUESTO", desc: "Presupuesto asignado",       format: "currency", positiveGood: null  },
+  { key: "FLUJO",       label: "FLUJO",       desc: "Flujo neto del período",     format: "currency", positiveGood: true  },
+  { key: "BANCO",       label: "BANCO",       desc: "Saldo total en cuentas",     format: "currency", positiveGood: true  },
+  { key: "NOMINA",      label: "NÓMINA",      desc: "Nómina quincenal activa",    format: "currency", positiveGood: null  },
+  { key: "VACANTES",    label: "VACANTES",    desc: "Posiciones abiertas",        format: "number",   positiveGood: null  },
+  { key: "ROTACION",    label: "ROTACIÓN",    desc: "Tasa de rotación",           format: "percent",  positiveGood: false },
 ];
 
 export function fmtValue(v: number, format: ModuleDef["format"]): string {

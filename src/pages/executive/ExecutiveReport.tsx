@@ -20,61 +20,268 @@ interface Props {
   onAuthError: () => void;
 }
 
+interface SubItem {
+  label: string;
+  value: string;
+}
+
+type Period = "Semana" | "Quincena" | "Mes";
+
+const PERIOD_DAYS: Record<Period, number> = { Semana: 7, Quincena: 15, Mes: 30 };
 const CHART_WEIGHTS = [0.85, 1.10, 0.95, 1.20, 1.05, 0.70, 0.90];
-const DAYS = ["L", "M", "X", "J", "V", "S", "D"];
+const CHART_DAYS = ["L", "M", "X", "J", "V", "S", "D"];
+
+function fmt(v: number) {
+  return "$" + v.toLocaleString("es-MX", { maximumFractionDigits: 0 });
+}
+
+function cutoffDate(days: number): Date {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return d;
+}
 
 export default function ExecutiveReport({ token, module, config, onBack, onAuthError }: Props) {
   const t = getTheme(config.theme);
   const modDef = MODULES.find((m) => m.key === module) ?? MODULES[0];
-  const [value, setValue] = useState(0);
-  const [variation, setVariation] = useState<number | null>(null);
+  const [mainValue, setMainValue] = useState(0);
+  const [subItems, setSubItems] = useState<SubItem[]>([]);
+  const [chartDays, setChartDays] = useState<{ day: string; value: number }[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [period, setPeriod] = useState<Period>("Semana");
 
   useEffect(() => {
     const eApi = execApi(token);
+    setLoading(true);
+    setError("");
+    setChartDays(null);
 
     async function load() {
       try {
         let val = 0;
-        let varPct: number | null = null;
+        let items: SubItem[] = [];
+        let chart: { day: string; value: number }[] | null = null;
 
-        if (module === "VENTAS" || module === "GASTOS") {
-          const type = module === "VENTAS" ? "INCOME" : "EXPENSE";
-          // Primary call — let errors surface
+        if (module === "VENTA") {
           const movs = await eApi.get("/movements").then((r) => r.data);
-          const list = Array.isArray(movs) ? movs.filter((m: any) => m.type === type) : [];
-          val = list.reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
-          // Secondary call — optional, swallow quietly
-          const kpis = await eApi.get("/dashboard/kpis").then((r) => r.data).catch(() => ({}));
-          varPct = module === "VENTAS"
-            ? Number(kpis.incomeVariation || 0)
-            : Number(kpis.expenseVariation || 0);
-        } else if (module === "SALDOS") {
-          const banks = await eApi.get("/banks").then((r) => r.data);
-          val = Array.isArray(banks)
-            ? banks.reduce((s: number, b: any) => s + Number(b.balance || 0), 0)
-            : 0;
-        } else if (module === "NOMINA") {
-          const emps = await eApi.get("/hr/employees").then((r) => r.data);
-          const activos = Array.isArray(emps) ? emps.filter((e: any) => e.status === "ACTIVO") : [];
-          val = activos.reduce((s: number, e: any) => s + Number(e.salarioQuincenal || 0), 0);
-        } else if (module === "ROTACION" || module === "VACANTES") {
-          const emps = await eApi.get("/hr/employees").then((r) => r.data);
-          const list = Array.isArray(emps) ? emps : [];
-          if (module === "ROTACION") {
-            const bajas = list.filter((e: any) => e.status === "BAJA");
-            val = list.length > 0 ? Math.round((bajas.length / list.length) * 100) : 0;
-          } else {
-            val = list.filter((e: any) => e.status === "VACANTE").length;
-          }
-        } else {
-          // COSTOS / PRESUPUESTO — no endpoint yet, show 0
-          val = 0;
+          const incomes = Array.isArray(movs)
+            ? movs.filter((m: any) => m.type === "INCOME")
+            : [];
+
+          const cutoff = cutoffDate(PERIOD_DAYS[period]);
+          const periodMovs = incomes.filter((m: any) => new Date(m.date || m.createdAt) >= cutoff);
+          val = periodMovs.reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
+
+          const todayStart = new Date();
+          todayStart.setHours(0, 0, 0, 0);
+          const todayVal = incomes
+            .filter((m: any) => new Date(m.date || m.createdAt) >= todayStart)
+            .reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
+
+          const conceptMap: Record<string, number> = {};
+          periodMovs.forEach((m: any) => {
+            const k = m.concept || m.description || "Sin concepto";
+            conceptMap[k] = (conceptMap[k] || 0) + Number(m.amount || 0);
+          });
+          const top3 = Object.entries(conceptMap)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3);
+
+          items = [
+            { label: "HOY", value: fmt(todayVal) },
+            ...top3.map(([k, v]) => ({
+              label: k.toUpperCase().slice(0, 16),
+              value: fmt(v),
+            })),
+          ];
         }
 
-        setValue(val);
-        setVariation(varPct);
+        else if (module === "COSTO") {
+          const [movs, insumosData, recipesData] = await Promise.all([
+            eApi.get("/movements").then((r) => r.data),
+            eApi.get("/costs/insumos").then((r) => r.data).catch(() => null),
+            eApi.get("/costs/recipes").then((r) => r.data).catch(() => null),
+          ]);
+
+          const allMovs = Array.isArray(movs) ? movs : [];
+          const expenses = allMovs.filter((m: any) => m.type === "EXPENSE");
+          const incomes = allMovs.filter((m: any) => m.type === "INCOME");
+          val = expenses.reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
+          const totalIncome = incomes.reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
+          const margin = totalIncome - val;
+          const marginPct = totalIncome > 0 ? Math.round((margin / totalIncome) * 100) : 0;
+
+          const insumos = Array.isArray(insumosData) ? insumosData : [];
+          const recipes = Array.isArray(recipesData) ? recipesData : [];
+          const topInsumo = [...insumos].sort(
+            (a: any, b: any) => Number(b.costoUnitario || 0) - Number(a.costoUnitario || 0),
+          )[0];
+          const topRecipe = [...recipes].sort(
+            (a: any, b: any) => Number(b.costoTotal || 0) - Number(a.costoTotal || 0),
+          )[0];
+
+          items = [
+            {
+              label: "INSUMO MAYOR COSTO",
+              value: topInsumo
+                ? `${(topInsumo.nombre || "—").slice(0, 12)} — ${fmt(Number(topInsumo.costoUnitario || 0))}`
+                : "N/D",
+            },
+            {
+              label: "RECETA MAYOR COSTO",
+              value: topRecipe
+                ? `${(topRecipe.nombre || "—").slice(0, 12)} — ${fmt(Number(topRecipe.costoTotal || 0))}`
+                : "N/D",
+            },
+            { label: "MARGEN BRUTO", value: fmt(margin) },
+            { label: "% MARGEN", value: `${marginPct}%` },
+          ];
+        }
+
+        else if (module === "GASTO") {
+          const movs = await eApi.get("/movements").then((r) => r.data);
+          const expenses = Array.isArray(movs)
+            ? movs.filter((m: any) => m.type === "EXPENSE")
+            : [];
+          val = expenses.reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
+
+          const catMap: Record<string, number> = {};
+          expenses.forEach((m: any) => {
+            const k = (m.category || "OTROS").toUpperCase();
+            catMap[k] = (catMap[k] || 0) + Number(m.amount || 0);
+          });
+          const topCats = Object.entries(catMap)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 2);
+
+          const conMap: Record<string, number> = {};
+          expenses.forEach((m: any) => {
+            const k = m.concept || m.description || "Sin concepto";
+            conMap[k] = (conMap[k] || 0) + Number(m.amount || 0);
+          });
+          const top2Con = Object.entries(conMap)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 2);
+
+          items = [
+            ...topCats.map(([k, v]) => ({ label: k.slice(0, 16), value: fmt(v) })),
+            ...top2Con.map(([k, v]) => ({ label: k.toUpperCase().slice(0, 16), value: fmt(v) })),
+          ];
+        }
+
+        else if (module === "PRESUPUESTO") {
+          val = 0;
+          items = [
+            { label: "EJECUTADO", value: "$0" },
+            { label: "DISPONIBLE", value: "$0" },
+            { label: "ESTADO", value: "En desarrollo" },
+          ];
+        }
+
+        else if (module === "FLUJO") {
+          const movs = await eApi.get("/movements").then((r) => r.data);
+          const allMovs = Array.isArray(movs) ? movs : [];
+          const totalIncome = allMovs
+            .filter((m: any) => m.type === "INCOME")
+            .reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
+          const totalExpense = allMovs
+            .filter((m: any) => m.type === "EXPENSE")
+            .reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
+          val = totalIncome - totalExpense;
+
+          items = [
+            { label: "INGRESOS", value: fmt(totalIncome) },
+            { label: "EGRESOS", value: fmt(totalExpense) },
+          ];
+
+          const base = Math.max(Math.abs(val) / 7, 1000);
+          chart = CHART_WEIGHTS.map((w, i) => ({
+            day: CHART_DAYS[i],
+            value: Math.round(base * w),
+          }));
+        }
+
+        else if (module === "BANCO") {
+          const banks = await eApi.get("/banks").then((r) => r.data);
+          const list = Array.isArray(banks) ? banks : [];
+          val = list.reduce((s: number, b: any) => s + Number(b.balance || 0), 0);
+
+          const sorted = [...list].sort(
+            (a: any, b: any) => Number(b.balance || 0) - Number(a.balance || 0),
+          );
+          items = sorted.slice(0, 5).map((b: any) => ({
+            label: (b.bank || b.name || "CUENTA").toUpperCase().slice(0, 16),
+            value: fmt(Number(b.balance || 0)),
+          }));
+          if (items.length === 0) {
+            items = [{ label: "SIN CUENTAS", value: "—" }];
+          }
+        }
+
+        else if (module === "NOMINA") {
+          const emps = await eApi.get("/hr/employees").then((r) => r.data);
+          const list = Array.isArray(emps) ? emps : [];
+          const activos = list.filter((e: any) => e.status === "ACTIVO");
+          val = activos.reduce((s: number, e: any) => s + Number(e.salarioQuincenal || 0), 0);
+          const promedio = activos.length > 0 ? Math.round(val / activos.length) : 0;
+
+          const top3 = [...activos]
+            .sort((a: any, b: any) => Number(b.salarioQuincenal || 0) - Number(a.salarioQuincenal || 0))
+            .slice(0, 3);
+
+          items = [
+            { label: "EMPLEADOS ACTIVOS", value: activos.length.toString() },
+            { label: "PROMEDIO", value: fmt(promedio) },
+            ...top3.map((e: any) => ({
+              label: `${e.nombre || ""} ${e.apellidos || ""}`.trim().toUpperCase().slice(0, 16) || "EMPLEADO",
+              value: fmt(Number(e.salarioQuincenal || 0)),
+            })),
+          ];
+        }
+
+        else if (module === "VACANTES") {
+          const emps = await eApi.get("/hr/employees").then((r) => r.data);
+          const list = Array.isArray(emps) ? emps : [];
+          const vacantes = list.filter((e: any) => e.status === "VACANTE");
+          val = vacantes.length;
+
+          items = vacantes.slice(0, 5).map((e: any) => ({
+            label: (e.puesto || e.position || "VACANTE").toUpperCase().slice(0, 16),
+            value: (e.departamento || e.department || "—").slice(0, 14),
+          }));
+          if (items.length === 0) {
+            items = [{ label: "VACANTES ABIERTAS", value: "Ninguna" }];
+          }
+        }
+
+        else if (module === "ROTACION") {
+          const emps = await eApi.get("/hr/employees").then((r) => r.data);
+          const list = Array.isArray(emps) ? emps : [];
+          const bajas = list.filter((e: any) => e.status === "BAJA");
+          val = list.length > 0 ? Math.round((bajas.length / list.length) * 100) : 0;
+
+          const ultimas3 = [...bajas]
+            .sort((a: any, b: any) => {
+              const da = new Date(a.updatedAt || a.createdAt || 0).getTime();
+              const db = new Date(b.updatedAt || b.createdAt || 0).getTime();
+              return db - da;
+            })
+            .slice(0, 3);
+
+          items = [
+            { label: "TOTAL EMPLEADOS", value: list.length.toString() },
+            { label: "BAJAS", value: bajas.length.toString() },
+            ...ultimas3.map((e: any) => ({
+              label: `${e.nombre || ""} ${e.apellidos || ""}`.trim().toUpperCase().slice(0, 16) || "EMPLEADO",
+              value: (e.puesto || e.position || "—").slice(0, 14),
+            })),
+          ];
+        }
+
+        setMainValue(val);
+        setSubItems(items);
+        setChartDays(chart);
       } catch (err: any) {
         if (err.response?.status === 401) { onAuthError(); return; }
         const status = err.response?.status;
@@ -86,13 +293,10 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
     }
 
     load();
-  }, [token, module]);
+  }, [token, module, period]);
 
-  const base = value / 7;
-  const chartData = CHART_WEIGHTS.map((w, i) => ({
-    day: DAYS[i],
-    value: Math.round(base * w),
-  }));
+  const showPeriodSelector = module === "VENTA";
+  const showChart = module === "FLUJO" && chartDays !== null;
 
   return (
     <div
@@ -115,7 +319,14 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
           alignItems: "center",
         }}
       >
-        <p style={{ color: t.secondary, fontSize: 11, letterSpacing: "0.12em" }}>
+        <p
+          style={{
+            color: t.secondary,
+            fontSize: 11,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+          }}
+        >
           {modDef.label}
         </p>
         <button
@@ -128,6 +339,7 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
             cursor: "pointer",
             fontFamily: "'Inter', sans-serif",
             padding: 0,
+            WebkitTapHighlightColor: "transparent",
           }}
         >
           Volver
@@ -139,8 +351,20 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
           <p style={{ color: t.secondary, fontSize: 13 }}>Cargando...</p>
         </div>
       ) : error ? (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 32px", gap: 16 }}>
-          <p style={{ color: "#EF4444", fontSize: 13, textAlign: "center", lineHeight: 1.6 }}>{error}</p>
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "0 32px",
+            gap: 16,
+          }}
+        >
+          <p style={{ color: "#EF4444", fontSize: 13, textAlign: "center", lineHeight: 1.6 }}>
+            {error}
+          </p>
           <button
             onClick={onBack}
             style={{
@@ -163,72 +387,147 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
           <div
             style={{
               flexShrink: 0,
-              padding: "28px 24px 4px",
+              padding: "16px 24px 0",
               textAlign: "center",
             }}
           >
             <p
               style={{
                 color: t.text,
-                fontSize: "4rem",
+                fontSize: "3.5rem",
                 fontWeight: 200,
                 lineHeight: 1,
+                letterSpacing: "-0.01em",
               }}
             >
-              {fmtValue(value, modDef.format)}
+              {fmtValue(mainValue, modDef.format)}
             </p>
-            {variation !== null && (
-              <p
-                style={{
-                  color: variation >= 0 ? "#22C55E" : "#EF4444",
-                  fontSize: 14,
-                  marginTop: 10,
-                  fontWeight: 300,
-                }}
-              >
-                {variation >= 0 ? "+" : ""}
-                {variation.toFixed(1)}%
-              </p>
-            )}
-            <p style={{ color: t.secondary, fontSize: 12, marginTop: 6 }}>
+            <p
+              style={{
+                color: t.secondary,
+                fontSize: "0.7rem",
+                marginTop: 6,
+                letterSpacing: "0.06em",
+              }}
+            >
               {modDef.desc}
             </p>
           </div>
 
-          {/* Chart fills remaining space */}
+          {/* Period selector — VENTA only */}
+          {showPeriodSelector && (
+            <div
+              style={{
+                flexShrink: 0,
+                display: "flex",
+                justifyContent: "center",
+                gap: 24,
+                padding: "12px 24px 0",
+              }}
+            >
+              {(["Semana", "Quincena", "Mes"] as Period[]).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPeriod(p)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    borderBottom: `1px solid ${period === p ? t.accent : "transparent"}`,
+                    color: period === p ? t.text : t.secondary,
+                    fontSize: "0.65rem",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    padding: "4px 0",
+                    cursor: "pointer",
+                    fontFamily: "'Inter', sans-serif",
+                    WebkitTapHighlightColor: "transparent",
+                  }}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Sub-items + optional chart */}
           <div
             style={{
               flex: 1,
-              padding: "20px 8px 32px",
+              display: "flex",
+              flexDirection: "column",
               minHeight: 0,
+              padding: showChart ? "16px 24px 8px" : "16px 24px 24px",
             }}
           >
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={chartData}
-                margin={{ top: 4, right: 8, left: 8, bottom: 0 }}
-              >
-                <XAxis
-                  dataKey="day"
-                  tick={{ fill: t.secondary, fontSize: 11 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis hide />
-                <Tooltip
-                  formatter={(v: number) => [fmtValue(v, modDef.format), modDef.label]}
-                  contentStyle={{
-                    background: t.card,
-                    border: `1px solid ${t.border}`,
-                    borderRadius: 6,
-                    color: t.text,
-                    fontSize: 11,
+            {subItems.map((item, i) => {
+              const isLast = i === subItems.length - 1;
+              return (
+                <div
+                  key={i}
+                  style={{
+                    flex: showChart ? "0 0 auto" : 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    borderBottom: !isLast ? `1px solid ${t.border}` : "none",
+                    padding: showChart ? "10px 0" : "0",
+                    minHeight: 0,
                   }}
-                  cursor={{ fill: t.bg + "80" }}
-                />
-                <Bar dataKey="value" fill={t.accent} radius={[3, 3, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+                >
+                  <span
+                    style={{
+                      color: t.secondary,
+                      fontSize: "0.65rem",
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {item.label}
+                  </span>
+                  <span
+                    style={{
+                      color: t.text,
+                      fontSize: "0.9rem",
+                      fontWeight: 300,
+                    }}
+                  >
+                    {item.value}
+                  </span>
+                </div>
+              );
+            })}
+
+            {/* Chart — FLUJO only */}
+            {showChart && (
+              <div style={{ flex: 1, minHeight: 0, paddingTop: 8 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={chartDays!}
+                    margin={{ top: 4, right: 4, left: 4, bottom: 0 }}
+                  >
+                    <XAxis
+                      dataKey="day"
+                      tick={{ fill: t.secondary, fontSize: 11 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis hide />
+                    <Tooltip
+                      formatter={(v: number) => [fmt(v), "Flujo"]}
+                      contentStyle={{
+                        background: t.card,
+                        border: `1px solid ${t.border}`,
+                        borderRadius: 6,
+                        color: t.text,
+                        fontSize: 11,
+                      }}
+                      cursor={{ fill: t.bg + "80" }}
+                    />
+                    <Bar dataKey="value" fill={t.accent} radius={[3, 3, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
           </div>
         </>
       )}

@@ -13,8 +13,8 @@ export interface ExecConfig {
 export const DEFAULT_CONFIG: ExecConfig = {
   theme: "dark",
   modules: {
-    VENTAS: true, SALDOS: true, COSTOS: true, GASTOS: true,
-    NOMINA: true, PRESUPUESTO: true, ROTACION: true, VACANTES: true,
+    VENTA: true, COSTO: true, GASTO: true, PRESUPUESTO: true,
+    FLUJO: true, BANCO: true, NOMINA: true, VACANTES: true, ROTACION: true,
   },
 };
 
@@ -75,6 +75,7 @@ export default function ExecutivePage() {
   if (view === "report" && activeModule) {
     return (
       <ExecutiveReport
+        key={activeModule}
         token={token}
         module={activeModule}
         config={config}
