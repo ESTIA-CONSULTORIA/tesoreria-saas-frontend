@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
+import useDebounce from "../../core/hooks/useDebounce";
 import ImportModal from "./ImportModal";
 import ExecutiveKPI from "../../components/ExecutiveKPI";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
@@ -68,16 +69,18 @@ export default function ReconciliationPage() {
     concept: "",
   });
 
+  const debouncedFilters = useDebounce(filters, 400);
+
   useEffect(() => {
     loadData();
-  }, [filters, activeCompany?.id]);
+  }, [debouncedFilters, activeCompany?.id]);
 
   async function loadData() {
     try {
       setLoading(true);
       setError("");
       const [dataRes, summaryRes] = await Promise.all([
-        api.get("/reconciliation/data", { params: filters }),
+        api.get("/reconciliation/data", { params: debouncedFilters }),
         api.get("/reconciliation/summary"),
       ]);
       setReconciliationData(dataRes.data);

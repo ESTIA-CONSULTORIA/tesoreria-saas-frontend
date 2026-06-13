@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
+import useDebounce from "../../core/hooks/useDebounce";
 import CreateSupplierModal from "./CreateSupplierModal";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
 
@@ -32,18 +33,19 @@ export default function SuppliersPage() {
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
   const [filterActive, setFilterActive] = useState<string>("");
 
   useEffect(() => {
     loadSuppliers();
-  }, [search, filterActive, activeCompany?.id]);
+  }, [debouncedSearch, filterActive, activeCompany?.id]);
 
   async function loadSuppliers() {
     try {
       setLoading(true);
       setError("");
       const response = await api.get("/suppliers", {
-        params: { search, isActive: filterActive },
+        params: { search: debouncedSearch, isActive: filterActive },
       });
       setSuppliers(Array.isArray(response.data) ? response.data : []);
     } catch (err: any) {

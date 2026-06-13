@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
+import useDebounce from "../../core/hooks/useDebounce";
 import CreateMovementModal from "./CreateMovementModal";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
 import { useAuthStore } from "../../core/store/useAuthStore";
@@ -43,6 +44,7 @@ export default function MovementsPage() {
   const [accountId, setAccountId] = useState("");
   const [type, setType] = useState("");
   const [category, setCategory] = useState("");
+  const debouncedCategory = useDebounce(category, 400);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [page, setPage] = useState(1);
@@ -55,7 +57,7 @@ export default function MovementsPage() {
 
   useEffect(() => {
     loadMovements();
-  }, [accountId, type, category, startDate, endDate, page, activeBranch?.id, activeCompany?.id]);
+  }, [accountId, type, debouncedCategory, startDate, endDate, page, activeBranch?.id, activeCompany?.id]);
 
   async function loadAccounts() {
     try {
@@ -71,7 +73,7 @@ export default function MovementsPage() {
       setLoading(true);
       setError("");
       const response = await api.get("/movements", {
-        params: { accountId, type, category, startDate, endDate, page, limit },
+        params: { accountId, type, category: debouncedCategory, startDate, endDate, page, limit },
       });
       const payload = response.data?.data ? response.data : { data: response.data, totalPages: 1 };
       setMovements(Array.isArray(payload.data) ? payload.data : []);
