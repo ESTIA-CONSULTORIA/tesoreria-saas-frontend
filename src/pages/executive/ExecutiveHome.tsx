@@ -3,14 +3,18 @@ import { useBrandingStore } from "../../core/store/useBrandingStore";
 import { getTheme } from "./theme";
 import { MODULES } from "./modules";
 import type { ExecConfig } from "./ExecutivePage";
+import type { Company } from "./ExecutivePage";
 
 interface Props {
   token: string;
   config: ExecConfig;
+  selectedCompanyId: string | null;
+  companies: Company[];
   onReport: (module: string) => void;
   onConfig: () => void;
   onLogout: () => void;
   onAuthError: () => void;
+  onBack: () => void;
 }
 
 const GRID_ORDER = [
@@ -20,23 +24,23 @@ const GRID_ORDER = [
 ];
 
 export default function ExecutiveHome({
-  config, onReport, onConfig, onLogout,
+  config, companies, selectedCompanyId,
+  onReport, onConfig, onLogout, onBack,
 }: Props) {
   const t = getTheme(config.theme);
   const { systemName } = useBrandingStore();
   const [pressedModule, setPressedModule] = useState<string | null>(null);
 
-  const cellBg = config.theme === "dark" ? "#161616" : "#EFEFEF";
-
-  const today = new Date().toLocaleDateString("es-MX", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
+  const selectedCompany = companies.find((c) => String(c.id) === selectedCompanyId);
+  const headerName = selectedCompany
+    ? (selectedCompany.name || selectedCompany.razonSocial || "")
+    : (systemName || "Vista Ejecutiva");
 
   const visibleKeys = GRID_ORDER.filter(
-    (key) => config.modules[key] !== false && MODULES.some((m) => m.key === key),
+    (key) =>
+      config.modules[key] !== false && MODULES.some((m) => m.key === key),
   );
+  const rows = Math.ceil(visibleKeys.length / 3);
 
   return (
     <div
@@ -49,19 +53,23 @@ export default function ExecutiveHome({
         overflow: "hidden",
       }}
     >
-      {/* Header */}
+      {/* Header — minimal */}
       <div
         style={{
           flexShrink: 0,
-          padding: "24px 24px 16px",
+          padding: "28px 24px 14px",
           textAlign: "center",
         }}
       >
-        <p style={{ color: t.text, fontSize: 15, fontWeight: 400, letterSpacing: "0.02em" }}>
-          {systemName || "Vista Ejecutiva"}
-        </p>
-        <p style={{ color: t.secondary, fontSize: 11, marginTop: 3, letterSpacing: "0.04em" }}>
-          {today}
+        <p
+          style={{
+            color: t.text,
+            fontSize: "0.85rem",
+            fontWeight: 300,
+            letterSpacing: "0.05em",
+          }}
+        >
+          {headerName}
         </p>
       </div>
 
@@ -71,9 +79,9 @@ export default function ExecutiveHome({
           flex: 1,
           display: "grid",
           gridTemplateColumns: "repeat(3, 1fr)",
-          gridTemplateRows: `repeat(${Math.ceil(visibleKeys.length / 3)}, 1fr)`,
-          gap: 2,
-          padding: "0 2px",
+          gridTemplateRows: `repeat(${rows}, 1fr)`,
+          gap: 10,
+          padding: "0 16px",
           minHeight: 0,
         }}
       >
@@ -88,8 +96,10 @@ export default function ExecutiveHome({
               onPointerUp={() => setPressedModule(null)}
               onPointerLeave={() => setPressedModule(null)}
               style={{
-                background: cellBg,
-                border: "none",
+                background: t.card,
+                border: t.cardBorder,
+                boxShadow: t.cardShadow,
+                borderRadius: 10,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -97,21 +107,22 @@ export default function ExecutiveHome({
                 fontFamily: "'Inter', sans-serif",
                 WebkitTapHighlightColor: "transparent",
                 outline: "none",
-                opacity: isPressed ? 0.4 : 1,
-                transition: "opacity 0.08s",
+                opacity: isPressed ? 0.5 : 1,
+                transform: isPressed ? "scale(0.97)" : "scale(1)",
+                transition: "opacity 0.1s, transform 0.1s",
                 minHeight: 0,
                 padding: "8px 4px",
               }}
             >
               <span
                 style={{
-                  color: t.text,
-                  fontSize: "0.7rem",
-                  fontWeight: 300,
-                  letterSpacing: "0.15em",
+                  color: t.accent,
+                  fontSize: "0.65rem",
+                  fontWeight: 400,
+                  letterSpacing: "0.2em",
                   textTransform: "uppercase",
                   textAlign: "center",
-                  lineHeight: 1.3,
+                  lineHeight: 1.4,
                   wordBreak: "break-word",
                 }}
               >
@@ -133,37 +144,58 @@ export default function ExecutiveHome({
         }}
       >
         <button
-          onClick={onConfig}
+          onClick={onBack}
           style={{
             background: "none",
             border: "none",
             color: t.secondary,
-            fontSize: 12,
+            fontSize: "0.6rem",
+            letterSpacing: "0.15em",
+            textTransform: "uppercase",
             cursor: "pointer",
             fontFamily: "'Inter', sans-serif",
-            letterSpacing: "0.04em",
             WebkitTapHighlightColor: "transparent",
             padding: 0,
           }}
         >
-          Configuración
+          ← RESUMEN
         </button>
-        <button
-          onClick={onLogout}
-          style={{
-            background: "none",
-            border: "none",
-            color: t.secondary,
-            fontSize: 12,
-            cursor: "pointer",
-            fontFamily: "'Inter', sans-serif",
-            letterSpacing: "0.04em",
-            WebkitTapHighlightColor: "transparent",
-            padding: 0,
-          }}
-        >
-          Cerrar sesión
-        </button>
+        <div style={{ display: "flex", gap: 16 }}>
+          <button
+            onClick={onConfig}
+            style={{
+              background: "none",
+              border: "none",
+              color: t.secondary,
+              fontSize: "0.6rem",
+              letterSpacing: "0.15em",
+              textTransform: "uppercase",
+              cursor: "pointer",
+              fontFamily: "'Inter', sans-serif",
+              WebkitTapHighlightColor: "transparent",
+              padding: 0,
+            }}
+          >
+            Configuración
+          </button>
+          <button
+            onClick={onLogout}
+            style={{
+              background: "none",
+              border: "none",
+              color: t.secondary,
+              fontSize: "0.6rem",
+              letterSpacing: "0.15em",
+              textTransform: "uppercase",
+              cursor: "pointer",
+              fontFamily: "'Inter', sans-serif",
+              WebkitTapHighlightColor: "transparent",
+              padding: 0,
+            }}
+          >
+            Salir
+          </button>
+        </div>
       </div>
     </div>
   );

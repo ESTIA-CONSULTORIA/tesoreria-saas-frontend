@@ -16,6 +16,7 @@ interface Props {
   token: string;
   module: string;
   config: ExecConfig;
+  selectedCompanyId: string | null;
   onBack: () => void;
   onAuthError: () => void;
 }
@@ -41,7 +42,9 @@ function cutoffDate(days: number): Date {
   return d;
 }
 
-export default function ExecutiveReport({ token, module, config, onBack, onAuthError }: Props) {
+export default function ExecutiveReport({
+  token, module, config, selectedCompanyId, onBack, onAuthError,
+}: Props) {
   const t = getTheme(config.theme);
   const modDef = MODULES.find((m) => m.key === module) ?? MODULES[0];
   const [mainValue, setMainValue] = useState(0);
@@ -51,8 +54,11 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
   const [error, setError] = useState("");
   const [period, setPeriod] = useState<Period>("Semana");
 
+  const showPeriodSelector = module === "VENTA";
+  const showChart = module === "FLUJO" && chartDays !== null;
+
   useEffect(() => {
-    const eApi = execApi(token);
+    const eApi = execApi(token, selectedCompanyId);
     setLoading(true);
     setError("");
     setChartDays(null);
@@ -70,7 +76,9 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
             : [];
 
           const cutoff = cutoffDate(PERIOD_DAYS[period]);
-          const periodMovs = incomes.filter((m: any) => new Date(m.date || m.createdAt) >= cutoff);
+          const periodMovs = incomes.filter(
+            (m: any) => new Date(m.date || m.createdAt) >= cutoff,
+          );
           val = periodMovs.reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
 
           const todayStart = new Date();
@@ -91,7 +99,7 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
           items = [
             { label: "HOY", value: fmt(todayVal) },
             ...top3.map(([k, v]) => ({
-              label: k.toUpperCase().slice(0, 16),
+              label: k.toUpperCase().slice(0, 18),
               value: fmt(v),
             })),
           ];
@@ -125,13 +133,13 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
             {
               label: "INSUMO MAYOR COSTO",
               value: topInsumo
-                ? `${(topInsumo.nombre || "—").slice(0, 12)} — ${fmt(Number(topInsumo.costoUnitario || 0))}`
+                ? `${(topInsumo.nombre || "—").slice(0, 14)} — ${fmt(Number(topInsumo.costoUnitario || 0))}`
                 : "N/D",
             },
             {
               label: "RECETA MAYOR COSTO",
               value: topRecipe
-                ? `${(topRecipe.nombre || "—").slice(0, 12)} — ${fmt(Number(topRecipe.costoTotal || 0))}`
+                ? `${(topRecipe.nombre || "—").slice(0, 14)} — ${fmt(Number(topRecipe.costoTotal || 0))}`
                 : "N/D",
             },
             { label: "MARGEN BRUTO", value: fmt(margin) },
@@ -160,13 +168,13 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
             const k = m.concept || m.description || "Sin concepto";
             conMap[k] = (conMap[k] || 0) + Number(m.amount || 0);
           });
-          const top2Con = Object.entries(conMap)
+          const top2 = Object.entries(conMap)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 2);
 
           items = [
-            ...topCats.map(([k, v]) => ({ label: k.slice(0, 16), value: fmt(v) })),
-            ...top2Con.map(([k, v]) => ({ label: k.toUpperCase().slice(0, 16), value: fmt(v) })),
+            ...topCats.map(([k, v]) => ({ label: k.slice(0, 18), value: fmt(v) })),
+            ...top2.map(([k, v]) => ({ label: k.toUpperCase().slice(0, 18), value: fmt(v) })),
           ];
         }
 
@@ -211,7 +219,7 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
             (a: any, b: any) => Number(b.balance || 0) - Number(a.balance || 0),
           );
           items = sorted.slice(0, 5).map((b: any) => ({
-            label: (b.bank || b.name || "CUENTA").toUpperCase().slice(0, 16),
+            label: (b.bank || b.name || "CUENTA").toUpperCase().slice(0, 18),
             value: fmt(Number(b.balance || 0)),
           }));
           if (items.length === 0) {
@@ -227,14 +235,18 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
           const promedio = activos.length > 0 ? Math.round(val / activos.length) : 0;
 
           const top3 = [...activos]
-            .sort((a: any, b: any) => Number(b.salarioQuincenal || 0) - Number(a.salarioQuincenal || 0))
+            .sort((a: any, b: any) =>
+              Number(b.salarioQuincenal || 0) - Number(a.salarioQuincenal || 0),
+            )
             .slice(0, 3);
 
           items = [
             { label: "EMPLEADOS ACTIVOS", value: activos.length.toString() },
             { label: "PROMEDIO", value: fmt(promedio) },
             ...top3.map((e: any) => ({
-              label: `${e.nombre || ""} ${e.apellidos || ""}`.trim().toUpperCase().slice(0, 16) || "EMPLEADO",
+              label:
+                `${e.nombre || ""} ${e.apellidos || ""}`.trim().toUpperCase().slice(0, 18) ||
+                "EMPLEADO",
               value: fmt(Number(e.salarioQuincenal || 0)),
             })),
           ];
@@ -247,8 +259,8 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
           val = vacantes.length;
 
           items = vacantes.slice(0, 5).map((e: any) => ({
-            label: (e.puesto || e.position || "VACANTE").toUpperCase().slice(0, 16),
-            value: (e.departamento || e.department || "—").slice(0, 14),
+            label: (e.puesto || e.position || "VACANTE").toUpperCase().slice(0, 18),
+            value: (e.departamento || e.department || "—").slice(0, 16),
           }));
           if (items.length === 0) {
             items = [{ label: "VACANTES ABIERTAS", value: "Ninguna" }];
@@ -273,8 +285,10 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
             { label: "TOTAL EMPLEADOS", value: list.length.toString() },
             { label: "BAJAS", value: bajas.length.toString() },
             ...ultimas3.map((e: any) => ({
-              label: `${e.nombre || ""} ${e.apellidos || ""}`.trim().toUpperCase().slice(0, 16) || "EMPLEADO",
-              value: (e.puesto || e.position || "—").slice(0, 14),
+              label:
+                `${e.nombre || ""} ${e.apellidos || ""}`.trim().toUpperCase().slice(0, 18) ||
+                "EMPLEADO",
+              value: (e.puesto || e.position || "—").slice(0, 16),
             })),
           ];
         }
@@ -293,10 +307,7 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
     }
 
     load();
-  }, [token, module, period]);
-
-  const showPeriodSelector = module === "VENTA";
-  const showChart = module === "FLUJO" && chartDays !== null;
+  }, [token, module, period, selectedCompanyId]);
 
   return (
     <div
@@ -319,23 +330,26 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
           alignItems: "center",
         }}
       >
-        <p
+        <span
           style={{
             color: t.secondary,
-            fontSize: 11,
-            letterSpacing: "0.12em",
+            fontSize: "0.65rem",
+            fontWeight: 400,
+            letterSpacing: "0.2em",
             textTransform: "uppercase",
           }}
         >
           {modDef.label}
-        </p>
+        </span>
         <button
           onClick={onBack}
           style={{
             color: t.secondary,
             background: "none",
             border: "none",
-            fontSize: 13,
+            fontSize: "0.65rem",
+            letterSpacing: "0.2em",
+            textTransform: "uppercase",
             cursor: "pointer",
             fontFamily: "'Inter', sans-serif",
             padding: 0,
@@ -387,7 +401,7 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
           <div
             style={{
               flexShrink: 0,
-              padding: "16px 24px 0",
+              padding: "14px 24px 0",
               textAlign: "center",
             }}
           >
@@ -405,7 +419,7 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
             <p
               style={{
                 color: t.secondary,
-                fontSize: "0.7rem",
+                fontSize: "0.65rem",
                 marginTop: 6,
                 letterSpacing: "0.06em",
               }}
@@ -414,15 +428,15 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
             </p>
           </div>
 
-          {/* Period selector — VENTA only */}
+          {/* Period chips — VENTA only */}
           {showPeriodSelector && (
             <div
               style={{
                 flexShrink: 0,
                 display: "flex",
                 justifyContent: "center",
-                gap: 24,
-                padding: "12px 24px 0",
+                gap: 8,
+                padding: "14px 24px 0",
               }}
             >
               {(["Semana", "Quincena", "Mes"] as Period[]).map((p) => (
@@ -430,14 +444,14 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
                   key={p}
                   onClick={() => setPeriod(p)}
                   style={{
-                    background: "none",
-                    border: "none",
-                    borderBottom: `1px solid ${period === p ? t.accent : "transparent"}`,
-                    color: period === p ? t.text : t.secondary,
+                    background: period === p ? t.accent : "transparent",
+                    color: period === p ? "#111111" : t.secondary,
+                    border: `1px solid ${period === p ? t.accent : t.border}`,
+                    borderRadius: 20,
+                    padding: "6px 14px",
                     fontSize: "0.65rem",
-                    letterSpacing: "0.12em",
+                    letterSpacing: "0.1em",
                     textTransform: "uppercase",
-                    padding: "4px 0",
                     cursor: "pointer",
                     fontFamily: "'Inter', sans-serif",
                     WebkitTapHighlightColor: "transparent",
@@ -449,57 +463,69 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
             </div>
           )}
 
-          {/* Sub-items + optional chart */}
+          {/* Sub-items card */}
           <div
             style={{
               flex: 1,
               display: "flex",
               flexDirection: "column",
               minHeight: 0,
-              padding: showChart ? "16px 24px 8px" : "16px 24px 24px",
+              padding: "16px 20px",
+              gap: showChart ? 0 : 0,
             }}
           >
-            {subItems.map((item, i) => {
-              const isLast = i === subItems.length - 1;
-              return (
-                <div
-                  key={i}
-                  style={{
-                    flex: showChart ? "0 0 auto" : 1,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    borderBottom: !isLast ? `1px solid ${t.border}` : "none",
-                    padding: showChart ? "10px 0" : "0",
-                    minHeight: 0,
-                  }}
-                >
-                  <span
+            {/* Card container for sub-items */}
+            <div
+              style={{
+                background: t.card,
+                border: t.cardBorder,
+                boxShadow: t.cardShadow,
+                borderRadius: 12,
+                overflow: "hidden",
+                flexShrink: 0,
+              }}
+            >
+              {subItems.map((item, i) => {
+                const isLast = i === subItems.length - 1;
+                return (
+                  <div
+                    key={i}
                     style={{
-                      color: t.secondary,
-                      fontSize: "0.65rem",
-                      letterSpacing: "0.1em",
-                      textTransform: "uppercase",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "12px 16px",
+                      borderBottom: !isLast ? `1px solid ${t.separator}` : "none",
                     }}
                   >
-                    {item.label}
-                  </span>
-                  <span
-                    style={{
-                      color: t.text,
-                      fontSize: "0.9rem",
-                      fontWeight: 300,
-                    }}
-                  >
-                    {item.value}
-                  </span>
-                </div>
-              );
-            })}
+                    <span
+                      style={{
+                        color: t.secondary,
+                        fontSize: "0.6rem",
+                        fontWeight: 400,
+                        letterSpacing: "0.15em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {item.label}
+                    </span>
+                    <span
+                      style={{
+                        color: t.text,
+                        fontSize: "0.85rem",
+                        fontWeight: 300,
+                      }}
+                    >
+                      {item.value}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
 
             {/* Chart — FLUJO only */}
             {showChart && (
-              <div style={{ flex: 1, minHeight: 0, paddingTop: 8 }}>
+              <div style={{ flex: 1, minHeight: 0, paddingTop: 12 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={chartDays!}
@@ -515,13 +541,13 @@ export default function ExecutiveReport({ token, module, config, onBack, onAuthE
                     <Tooltip
                       formatter={(v: number) => [fmt(v), "Flujo"]}
                       contentStyle={{
-                        background: t.card,
-                        border: `1px solid ${t.border}`,
+                        background: t.cardColor,
+                        border: t.cardBorder,
                         borderRadius: 6,
                         color: t.text,
                         fontSize: 11,
                       }}
-                      cursor={{ fill: t.bg + "80" }}
+                      cursor={{ fill: `${t.bgColor}40` }}
                     />
                     <Bar dataKey="value" fill={t.accent} radius={[3, 3, 0, 0]} />
                   </BarChart>

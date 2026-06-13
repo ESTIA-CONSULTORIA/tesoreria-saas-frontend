@@ -179,7 +179,7 @@ export default function ExecutiveConfig({ config, onSave, onBack, onLogout }: Pr
                     width: 16,
                     height: 16,
                     borderRadius: "50%",
-                    background: t.bg,
+                    background: t.bgColor,
                     transition: "left 0.2s",
                   }}
                 />

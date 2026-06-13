@@ -9,11 +9,9 @@ const BASE =
 // For executive-login (unauthenticated) — no interceptors that redirect on 401
 export const execPublicApi = axios.create({ baseURL: BASE, timeout: 30000 });
 
-// For authenticated executive calls — token passed per instance
-export function execApi(token: string) {
-  return axios.create({
-    baseURL: BASE,
-    timeout: 30000,
-    headers: { Authorization: `Bearer ${token}` },
-  });
+// For authenticated executive calls — token passed per instance, optional companyId
+export function execApi(token: string, companyId?: string | null) {
+  const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
+  if (companyId) headers["x-company-id"] = String(companyId);
+  return axios.create({ baseURL: BASE, timeout: 30000, headers });
 }

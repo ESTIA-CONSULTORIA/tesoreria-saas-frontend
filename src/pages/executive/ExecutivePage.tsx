@@ -1,5 +1,6 @@
 import { useState } from "react";
 import ExecutiveLogin from "./ExecutiveLogin";
+import ExecutiveDashboard from "./ExecutiveDashboard";
 import ExecutiveHome from "./ExecutiveHome";
 import ExecutiveReport from "./ExecutiveReport";
 import ExecutiveConfig from "./ExecutiveConfig";
@@ -10,6 +11,12 @@ export interface ExecConfig {
   modules: Record<string, boolean>;
 }
 
+export interface Company {
+  id: string | number;
+  name: string;
+  razonSocial?: string;
+}
+
 export const DEFAULT_CONFIG: ExecConfig = {
   theme: "dark",
   modules: {
@@ -18,16 +25,18 @@ export const DEFAULT_CONFIG: ExecConfig = {
   },
 };
 
-type View = "login" | "home" | "report" | "config";
+type View = "login" | "dashboard" | "grid" | "report" | "config";
 
 export default function ExecutivePage() {
   const [token, setToken] = useState<string | null>(
     () => sessionStorage.getItem("executive_token"),
   );
   const [view, setView] = useState<View>(
-    () => (sessionStorage.getItem("executive_token") ? "home" : "login"),
+    () => (sessionStorage.getItem("executive_token") ? "dashboard" : "login"),
   );
   const [activeModule, setActiveModule] = useState("");
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
   const [config, setConfig] = useState<ExecConfig>(() => {
     try {
       return JSON.parse(localStorage.getItem("executive_config") || "null") ?? DEFAULT_CONFIG;
@@ -39,7 +48,7 @@ export default function ExecutivePage() {
   function onLogin(t: string) {
     sessionStorage.setItem("executive_token", t);
     setToken(t);
-    setView("home");
+    setView("dashboard");
   }
 
   function onLogout() {
@@ -62,16 +71,34 @@ export default function ExecutivePage() {
   if (!token || view === "login") {
     return <ExecutiveLogin onLogin={onLogin} config={config} />;
   }
+
+  if (view === "dashboard") {
+    return (
+      <ExecutiveDashboard
+        token={token}
+        config={config}
+        companies={companies}
+        selectedCompanyId={selectedCompanyId}
+        onSelectCompany={setSelectedCompanyId}
+        onCompaniesLoaded={setCompanies}
+        onViewModules={() => setView("grid")}
+        onLogout={onLogout}
+        onAuthError={onAuthError}
+      />
+    );
+  }
+
   if (view === "config") {
     return (
       <ExecutiveConfig
         config={config}
         onSave={onSaveConfig}
-        onBack={() => setView("home")}
+        onBack={() => setView("grid")}
         onLogout={onLogout}
       />
     );
   }
+
   if (view === "report" && activeModule) {
     return (
       <ExecutiveReport
@@ -79,19 +106,24 @@ export default function ExecutivePage() {
         token={token}
         module={activeModule}
         config={config}
-        onBack={() => setView("home")}
+        selectedCompanyId={selectedCompanyId}
+        onBack={() => setView("grid")}
         onAuthError={onAuthError}
       />
     );
   }
+
   return (
     <ExecutiveHome
       token={token}
       config={config}
+      companies={companies}
+      selectedCompanyId={selectedCompanyId}
       onReport={(mod) => { setActiveModule(mod); setView("report"); }}
       onConfig={() => setView("config")}
       onLogout={onLogout}
       onAuthError={onAuthError}
+      onBack={() => setView("dashboard")}
     />
   );
 }

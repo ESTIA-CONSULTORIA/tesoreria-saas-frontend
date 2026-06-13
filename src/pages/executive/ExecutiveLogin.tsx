@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { execPublicApi } from "./execApi";
 import { useBrandingStore } from "../../core/store/useBrandingStore";
 import type { ExecConfig } from "./ExecutivePage";
@@ -16,6 +16,24 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
   const t = getTheme(config.theme);
   const { systemName, logoUrl } = useBrandingStore();
 
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return;
+    execPublicApi
+      .get(`/tenant-settings/${stored}`)
+      .then((r) => {
+        if (r.data) {
+          const { name, logoUrl: lu, accentColor } = r.data;
+          useBrandingStore.getState().update(
+            name || "Vista Ejecutiva",
+            lu || "",
+            accentColor || "#2563eb",
+          );
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Reactive so "Cambiar empresa" can clear it and show the input
   const [storedTenant, setStoredTenant] = useState(
     () => localStorage.getItem(STORAGE_KEY) || "",
@@ -26,10 +44,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
   const [loading, setLoading] = useState(false);
   const [pressedKey, setPressedKey] = useState<string | null>(null);
 
-  const gradient =
-    config.theme === "dark"
-      ? "linear-gradient(180deg, #080808 0%, #111111 100%)"
-      : "linear-gradient(180deg, #F8F8F6 0%, #EFEFED 100%)";
+  const gradient = t.bg;
 
   async function submit(p: string) {
     if (!tenantId.trim()) { setError("Ingresa el ID de empresa"); return; }
