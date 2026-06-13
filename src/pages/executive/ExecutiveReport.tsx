@@ -28,18 +28,12 @@ interface SubItem {
 
 type Period = "Semana" | "Quincena" | "Mes";
 
-const PERIOD_DAYS: Record<Period, number> = { Semana: 7, Quincena: 15, Mes: 30 };
+const PERIOD_PARAM: Record<Period, string> = { Semana: "week", Quincena: "fortnight", Mes: "month" };
 const CHART_WEIGHTS = [0.85, 1.10, 0.95, 1.20, 1.05, 0.70, 0.90];
 const CHART_DAYS = ["L", "M", "X", "J", "V", "S", "D"];
 
 function fmt(v: number) {
   return "$" + v.toLocaleString("es-MX", { maximumFractionDigits: 0 });
-}
-
-function cutoffDate(days: number): Date {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  return d;
 }
 
 export default function ExecutiveReport({
@@ -48,6 +42,7 @@ export default function ExecutiveReport({
   const t = getTheme(config.theme);
   const modDef = MODULES.find((m) => m.key === module) ?? MODULES[0];
   const [mainValue, setMainValue] = useState(0);
+  const [mainDesc, setMainDesc] = useState(modDef.desc);
   const [subItems, setSubItems] = useState<SubItem[]>([]);
   const [chartDays, setChartDays] = useState<{ day: string; value: number }[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -62,6 +57,7 @@ export default function ExecutiveReport({
     setLoading(true);
     setError("");
     setChartDays(null);
+    setMainDesc(modDef.desc);
 
     async function load() {
       try {
@@ -70,16 +66,16 @@ export default function ExecutiveReport({
         let chart: { day: string; value: number }[] | null = null;
 
         if (module === "VENTA") {
-          const movs = await eApi.get("/movements").then((r) => r.data);
-          const incomes = Array.isArray(movs)
-            ? movs.filter((m: any) => m.type === "INCOME")
-            : [];
+          const [kpisData, movsData] = await Promise.all([
+            eApi.get("/dashboard/kpis", { params: { period: PERIOD_PARAM[period] } })
+              .then((r) => r.data),
+            eApi.get("/movements").then((r) => r.data).catch(() => []),
+          ]);
 
-          const cutoff = cutoffDate(PERIOD_DAYS[period]);
-          const periodMovs = incomes.filter(
-            (m: any) => new Date(m.date || m.createdAt) >= cutoff,
-          );
-          val = periodMovs.reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
+          val = Number(kpisData.income || 0);
+
+          const allMovs = Array.isArray(movsData) ? movsData : [];
+          const incomes = allMovs.filter((m: any) => m.type === "INCOME");
 
           const todayStart = new Date();
           todayStart.setHours(0, 0, 0, 0);
@@ -88,7 +84,7 @@ export default function ExecutiveReport({
             .reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
 
           const conceptMap: Record<string, number> = {};
-          periodMovs.forEach((m: any) => {
+          incomes.forEach((m: any) => {
             const k = m.concept || m.description || "Sin concepto";
             conceptMap[k] = (conceptMap[k] || 0) + Number(m.amount || 0);
           });
@@ -98,27 +94,33 @@ export default function ExecutiveReport({
 
           items = [
             { label: "HOY", value: fmt(todayVal) },
-            ...top3.map(([k, v]) => ({
-              label: k.toUpperCase().slice(0, 18),
-              value: fmt(v),
-            })),
+            ...top3.map(([k, v]) => ({ label: k.toUpperCase().slice(0, 18), value: fmt(v) })),
           ];
         }
 
         else if (module === "COSTO") {
-          const [movs, insumosData, recipesData] = await Promise.all([
-            eApi.get("/movements").then((r) => r.data),
+          const [costData, kpisData, insumosData, recipesData] = await Promise.all([
+            eApi.get("/costs/cost-of-sales").then((r) => r.data).catch(() => null),
+            eApi.get("/dashboard/kpis").then((r) => r.data).catch(() => ({})),
             eApi.get("/costs/insumos").then((r) => r.data).catch(() => null),
             eApi.get("/costs/recipes").then((r) => r.data).catch(() => null),
           ]);
 
-          const allMovs = Array.isArray(movs) ? movs : [];
-          const expenses = allMovs.filter((m: any) => m.type === "EXPENSE");
-          const incomes = allMovs.filter((m: any) => m.type === "INCOME");
-          val = expenses.reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
-          const totalIncome = incomes.reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
-          const margin = totalIncome - val;
-          const marginPct = totalIncome > 0 ? Math.round((margin / totalIncome) * 100) : 0;
+          const income = Number(kpisData.income || 0);
+
+          if (costData) {
+            const raw = Number(costData.costoVentas || costData.total || costData.value || 0);
+            if (raw > 0) {
+              val = raw;
+              setMainDesc("Costo de ventas registrado");
+            } else {
+              val = Math.round(income * 0.30);
+              setMainDesc("Estimado 30% sobre ventas");
+            }
+          } else {
+            val = Math.round(income * 0.30);
+            setMainDesc("Estimado 30% sobre ventas");
+          }
 
           const insumos = Array.isArray(insumosData) ? insumosData : [];
           const recipes = Array.isArray(recipesData) ? recipesData : [];
@@ -128,6 +130,8 @@ export default function ExecutiveReport({
           const topRecipe = [...recipes].sort(
             (a: any, b: any) => Number(b.costoTotal || 0) - Number(a.costoTotal || 0),
           )[0];
+          const margin = income - val;
+          const marginPct = income > 0 ? Math.round((margin / income) * 100) : 0;
 
           items = [
             {
@@ -148,29 +152,30 @@ export default function ExecutiveReport({
         }
 
         else if (module === "GASTO") {
-          const movs = await eApi.get("/movements").then((r) => r.data);
-          const expenses = Array.isArray(movs)
-            ? movs.filter((m: any) => m.type === "EXPENSE")
+          const [kpisData, movsData] = await Promise.all([
+            eApi.get("/dashboard/kpis").then((r) => r.data),
+            eApi.get("/movements").then((r) => r.data).catch(() => []),
+          ]);
+
+          val = Number(kpisData.expense || 0);
+
+          const expenses = Array.isArray(movsData)
+            ? movsData.filter((m: any) => m.type === "EXPENSE")
             : [];
-          val = expenses.reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
 
           const catMap: Record<string, number> = {};
           expenses.forEach((m: any) => {
             const k = (m.category || "OTROS").toUpperCase();
             catMap[k] = (catMap[k] || 0) + Number(m.amount || 0);
           });
-          const topCats = Object.entries(catMap)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 2);
+          const topCats = Object.entries(catMap).sort((a, b) => b[1] - a[1]).slice(0, 2);
 
           const conMap: Record<string, number> = {};
           expenses.forEach((m: any) => {
             const k = m.concept || m.description || "Sin concepto";
             conMap[k] = (conMap[k] || 0) + Number(m.amount || 0);
           });
-          const top2 = Object.entries(conMap)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 2);
+          const top2 = Object.entries(conMap).sort((a, b) => b[1] - a[1]).slice(0, 2);
 
           items = [
             ...topCats.map(([k, v]) => ({ label: k.slice(0, 18), value: fmt(v) })),
@@ -188,19 +193,14 @@ export default function ExecutiveReport({
         }
 
         else if (module === "FLUJO") {
-          const movs = await eApi.get("/movements").then((r) => r.data);
-          const allMovs = Array.isArray(movs) ? movs : [];
-          const totalIncome = allMovs
-            .filter((m: any) => m.type === "INCOME")
-            .reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
-          const totalExpense = allMovs
-            .filter((m: any) => m.type === "EXPENSE")
-            .reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
-          val = totalIncome - totalExpense;
+          const kpisData = await eApi.get("/dashboard/kpis").then((r) => r.data);
+          const income = Number(kpisData.income || 0);
+          const expense = Number(kpisData.expense || 0);
+          val = income - expense;
 
           items = [
-            { label: "INGRESOS", value: fmt(totalIncome) },
-            { label: "EGRESOS", value: fmt(totalExpense) },
+            { label: "INGRESOS", value: fmt(income) },
+            { label: "EGRESOS", value: fmt(expense) },
           ];
 
           const base = Math.max(Math.abs(val) / 7, 1000);
@@ -233,20 +233,15 @@ export default function ExecutiveReport({
           const activos = list.filter((e: any) => e.status === "ACTIVO");
           val = activos.reduce((s: number, e: any) => s + Number(e.salarioQuincenal || 0), 0);
           const promedio = activos.length > 0 ? Math.round(val / activos.length) : 0;
-
           const top3 = [...activos]
-            .sort((a: any, b: any) =>
-              Number(b.salarioQuincenal || 0) - Number(a.salarioQuincenal || 0),
-            )
+            .sort((a: any, b: any) => Number(b.salarioQuincenal || 0) - Number(a.salarioQuincenal || 0))
             .slice(0, 3);
 
           items = [
             { label: "EMPLEADOS ACTIVOS", value: activos.length.toString() },
             { label: "PROMEDIO", value: fmt(promedio) },
             ...top3.map((e: any) => ({
-              label:
-                `${e.nombre || ""} ${e.apellidos || ""}`.trim().toUpperCase().slice(0, 18) ||
-                "EMPLEADO",
+              label: `${e.nombre || ""} ${e.apellidos || ""}`.trim().toUpperCase().slice(0, 18) || "EMPLEADO",
               value: fmt(Number(e.salarioQuincenal || 0)),
             })),
           ];
@@ -285,9 +280,7 @@ export default function ExecutiveReport({
             { label: "TOTAL EMPLEADOS", value: list.length.toString() },
             { label: "BAJAS", value: bajas.length.toString() },
             ...ultimas3.map((e: any) => ({
-              label:
-                `${e.nombre || ""} ${e.apellidos || ""}`.trim().toUpperCase().slice(0, 18) ||
-                "EMPLEADO",
+              label: `${e.nombre || ""} ${e.apellidos || ""}`.trim().toUpperCase().slice(0, 18) || "EMPLEADO",
               value: (e.puesto || e.position || "—").slice(0, 16),
             })),
           ];
@@ -398,13 +391,7 @@ export default function ExecutiveReport({
       ) : (
         <>
           {/* Main value */}
-          <div
-            style={{
-              flexShrink: 0,
-              padding: "14px 24px 0",
-              textAlign: "center",
-            }}
-          >
+          <div style={{ flexShrink: 0, padding: "14px 24px 0", textAlign: "center" }}>
             <p
               style={{
                 color: t.text,
@@ -424,7 +411,7 @@ export default function ExecutiveReport({
                 letterSpacing: "0.06em",
               }}
             >
-              {modDef.desc}
+              {mainDesc}
             </p>
           </div>
 
@@ -463,7 +450,7 @@ export default function ExecutiveReport({
             </div>
           )}
 
-          {/* Sub-items card */}
+          {/* Sub-items card + optional chart */}
           <div
             style={{
               flex: 1,
@@ -471,10 +458,8 @@ export default function ExecutiveReport({
               flexDirection: "column",
               minHeight: 0,
               padding: "16px 20px",
-              gap: showChart ? 0 : 0,
             }}
           >
-            {/* Card container for sub-items */}
             <div
               style={{
                 background: t.card,
@@ -485,42 +470,33 @@ export default function ExecutiveReport({
                 flexShrink: 0,
               }}
             >
-              {subItems.map((item, i) => {
-                const isLast = i === subItems.length - 1;
-                return (
-                  <div
-                    key={i}
+              {subItems.map((item, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "12px 16px",
+                    borderBottom: i < subItems.length - 1 ? `1px solid ${t.separator}` : "none",
+                  }}
+                >
+                  <span
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "12px 16px",
-                      borderBottom: !isLast ? `1px solid ${t.separator}` : "none",
+                      color: t.secondary,
+                      fontSize: "0.6rem",
+                      fontWeight: 400,
+                      letterSpacing: "0.15em",
+                      textTransform: "uppercase",
                     }}
                   >
-                    <span
-                      style={{
-                        color: t.secondary,
-                        fontSize: "0.6rem",
-                        fontWeight: 400,
-                        letterSpacing: "0.15em",
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      {item.label}
-                    </span>
-                    <span
-                      style={{
-                        color: t.text,
-                        fontSize: "0.85rem",
-                        fontWeight: 300,
-                      }}
-                    >
-                      {item.value}
-                    </span>
-                  </div>
-                );
-              })}
+                    {item.label}
+                  </span>
+                  <span style={{ color: t.text, fontSize: "0.85rem", fontWeight: 300 }}>
+                    {item.value}
+                  </span>
+                </div>
+              ))}
             </div>
 
             {/* Chart — FLUJO only */}

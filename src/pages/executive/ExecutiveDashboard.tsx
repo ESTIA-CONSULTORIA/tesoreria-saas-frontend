@@ -25,12 +25,9 @@ interface KPIs {
   flujo: number;
 }
 
-const CARDS = [
-  { key: "venta", label: "VENTA" },
-  { key: "costo", label: "COSTO" },
-  { key: "gasto", label: "GASTO" },
-  { key: "flujo", label: "FLUJO" },
-] as const;
+function companyName(c: Company): string {
+  return (c as any).tradeName || (c as any).legalName || c.name || c.razonSocial || "Empresa";
+}
 
 export default function ExecutiveDashboard({
   token, config, companies, selectedCompanyId,
@@ -39,16 +36,19 @@ export default function ExecutiveDashboard({
   const t = getTheme(config.theme);
   const { systemName } = useBrandingStore();
   const [kpis, setKpis] = useState<KPIs>({ venta: 0, costo: 0, gasto: 0, flujo: 0 });
+  const [costoLabel, setCostoLabel] = useState("COSTO");
   const [loading, setLoading] = useState(true);
 
   const selectedCompany = companies.find((c) => String(c.id) === selectedCompanyId);
   const headerName = selectedCompany
-    ? (selectedCompany.name || selectedCompany.razonSocial || "Empresa")
+    ? companyName(selectedCompany)
     : (systemName || "Vista Ejecutiva");
 
   const today = new Date().toLocaleDateString("es-MX", {
     weekday: "long", day: "numeric", month: "long",
   });
+
+  const canViewModules = selectedCompanyId !== null;
 
   // Load companies once
   useEffect(() => {
@@ -73,9 +73,22 @@ export default function ExecutiveDashboard({
       .then(([kpisData, costData]) => {
         const income = Number(kpisData.income || 0);
         const expense = Number(kpisData.expense || 0);
-        const costo = costData
-          ? Number(costData.costoVentas || costData.total || costData.value || 0)
-          : 0;
+
+        let costo: number;
+        if (costData) {
+          const raw = Number(costData.costoVentas || costData.total || costData.value || 0);
+          if (raw > 0) {
+            costo = raw;
+            setCostoLabel("COSTO");
+          } else {
+            costo = Math.round(income * 0.30);
+            setCostoLabel("COSTO EST.");
+          }
+        } else {
+          costo = Math.round(income * 0.30);
+          setCostoLabel("COSTO EST.");
+        }
+
         setKpis({ venta: income, costo, gasto: expense, flujo: income - expense });
       })
       .catch((err) => {
@@ -99,6 +112,14 @@ export default function ExecutiveDashboard({
     WebkitTapHighlightColor: "transparent",
     whiteSpace: "nowrap" as const,
   });
+
+  const cardKeys = ["venta", "costo", "gasto", "flujo"] as const;
+  const cardLabels: Record<string, string> = {
+    venta: "VENTA",
+    costo: costoLabel,
+    gasto: "GASTO",
+    flujo: "FLUJO",
+  };
 
   return (
     <div
@@ -127,7 +148,7 @@ export default function ExecutiveDashboard({
         </p>
       </div>
 
-      {/* KPI 2x2 grid — 50vh */}
+      {/* KPI 2×2 grid — 50vh */}
       <div
         style={{
           flexShrink: 0,
@@ -139,49 +160,46 @@ export default function ExecutiveDashboard({
           padding: "0 20px",
         }}
       >
-        {CARDS.map(({ key, label }) => {
-          const val = kpis[key];
-          return (
-            <div
-              key={key}
+        {cardKeys.map((key) => (
+          <div
+            key={key}
+            style={{
+              background: t.card,
+              border: t.cardBorder,
+              boxShadow: t.cardShadow,
+              borderRadius: 12,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              padding: "14px 16px",
+              minHeight: 0,
+            }}
+          >
+            <span
               style={{
-                background: t.card,
-                border: t.cardBorder,
-                boxShadow: t.cardShadow,
-                borderRadius: 12,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-                justifyContent: "space-between",
-                padding: "14px 16px",
-                minHeight: 0,
+                color: t.secondary,
+                fontSize: "0.6rem",
+                fontWeight: 400,
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
               }}
             >
-              <span
-                style={{
-                  color: t.secondary,
-                  fontSize: "0.6rem",
-                  fontWeight: 400,
-                  letterSpacing: "0.2em",
-                  textTransform: "uppercase",
-                }}
-              >
-                {label}
-              </span>
-              <span
-                style={{
-                  color: loading ? t.secondary : t.text,
-                  fontSize: "2.2rem",
-                  fontWeight: 200,
-                  letterSpacing: "-0.02em",
-                  lineHeight: 1,
-                }}
-              >
-                {loading ? "—" : fmtValue(val, "currency")}
-              </span>
-            </div>
-          );
-        })}
+              {cardLabels[key]}
+            </span>
+            <span
+              style={{
+                color: loading ? t.secondary : t.text,
+                fontSize: "2.2rem",
+                fontWeight: 200,
+                letterSpacing: "-0.02em",
+                lineHeight: 1,
+              }}
+            >
+              {loading ? "—" : fmtValue(kpis[key], "currency")}
+            </span>
+          </div>
+        ))}
       </div>
 
       {/* Company selector */}
@@ -201,32 +219,28 @@ export default function ExecutiveDashboard({
         <div
           style={{
             display: "flex",
+            flexWrap: "nowrap",
             gap: 8,
             overflowX: "auto",
+            WebkitOverflowScrolling: "touch",
             paddingBottom: 6,
             scrollbarWidth: "none",
             msOverflowStyle: "none",
           } as React.CSSProperties}
         >
-          <button
-            onClick={() => onSelectCompany(null)}
-            style={chipStyle(selectedCompanyId === null)}
-          >
-            Todas
-          </button>
           {companies.map((c) => (
             <button
               key={c.id}
               onClick={() => onSelectCompany(String(c.id))}
               style={chipStyle(selectedCompanyId === String(c.id))}
             >
-              {(c.name || c.razonSocial || "Empresa").slice(0, 20)}
+              {companyName(c).slice(0, 22)}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Footer — VER MÓDULOS */}
+      {/* Footer — VER MÓDULOS (disabled when no company selected) */}
       <div
         style={{
           flex: 1,
@@ -237,25 +251,29 @@ export default function ExecutiveDashboard({
         }}
       >
         <button
-          onClick={onViewModules}
+          onClick={canViewModules ? onViewModules : undefined}
           style={{
             background: "none",
             border: "none",
-            color: t.accent,
+            color: canViewModules ? t.accent : t.secondary,
             fontSize: "0.65rem",
             letterSpacing: "0.2em",
             textTransform: "uppercase",
-            cursor: "pointer",
+            cursor: canViewModules ? "pointer" : "default",
             fontFamily: "'Inter', sans-serif",
             WebkitTapHighlightColor: "transparent",
             padding: "8px 0",
             display: "flex",
             alignItems: "center",
             gap: 6,
+            opacity: canViewModules ? 1 : 0.5,
           }}
         >
-          VER MÓDULOS
-          <span style={{ fontSize: "0.8rem" }}>→</span>
+          {canViewModules ? (
+            <>VER MÓDULOS <span style={{ fontSize: "0.8rem" }}>→</span></>
+          ) : (
+            "SELECCIONA UNA EMPRESA"
+          )}
         </button>
       </div>
     </div>

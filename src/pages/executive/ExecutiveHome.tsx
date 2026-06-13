@@ -23,6 +23,12 @@ const GRID_ORDER = [
   "NOMINA", "VACANTES", "ROTACION",
 ];
 
+function companyLabel(companies: Company[], selectedId: string | null, fallback: string): string {
+  const c = companies.find((co) => String(co.id) === selectedId);
+  if (!c) return fallback;
+  return (c as any).tradeName || (c as any).legalName || c.name || c.razonSocial || fallback;
+}
+
 export default function ExecutiveHome({
   config, companies, selectedCompanyId,
   onReport, onConfig, onLogout, onBack,
@@ -31,14 +37,10 @@ export default function ExecutiveHome({
   const { systemName } = useBrandingStore();
   const [pressedModule, setPressedModule] = useState<string | null>(null);
 
-  const selectedCompany = companies.find((c) => String(c.id) === selectedCompanyId);
-  const headerName = selectedCompany
-    ? (selectedCompany.name || selectedCompany.razonSocial || "")
-    : (systemName || "Vista Ejecutiva");
+  const headerName = companyLabel(companies, selectedCompanyId, systemName || "Vista Ejecutiva");
 
   const visibleKeys = GRID_ORDER.filter(
-    (key) =>
-      config.modules[key] !== false && MODULES.some((m) => m.key === key),
+    (key) => config.modules[key] !== false && MODULES.some((m) => m.key === key),
   );
   const rows = Math.ceil(visibleKeys.length / 3);
 
@@ -53,18 +55,18 @@ export default function ExecutiveHome({
         overflow: "hidden",
       }}
     >
-      {/* Header — minimal */}
+      {/* Header */}
       <div
         style={{
           flexShrink: 0,
-          padding: "28px 24px 14px",
+          padding: "24px 24px 12px",
           textAlign: "center",
         }}
       >
         <p
           style={{
             color: t.text,
-            fontSize: "0.85rem",
+            fontSize: "0.8rem",
             fontWeight: 300,
             letterSpacing: "0.05em",
           }}
@@ -73,16 +75,18 @@ export default function ExecutiveHome({
         </p>
       </div>
 
-      {/* 3×3 Grid */}
+      {/* 3×3 Grid — 65% height, square buttons */}
       <div
         style={{
-          flex: 1,
+          flexShrink: 0,
+          height: "65%",
           display: "grid",
           gridTemplateColumns: "repeat(3, 1fr)",
           gridTemplateRows: `repeat(${rows}, 1fr)`,
           gap: 10,
           padding: "0 16px",
-          minHeight: 0,
+          boxSizing: "border-box" as const,
+          alignItems: "center",
         }}
       >
         {visibleKeys.map((key) => {
@@ -96,6 +100,8 @@ export default function ExecutiveHome({
               onPointerUp={() => setPressedModule(null)}
               onPointerLeave={() => setPressedModule(null)}
               style={{
+                aspectRatio: "1",
+                width: "100%",
                 background: t.card,
                 border: t.cardBorder,
                 boxShadow: t.cardShadow,
@@ -110,19 +116,18 @@ export default function ExecutiveHome({
                 opacity: isPressed ? 0.5 : 1,
                 transform: isPressed ? "scale(0.97)" : "scale(1)",
                 transition: "opacity 0.1s, transform 0.1s",
-                minHeight: 0,
-                padding: "8px 4px",
+                padding: "6px",
               }}
             >
               <span
                 style={{
                   color: t.accent,
-                  fontSize: "0.65rem",
+                  fontSize: "0.55rem",
                   fontWeight: 400,
                   letterSpacing: "0.2em",
                   textTransform: "uppercase",
                   textAlign: "center",
-                  lineHeight: 1.4,
+                  lineHeight: 1.2,
                   wordBreak: "break-word",
                 }}
               >
@@ -132,6 +137,9 @@ export default function ExecutiveHome({
           );
         })}
       </div>
+
+      {/* Spacer */}
+      <div style={{ flex: 1 }} />
 
       {/* Footer */}
       <div

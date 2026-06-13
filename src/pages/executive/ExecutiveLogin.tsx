@@ -22,11 +22,13 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
     execPublicApi
       .get(`/tenant-settings/${stored}`)
       .then((r) => {
+        console.log("tenant-settings response:", r.data);
         if (r.data) {
-          const { name, logoUrl: lu, accentColor } = r.data;
+          const { name, accentColor } = r.data;
+          const lu = r.data.logoUrl || r.data.logo_url || r.data.logoURL || "";
           useBrandingStore.getState().update(
             name || "Vista Ejecutiva",
-            lu || "",
+            lu,
             accentColor || "#2563eb",
           );
         }
