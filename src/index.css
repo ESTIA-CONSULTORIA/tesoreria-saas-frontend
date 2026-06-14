@@ -205,8 +205,28 @@ td { border-color: #2D2D2D !important; }
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #0A0A0A; }
-::-webkit-scrollbar-thumb { 
-  background: #2D2D2D; 
-  border-radius: 3px; 
+::-webkit-scrollbar-thumb {
+  background: #2D2D2D;
+  border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover { background: #3A3A3A; }
+
+/* Viewport height base — fixes Safari iOS position:fixed */
+html { height: 100%; }
+
+/* Executive view isolation — prevent global dark-theme overrides */
+#exec-root {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+#exec-root input,
+#exec-root select,
+#exec-root textarea {
+  background-color: transparent !important;
+  border-color: unset !important;
+  color: inherit !important;
+}
+#exec-root input::placeholder,
+#exec-root textarea::placeholder {
+  color: rgba(150, 150, 150, 0.5) !important;
+}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { ReactNode } from "react";
 import ExecutiveLogin from "./ExecutiveLogin";
 import ExecutiveDashboard from "./ExecutiveDashboard";
 import ExecutiveHome from "./ExecutiveHome";
@@ -27,6 +28,11 @@ export const DEFAULT_CONFIG: ExecConfig = {
 
 type View = "login" | "dashboard" | "grid" | "report" | "config";
 
+const BG: Record<ExecTheme, string> = {
+  dark: "linear-gradient(160deg, #0A0A0A 0%, #111111 50%, #0D0D0D 100%)",
+  light: "linear-gradient(160deg, #F8F8F6 0%, #F2F2EF 50%, #F5F5F2 100%)",
+};
+
 export default function ExecutivePage() {
   const [token, setToken] = useState<string | null>(
     () => sessionStorage.getItem("executive_token"),
@@ -44,6 +50,8 @@ export default function ExecutivePage() {
       return DEFAULT_CONFIG;
     }
   });
+  // Separate displayTheme so ExecutiveConfig can preview theme changes before saving
+  const [displayTheme, setDisplayTheme] = useState<ExecTheme>(() => config.theme);
 
   function onLogin(t: string, name?: string) {
     sessionStorage.setItem("executive_token", t);
@@ -66,15 +74,16 @@ export default function ExecutivePage() {
 
   function onSaveConfig(c: ExecConfig) {
     setConfig(c);
+    setDisplayTheme(c.theme);
     localStorage.setItem("executive_config", JSON.stringify(c));
   }
 
-  if (!token || view === "login") {
-    return <ExecutiveLogin onLogin={onLogin} config={config} />;
-  }
+  let content: ReactNode;
 
-  if (view === "dashboard") {
-    return (
+  if (!token || view === "login") {
+    content = <ExecutiveLogin onLogin={onLogin} config={config} />;
+  } else if (view === "dashboard") {
+    content = (
       <ExecutiveDashboard
         token={token}
         config={config}
@@ -87,21 +96,21 @@ export default function ExecutivePage() {
         onAuthError={onAuthError}
       />
     );
-  }
-
-  if (view === "config") {
-    return (
+  } else if (view === "config") {
+    content = (
       <ExecutiveConfig
         config={config}
         onSave={onSaveConfig}
-        onBack={() => setView("grid")}
+        onBack={() => {
+          setDisplayTheme(config.theme);
+          setView("grid");
+        }}
         onLogout={onLogout}
+        onThemePreview={setDisplayTheme}
       />
     );
-  }
-
-  if (view === "report" && activeModule) {
-    return (
+  } else if (view === "report" && activeModule) {
+    content = (
       <ExecutiveReport
         key={activeModule}
         token={token}
@@ -112,19 +121,47 @@ export default function ExecutivePage() {
         onAuthError={onAuthError}
       />
     );
+  } else {
+    content = (
+      <ExecutiveHome
+        token={token}
+        config={config}
+        companies={companies}
+        selectedCompanyId={selectedCompanyId}
+        onReport={(mod) => { setActiveModule(mod); setView("report"); }}
+        onConfig={() => setView("config")}
+        onLogout={onLogout}
+        onAuthError={onAuthError}
+        onBack={() => setView("dashboard")}
+      />
+    );
   }
 
   return (
-    <ExecutiveHome
-      token={token}
-      config={config}
-      companies={companies}
-      selectedCompanyId={selectedCompanyId}
-      onReport={(mod) => { setActiveModule(mod); setView("report"); }}
-      onConfig={() => setView("config")}
-      onLogout={onLogout}
-      onAuthError={onAuthError}
-      onBack={() => setView("dashboard")}
-    />
+    <div
+      id="exec-root"
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundImage: BG[displayTheme],
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 430,
+          margin: "0 auto",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          overflowY: "auto",
+          overflowX: "hidden",
+        }}
+      >
+        {content}
+      </div>
+    </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { getTheme } from "./theme";
+import type { ExecTheme } from "./theme";
 import { MODULES } from "./modules";
 import type { ExecConfig } from "./ExecutivePage";
 
@@ -8,9 +9,10 @@ interface Props {
   onSave: (c: ExecConfig) => void;
   onBack: () => void;
   onLogout: () => void;
+  onThemePreview: (theme: ExecTheme) => void;
 }
 
-export default function ExecutiveConfig({ config, onSave, onBack, onLogout }: Props) {
+export default function ExecutiveConfig({ config, onSave, onBack, onLogout, onThemePreview }: Props) {
   const [draft, setDraft] = useState<ExecConfig>({
     ...config,
     modules: { ...config.modules },
@@ -30,32 +32,14 @@ export default function ExecutiveConfig({ config, onSave, onBack, onLogout }: Pr
   }
 
   return (
-    <>
-      <div style={{
-        position: "fixed",
-        top: 0, left: 0, right: 0, bottom: 0,
-        backgroundImage: draft.theme === "dark"
-          ? "linear-gradient(160deg, #0A0A0A 0%, #111111 50%, #0D0D0D 100%)"
-          : "linear-gradient(160deg, #F8F8F6 0%, #F2F2EF 50%, #F5F5F2 100%)",
-        zIndex: 0,
-      }} />
-      <div
-        style={{
-          position: "fixed",
-          top: 0,
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "100%",
-          maxWidth: 430,
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          fontFamily: "'Inter', sans-serif",
-          zIndex: 1,
-          overflowY: "auto",
-          overflowX: "hidden",
-        }}
-      >
+    <div
+      style={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        fontFamily: "'Inter', sans-serif",
+      }}
+    >
       {/* Header */}
       <div
         style={{
@@ -113,7 +97,10 @@ export default function ExecutiveConfig({ config, onSave, onBack, onLogout }: Pr
           {(["dark", "light"] as const).map((mode) => (
             <button
               key={mode}
-              onClick={() => setDraft((prev) => ({ ...prev, theme: mode }))}
+              onClick={() => {
+                setDraft((prev) => ({ ...prev, theme: mode }));
+                onThemePreview(mode);
+              }}
               style={{
                 flex: 1,
                 padding: "10px 0",
@@ -224,7 +211,6 @@ export default function ExecutiveConfig({ config, onSave, onBack, onLogout }: Pr
           Cerrar sesión
         </button>
       </div>
-      </div>
-    </>
+    </div>
   );
 }
