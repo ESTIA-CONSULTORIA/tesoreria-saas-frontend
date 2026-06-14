@@ -6,8 +6,12 @@
   <title>Vista Ejecutiva</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; overflow: hidden; background: #0A0A0A; }
+    html { height: 100%; overflow: hidden; }
     body {
+      height: 100%;
+      min-height: 100vh;
+      overflow: hidden;
+      background: linear-gradient(160deg, #0A0A0A 0%, #161616 50%, #0D0D0D 100%);
       font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
       color: #F5F5F5;
       -webkit-font-smoothing: antialiased;
@@ -15,7 +19,7 @@
     #app {
       position: fixed;
       inset: 0;
-      background-image: linear-gradient(160deg, #0A0A0A 0%, #111111 50%, #0D0D0D 100%);
+      background: transparent;
     }
     #inner {
       max-width: 430px;
@@ -167,8 +171,7 @@ async function apiPost(path, body, tok) {
 function render() {
   const inner = document.getElementById('inner');
   const t = T();
-  document.getElementById('app').style.backgroundImage = t.bg;
-  document.body.style.background = t.bgSolid;
+  document.body.style.background = t.bg;
   if      (S.view === 'login')     inner.innerHTML = htmlLogin(t);
   else if (S.view === 'dashboard') inner.innerHTML = htmlDashboard(t);
   else if (S.view === 'grid')      inner.innerHTML = htmlGrid(t);
@@ -211,6 +214,7 @@ function htmlLogin(t) {
   const tenantRow = !S.tenantId
     ? `<input id="inp-tenant" value="${esc(S.inputTenantId)}"
          oninput="S.inputTenantId=this.value"
+         onblur="loadBranding()"
          placeholder="ID de empresa"
          style="width:160px;padding:9px 14px;background:transparent;
            border:1px solid ${t.border};border-radius:8px;
@@ -532,11 +536,12 @@ function toggleTheme() {
    DATA LOADING
 ══════════════════════════════════════════════════════════════ */
 async function loadBranding() {
-  if (!S.tenantId) { render(); return; }
-  const d = await apiGet('/tenant-settings/' + S.tenantId);
+  const tid = S.tenantId || S.inputTenantId || '';
+  if (!tid) { render(); return; }
+  const d = await apiGet('/tenant-settings/' + encodeURIComponent(tid));
   if (d) {
-    S.brandLogo = d.logoUrl || d.logo_url || d.logoURL || '';
-    S.brandName = d.name || d.businessName || 'Vista Ejecutiva';
+    S.brandLogo = d.logoUrl || d.logo_url || d.logoURL || d.logo || d.imageUrl || '';
+    S.brandName = d.name || d.businessName || d.business_name || d.companyName || 'Vista Ejecutiva';
   }
   render();
 }
