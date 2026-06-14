@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Vista Ejecutiva</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; background: #0A0A0A; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+      color: #F5F5F5;
+      -webkit-font-smoothing: antialiased;
+    }
+    #app {
+      position: fixed;
+      inset: 0;
+      background-image: linear-gradient(160deg, #0A0A0A 0%, #111111 50%, #0D0D0D 100%);
+    }
+    #inner {
+      max-width: 430px;
+      margin: 0 auto;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+    button {
+      background: none;
+      border: none;
+      color: inherit;
+      font-family: inherit;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      outline: none;
+    }
+    button:active { opacity: 0.5; }
+    input {
+      outline: none;
+      font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+<div id="app"><div id="inner"></div></div>
+<script>
+/* ─── CONFIG ─────────────────────────────────────────────────── */
+const API_BASE = (function() {
+  const h = window.location.hostname;
+  if (h === 'localhost' || h === '127.0.0.1') return 'http://localhost:3000';
+  return 'http://' + h + ':3000';
+})();
+
+const KEY_TOKEN    = 'exec_token';
+const KEY_USER     = 'exec_user_name';
+const KEY_TENANT   = 'exec_tenant_id';
+const KEY_CONFIG   = 'exec_config';
+
+/* ─── MODULES ────────────────────────────────────────────────── */
+const MODS = [
+  { key:'VENTA',      label:'VENTA'       },
+  { key:'COSTO',      label:'COSTO'       },
+  { key:'GASTO',      label:'GASTO'       },
+  { key:'PRESUPUESTO',label:'PRESU-\nPUESTO'},
+  { key:'FLUJO',      label:'FLUJO'       },
+  { key:'BANCO',      label:'BANCO'       },
+  { key:'NOMINA',     label:'NÓMINA'      },
+  { key:'VACANTES',   label:'VACAN-\nTES' },
+  { key:'ROTACION',   label:'ROTA-\nCIÓN' },
+];
+
+/* ─── THEME ──────────────────────────────────────────────────── */
+const THEMES = {
+  dark: {
+    bg:       'linear-gradient(160deg, #0A0A0A 0%, #111111 50%, #0D0D0D 100%)',
+    bgSolid:  '#0A0A0A',
+    card:     'rgba(255,255,255,0.04)',
+    cardBorder:'1px solid rgba(255,255,255,0.06)',
+    text:     '#F5F5F5',
+    sub:      '#6B6B6B',
+    accent:   '#E8E8E8',
+    border:   'rgba(255,255,255,0.08)',
+    key:      '#1A1A1A',
+    keyBorder:'rgba(255,255,255,0.06)',
+  },
+  light: {
+    bg:       'linear-gradient(160deg, #F8F8F6 0%, #F2F2EF 50%, #F5F5F2 100%)',
+    bgSolid:  '#F8F8F6',
+    card:     'rgba(0,0,0,0.04)',
+    cardBorder:'1px solid rgba(0,0,0,0.07)',
+    text:     '#1A1A1A',
+    sub:      '#8A8A8A',
+    accent:   '#2D2D2D',
+    border:   'rgba(0,0,0,0.08)',
+    key:      '#EAEAE8',
+    keyBorder:'rgba(0,0,0,0.06)',
+  },
+};
+
+/* ─── STATE ──────────────────────────────────────────────────── */
+let S = {
+  view:      'login',
+  token:     sessionStorage.getItem(KEY_TOKEN)  || null,
+  userName:  sessionStorage.getItem(KEY_USER)   || '',
+  tenantId:  localStorage.getItem(KEY_TENANT)   || '',
+  pin:       '',
+  inputTenantId: '',
+  error:     '',
+  loading:   false,
+  brandName: 'Vista Ejecutiva',
+  brandLogo: '',
+  companies: [],
+  selCompanyId: null,
+  selModule:    null,
+  kpis:      null,
+  reportData:null,
+  theme:     'dark',
+};
+
+/* Load saved config */
+try {
+  const cfg = JSON.parse(localStorage.getItem(KEY_CONFIG) || '{}');
+  if (cfg.theme) S.theme = cfg.theme;
+} catch(e) {}
+
+/* ─── HELPERS ────────────────────────────────────────────────── */
+function T() { return THEMES[S.theme] || THEMES.dark; }
+
+function fmt(v) {
+  const n = Number(v);
+  if (v == null || isNaN(n)) return 'N/D';
+  return '$' + n.toLocaleString('es-MX', { maximumFractionDigits: 0 });
+}
+
+function pct(a, b) {
+  if (!b || b === 0) return 'N/D';
+  return (a / b * 100).toFixed(1) + '%';
+}
+
+async function apiGet(path, tok, cid) {
+  try {
+    const h = {};
+    if (tok) h['Authorization'] = 'Bearer ' + tok;
+    if (cid) h['x-company-id']  = String(cid);
+    const r = await fetch(API_BASE + path, { headers: h });
+    if (!r.ok) return null;
+    return r.json();
+  } catch(e) { return null; }
+}
+
+async function apiPost(path, body, tok) {
+  const h = { 'Content-Type': 'application/json' };
+  if (tok) h['Authorization'] = 'Bearer ' + tok;
+  const r = await fetch(API_BASE + path, {
+    method: 'POST', headers: h, body: JSON.stringify(body),
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error(err.message || String(r.status));
+  }
+  return r.json();
+}
+
+/* ─── RENDER ─────────────────────────────────────────────────── */
+function render() {
+  const inner = document.getElementById('inner');
+  const t = T();
+  document.getElementById('app').style.backgroundImage = t.bg;
+  document.body.style.background = t.bgSolid;
+  if      (S.view === 'login')     inner.innerHTML = htmlLogin(t);
+  else if (S.view === 'dashboard') inner.innerHTML = htmlDashboard(t);
+  else if (S.view === 'grid')      inner.innerHTML = htmlGrid(t);
+  else if (S.view === 'report')    inner.innerHTML = htmlReport(t);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LOGIN
+══════════════════════════════════════════════════════════════ */
+function htmlLogin(t) {
+  const dots = [0,1,2,3].map(i =>
+    `<div style="width:16px;height:16px;border-radius:50%;
+       background:${i<S.pin.length ? t.accent : 'transparent'};
+       border:1.5px solid ${i<S.pin.length ? t.accent : t.sub};
+       transition:background .15s,border .15s"></div>`
+  ).join('');
+
+  const keys = ['1','2','3','4','5','6','7','8','9','','0','del'];
+  const keypad = keys.map(k => {
+    if (k === '') return `<div></div>`;
+    const label = k === 'del' ? '⌫' : k;
+    const fs    = k === 'del' ? '1.4rem' : '1.9rem';
+    const col   = k === 'del' ? t.sub : t.text;
+    return `<button onclick="pressKey('${k}')"
+      style="display:flex;align-items:center;justify-content:center;
+        font-size:${fs};font-weight:300;color:${col};
+        background:${t.key};border:1px solid ${t.keyBorder};
+        border-radius:12px;margin:4px;user-select:none;
+        -webkit-user-select:none">
+      ${label}
+    </button>`;
+  }).join('');
+
+  const brand = S.brandLogo
+    ? `<img src="${S.brandLogo}" style="max-height:72px;max-width:80%;object-fit:contain"
+         onerror="this.style.display='none'">
+       ${S.brandName ? `<p style="color:${t.sub};font-size:.8rem;font-weight:300;letter-spacing:.12em;margin-top:8px">${S.brandName}</p>` : ''}`
+    : `<p style="color:${t.text};font-size:1.9rem;font-weight:200;letter-spacing:.06em;text-align:center;line-height:1.2">${S.brandName}</p>`;
+
+  const tenantRow = !S.tenantId
+    ? `<input id="inp-tenant" value="${esc(S.inputTenantId)}"
+         oninput="S.inputTenantId=this.value"
+         placeholder="ID de empresa"
+         style="width:160px;padding:9px 14px;background:transparent;
+           border:1px solid ${t.border};border-radius:8px;
+           color:${t.text};font-size:13px;text-align:center">`
+    : `<p style="color:${t.sub};font-size:.65rem;letter-spacing:.18em;text-transform:uppercase">
+         ${esc(S.tenantId)}</p>`;
+
+  const changeTenantBtn = S.tenantId
+    ? `<button onclick="clearTenant()"
+         style="color:${t.sub};font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;
+           padding:4px 10px;margin-top:4px">
+         Cambiar empresa
+       </button>`
+    : '';
+
+  const errMsg = S.error
+    ? `<p style="color:#EF4444;font-size:.75rem;text-align:center;margin-top:2px">${esc(S.error)}</p>`
+    : '';
+
+  return `
+    <div style="height:38%;display:flex;flex-direction:column;align-items:center;
+      justify-content:center;padding:0 32px;gap:8px">
+      ${brand}
+    </div>
+    <div style="height:22%;display:flex;flex-direction:column;align-items:center;
+      justify-content:center;gap:10px;padding:0 32px">
+      ${tenantRow}
+      <p style="color:${t.sub};font-size:.58rem;letter-spacing:.28em;text-transform:uppercase">
+        ACCESO EJECUTIVO</p>
+      <div style="display:flex;gap:22px">${dots}</div>
+      ${errMsg}
+      ${changeTenantBtn}
+    </div>
+    <div style="height:40%;display:grid;grid-template-columns:repeat(3,1fr);
+      grid-template-rows:repeat(4,1fr);padding:0 8px 12px">
+      ${keypad}
+    </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DASHBOARD
+══════════════════════════════════════════════════════════════ */
+function htmlDashboard(t) {
+  const now  = new Date();
+  const time = now.toLocaleTimeString('es-MX',{ hour:'2-digit',minute:'2-digit',hour12:false });
+  const date = now.toLocaleDateString('es-MX',{ weekday:'long',day:'numeric',month:'short' });
+
+  const greeting = S.userName
+    ? `<p style="color:${t.text};font-size:1.05rem;font-weight:300;margin-bottom:2px">
+         ${esc(S.userName)}</p>`
+    : '';
+
+  const kDefs = [
+    { key:'venta', label:'VENTA'  },
+    { key:'costo', label:'COSTO'  },
+    { key:'gasto', label:'GASTO'  },
+    { key:'flujo', label:'FLUJO'  },
+  ];
+  const kpiCards = kDefs.map(d => {
+    const val = S.loading ? '—' : (S.kpis ? fmt(S.kpis[d.key]) : '—');
+    return `<div style="background:${t.card};border:${t.cardBorder};border-radius:12px;
+        padding:14px 16px;display:flex;flex-direction:column;justify-content:space-between;
+        min-height:0;overflow:hidden">
+      <span style="color:${t.sub};font-size:.58rem;font-weight:400;letter-spacing:.2em;
+        text-transform:uppercase">${d.label}</span>
+      <span style="color:${S.loading ? t.sub : t.text};font-size:2rem;font-weight:200;
+        letter-spacing:-.02em;line-height:1;margin-top:8px">${val}</span>
+    </div>`;
+  }).join('');
+
+  const compBtns = S.companies.map(c => {
+    const name = c.tradeName || c.legalName || c.name || c.razonSocial || 'Empresa';
+    return `<button onclick="selectCompany('${c.id}')"
+      style="background:transparent;border:1px solid ${t.border};border-radius:8px;
+        padding:10px 20px;color:${t.text};font-size:.68rem;font-weight:300;
+        letter-spacing:.04em;font-family:inherit">
+      ${esc(name)}
+    </button>`;
+  }).join('');
+
+  const themeBtn = `<button onclick="toggleTheme()"
+    style="color:${t.sub};font-size:.6rem;letter-spacing:.15em;text-transform:uppercase">
+    ${S.theme === 'dark' ? 'Claro' : 'Oscuro'}
+  </button>`;
+
+  return `
+    <div style="flex-shrink:0;padding:36px 24px 12px;text-align:center">
+      <p style="color:${t.sub};font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;
+        margin-bottom:4px">BIENVENIDO</p>
+      ${greeting}
+      <p style="color:${t.sub};font-size:.63rem;letter-spacing:.05em">${time} · ${date}</p>
+    </div>
+
+    <div style="flex-shrink:0;height:50vh;display:grid;grid-template-columns:1fr 1fr;
+      grid-template-rows:1fr 1fr;gap:10px;padding:0 20px">
+      ${kpiCards}
+    </div>
+
+    ${S.companies.length > 0 ? `
+    <div style="flex-shrink:0;padding:20px 20px 8px;text-align:center">
+      <p style="color:${t.sub};font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;
+        margin-bottom:12px">SELECCIONA EMPRESA</p>
+      <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px">${compBtns}</div>
+    </div>` : ''}
+
+    <div style="flex:1"></div>
+    <div style="flex-shrink:0;padding:10px 20px 28px;display:flex;
+      justify-content:space-between;align-items:center">
+      ${themeBtn}
+      <button onclick="logout()"
+        style="color:${t.sub};font-size:.6rem;letter-spacing:.15em;text-transform:uppercase">
+        Salir
+      </button>
+    </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GRID
+══════════════════════════════════════════════════════════════ */
+function htmlGrid(t) {
+  const company = S.companies.find(c => String(c.id) === String(S.selCompanyId));
+  const cName   = company ? (company.tradeName || company.legalName || company.name || 'Empresa') : 'Empresa';
+
+  const btns = MODS.map(m => {
+    const lines = m.label.split('\n');
+    const lbl   = lines.map(l => `<span style="display:block">${l}</span>`).join('');
+    return `<button onclick="openReport('${m.key}')"
+      style="background:${t.card};border:${t.cardBorder};border-radius:10px;
+        display:flex;align-items:center;justify-content:center;
+        font-family:inherit;padding:4px">
+      <span style="color:${t.accent};font-size:.52rem;font-weight:400;letter-spacing:.2em;
+        text-transform:uppercase;text-align:center;line-height:1.25">${lbl}</span>
+    </button>`;
+  }).join('');
+
+  return `
+    <div style="flex-shrink:0;padding:20px 24px 10px;text-align:center">
+      <p style="color:${t.text};font-size:.8rem;font-weight:300;letter-spacing:.04em">
+        ${esc(cName)}</p>
+    </div>
+
+    <div style="flex:1;display:grid;grid-template-columns:repeat(3,1fr);
+      grid-template-rows:repeat(3,1fr);gap:10px;padding:0 16px 16px;min-height:0">
+      ${btns}
+    </div>
+
+    <div style="flex-shrink:0;padding:10px 20px 28px;display:flex;
+      justify-content:space-between;align-items:center">
+      <button onclick="goBack()"
+        style="color:${t.sub};font-size:.6rem;letter-spacing:.15em;text-transform:uppercase">
+        ← RESUMEN
+      </button>
+      <button onclick="logout()"
+        style="color:${t.sub};font-size:.6rem;letter-spacing:.15em;text-transform:uppercase">
+        Salir
+      </button>
+    </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   REPORT
+══════════════════════════════════════════════════════════════ */
+function htmlReport(t) {
+  const mod  = MODS.find(m => m.key === S.selModule) || MODS[0];
+  const rd   = S.reportData;
+  const main = S.loading ? '—' : (rd ? fmt(rd.mainValue) : 'N/D');
+  const desc = rd ? rd.mainDesc : (mod.label.replace('\n',''));
+
+  const rows = (rd && rd.items && rd.items.length) ? rd.items.map(it =>
+    `<div style="display:flex;justify-content:space-between;align-items:center;
+       padding:12px 16px;border-bottom:1px solid ${t.border}">
+      <span style="color:${t.sub};font-size:.68rem;letter-spacing:.06em;text-transform:uppercase">
+        ${esc(it.label)}</span>
+      <span style="color:${t.text};font-size:.88rem;font-weight:300">${esc(it.value)}</span>
+    </div>`
+  ).join('') : '';
+
+  const errMsg = S.error
+    ? `<p style="color:#EF4444;font-size:.75rem;text-align:center;padding:0 20px 12px">
+         ${esc(S.error)}</p>`
+    : '';
+
+  const modLabel = mod.label.replace(/[\n\-]/g,' ').replace(/\s+/g,' ').trim();
+
+  return `
+    <div style="flex-shrink:0;padding:20px 24px 12px;display:flex;
+      justify-content:space-between;align-items:center">
+      <button onclick="goBack()"
+        style="color:${t.sub};font-size:13px;padding:0">← Volver</button>
+      <p style="color:${t.text};font-size:.58rem;letter-spacing:.2em;text-transform:uppercase">
+        ${modLabel}</p>
+      <div style="width:48px"></div>
+    </div>
+
+    <div style="flex-shrink:0;padding:0 20px 16px">
+      <div style="background:${t.card};border:${t.cardBorder};border-radius:12px;padding:20px 24px">
+        <p style="color:${t.sub};font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;
+          margin-bottom:8px">${esc(desc)}</p>
+        <p style="color:${t.text};font-size:3rem;font-weight:200;letter-spacing:-.02em;line-height:1">
+          ${main}</p>
+      </div>
+    </div>
+
+    ${rows ? `
+    <div style="flex-shrink:0;padding:0 20px 16px">
+      <div style="background:${t.card};border:${t.cardBorder};border-radius:12px;overflow:hidden">
+        ${rows}
+      </div>
+    </div>` : ''}
+
+    ${errMsg}
+    <div style="flex:1"></div>`;
+}
+
+/* ─── ESCAPE ─────────────────────────────────────────────────── */
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ACTIONS
+══════════════════════════════════════════════════════════════ */
+function pressKey(k) {
+  if (k === 'del') {
+    S.pin   = S.pin.slice(0,-1);
+    S.error = '';
+    render(); return;
+  }
+  S.error = '';
+  S.pin  += k;
+  render();
+  if (S.pin.length === 4) submitLogin();
+}
+
+async function submitLogin() {
+  const tid = (S.tenantId || S.inputTenantId || '').trim();
+  if (!tid) {
+    S.error = 'Ingresa el ID de empresa'; S.pin=''; render(); return;
+  }
+  S.loading = true; render();
+  try {
+    const res = await apiPost('/auth/executive-login', { tenantId: tid, pin: S.pin });
+    localStorage.setItem(KEY_TENANT, tid);
+    sessionStorage.setItem(KEY_TOKEN, res.access_token);
+    sessionStorage.setItem(KEY_USER,  res.user?.name || '');
+    S.tenantId  = tid;
+    S.token     = res.access_token;
+    S.userName  = res.user?.name || '';
+    S.loading   = false;
+    S.error     = '';
+    S.pin       = '';
+    S.view      = 'dashboard';
+    render();
+    loadDashboard();
+  } catch(e) {
+    S.error   = 'PIN incorrecto';
+    S.pin     = '';
+    S.loading = false;
+    render();
+  }
+}
+
+function clearTenant() {
+  localStorage.removeItem(KEY_TENANT);
+  S.tenantId      = '';
+  S.inputTenantId = '';
+  S.pin           = '';
+  S.error         = '';
+  S.brandName     = 'Vista Ejecutiva';
+  S.brandLogo     = '';
+  render();
+}
+
+function selectCompany(id) {
+  S.selCompanyId = String(id);
+  S.view         = 'grid';
+  render();
+}
+
+function openReport(modKey) {
+  S.selModule  = modKey;
+  S.view       = 'report';
+  S.reportData = null;
+  S.error      = '';
+  render();
+  loadReport(modKey);
+}
+
+function goBack() {
+  if      (S.view === 'report')    { S.view = 'grid';      render(); }
+  else if (S.view === 'grid')      { S.view = 'dashboard'; render(); }
+  else if (S.view === 'dashboard') { logout(); }
+}
+
+function logout() {
+  sessionStorage.removeItem(KEY_TOKEN);
+  sessionStorage.removeItem(KEY_USER);
+  S.token        = null;
+  S.view         = 'login';
+  S.pin          = '';
+  S.error        = '';
+  S.kpis         = null;
+  S.companies    = [];
+  S.selCompanyId = null;
+  S.reportData   = null;
+  render();
+}
+
+function toggleTheme() {
+  S.theme = S.theme === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem(KEY_CONFIG, JSON.stringify({ theme: S.theme })); } catch(e) {}
+  render();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DATA LOADING
+══════════════════════════════════════════════════════════════ */
+async function loadBranding() {
+  if (!S.tenantId) { render(); return; }
+  const d = await apiGet('/tenant-settings/' + S.tenantId);
+  if (d) {
+    S.brandLogo = d.logoUrl || d.logo_url || d.logoURL || '';
+    S.brandName = d.name || d.businessName || 'Vista Ejecutiva';
+  }
+  render();
+}
+
+async function loadDashboard() {
+  S.loading = true; render();
+
+  const [kpis, comps] = await Promise.all([
+    apiGet('/dashboard/kpis', S.token),
+    apiGet('/companies', S.token),
+  ]);
+
+  if (kpis) {
+    const income  = Number(kpis.income  || kpis.venta  || 0);
+    const expense = Number(kpis.expense || kpis.gasto  || 0);
+    const costo   = Number(kpis.costo   || kpis.costs  || 0);
+    S.kpis = {
+      venta: income,
+      costo: costo  > 0 ? costo  : Math.round(income * 0.30),
+      gasto: expense,
+      flujo: income - expense,
+    };
+  }
+
+  if (comps && Array.isArray(comps)) S.companies = comps;
+  S.loading = false;
+  render();
+}
+
+async function loadReport(modKey) {
+  S.loading = true; render();
+
+  const eGet = (path) => apiGet(path, S.token, S.selCompanyId);
+
+  try {
+    if (modKey === 'VENTA') {
+      const [kpis, pos] = await Promise.all([
+        eGet('/dashboard/kpis'),
+        eGet('/pos/sales').catch ? eGet('/pos/sales') : Promise.resolve(null),
+      ]);
+      const income = Number(kpis?.income || 0);
+      const items  = [];
+      if (pos?.ticketPromedio || pos?.averageTicket)
+        items.push({ label:'Ticket promedio', value: fmt(pos.ticketPromedio || pos.averageTicket) });
+      if (pos?.hoy || pos?.today)
+        items.push({ label:'Hoy', value: fmt(pos.hoy || pos.today) });
+      if (income > 0 && kpis?.transacciones)
+        items.push({ label:'Transacciones', value: String(kpis.transacciones) });
+      S.reportData = { mainValue: income, mainDesc: 'Ventas del período', items };
+
+    } else if (modKey === 'COSTO') {
+      const [costData, kpis] = await Promise.all([
+        eGet('/costs/cost-of-sales'),
+        eGet('/dashboard/kpis'),
+      ]);
+      const income = Number(kpis?.income || 0);
+      const raw    = Number(costData?.costoVentas || costData?.total || costData?.value || costData?.cost || 0);
+      const costo  = raw > 0 ? raw : Math.round(income * 0.30);
+      const items  = [];
+      if (income > 0) items.push({ label:'Margen bruto', value: pct(income - costo, income) });
+      if (raw === 0 && income > 0) items.push({ label:'Nota', value: 'Estimado 30%' });
+      S.reportData = {
+        mainValue: costo,
+        mainDesc:  'Costo de ventas',
+        items,
+      };
+
+    } else if (modKey === 'GASTO') {
+      const kpis = await eGet('/dashboard/kpis');
+      const expense = Number(kpis?.expense || kpis?.gasto || 0);
+      const income  = Number(kpis?.income  || 0);
+      const items   = [];
+      if (income > 0) items.push({ label:'% sobre ventas', value: pct(expense, income) });
+      S.reportData = { mainValue: expense, mainDesc: 'Gastos del período', items };
+
+    } else if (modKey === 'FLUJO') {
+      const kpis    = await eGet('/dashboard/kpis');
+      const income  = Number(kpis?.income  || 0);
+      const expense = Number(kpis?.expense || 0);
+      S.reportData  = {
+        mainValue: income - expense,
+        mainDesc:  'Flujo neto',
+        items: [
+          { label:'Ingresos', value: fmt(income) },
+          { label:'Egresos',  value: fmt(expense) },
+        ],
+      };
+
+    } else if (modKey === 'BANCO') {
+      const banks  = await eGet('/banks');
+      const arr    = Array.isArray(banks) ? banks : [];
+      const total  = arr.reduce((s,b) => s + Number(b.balance||b.saldo||b.amount||0), 0);
+      const items  = arr.slice(0,4).map(b => ({
+        label: b.name || b.nombre || b.bankName || 'Cuenta',
+        value: fmt(b.balance || b.saldo || b.amount || 0),
+      }));
+      S.reportData = { mainValue: total, mainDesc: 'Saldo total en bancos', items };
+
+    } else if (modKey === 'NOMINA') {
+      const data = await eGet('/hr/payroll');
+      const val  = data ? Number(data.total || data.amount || 0) : null;
+      S.reportData = { mainValue: val, mainDesc: 'Nómina del período', items: [] };
+
+    } else if (modKey === 'VACANTES') {
+      const data  = await eGet('/hr/vacancies');
+      const arr   = Array.isArray(data) ? data : (data?.items || []);
+      const total = Array.isArray(data) ? data.length : (data?.total || arr.length || null);
+      S.reportData = {
+        mainValue: null,
+        mainDesc:  'Vacantes activas',
+        items: [{ label:'Total vacantes', value: total != null ? String(total) : 'N/D' }],
+      };
+
+    } else if (modKey === 'ROTACION') {
+      const data = await eGet('/hr/rotation');
+      const val  = data ? (data.rate || data.tasa || data.rotacion || null) : null;
+      S.reportData = {
+        mainValue: null,
+        mainDesc:  'Índice de rotación',
+        items: [{ label:'Tasa de rotación', value: val != null ? String(val) + '%' : 'N/D' }],
+      };
+
+    } else if (modKey === 'PRESUPUESTO') {
+      const [kpis, budget] = await Promise.all([
+        eGet('/dashboard/kpis'),
+        eGet('/budget/summary'),
+      ]);
+      const income = Number(kpis?.income || 0);
+      const bud    = budget ? Number(budget.total || budget.monto || budget.presupuesto || 0) : null;
+      const items  = [];
+      if (bud != null && bud > 0 && income > 0)
+        items.push({ label:'Ejecución', value: pct(income, bud) });
+      S.reportData = {
+        mainValue: bud,
+        mainDesc:  'Presupuesto del período',
+        items,
+      };
+
+    } else {
+      S.reportData = { mainValue: null, mainDesc: modKey, items: [] };
+    }
+  } catch(e) {
+    S.error = 'Error al cargar datos';
+  }
+
+  S.loading = false;
+  render();
+}
+
+/* ──────────────────────────────────────────────────────────────
+   INIT
+────────────────────────────────────────────────────────────── */
+if (S.token) {
+  S.view = 'dashboard';
+  render();
+  loadDashboard();
+} else {
+  render();
+  if (S.tenantId) loadBranding();
+}
+</script>
+</body>
+</html>
