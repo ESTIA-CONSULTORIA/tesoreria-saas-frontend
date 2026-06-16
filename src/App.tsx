@@ -20,6 +20,11 @@ import ESTIAExecutiveAccess from "./pages/mobile-analytics/MobileAnalyticsApp";
 import POSPage from "./pages/pos/POSPage";
 import OCRPage from "./pages/ocr/OCRPage";
 import HRPage from "./pages/hr/HRPage";
+import IntegrationsPage from "./pages/integrations/IntegrationsPage";
+import EmployeeLogin from "./pages/employee/EmployeeLogin";
+import EmployeeHome from "./pages/employee/EmployeeHome";
+import EmployeeRequests from "./pages/employee/EmployeeRequests";
+import EmployeeDocuments from "./pages/employee/EmployeeDocuments";
 import OnboardingWizard from "./components/OnboardingWizard";
 
 import LoginPage from "./pages/Login/LoginPage";
@@ -358,6 +363,23 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path="/integrations"
+        element={
+          <ProtectedRoute>
+            <ModuloRoute modulo="integraciones">
+              <IntegrationsPage />
+            </ModuloRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Portal del Empleado — rutas sin ProtectedRoute */}
+      <Route path="/employee" element={<EmployeeLogin />} />
+      <Route path="/employee/home" element={<EmployeeHome />} />
+      <Route path="/employee/requests" element={<EmployeeRequests />} />
+      <Route path="/employee/documents" element={<EmployeeDocuments />} />
 
       {/* Rutas de SOPORTE - Solo accesibles para rol SOPORTE */}
       <Route

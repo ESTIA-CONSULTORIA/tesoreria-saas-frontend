@@ -3,7 +3,7 @@ import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
 
-type Tab = "empleados" | "expedientes" | "nomina";
+type Tab = "empleados" | "expedientes" | "nomina" | "asistencia" | "turnos" | "solicitudes";
 
 interface Employee {
   id: string;
@@ -58,6 +58,20 @@ export default function HRPage() {
   const [showDocForm, setShowDocForm] = useState(false);
   const [docForm, setDocForm] = useState({ tipo: "INE", nombre: "", fileData: "", notas: "" });
 
+  // Asistencia
+  const [attendance, setAttendance] = useState<any[]>([]);
+  const [loadingAttendance, setLoadingAttendance] = useState(false);
+
+  // Turnos
+  const [shifts, setShifts] = useState<any[]>([]);
+  const [loadingShifts, setLoadingShifts] = useState(false);
+  const [showShiftForm, setShowShiftForm] = useState(false);
+  const [shiftForm, setShiftForm] = useState({ name: "", startTime: "09:00", endTime: "18:00" });
+
+  // Solicitudes pendientes
+  const [pendingRequests, setPendingRequests] = useState<{ vacaciones: any[]; permisos: any[] }>({ vacaciones: [], permisos: [] });
+  const [loadingPending, setLoadingPending] = useState(false);
+
   // Carga masiva
   const [showBulkPanel, setShowBulkPanel] = useState(false);
   const [bulkFiles, setBulkFiles] = useState<{ file: File; tipo: string; status: "pending" | "uploading" | "done" | "error" }[]>([]);
@@ -70,6 +84,66 @@ export default function HRPage() {
   const headers = { "x-tenant-id": tenantId ?? "", "x-company-id": companyId ?? "" };
 
   useEffect(() => { loadEmployees(); }, []);
+
+  useEffect(() => {
+    if (tab === "asistencia") loadAttendance();
+    if (tab === "turnos") loadShifts();
+    if (tab === "solicitudes") loadPending();
+  }, [tab]);
+
+  async function loadAttendance() {
+    setLoadingAttendance(true);
+    try {
+      const res = await api.get("/hr/attendance/today", { headers });
+      setAttendance(Array.isArray(res.data) ? res.data : []);
+    } catch { setAttendance([]); }
+    finally { setLoadingAttendance(false); }
+  }
+
+  async function loadShifts() {
+    setLoadingShifts(true);
+    try {
+      const res = await api.get("/hr/shifts", { headers });
+      setShifts(Array.isArray(res.data) ? res.data : []);
+    } catch { setShifts([]); }
+    finally { setLoadingShifts(false); }
+  }
+
+  async function loadPending() {
+    setLoadingPending(true);
+    try {
+      const res = await api.get("/hr/requests/pending", { headers });
+      setPendingRequests(res.data ?? { vacaciones: [], permisos: [] });
+    } catch { setPendingRequests({ vacaciones: [], permisos: [] }); }
+    finally { setLoadingPending(false); }
+  }
+
+  async function saveShift() {
+    try {
+      await api.post("/hr/shifts", shiftForm, { headers });
+      setShowShiftForm(false);
+      setShiftForm({ name: "", startTime: "09:00", endTime: "18:00" });
+      loadShifts();
+    } catch { setError("Error al guardar turno"); }
+  }
+
+  async function deleteShift(id: string) {
+    if (!confirm("¿Eliminar turno?")) return;
+    await api.delete(`/hr/shifts/${id}`, { headers });
+    loadShifts();
+  }
+
+  async function approveRequest(type: "vacation" | "permission", id: string) {
+    await api.put(`/hr/requests/${type === "vacation" ? "vacation" : "permission"}/${id}/approve`, {}, { headers });
+    loadPending();
+  }
+
+  async function rejectRequest(type: "vacation" | "permission", id: string) {
+    const note = prompt("Motivo del rechazo:");
+    if (note === null) return;
+    await api.put(`/hr/requests/${type === "vacation" ? "vacation" : "permission"}/${id}/reject`, { responseNote: note }, { headers });
+    loadPending();
+  }
 
   async function loadEmployees() {
     setLoading(true);
@@ -230,14 +304,14 @@ export default function HRPage() {
         {error && <div className="rounded-xl border border-red-700 bg-red-900/30 p-4 text-red-300 text-sm">{error}</div>}
 
         {/* Tabs */}
-        <div className="flex gap-0 border-b border-slate-800">
-          {(["empleados", "expedientes", "nomina"] as Tab[]).map((t) => (
+        <div className="flex gap-0 border-b border-slate-800 overflow-x-auto">
+          {(["empleados", "expedientes", "nomina", "asistencia", "turnos", "solicitudes"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`px-5 py-2 text-sm font-medium border-b-2 transition-colors capitalize ${tab === t ? "border-blue-500 text-blue-400" : "border-transparent text-slate-400 hover:text-slate-200"}`}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${tab === t ? "border-blue-500 text-blue-400" : "border-transparent text-slate-400 hover:text-slate-200"}`}
             >
-              {t === "empleados" ? "Empleados" : t === "expedientes" ? "Expedientes" : "Nómina"}
+              {t === "empleados" ? "Empleados" : t === "expedientes" ? "Expedientes" : t === "nomina" ? "Nómina" : t === "asistencia" ? "Asistencia" : t === "turnos" ? "Turnos" : "Solicitudes"}
             </button>
           ))}
         </div>
@@ -497,6 +571,155 @@ export default function HRPage() {
           </div>
         )}
       </div>
+
+        {/* ── TAB: Asistencia ── */}
+        {tab === "asistencia" && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold">Asistencia de hoy</h2>
+              <button onClick={loadAttendance} className="text-xs px-3 py-1.5 rounded border border-slate-700 text-slate-400">Actualizar</button>
+            </div>
+            {loadingAttendance ? (
+              <div className="text-slate-400 text-sm">Cargando...</div>
+            ) : attendance.length === 0 ? (
+              <div className="rounded-xl bg-slate-900 p-6 text-slate-400 text-sm">Sin registros de asistencia hoy</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-xs text-slate-500 border-b border-slate-800">
+                      <th className="pb-2 pr-4">Empleado</th>
+                      <th className="pb-2 pr-4">Entrada</th>
+                      <th className="pb-2 pr-4">Salida</th>
+                      <th className="pb-2 pr-4">Método</th>
+                      <th className="pb-2">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {attendance.map((a) => (
+                      <tr key={a.id} className="border-b border-slate-800/50">
+                        <td className="py-2 pr-4">{a.employeeId}</td>
+                        <td className="py-2 pr-4">{a.checkIn ? new Date(a.checkIn).toLocaleTimeString("es-MX") : "—"}</td>
+                        <td className="py-2 pr-4">{a.checkOut ? new Date(a.checkOut).toLocaleTimeString("es-MX") : "—"}</td>
+                        <td className="py-2 pr-4">{a.method}</td>
+                        <td className="py-2"><span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: a.status === "PRESENTE" ? "#22C55E22" : "#EF444422", color: a.status === "PRESENTE" ? "#22C55E" : "#EF4444" }}>{a.status}</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── TAB: Turnos ── */}
+        {tab === "turnos" && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold">Turnos de trabajo</h2>
+              <button onClick={() => setShowShiftForm(true)} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">+ Nuevo Turno</button>
+            </div>
+            {loadingShifts ? (
+              <div className="text-slate-400 text-sm">Cargando...</div>
+            ) : shifts.length === 0 ? (
+              <div className="rounded-xl bg-slate-900 p-6 text-slate-400 text-sm">Sin turnos configurados</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {shifts.map((s) => (
+                  <div key={s.id} className="rounded-xl p-4 bg-slate-900 border border-slate-800">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-sm">{s.name}</span>
+                      <button onClick={() => deleteShift(s.id)} className="text-xs text-red-400 hover:text-red-300">Eliminar</button>
+                    </div>
+                    <p className="text-xs text-slate-400">{s.startTime} — {s.endTime}</p>
+                    <p className="text-xs text-slate-500 mt-1">Tolerancia: {s.toleranceMinutes} min</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            {showShiftForm && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.7)" }}>
+                <div className="rounded-xl p-6 w-full max-w-sm space-y-4" style={{ backgroundColor: "#161616", border: "1px solid #2D2D2D" }}>
+                  <h3 className="font-semibold">Nuevo Turno</h3>
+                  <div>
+                    <label className="text-xs block mb-1 text-slate-400">Nombre</label>
+                    <input value={shiftForm.name} onChange={(e) => setShiftForm((p) => ({ ...p, name: e.target.value }))} className="w-full rounded border border-slate-700 bg-slate-800 p-2 text-sm text-white" />
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <label className="text-xs block mb-1 text-slate-400">Entrada</label>
+                      <input type="time" value={shiftForm.startTime} onChange={(e) => setShiftForm((p) => ({ ...p, startTime: e.target.value }))} className="w-full rounded border border-slate-700 bg-slate-800 p-2 text-sm text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-xs block mb-1 text-slate-400">Salida</label>
+                      <input type="time" value={shiftForm.endTime} onChange={(e) => setShiftForm((p) => ({ ...p, endTime: e.target.value }))} className="w-full rounded border border-slate-700 bg-slate-800 p-2 text-sm text-white" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => setShowShiftForm(false)} className="flex-1 py-2 text-sm rounded border border-slate-700 text-slate-400">Cancelar</button>
+                    <button onClick={saveShift} className="flex-1 py-2 text-sm rounded bg-blue-600 text-white font-medium">Guardar</button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── TAB: Solicitudes ── */}
+        {tab === "solicitudes" && (
+          <div>
+            <h2 className="font-semibold mb-4">Solicitudes pendientes</h2>
+            {loadingPending ? (
+              <div className="text-slate-400 text-sm">Cargando...</div>
+            ) : (
+              <>
+                {pendingRequests.vacaciones.length === 0 && pendingRequests.permisos.length === 0 && (
+                  <div className="rounded-xl bg-slate-900 p-6 text-slate-400 text-sm">Sin solicitudes pendientes</div>
+                )}
+                {pendingRequests.vacaciones.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Vacaciones</h3>
+                    <div className="space-y-2">
+                      {pendingRequests.vacaciones.map((v: any) => (
+                        <div key={v.id} className="rounded-xl p-4 bg-slate-900 border border-slate-800 flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium">{v.employeeId}</p>
+                            <p className="text-xs text-slate-400">{new Date(v.startDate).toLocaleDateString("es-MX")} — {new Date(v.endDate).toLocaleDateString("es-MX")} ({v.daysRequested} días)</p>
+                            <p className="text-xs text-slate-500">{v.reason}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <button onClick={() => approveRequest("vacation", v.id)} className="text-xs px-3 py-1.5 rounded" style={{ backgroundColor: "#22C55E22", color: "#22C55E" }}>Aprobar</button>
+                            <button onClick={() => rejectRequest("vacation", v.id)} className="text-xs px-3 py-1.5 rounded" style={{ backgroundColor: "#EF444422", color: "#EF4444" }}>Rechazar</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {pendingRequests.permisos.length > 0 && (
+                  <div>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Permisos</h3>
+                    <div className="space-y-2">
+                      {pendingRequests.permisos.map((p: any) => (
+                        <div key={p.id} className="rounded-xl p-4 bg-slate-900 border border-slate-800 flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium">{p.employeeId}</p>
+                            <p className="text-xs text-slate-400">{new Date(p.date).toLocaleDateString("es-MX")} — {p.hours}h — {p.type}</p>
+                            <p className="text-xs text-slate-500">{p.reason}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <button onClick={() => approveRequest("permission", p.id)} className="text-xs px-3 py-1.5 rounded" style={{ backgroundColor: "#22C55E22", color: "#22C55E" }}>Aprobar</button>
+                            <button onClick={() => rejectRequest("permission", p.id)} className="text-xs px-3 py-1.5 rounded" style={{ backgroundColor: "#EF444422", color: "#EF4444" }}>Rechazar</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
 
       {/* Modal empleado */}
       {showEmpModal && (

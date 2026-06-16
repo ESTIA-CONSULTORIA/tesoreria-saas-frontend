@@ -29,6 +29,8 @@ const navItems = [
   { label: "Reportes", to: "/reports", modulo: "reportes", shortcut: "Alt+4", category: "ANÁLISIS" },
   { label: "POS", to: "/pos", modulo: "pos", category: "ANÁLISIS" },
   { label: "Recursos Humanos", to: "/hr", modulo: "rh", category: "RRHH" },
+  { label: "Portal Empleado", to: "/employee", modulo: "rh", category: "RRHH" },
+  { label: "Integraciones", to: "/integrations", modulo: "integraciones", category: "CONTROL" },
   { label: "Configuración", to: "/settings", modulo: "configuracion", category: "CONTROL" },
   { label: "Config. Login", to: "/settings/login-config", modulo: "configuracion", category: "CONTROL" },
 ];
