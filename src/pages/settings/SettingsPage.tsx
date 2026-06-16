@@ -131,6 +131,8 @@ export default function SettingsPage() {
       });
 
       updateBranding(settings.systemName, settings.logoUrl, settings.accentColor);
+      // Re-fetch from server so MainLayout picks up the latest logo/name
+      await useBrandingStore.getState().load();
       setSuccess("Configuración guardada correctamente");
       setTimeout(() => setSuccess(""), 3000);
     } catch (err: any) {
