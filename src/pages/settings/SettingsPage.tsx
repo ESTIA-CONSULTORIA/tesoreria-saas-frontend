@@ -8,6 +8,7 @@ interface AppearanceSettings {
   systemName: string;
   logoUrl: string;
   faviconUrl: string;
+  backgroundImage: string;
   primaryColor: string;
   secondaryColor: string;
   accentColor: string;
@@ -29,6 +30,7 @@ const defaultSettings: AppearanceSettings = {
   systemName: '',
   logoUrl: '',
   faviconUrl: '',
+  backgroundImage: '',
   primaryColor: '#2563eb',
   secondaryColor: '#64748b',
   accentColor: '#0ea5e9',
@@ -68,6 +70,7 @@ export default function SettingsPage() {
           systemName: response.data.name || '',
           logoUrl: response.data.logoUrl || '',
           faviconUrl: response.data.faviconUrl || '',
+          backgroundImage: response.data.backgroundImage || '',
           primaryColor: response.data.primaryColor || '#2563eb',
           secondaryColor: response.data.secondaryColor || '#64748b',
           accentColor: response.data.accentColor || '#0ea5e9',
@@ -116,6 +119,7 @@ export default function SettingsPage() {
         name: settings.systemName,
         logoUrl: settings.logoUrl,
         faviconUrl: settings.faviconUrl,
+        backgroundImage: settings.backgroundImage,
         primaryColor: settings.primaryColor,
         secondaryColor: settings.secondaryColor,
         accentColor: settings.accentColor,
@@ -130,7 +134,7 @@ export default function SettingsPage() {
         buttonBorderRadius: settings.buttonBorderRadius,
       });
 
-      updateBranding(settings.systemName, settings.logoUrl, settings.accentColor);
+      updateBranding(settings.systemName, settings.logoUrl, settings.accentColor, settings.backgroundImage);
       // Re-fetch from server so MainLayout picks up the latest logo/name
       await useBrandingStore.getState().load();
       setSuccess("Configuración guardada correctamente");
@@ -245,6 +249,33 @@ export default function SettingsPage() {
                   className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
                   placeholder="https://example.com/favicon.ico"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm text-slate-400 mb-2">Imagen de fondo del sistema</label>
+                <input
+                  value={settings.backgroundImage}
+                  onChange={(e) => setSettings({ ...settings, backgroundImage: e.target.value })}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                  placeholder="https://example.com/bg.jpg  (o pegar base64)"
+                />
+                {settings.backgroundImage && (
+                  <div className="mt-2 flex items-center gap-3">
+                    <img
+                      src={settings.backgroundImage}
+                      alt="Background preview"
+                      className="h-16 w-28 rounded object-cover border border-slate-700"
+                      onError={(e) => (e.currentTarget.style.display = 'none')}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setSettings({ ...settings, backgroundImage: '' })}
+                      className="text-xs text-red-400 hover:text-red-300"
+                    >
+                      Quitar fondo
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

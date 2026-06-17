@@ -50,7 +50,7 @@ export default function MainLayout({ children }: Props) {
   const [searchOpen, setSearchOpen] = useState(false);
   const user = useAuthStore((state) => state.user);
   const isSoporte = user?.roleCode === "SOPORTE";
-  const { systemName, logoUrl } = useBrandingStore();
+  const { systemName, logoUrl, backgroundImage } = useBrandingStore();
 
   // Atajos globales
   useKeyboardShortcuts([
@@ -63,7 +63,18 @@ export default function MainLayout({ children }: Props) {
   ]);
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', color: '#F5F5F5' }}>
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: '#0A0A0A',
+      color: '#F5F5F5',
+      ...(backgroundImage ? {
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
+      } : {}),
+    }}>
       <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
       <div className="flex relative overflow-x-hidden min-w-0">
