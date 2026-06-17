@@ -95,7 +95,9 @@ export default function TreasuryPage() {
           break;
         case "depositos":
           const depositsRes = await api.get("/treasury/pending-deposits");
-          setPendingDeposits(Array.isArray(depositsRes.data) ? depositsRes.data : []);
+          const depositsArr = Array.isArray(depositsRes.data) ? depositsRes.data : (depositsRes.data?.deposits ?? []);
+          // Normalize: backend uses shiftId, frontend uses id
+          setPendingDeposits(depositsArr.map((d: any) => ({ ...d, id: d.id ?? d.shiftId })));
           const banksForDep = await api.get("/banks");
           setBanks(Array.isArray(banksForDep.data) ? banksForDep.data : []);
           break;
@@ -1176,7 +1178,8 @@ export default function TreasuryPage() {
                           });
                           setSelectedShift(null);
                           const res = await api.get("/treasury/pending-deposits");
-                          setPendingDeposits(Array.isArray(res.data) ? res.data : []);
+                          const arr = Array.isArray(res.data) ? res.data : (res.data?.deposits ?? []);
+                          setPendingDeposits(arr.map((d: any) => ({ ...d, id: d.id ?? d.shiftId })));
                         } catch (e: any) {
                           alert(e?.response?.data?.message || "Error al confirmar depósito");
                         } finally {
