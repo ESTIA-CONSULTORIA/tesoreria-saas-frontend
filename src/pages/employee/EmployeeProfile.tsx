@@ -122,18 +122,20 @@ export default function EmployeeProfile() {
               onClick={logout}
               style={{
                 width: "100%",
-                padding: "14px",
-                background: "#0E0E0E",
-                border: "1px solid #2A1515",
+                padding: "15px",
+                background: "#EF4444",
+                border: "none",
                 borderRadius: 12,
-                color: "#EF4444",
-                fontSize: "0.85rem",
-                fontWeight: 500,
-                letterSpacing: "0.05em",
+                color: "#FFFFFF",
+                fontSize: "0.9rem",
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
                 cursor: "pointer",
+                marginBottom: 8,
               }}
             >
-              Cerrar sesión
+              Cerrar Sesión
             </button>
           </>
         )}
