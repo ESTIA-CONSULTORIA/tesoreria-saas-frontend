@@ -65,7 +65,7 @@ export default function MainLayout({ children }: Props) {
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: '#0A0A0A',
+      position: 'relative',
       color: '#F5F5F5',
       ...(backgroundImage ? {
         backgroundImage: `url(${backgroundImage})`,
@@ -73,8 +73,21 @@ export default function MainLayout({ children }: Props) {
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         backgroundAttachment: 'fixed',
-      } : {}),
+      } : { backgroundColor: '#0A0A0A' }),
     }}>
+      {/* Overlay oscuro sobre imagen de fondo para legibilidad */}
+      {backgroundImage && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundColor: 'rgba(0,0,0,0.65)',
+          zIndex: 0,
+          pointerEvents: 'none',
+        }} />
+      )}
+
+      {/* Todo el contenido por encima del overlay */}
+      <div style={{ position: 'relative', zIndex: 1 }}>
       <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
       <div className="flex relative overflow-x-hidden min-w-0">
@@ -219,10 +232,11 @@ export default function MainLayout({ children }: Props) {
         </aside>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden w-full min-w-0" style={{ backgroundColor: '#0A0A0A' }}>
+        <main className="flex-1 overflow-y-auto overflow-x-hidden w-full min-w-0" style={{ backgroundColor: backgroundImage ? 'transparent' : '#0A0A0A' }}>
           {children}
         </main>
       </div>
+      </div>{/* /contenido sobre overlay */}
 
       {/* Global Search Modal */}
       <GlobalSearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />

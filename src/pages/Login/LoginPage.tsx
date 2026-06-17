@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
 import { useLoginConfigStore } from "../../core/store/useLoginConfigStore";
+import { useBrandingStore } from "../../core/store/useBrandingStore";
 
 export default function LoginPage() {
   const { login } = useAuthStore();
   const { config, loadConfig } = useLoginConfigStore();
   const navigate = useNavigate();
+  const { backgroundImage: brandingBg, logoUrl: brandingLogo } = useBrandingStore();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,6 +21,7 @@ export default function LoginPage() {
   const [expandedCard, setExpandedCard] = useState<"main" | "pos" | null>(null);
 
   useEffect(() => {
+    useBrandingStore.getState().load();
     const tenantId = localStorage.getItem('tenant_id');
     if (tenantId) {
       loadConfig(tenantId);
@@ -154,7 +157,16 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', backgroundColor: '#0A0A0A' }}>
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      backgroundColor: '#0A0A0A',
+      ...(brandingBg ? {
+        backgroundImage: `url(${brandingBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      } : {}),
+    }}>
       {/* Columna Izquierda - 45% */}
       <div style={{
         width: '45%',
@@ -209,9 +221,9 @@ export default function LoginPage() {
         )}
 
         {/* Logo del cliente */}
-        {config.logoUrl && (
+        {(brandingLogo || config.logoUrl) && (
           <div style={{ position: 'relative', zIndex: 1 }}>
-            <img src={config.logoUrl} alt="Logo" style={{ maxHeight: '60px' }} />
+            <img src={brandingLogo || config.logoUrl} alt="Logo" style={{ maxHeight: '60px' }} />
           </div>
         )}
 
@@ -222,12 +234,20 @@ export default function LoginPage() {
 
         {/* Contenido central */}
         <div style={{ position: 'relative', zIndex: 1, marginTop: 'auto', marginBottom: 'auto' }}>
-          <p style={{ fontSize: '10px', color: '#BDBDBD', letterSpacing: '0.15em', marginBottom: '16px' }}>
-            BIENVENIDO A
-          </p>
-          <h1 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 200, color: '#F5F5F5', letterSpacing: '0.12em', marginBottom: '8px' }}>
-            {config.companyName || 'Sistema de Gestión'}
-          </h1>
+          {brandingLogo ? (
+            <div style={{ marginBottom: '24px' }}>
+              <img src={brandingLogo} alt="Logo" style={{ maxHeight: '80px', maxWidth: '200px', objectFit: 'contain' }} />
+            </div>
+          ) : (
+            <>
+              <p style={{ fontSize: '10px', color: '#BDBDBD', letterSpacing: '0.15em', marginBottom: '16px' }}>
+                BIENVENIDO A
+              </p>
+              <h1 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 200, color: '#F5F5F5', letterSpacing: '0.12em', marginBottom: '8px' }}>
+                {config.companyName || 'Sistema de Gestión'}
+              </h1>
+            </>
+          )}
           <div style={{ width: '40px', height: '1px', backgroundColor: '#BDBDBD', margin: '16px 0' }} />
           <p style={{ fontSize: '13px', color: '#9A9A9A' }}>
             {config.tagline || 'Solución integral para tu negocio'}
