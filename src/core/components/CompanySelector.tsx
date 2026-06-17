@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { api } from "../api/api";
 import { useCompanyStore } from "../store/useCompanyStore";
 import { useAuthStore } from "../store/useAuthStore";
+import { jwtDecode } from "jwt-decode";
 
 interface Company {
   id: string;
@@ -87,7 +88,7 @@ export default function CompanySelector() {
     }
   }
 
-  function handleCompanySelect(company: Company) {
+  async function handleCompanySelect(company: Company) {
     setActiveCompany({ id: company.id, name: company.tradeName || company.legalName });
     setActiveBranch(null);
     localStorage.setItem('active_company_id', company.id);
@@ -96,6 +97,32 @@ export default function CompanySelector() {
     localStorage.removeItem('active_branch_name');
     loadBranches(company.id);
     setCompanyDropdownOpen(false);
+
+    // Switch company context — get a token scoped to this company
+    try {
+      const res = await api.post('/auth/switch-company', { companyId: company.id });
+      const { access_token, user: newUser } = res.data;
+      if (access_token) {
+        localStorage.setItem('access_token', access_token);
+        const decoded: any = jwtDecode(access_token);
+        const modulosActivos = JSON.parse(localStorage.getItem('modulos_activos') || '[]');
+        useAuthStore.getState().login(
+          access_token,
+          decoded.tenantId || localStorage.getItem('tenant_id') || '',
+          {
+            id: newUser?.id || decoded.sub,
+            email: newUser?.email || decoded.email,
+            name: newUser?.name,
+            roleCode: decoded.roleCode,
+            tenantId: decoded.tenantId,
+            companyId: company.id,
+          },
+          modulosActivos
+        );
+      }
+    } catch {
+      // silent — context switch is best-effort
+    }
   }
 
   function handleBranchSelect(branch: Branch) {

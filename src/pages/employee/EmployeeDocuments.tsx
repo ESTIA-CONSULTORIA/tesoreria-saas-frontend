@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import EmployeeLayout from "./EmployeeLayout";
-import { api } from "../../core/api/api";
+import { employeeApi } from "../../core/api/employeeApi";
 
 interface HrDocument {
   id: string;
@@ -16,12 +16,11 @@ export default function EmployeeDocuments() {
   const [documents, setDocuments] = useState<HrDocument[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const token = localStorage.getItem("employee_token");
-  const headers = { Authorization: `Bearer ${token}` };
+  const token = sessionStorage.getItem("employee_token");
 
   useEffect(() => {
     if (!token) { navigate("/employee"); return; }
-    api.get("/hr/portal/documents", { headers })
+    employeeApi.get("/hr/portal/documents")
       .then((res) => setDocuments(res.data ?? []))
       .catch(() => {})
       .finally(() => setLoading(false));

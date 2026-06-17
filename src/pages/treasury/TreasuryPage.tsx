@@ -5,7 +5,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import ExecutiveKPI from "../../components/ExecutiveKPI";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
 
-type TabType = "resumen" | "posicion" | "traslados" | "cxp" | "cxc" | "alertas";
+type TabType = "resumen" | "posicion" | "traslados" | "cxp" | "cxc" | "alertas" | "antiguedad" | "depositos";
 type PeriodType = "week" | "month" | "quarter";
 
 export default function TreasuryPage() {
@@ -22,6 +22,12 @@ export default function TreasuryPage() {
   const [suppliers, setSuppliers] = useState<any[]>([]);
   const [alertConfig, setAlertConfig] = useState<any>(null);
   const [banks, setBanks] = useState<any[]>([]);
+  const [agingReport, setAgingReport] = useState<any>(null);
+  const [pendingDeposits, setPendingDeposits] = useState<any[]>([]);
+  const [selectedShift, setSelectedShift] = useState<any>(null);
+  const [depositBankId, setDepositBankId] = useState("");
+  const [depositAmount, setDepositAmountTreas] = useState("");
+  const [confirmingDeposit, setConfirmingDeposit] = useState(false);
   const [showScheduledPayments, setShowScheduledPayments] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -82,6 +88,16 @@ export default function TreasuryPage() {
           setAlertConfig(configRes.data);
           const alertsData = await api.get("/treasury/alerts");
           setAlerts(alertsData.data);
+          break;
+        case "antiguedad":
+          const agingRes = await api.get("/treasury/aging-report");
+          setAgingReport(agingRes.data);
+          break;
+        case "depositos":
+          const depositsRes = await api.get("/treasury/pending-deposits");
+          setPendingDeposits(Array.isArray(depositsRes.data) ? depositsRes.data : []);
+          const banksForDep = await api.get("/banks");
+          setBanks(Array.isArray(banksForDep.data) ? banksForDep.data : []);
           break;
       }
     } catch (err: any) {
@@ -186,6 +202,8 @@ export default function TreasuryPage() {
           { id: 'cxp', label: 'CxP' },
           { id: 'cxc', label: 'CxC' },
           { id: 'alertas', label: 'Alertas' },
+          { id: 'antiguedad', label: 'Antigüedad' },
+          { id: 'depositos', label: 'Depósitos' },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -988,6 +1006,199 @@ export default function TreasuryPage() {
                   )}
                 </div>
               )}
+            </div>
+          )}
+          {/* TAB: Antigüedad de Saldos */}
+          {activeTab === "antiguedad" && (
+            <div className="space-y-6">
+              {!agingReport ? (
+                <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '32px', textAlign: 'center', color: '#7E7E7E' }}>
+                  Sin datos de antigüedad disponibles
+                </div>
+              ) : (
+                <>
+                  {/* KPI Cards */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {[
+                      { label: "0–30 días", key: "bucket0_30", color: "#22C55E" },
+                      { label: "31–60 días", key: "bucket31_60", color: "#F59E0B" },
+                      { label: "61–90 días", key: "bucket61_90", color: "#F97316" },
+                      { label: "+90 días", key: "bucket90plus", color: "#EF4444" },
+                    ].map(({ label, key, color }) => (
+                      <div key={key} style={{ backgroundColor: '#161616', border: `1px solid ${color}44`, borderRadius: '6px', padding: '20px' }}>
+                        <p style={{ fontSize: '11px', color: '#7E7E7E', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
+                        <p style={{ fontSize: '24px', fontWeight: 700, color, fontFamily: 'monospace' }}>
+                          ${Number(agingReport[key] ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Tabla de detalle */}
+                  <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px' }}>
+                    <h3 style={{ padding: '16px 24px', fontSize: '14px', fontWeight: 600, color: '#F5F5F5', borderBottom: '1px solid #2D2D2D' }}>Detalle de antigüedad</h3>
+                    {(agingReport.items ?? []).length === 0 ? (
+                      <div style={{ padding: '32px', textAlign: 'center', color: '#7E7E7E' }}>Sin facturas vencidas</div>
+                    ) : (
+                      <table className="w-full text-sm">
+                        <thead style={{ backgroundColor: '#0F0F0F' }}>
+                          <tr>
+                            {["Proveedor", "Folio", "Monto", "Días vencido", "Fecha vencimiento"].map((h) => (
+                              <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: '11px', color: '#7E7E7E', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(agingReport.items ?? []).map((item: any, i: number) => {
+                            const days = Number(item.diasVencido ?? 0);
+                            const color = days <= 30 ? '#22C55E' : days <= 60 ? '#F59E0B' : days <= 90 ? '#F97316' : '#EF4444';
+                            return (
+                              <tr key={i} style={{ borderTop: '1px solid #2D2D2D' }}>
+                                <td style={{ padding: '10px 16px', color: '#F5F5F5' }}>{item.proveedor ?? item.supplierName ?? '—'}</td>
+                                <td style={{ padding: '10px 16px', color: '#A3A3A3' }}>{item.folio ?? item.numero ?? '—'}</td>
+                                <td style={{ padding: '10px 16px', color: '#F5F5F5', fontWeight: 600 }}>${Number(item.monto ?? item.saldoPendiente ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                                <td style={{ padding: '10px 16px' }}>
+                                  <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 600, backgroundColor: color + '22', color }}>{days} días</span>
+                                </td>
+                                <td style={{ padding: '10px 16px', color: '#A3A3A3' }}>{item.fechaVencimiento ? new Date(item.fechaVencimiento).toLocaleDateString('es-MX') : '—'}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* TAB: Depósitos en Tránsito */}
+          {activeTab === "depositos" && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Lista de turnos con efectivo pendiente */}
+              <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', overflow: 'hidden' }}>
+                <h3 style={{ padding: '16px 24px', fontSize: '14px', fontWeight: 600, color: '#F5F5F5', borderBottom: '1px solid #2D2D2D' }}>Turnos con efectivo pendiente</h3>
+                {pendingDeposits.length === 0 ? (
+                  <div style={{ padding: '32px', textAlign: 'center', color: '#7E7E7E' }}>Sin depósitos pendientes</div>
+                ) : (
+                  <div>
+                    {pendingDeposits.map((shift: any) => (
+                      <div
+                        key={shift.id}
+                        onClick={() => { setSelectedShift(shift); setDepositBankId(""); setDepositAmountTreas(String(shift.totalEfectivo ?? shift.montoDepositar ?? "")); }}
+                        style={{
+                          padding: '16px 24px',
+                          borderBottom: '1px solid #2D2D2D',
+                          cursor: 'pointer',
+                          backgroundColor: selectedShift?.id === shift.id ? '#1F1F1F' : 'transparent',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1A1A1A'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = selectedShift?.id === shift.id ? '#1F1F1F' : 'transparent'}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p style={{ fontWeight: 600, color: '#F5F5F5', fontSize: '13px' }}>{shift.cajero ?? shift.cashierName ?? 'Cajero'}</p>
+                            <p style={{ fontSize: '12px', color: '#7E7E7E' }}>{shift.fecha ? new Date(shift.fecha).toLocaleDateString('es-MX') : '—'}</p>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <p style={{ fontWeight: 700, color: '#22C55E', fontFamily: 'monospace' }}>${Number(shift.totalEfectivo ?? shift.montoDepositar ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
+                            <p style={{ fontSize: '11px', color: '#7E7E7E' }}>a depositar</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Panel derecho: detalle + confirmación */}
+              <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '24px' }}>
+                {!selectedShift ? (
+                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7E7E7E', minHeight: '200px' }}>
+                    Selecciona un turno para ver el detalle
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#F5F5F5' }}>Detalle del turno</h3>
+
+                    {/* Arqueo */}
+                    <div style={{ backgroundColor: '#0F0F0F', borderRadius: '6px', padding: '16px' }} className="space-y-2">
+                      {[
+                        { label: "Cajero", value: selectedShift.cajero ?? selectedShift.cashierName ?? '—' },
+                        { label: "Fecha", value: selectedShift.fecha ? new Date(selectedShift.fecha).toLocaleDateString('es-MX') : '—' },
+                        { label: "Fondo inicial", value: `$${Number(selectedShift.fondoInicial ?? 0).toFixed(2)}` },
+                        { label: "Total ventas", value: `$${Number(selectedShift.totalVentas ?? 0).toFixed(2)}` },
+                        { label: "Efectivo contado", value: `$${Number(selectedShift.totalEfectivo ?? selectedShift.efectivoContado ?? 0).toFixed(2)}` },
+                      ].map(({ label, value }) => (
+                        <div key={label} className="flex justify-between text-sm">
+                          <span style={{ color: '#9A9A9A' }}>{label}</span>
+                          <span style={{ color: '#F5F5F5', fontWeight: 500 }}>{value}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Banco destino */}
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Cuenta bancaria destino</label>
+                      <select
+                        value={depositBankId}
+                        onChange={(e) => setDepositBankId(e.target.value)}
+                        style={{ width: '100%', backgroundColor: '#0F0F0F', color: '#F5F5F5', borderRadius: '4px', border: '1px solid #2D2D2D', padding: '10px 12px', fontSize: '13px' }}
+                      >
+                        <option value="">Seleccionar cuenta</option>
+                        {banks.map((b: any) => (
+                          <option key={b.id} value={b.id}>{b.name} — ${Number(b.balance ?? 0).toFixed(2)}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Monto */}
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Monto a depositar</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={depositAmount}
+                        onChange={(e) => setDepositAmountTreas(e.target.value)}
+                        style={{ width: '100%', backgroundColor: '#0F0F0F', color: '#F5F5F5', borderRadius: '4px', border: '1px solid #2D2D2D', padding: '10px 12px', fontSize: '13px' }}
+                      />
+                    </div>
+
+                    <button
+                      disabled={!depositBankId || !depositAmount || confirmingDeposit}
+                      onClick={async () => {
+                        setConfirmingDeposit(true);
+                        try {
+                          await api.post(`/treasury/confirm-deposit/${selectedShift.id}`, {
+                            bankId: depositBankId,
+                            amount: parseFloat(depositAmount),
+                          });
+                          setSelectedShift(null);
+                          const res = await api.get("/treasury/pending-deposits");
+                          setPendingDeposits(Array.isArray(res.data) ? res.data : []);
+                        } catch (e: any) {
+                          alert(e?.response?.data?.message || "Error al confirmar depósito");
+                        } finally {
+                          setConfirmingDeposit(false);
+                        }
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        borderRadius: '4px',
+                        backgroundColor: depositBankId && depositAmount ? '#C0C0C0' : '#2D2D2D',
+                        color: depositBankId && depositAmount ? '#0A0A0A' : '#7E7E7E',
+                        fontWeight: 600,
+                        fontSize: '14px',
+                        cursor: depositBankId && depositAmount ? 'pointer' : 'not-allowed',
+                      }}
+                    >
+                      {confirmingDeposit ? "Confirmando..." : "Confirmar Ingreso a Banco"}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </>

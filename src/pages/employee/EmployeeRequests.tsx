@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import EmployeeLayout from "./EmployeeLayout";
-import { api } from "../../core/api/api";
+import { employeeApi } from "../../core/api/employeeApi";
 
 interface VacationRequest {
   id: string;
@@ -43,8 +43,7 @@ export default function EmployeeRequests() {
   const [permForm, setPermForm] = useState({ date: "", hours: "1", type: "PERSONAL", reason: "" });
   const [saving, setSaving] = useState(false);
 
-  const token = localStorage.getItem("employee_token");
-  const headers = { Authorization: `Bearer ${token}` };
+  const token = sessionStorage.getItem("employee_token");
 
   useEffect(() => {
     if (!token) { navigate("/employee"); return; }
@@ -53,7 +52,7 @@ export default function EmployeeRequests() {
 
   async function loadRequests() {
     try {
-      const res = await api.get("/hr/portal/requests", { headers });
+      const res = await employeeApi.get("/hr/portal/requests");
       setVacaciones(res.data?.vacaciones ?? []);
       setPermisos(res.data?.permisos ?? []);
     } catch {
@@ -67,7 +66,7 @@ export default function EmployeeRequests() {
     e.preventDefault();
     setSaving(true);
     try {
-      await api.post("/hr/portal/vacation-request", vacForm, { headers });
+      await employeeApi.post("/hr/portal/vacation-request", vacForm);
       setShowVacForm(false);
       setVacForm({ startDate: "", endDate: "", reason: "" });
       await loadRequests();
@@ -82,7 +81,7 @@ export default function EmployeeRequests() {
     e.preventDefault();
     setSaving(true);
     try {
-      await api.post("/hr/portal/permission-request", { ...permForm, hours: parseFloat(permForm.hours) }, { headers });
+      await employeeApi.post("/hr/portal/permission-request", { ...permForm, hours: parseFloat(permForm.hours) });
       setShowPermForm(false);
       setPermForm({ date: "", hours: "1", type: "PERSONAL", reason: "" });
       await loadRequests();

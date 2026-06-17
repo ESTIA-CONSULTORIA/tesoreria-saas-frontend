@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../../core/api/api";
+import { employeeApi } from "../../core/api/employeeApi";
 
 export default function EmployeeLogin() {
   const navigate = useNavigate();
@@ -14,11 +14,11 @@ export default function EmployeeLogin() {
     setError("");
     setLoading(true);
     try {
-      const res = await api.post("/auth/login", { email, password });
+      const res = await employeeApi.post("/auth/login", { email, password });
       const { access_token, user } = res.data;
       if (!access_token) throw new Error("Sin token");
-      localStorage.setItem("employee_token", access_token);
-      localStorage.setItem("employee_user", JSON.stringify(user));
+      sessionStorage.setItem("employee_token", access_token);
+      sessionStorage.setItem("employee_user", JSON.stringify(user));
       navigate("/employee/home");
     } catch (e: any) {
       setError(e?.response?.data?.message || "Credenciales incorrectas");

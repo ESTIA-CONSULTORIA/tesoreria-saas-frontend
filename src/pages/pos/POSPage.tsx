@@ -3,7 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
 import { useLoginConfigStore } from "../../core/store/useLoginConfigStore";
+import { useCompanyStore } from "../../core/store/useCompanyStore";
 import PosChatPanel from "./PosChatPanel";
+import TableLayout from "./TableLayout";
+import CheckoutFast from "./CheckoutFast";
 
 type TabType = "terminal" | "productos" | "categorias" | "areas" | "turnos" | "hardware" | "parametros";
 
@@ -88,8 +91,19 @@ export default function POSPage() {
   const logout = useAuthStore((state) => state.logout);
   const token = useAuthStore((state) => state.token);
   const branchId = useAuthStore((state) => state.branchId);
+  const tenantId = useAuthStore((state) => state.tenantId);
   const { config } = useLoginConfigStore();
+  const { activeCompany } = useCompanyStore();
   const isAdminOrSoporte = user?.roleCode === "ADMIN" || user?.roleCode === "SOPORTE";
+
+  // Giro detection
+  const [giro, setGiro] = useState<string>("");
+  const [selectedTableForPOS, setSelectedTableForPOS] = useState<{ id: string; numero: number } | null>(null);
+  const [showTableSelect, setShowTableSelect] = useState(false);
+  const [showRetailCheckout, setShowRetailCheckout] = useState(false);
+
+  const isRestaurant = /restaurante|food|bar|cocina|cafeteria|cafe|bistro/i.test(giro);
+  const isRetail = /retail|comercio|tienda|boutique|abarrotes/i.test(giro);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -257,6 +271,13 @@ export default function POSPage() {
     copiasTicket: "1",
     moneda: "MXN"
   });
+
+  useEffect(() => {
+    if (!activeCompany?.id) return;
+    api.get(`/companies/${activeCompany.id}`)
+      .then((res) => setGiro(res.data?.giro || res.data?.businessType || ""))
+      .catch(() => {});
+  }, [activeCompany?.id]);
 
   useEffect(() => {
     if (!token) return; // esperar token
@@ -1112,6 +1133,62 @@ export default function POSPage() {
               </button>
             </div>
           </header>
+
+          {/* RESTAURANT: tabla selector overlay */}
+          {isRestaurant && shift && showTableSelect && (
+            <div className="fixed inset-0 z-50 bg-black/80 flex flex-col overflow-auto p-4">
+              <div className="flex items-center justify-between mb-4 max-w-5xl mx-auto w-full">
+                <h2 className="text-lg font-semibold text-white">Selecciona una mesa</h2>
+                <button onClick={() => setShowTableSelect(false)} className="text-sm text-slate-400 hover:text-white">✕ Cancelar</button>
+              </div>
+              <div className="max-w-5xl mx-auto w-full">
+                <TableLayout
+                  tenantId={tenantId || ""}
+                  branchId={branchId || ""}
+                  onSelectTable={(tableId, tableNumber) => {
+                    setSelectedTableForPOS({ id: tableId, numero: tableNumber });
+                    setShowTableSelect(false);
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* RESTAURANT: mesa indicator + button when shift open */}
+          {isRestaurant && shift && (
+            <div className="px-4 py-2 border-b border-slate-700 flex items-center gap-3 bg-slate-900">
+              {selectedTableForPOS ? (
+                <span className="text-sm text-green-400 font-medium">Mesa {selectedTableForPOS.numero} seleccionada</span>
+              ) : (
+                <span className="text-sm text-yellow-400">Sin mesa seleccionada</span>
+              )}
+              <button
+                onClick={() => setShowTableSelect(true)}
+                className="text-xs px-3 py-1.5 rounded bg-slate-700 text-white hover:bg-slate-600"
+              >
+                {selectedTableForPOS ? "Cambiar mesa" : "Seleccionar mesa"}
+              </button>
+              {selectedTableForPOS && (
+                <button onClick={() => setSelectedTableForPOS(null)} className="text-xs text-red-400 hover:text-red-300">Liberar mesa</button>
+              )}
+            </div>
+          )}
+
+          {/* RETAIL: CheckoutFast overlay */}
+          {isRetail && shift && showRetailCheckout && ticket.length > 0 && (
+            <div className="fixed inset-0 z-50 bg-black/80 flex items-end justify-center">
+              <div className="w-full max-w-lg">
+                <CheckoutFast
+                  items={ticket}
+                  total={ticket.reduce((s, i) => s + i.subtotal, 0)}
+                  onPay={(formasPago) => {
+                    setShowRetailCheckout(false);
+                  }}
+                  onCancel={() => setShowRetailCheckout(false)}
+                />
+              </div>
+            </div>
+          )}
 
           {/* MAIN CONTENT - 2 ZONES */}
           <div className="flex-1 flex overflow-hidden">

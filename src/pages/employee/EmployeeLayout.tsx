@@ -10,7 +10,8 @@ export default function EmployeeLayout({ children, employee }: Props) {
   const navigate = useNavigate();
 
   function logout() {
-    localStorage.removeItem("employee_token");
+    sessionStorage.removeItem("employee_token");
+    sessionStorage.removeItem("employee_user");
     navigate("/employee");
   }
 
