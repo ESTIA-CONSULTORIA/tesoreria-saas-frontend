@@ -151,8 +151,17 @@ export default function SettingsPage() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      const base64 = ev.target?.result as string;
-      setSettings((s) => ({ ...s, logoUrl: base64 }));
+      setSettings((s) => ({ ...s, logoUrl: ev.target?.result as string }));
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleBackgroundFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setSettings((s) => ({ ...s, backgroundImage: ev.target?.result as string }));
     };
     reader.readAsDataURL(file);
   }
@@ -254,16 +263,16 @@ export default function SettingsPage() {
               <div>
                 <label className="block text-sm text-slate-400 mb-2">Imagen de fondo del sistema</label>
                 <input
-                  value={settings.backgroundImage}
-                  onChange={(e) => setSettings({ ...settings, backgroundImage: e.target.value })}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
-                  placeholder="https://example.com/bg.jpg  (o pegar base64)"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleBackgroundFile}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-slate-300 outline-none focus:border-blue-500 file:mr-3 file:rounded file:border-0 file:bg-slate-700 file:px-3 file:py-1 file:text-sm file:text-slate-200"
                 />
                 {settings.backgroundImage && (
                   <div className="mt-2 flex items-center gap-3">
                     <img
                       src={settings.backgroundImage}
-                      alt="Background preview"
+                      alt="Fondo preview"
                       className="h-16 w-28 rounded object-cover border border-slate-700"
                       onError={(e) => (e.currentTarget.style.display = 'none')}
                     />
