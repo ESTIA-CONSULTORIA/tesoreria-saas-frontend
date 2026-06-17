@@ -11,16 +11,23 @@ interface HrDocument {
   uploadedAt: string;
 }
 
+const TIPO_ICONS: Record<string, string> = {
+  CONTRATO: "◈",
+  CONSTANCIA: "◻",
+  NOMINA: "◯",
+  RECIBO: "▸",
+  OTRO: "·",
+};
+
 export default function EmployeeDocuments() {
   const navigate = useNavigate();
   const [documents, setDocuments] = useState<HrDocument[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const token = sessionStorage.getItem("employee_token");
-
   useEffect(() => {
-    if (!token) { navigate("/employee"); return; }
-    employeeApi.get("/hr/portal/documents")
+    if (!sessionStorage.getItem("employee_token")) { navigate("/employee"); return; }
+    employeeApi
+      .get("/hr/portal/documents")
       .then((res) => setDocuments(res.data ?? []))
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -28,34 +35,104 @@ export default function EmployeeDocuments() {
 
   return (
     <EmployeeLayout>
-      <div className="max-w-2xl mx-auto">
-        <h2 className="font-semibold mb-4">Mis Documentos</h2>
+      <div style={{ padding: "28px 20px 0" }}>
+        <h1 style={{ color: "#F5F5F5", fontSize: "1.2rem", fontWeight: 600, marginBottom: 24 }}>
+          Mis Documentos
+        </h1>
 
         {loading ? (
-          <p className="text-sm" style={{ color: "#9A9A9A" }}>Cargando...</p>
+          <div style={{ color: "#383838", fontSize: "0.8rem", letterSpacing: "0.1em", textAlign: "center", padding: "40px 0" }}>
+            CARGANDO
+          </div>
         ) : documents.length === 0 ? (
-          <div className="rounded-xl p-8 border text-center" style={{ backgroundColor: "#161616", borderColor: "#2D2D2D" }}>
-            <p className="text-sm" style={{ color: "#9A9A9A" }}>No hay documentos disponibles</p>
+          <div
+            style={{
+              background: "#0E0E0E",
+              border: "1px solid #1C1C1C",
+              borderRadius: 14,
+              padding: "48px 20px",
+              textAlign: "center",
+              color: "#303030",
+              fontSize: "0.8rem",
+              letterSpacing: "0.05em",
+            }}
+          >
+            No hay documentos disponibles
           </div>
         ) : (
-          <div className="space-y-2">
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {documents.map((doc) => (
-              <div key={doc.id} className="rounded-lg p-4 border flex items-center justify-between" style={{ backgroundColor: "#161616", borderColor: "#2D2D2D" }}>
-                <div>
-                  <p className="text-sm font-medium">{doc.nombre}</p>
-                  <p className="text-xs" style={{ color: "#9A9A9A" }}>
-                    {doc.tipo} — {new Date(doc.uploadedAt).toLocaleDateString("es-MX")}
-                  </p>
+              <div
+                key={doc.id}
+                style={{
+                  background: "#0E0E0E",
+                  border: "1px solid #1C1C1C",
+                  borderRadius: 14,
+                  padding: "16px 18px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                }}
+              >
+                {/* Icon */}
+                <div
+                  style={{
+                    width: 40,
+                    height: 40,
+                    background: "#141414",
+                    border: "1px solid #1C1C1C",
+                    borderRadius: 10,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#383838",
+                    fontSize: 18,
+                    flexShrink: 0,
+                  }}
+                >
+                  {TIPO_ICONS[doc.tipo?.toUpperCase()] ?? TIPO_ICONS.OTRO}
                 </div>
+
+                {/* Info */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      color: "#F5F5F5",
+                      fontSize: "0.9rem",
+                      fontWeight: 500,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {doc.nombre}
+                  </div>
+                  <div style={{ color: "#383838", fontSize: "0.7rem", marginTop: 3 }}>
+                    {doc.tipo} · {new Date(doc.uploadedAt).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}
+                  </div>
+                </div>
+
+                {/* Action */}
                 {doc.url && (
                   <a
                     href={doc.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs px-3 py-1.5 rounded"
-                    style={{ backgroundColor: "#2D2D2D", color: "#F5F5F5" }}
+                    style={{
+                      flexShrink: 0,
+                      background: "#141414",
+                      border: "1px solid #2A2A2A",
+                      borderRadius: 8,
+                      color: "#A0A0A0",
+                      fontSize: "0.72rem",
+                      fontWeight: 600,
+                      letterSpacing: "0.08em",
+                      padding: "7px 14px",
+                      textDecoration: "none",
+                      textTransform: "uppercase",
+                    }}
                   >
-                    Ver
+                    VER
                   </a>
                 )}
               </div>

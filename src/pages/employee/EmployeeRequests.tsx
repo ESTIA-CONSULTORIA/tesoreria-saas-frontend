@@ -25,11 +25,15 @@ interface PermissionRequest {
   createdAt: string;
 }
 
-const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
-  PENDIENTE: { bg: "#F59E0B22", color: "#F59E0B" },
-  APROBADA: { bg: "#22C55E22", color: "#22C55E" },
-  RECHAZADA: { bg: "#EF444422", color: "#EF4444" },
+const STATUS_CONFIG: Record<string, { color: string; bg: string; label: string }> = {
+  PENDIENTE: { color: "#F59E0B", bg: "#F59E0B12", label: "Pendiente" },
+  APROBADA: { color: "#22C55E", bg: "#22C55E12", label: "Aprobada" },
+  RECHAZADA: { color: "#EF4444", bg: "#EF444412", label: "Rechazada" },
 };
+
+function fmtDate(d: string) {
+  return new Date(d).toLocaleDateString("es-MX", { day: "numeric", month: "short" });
+}
 
 export default function EmployeeRequests() {
   const navigate = useNavigate();
@@ -42,15 +46,14 @@ export default function EmployeeRequests() {
   const [vacForm, setVacForm] = useState({ startDate: "", endDate: "", reason: "" });
   const [permForm, setPermForm] = useState({ date: "", hours: "1", type: "PERSONAL", reason: "" });
   const [saving, setSaving] = useState(false);
-
-  const token = sessionStorage.getItem("employee_token");
+  const [formError, setFormError] = useState("");
 
   useEffect(() => {
-    if (!token) { navigate("/employee"); return; }
-    loadRequests();
+    if (!sessionStorage.getItem("employee_token")) { navigate("/employee"); return; }
+    load();
   }, []);
 
-  async function loadRequests() {
+  async function load() {
     try {
       const res = await employeeApi.get("/hr/portal/requests");
       setVacaciones(res.data?.vacaciones ?? []);
@@ -65,13 +68,14 @@ export default function EmployeeRequests() {
   async function submitVacation(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
+    setFormError("");
     try {
       await employeeApi.post("/hr/portal/vacation-request", vacForm);
       setShowVacForm(false);
       setVacForm({ startDate: "", endDate: "", reason: "" });
-      await loadRequests();
+      await load();
     } catch (e: any) {
-      alert(e?.response?.data?.message || "Error al enviar solicitud");
+      setFormError(e?.response?.data?.message || "Error al enviar solicitud");
     } finally {
       setSaving(false);
     }
@@ -80,161 +84,251 @@ export default function EmployeeRequests() {
   async function submitPermission(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
+    setFormError("");
     try {
       await employeeApi.post("/hr/portal/permission-request", { ...permForm, hours: parseFloat(permForm.hours) });
       setShowPermForm(false);
       setPermForm({ date: "", hours: "1", type: "PERSONAL", reason: "" });
-      await loadRequests();
+      await load();
     } catch (e: any) {
-      alert(e?.response?.data?.message || "Error al enviar solicitud");
+      setFormError(e?.response?.data?.message || "Error al enviar solicitud");
     } finally {
       setSaving(false);
     }
   }
 
+  function inputStyle(): React.CSSProperties {
+    return {
+      width: "100%",
+      background: "#0A0A0A",
+      border: "1px solid #222222",
+      borderRadius: 10,
+      padding: "12px 14px",
+      color: "#F5F5F5",
+      fontSize: "0.9rem",
+      outline: "none",
+      boxSizing: "border-box",
+    };
+  }
+
+  function labelStyle(): React.CSSProperties {
+    return {
+      display: "block",
+      fontSize: "0.6rem",
+      color: "#505050",
+      letterSpacing: "0.15em",
+      textTransform: "uppercase",
+      marginBottom: 6,
+    };
+  }
+
   return (
     <EmployeeLayout>
-      <div className="max-w-2xl mx-auto">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold">Mis Solicitudes</h2>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowVacForm(true)}
-              className="text-xs px-3 py-1.5 rounded"
-              style={{ backgroundColor: "#F5F5F522", color: "#F5F5F5", border: "1px solid #2D2D2D" }}
-            >
-              + Vacaciones
-            </button>
-            <button
-              onClick={() => setShowPermForm(true)}
-              className="text-xs px-3 py-1.5 rounded"
-              style={{ backgroundColor: "#F5F5F522", color: "#F5F5F5", border: "1px solid #2D2D2D" }}
-            >
-              + Permiso
-            </button>
-          </div>
+      <div style={{ padding: "28px 20px 0" }}>
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+          <h1 style={{ color: "#F5F5F5", fontSize: "1.2rem", fontWeight: 600 }}>Mis Solicitudes</h1>
+          <button
+            onClick={() => tab === "vacaciones" ? setShowVacForm(true) : setShowPermForm(true)}
+            style={{
+              background: "#1A1A1A",
+              border: "1px solid #2A2A2A",
+              borderRadius: 10,
+              color: "#A0A0A0",
+              fontSize: "0.78rem",
+              padding: "8px 14px",
+              cursor: "pointer",
+            }}
+          >
+            + Nueva
+          </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-4">
+        <div style={{ display: "flex", gap: 4, marginBottom: 20, background: "#0A0A0A", borderRadius: 12, padding: 4 }}>
           {(["vacaciones", "permisos"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className="text-xs px-3 py-1.5 rounded capitalize"
               style={{
-                backgroundColor: tab === t ? "#2D2D2D" : "transparent",
-                color: tab === t ? "#F5F5F5" : "#9A9A9A",
+                flex: 1,
+                padding: "9px 0",
+                background: tab === t ? "#1C1C1C" : "transparent",
+                border: "none",
+                borderRadius: 9,
+                color: tab === t ? "#F5F5F5" : "#505050",
+                fontSize: "0.7rem",
+                fontWeight: 600,
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+                cursor: "pointer",
+                transition: "all 0.15s",
               }}
             >
-              {t}
+              {t === "vacaciones" ? "VACACIONES" : "PERMISOS"}
             </button>
           ))}
         </div>
 
+        {/* List */}
         {loading ? (
-          <p className="text-sm" style={{ color: "#9A9A9A" }}>Cargando...</p>
+          <div style={{ color: "#383838", fontSize: "0.8rem", letterSpacing: "0.1em", textAlign: "center", padding: "40px 0" }}>
+            CARGANDO
+          </div>
         ) : tab === "vacaciones" ? (
           vacaciones.length === 0 ? (
-            <p className="text-sm" style={{ color: "#9A9A9A" }}>Sin solicitudes de vacaciones</p>
+            <EmptyState label="Sin solicitudes de vacaciones" />
           ) : (
-            <div className="space-y-2">
-              {vacaciones.map((v) => (
-                <div key={v.id} className="rounded-lg p-4 border" style={{ backgroundColor: "#161616", borderColor: "#2D2D2D" }}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium">
-                      {new Date(v.startDate).toLocaleDateString("es-MX")} — {new Date(v.endDate).toLocaleDateString("es-MX")}
-                    </span>
-                    <span
-                      className="text-xs px-2 py-0.5 rounded-full"
-                      style={STATUS_STYLE[v.status] ?? STATUS_STYLE.PENDIENTE}
-                    >
-                      {v.status}
-                    </span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {vacaciones.map((v) => {
+                const s = STATUS_CONFIG[v.status] ?? STATUS_CONFIG.PENDIENTE;
+                return (
+                  <div
+                    key={v.id}
+                    style={{
+                      background: "#0E0E0E",
+                      border: "1px solid #1C1C1C",
+                      borderRadius: 14,
+                      padding: "16px 18px",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                      <div>
+                        <div style={{ color: "#F5F5F5", fontSize: "0.9rem", fontWeight: 500 }}>
+                          {fmtDate(v.startDate)} — {fmtDate(v.endDate)}
+                        </div>
+                        <div style={{ color: "#505050", fontSize: "0.75rem", marginTop: 2 }}>
+                          {v.daysRequested} día{v.daysRequested !== 1 ? "s" : ""}
+                        </div>
+                      </div>
+                      <span
+                        style={{
+                          background: s.bg,
+                          color: s.color,
+                          fontSize: "0.65rem",
+                          fontWeight: 600,
+                          letterSpacing: "0.1em",
+                          padding: "4px 10px",
+                          borderRadius: 20,
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {s.label}
+                      </span>
+                    </div>
+                    {v.reason && <p style={{ color: "#404040", fontSize: "0.78rem" }}>{v.reason}</p>}
+                    {v.responseNote && (
+                      <p style={{ color: "#383838", fontSize: "0.72rem", marginTop: 6, borderTop: "1px solid #1A1A1A", paddingTop: 6 }}>
+                        {v.responseNote}
+                      </p>
+                    )}
                   </div>
-                  <p className="text-xs" style={{ color: "#9A9A9A" }}>{v.daysRequested} días — {v.reason}</p>
-                  {v.responseNote && <p className="text-xs mt-1" style={{ color: "#7E7E7E" }}>Nota: {v.responseNote}</p>}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )
         ) : (
           permisos.length === 0 ? (
-            <p className="text-sm" style={{ color: "#9A9A9A" }}>Sin solicitudes de permisos</p>
+            <EmptyState label="Sin solicitudes de permisos" />
           ) : (
-            <div className="space-y-2">
-              {permisos.map((p) => (
-                <div key={p.id} className="rounded-lg p-4 border" style={{ backgroundColor: "#161616", borderColor: "#2D2D2D" }}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium">
-                      {new Date(p.date).toLocaleDateString("es-MX")} — {p.hours}h — {p.type}
-                    </span>
-                    <span
-                      className="text-xs px-2 py-0.5 rounded-full"
-                      style={STATUS_STYLE[p.status] ?? STATUS_STYLE.PENDIENTE}
-                    >
-                      {p.status}
-                    </span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {permisos.map((p) => {
+                const s = STATUS_CONFIG[p.status] ?? STATUS_CONFIG.PENDIENTE;
+                return (
+                  <div
+                    key={p.id}
+                    style={{
+                      background: "#0E0E0E",
+                      border: "1px solid #1C1C1C",
+                      borderRadius: 14,
+                      padding: "16px 18px",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                      <div>
+                        <div style={{ color: "#F5F5F5", fontSize: "0.9rem", fontWeight: 500 }}>
+                          {fmtDate(p.date)} · {p.hours}h · {p.type}
+                        </div>
+                      </div>
+                      <span
+                        style={{
+                          background: s.bg,
+                          color: s.color,
+                          fontSize: "0.65rem",
+                          fontWeight: 600,
+                          letterSpacing: "0.1em",
+                          padding: "4px 10px",
+                          borderRadius: 20,
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {s.label}
+                      </span>
+                    </div>
+                    {p.reason && <p style={{ color: "#404040", fontSize: "0.78rem" }}>{p.reason}</p>}
+                    {p.responseNote && (
+                      <p style={{ color: "#383838", fontSize: "0.72rem", marginTop: 6, borderTop: "1px solid #1A1A1A", paddingTop: 6 }}>
+                        {p.responseNote}
+                      </p>
+                    )}
                   </div>
-                  <p className="text-xs" style={{ color: "#9A9A9A" }}>{p.reason}</p>
-                  {p.responseNote && <p className="text-xs mt-1" style={{ color: "#7E7E7E" }}>Nota: {p.responseNote}</p>}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )
         )}
       </div>
 
-      {/* Vacation form modal */}
+      {/* Vacation Form Modal */}
       {showVacForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.7)" }}>
-          <form onSubmit={submitVacation} className="w-full max-w-sm p-6 rounded-xl space-y-4" style={{ backgroundColor: "#161616", border: "1px solid #2D2D2D" }}>
-            <h3 className="font-semibold">Solicitar Vacaciones</h3>
+        <Modal title="Solicitar Vacaciones" onClose={() => { setShowVacForm(false); setFormError(""); }}>
+          <form onSubmit={submitVacation} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div>
-              <label className="text-xs block mb-1" style={{ color: "#9A9A9A" }}>Fecha inicio</label>
-              <input type="date" required value={vacForm.startDate} onChange={(e) => setVacForm((p) => ({ ...p, startDate: e.target.value }))}
-                className="w-full text-sm px-3 py-2 rounded" style={{ backgroundColor: "#0A0A0A", border: "1px solid #2D2D2D", color: "#F5F5F5" }} />
-            </div>
-            <div>
-              <label className="text-xs block mb-1" style={{ color: "#9A9A9A" }}>Fecha fin</label>
-              <input type="date" required value={vacForm.endDate} onChange={(e) => setVacForm((p) => ({ ...p, endDate: e.target.value }))}
-                className="w-full text-sm px-3 py-2 rounded" style={{ backgroundColor: "#0A0A0A", border: "1px solid #2D2D2D", color: "#F5F5F5" }} />
+              <label style={labelStyle()}>Fecha inicio</label>
+              <input type="date" required value={vacForm.startDate}
+                onChange={(e) => setVacForm((p) => ({ ...p, startDate: e.target.value }))}
+                style={inputStyle()} />
             </div>
             <div>
-              <label className="text-xs block mb-1" style={{ color: "#9A9A9A" }}>Motivo</label>
-              <textarea value={vacForm.reason} onChange={(e) => setVacForm((p) => ({ ...p, reason: e.target.value }))}
-                className="w-full text-sm px-3 py-2 rounded" rows={3} style={{ backgroundColor: "#0A0A0A", border: "1px solid #2D2D2D", color: "#F5F5F5" }} />
+              <label style={labelStyle()}>Fecha fin</label>
+              <input type="date" required value={vacForm.endDate}
+                onChange={(e) => setVacForm((p) => ({ ...p, endDate: e.target.value }))}
+                style={inputStyle()} />
             </div>
-            <div className="flex gap-2">
-              <button type="button" onClick={() => setShowVacForm(false)} className="flex-1 py-2 text-sm rounded" style={{ border: "1px solid #2D2D2D", color: "#9A9A9A" }}>Cancelar</button>
-              <button type="submit" disabled={saving} className="flex-1 py-2 text-sm rounded font-medium" style={{ backgroundColor: "#F5F5F5", color: "#0A0A0A" }}>
-                {saving ? "Enviando..." : "Enviar"}
-              </button>
+            <div>
+              <label style={labelStyle()}>Motivo (opcional)</label>
+              <textarea value={vacForm.reason} rows={3}
+                onChange={(e) => setVacForm((p) => ({ ...p, reason: e.target.value }))}
+                style={{ ...inputStyle(), resize: "none" }} />
             </div>
+            {formError && <p style={{ color: "#EF4444", fontSize: "0.78rem" }}>{formError}</p>}
+            <ModalButtons onCancel={() => { setShowVacForm(false); setFormError(""); }} saving={saving} />
           </form>
-        </div>
+        </Modal>
       )}
 
-      {/* Permission form modal */}
+      {/* Permission Form Modal */}
       {showPermForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.7)" }}>
-          <form onSubmit={submitPermission} className="w-full max-w-sm p-6 rounded-xl space-y-4" style={{ backgroundColor: "#161616", border: "1px solid #2D2D2D" }}>
-            <h3 className="font-semibold">Solicitar Permiso</h3>
+        <Modal title="Solicitar Permiso" onClose={() => { setShowPermForm(false); setFormError(""); }}>
+          <form onSubmit={submitPermission} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div>
-              <label className="text-xs block mb-1" style={{ color: "#9A9A9A" }}>Fecha</label>
-              <input type="date" required value={permForm.date} onChange={(e) => setPermForm((p) => ({ ...p, date: e.target.value }))}
-                className="w-full text-sm px-3 py-2 rounded" style={{ backgroundColor: "#0A0A0A", border: "1px solid #2D2D2D", color: "#F5F5F5" }} />
+              <label style={labelStyle()}>Fecha</label>
+              <input type="date" required value={permForm.date}
+                onChange={(e) => setPermForm((p) => ({ ...p, date: e.target.value }))}
+                style={inputStyle()} />
             </div>
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <label className="text-xs block mb-1" style={{ color: "#9A9A9A" }}>Horas</label>
-                <input type="number" min="0.5" max="8" step="0.5" required value={permForm.hours} onChange={(e) => setPermForm((p) => ({ ...p, hours: e.target.value }))}
-                  className="w-full text-sm px-3 py-2 rounded" style={{ backgroundColor: "#0A0A0A", border: "1px solid #2D2D2D", color: "#F5F5F5" }} />
+            <div style={{ display: "flex", gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <label style={labelStyle()}>Horas</label>
+                <input type="number" min="0.5" max="8" step="0.5" required value={permForm.hours}
+                  onChange={(e) => setPermForm((p) => ({ ...p, hours: e.target.value }))}
+                  style={inputStyle()} />
               </div>
-              <div className="flex-1">
-                <label className="text-xs block mb-1" style={{ color: "#9A9A9A" }}>Tipo</label>
-                <select value={permForm.type} onChange={(e) => setPermForm((p) => ({ ...p, type: e.target.value }))}
-                  className="w-full text-sm px-3 py-2 rounded" style={{ backgroundColor: "#0A0A0A", border: "1px solid #2D2D2D", color: "#F5F5F5" }}>
+              <div style={{ flex: 1 }}>
+                <label style={labelStyle()}>Tipo</label>
+                <select value={permForm.type}
+                  onChange={(e) => setPermForm((p) => ({ ...p, type: e.target.value }))}
+                  style={inputStyle()}>
                   <option value="PERSONAL">Personal</option>
                   <option value="MEDICO">Médico</option>
                   <option value="FAMILIAR">Familiar</option>
@@ -243,19 +337,109 @@ export default function EmployeeRequests() {
               </div>
             </div>
             <div>
-              <label className="text-xs block mb-1" style={{ color: "#9A9A9A" }}>Motivo</label>
-              <textarea value={permForm.reason} onChange={(e) => setPermForm((p) => ({ ...p, reason: e.target.value }))}
-                className="w-full text-sm px-3 py-2 rounded" rows={3} style={{ backgroundColor: "#0A0A0A", border: "1px solid #2D2D2D", color: "#F5F5F5" }} />
+              <label style={labelStyle()}>Motivo</label>
+              <textarea value={permForm.reason} rows={3}
+                onChange={(e) => setPermForm((p) => ({ ...p, reason: e.target.value }))}
+                style={{ ...inputStyle(), resize: "none" }} />
             </div>
-            <div className="flex gap-2">
-              <button type="button" onClick={() => setShowPermForm(false)} className="flex-1 py-2 text-sm rounded" style={{ border: "1px solid #2D2D2D", color: "#9A9A9A" }}>Cancelar</button>
-              <button type="submit" disabled={saving} className="flex-1 py-2 text-sm rounded font-medium" style={{ backgroundColor: "#F5F5F5", color: "#0A0A0A" }}>
-                {saving ? "Enviando..." : "Enviar"}
-              </button>
-            </div>
+            {formError && <p style={{ color: "#EF4444", fontSize: "0.78rem" }}>{formError}</p>}
+            <ModalButtons onCancel={() => { setShowPermForm(false); setFormError(""); }} saving={saving} />
           </form>
-        </div>
+        </Modal>
       )}
     </EmployeeLayout>
+  );
+}
+
+function EmptyState({ label }: { label: string }) {
+  return (
+    <div
+      style={{
+        background: "#0E0E0E",
+        border: "1px solid #1C1C1C",
+        borderRadius: 14,
+        padding: "36px 20px",
+        textAlign: "center",
+        color: "#303030",
+        fontSize: "0.8rem",
+        letterSpacing: "0.05em",
+      }}
+    >
+      {label}
+    </div>
+  );
+}
+
+function Modal({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 100,
+        background: "rgba(0,0,0,0.8)",
+        display: "flex",
+        alignItems: "flex-end",
+        justifyContent: "center",
+      }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 430,
+          background: "#0E0E0E",
+          border: "1px solid #1C1C1C",
+          borderRadius: "20px 20px 0 0",
+          padding: "24px 20px 36px",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <h3 style={{ color: "#F5F5F5", fontSize: "1rem", fontWeight: 600 }}>{title}</h3>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: "#505050", fontSize: "1.2rem", cursor: "pointer", lineHeight: 1 }}>×</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function ModalButtons({ onCancel, saving }: { onCancel: () => void; saving: boolean }) {
+  return (
+    <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+      <button
+        type="button"
+        onClick={onCancel}
+        style={{
+          flex: 1,
+          padding: "13px",
+          background: "transparent",
+          border: "1px solid #2A2A2A",
+          borderRadius: 10,
+          color: "#505050",
+          fontSize: "0.85rem",
+          cursor: "pointer",
+        }}
+      >
+        Cancelar
+      </button>
+      <button
+        type="submit"
+        disabled={saving}
+        style={{
+          flex: 1,
+          padding: "13px",
+          background: saving ? "#1A1A1A" : "#F5F5F5",
+          border: "none",
+          borderRadius: 10,
+          color: saving ? "#505050" : "#0A0A0A",
+          fontSize: "0.85rem",
+          fontWeight: 600,
+          cursor: saving ? "not-allowed" : "pointer",
+        }}
+      >
+        {saving ? "Enviando..." : "Enviar"}
+      </button>
+    </div>
   );
 }

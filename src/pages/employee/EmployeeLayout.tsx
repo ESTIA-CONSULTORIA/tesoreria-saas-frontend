@@ -1,11 +1,17 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface Props {
   children: React.ReactNode;
-  employee?: { nombre?: string; puesto?: string } | null;
 }
 
-export default function EmployeeLayout({ children, employee }: Props) {
+const TABS = [
+  { label: "INICIO", to: "/employee/home", icon: "⌂" },
+  { label: "SOLICITUDES", to: "/employee/requests", icon: "◈" },
+  { label: "DOCUMENTOS", to: "/employee/documents", icon: "◻" },
+  { label: "PERFIL", to: "/employee/profile", icon: "◯" },
+];
+
+export default function EmployeeLayout({ children }: Props) {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -15,53 +21,74 @@ export default function EmployeeLayout({ children, employee }: Props) {
     navigate("/employee");
   }
 
-  const navItems = [
-    { label: "Inicio", to: "/employee/home" },
-    { label: "Mis Solicitudes", to: "/employee/requests" },
-    { label: "Mis Documentos", to: "/employee/documents" },
-  ];
-
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#0A0A0A", color: "#F5F5F5" }}>
-      {/* Header */}
-      <header
-        className="flex items-center justify-between px-4 py-3 border-b"
-        style={{ backgroundColor: "#101010", borderColor: "#2D2D2D" }}
-      >
-        <div>
-          <span className="font-semibold text-sm">Portal del Empleado</span>
-          {employee?.nombre && (
-            <span className="text-xs ml-2" style={{ color: "#9A9A9A" }}>
-              — {employee.nombre}
-            </span>
-          )}
-        </div>
-        <button onClick={logout} className="text-xs px-3 py-1.5 rounded" style={{ backgroundColor: "#1A1A1A", color: "#9A9A9A" }}>
-          Salir
-        </button>
-      </header>
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        maxWidth: 430,
+        margin: "0 auto",
+        background: "linear-gradient(160deg, #0A0A0A 0%, #111111 50%, #0D0D0D 100%)",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      }}
+    >
+      {/* Scrollable content area */}
+      <div style={{ flex: 1, overflowY: "auto", paddingBottom: 76 }}>
+        {children}
+      </div>
 
-      {/* Nav */}
-      <nav className="flex gap-1 px-4 py-2 border-b" style={{ borderColor: "#2D2D2D" }}>
-        {navItems.map((item) => {
-          const active = location.pathname === item.to;
+      {/* Bottom Navigation */}
+      <nav
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 72,
+          background: "#080808",
+          borderTop: "1px solid #1C1C1C",
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        {TABS.map((tab) => {
+          const active = location.pathname === tab.to;
           return (
-            <Link
-              key={item.to}
-              to={item.to}
-              className="text-xs px-3 py-1.5 rounded"
+            <button
+              key={tab.to}
+              onClick={() => navigate(tab.to)}
               style={{
-                backgroundColor: active ? "#2D2D2D" : "transparent",
-                color: active ? "#F5F5F5" : "#9A9A9A",
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 4,
+                height: "100%",
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                color: active ? "#FFFFFF" : "#505050",
+                transition: "color 0.15s",
               }}
             >
-              {item.label}
-            </Link>
+              <span style={{ fontSize: 18, lineHeight: 1 }}>{tab.icon}</span>
+              <span
+                style={{
+                  fontSize: "0.55rem",
+                  letterSpacing: "0.2em",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                }}
+              >
+                {tab.label}
+              </span>
+            </button>
           );
         })}
       </nav>
-
-      <main className="p-4">{children}</main>
     </div>
   );
 }

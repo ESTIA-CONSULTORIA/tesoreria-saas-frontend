@@ -6,178 +6,313 @@ import { employeeApi } from "../../core/api/employeeApi";
 interface Employee {
   id: string;
   nombre: string;
+  apellidos?: string;
   puesto?: string;
   departamento?: string;
-  email?: string;
-  whatsapp?: string;
-  salario?: number;
-  fechaIngreso?: string;
+}
+
+interface AttendanceRecord {
+  id: string;
+  checkIn?: string;
+  checkOut?: string;
   status?: string;
+  method?: string;
+}
+
+function formatTime(dateStr?: string): string {
+  if (!dateStr) return "--:--";
+  const d = new Date(dateStr);
+  return d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false });
+}
+
+function formatDate(): string {
+  return new Date().toLocaleDateString("es-MX", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
 }
 
 export default function EmployeeHome() {
   const navigate = useNavigate();
   const [employee, setEmployee] = useState<Employee | null>(null);
+  const [attendance, setAttendance] = useState<AttendanceRecord | null | undefined>(undefined);
   const [loading, setLoading] = useState(true);
-  const [checkingIn, setCheckingIn] = useState(false);
-  const [checkMsg, setCheckMsg] = useState("");
+  const [working, setWorking] = useState(false);
+  const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
 
   const token = sessionStorage.getItem("employee_token");
 
   useEffect(() => {
     if (!token) { navigate("/employee"); return; }
-    employeeApi.get("/hr/portal/me")
-      .then((res) => setEmployee(res.data))
-      .catch(() => { navigate("/employee"); })
+    Promise.all([
+      employeeApi.get("/hr/portal/me"),
+      employeeApi.get("/hr/portal/attendance-today"),
+    ])
+      .then(([empRes, attRes]) => {
+        setEmployee(empRes.data);
+        setAttendance(attRes.data ?? null);
+      })
+      .catch(() => navigate("/employee"))
       .finally(() => setLoading(false));
   }, []);
 
-  async function handleCheckin() {
-    setCheckingIn(true);
-    setCheckMsg("");
+  async function handleCheckIn() {
+    setWorking(true);
+    setMessage(null);
     try {
       const position = await new Promise<GeolocationPosition>((resolve, reject) =>
         navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 })
       );
-      await employeeApi.post("/hr/attendance/check-in", {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        method: "GPS",
+      const res = await employeeApi.post("/hr/portal/check-in", {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+        method: "WEB_GPS",
       });
-      setCheckMsg("✓ Entrada registrada correctamente");
+      setAttendance(res.data);
+      setMessage({ text: "Entrada registrada correctamente", ok: true });
     } catch (err: any) {
       if (err.code === 1) {
-        setCheckMsg("Sin acceso a ubicación — registrando sin GPS...");
         try {
-          await employeeApi.post("/hr/attendance/check-in", { method: "MANUAL" });
-          setCheckMsg("✓ Entrada registrada (sin GPS)");
+          const res = await employeeApi.post("/hr/portal/check-in", { method: "WEB_NO_GPS" });
+          setAttendance(res.data);
+          setMessage({ text: "Entrada registrada sin GPS", ok: true });
         } catch (e2: any) {
-          setCheckMsg(e2?.response?.data?.message || "Error al registrar entrada");
+          setMessage({ text: e2?.response?.data?.message || "Error al registrar entrada", ok: false });
         }
       } else {
-        setCheckMsg(err?.response?.data?.message || "Error al registrar entrada");
+        setMessage({ text: err?.response?.data?.message || "Error al registrar entrada", ok: false });
       }
     } finally {
-      setCheckingIn(false);
+      setWorking(false);
     }
   }
 
-  async function handleCheckout() {
-    setCheckingIn(true);
-    setCheckMsg("");
+  async function handleCheckOut() {
+    setWorking(true);
+    setMessage(null);
     try {
-      await employeeApi.post("/hr/attendance/check-out", {});
-      setCheckMsg("✓ Salida registrada correctamente");
+      const res = await employeeApi.post("/hr/portal/check-out", {});
+      setAttendance(res.data);
+      setMessage({ text: "Salida registrada correctamente", ok: true });
     } catch (err: any) {
-      setCheckMsg(err?.response?.data?.message || "Error al registrar salida");
+      setMessage({ text: err?.response?.data?.message || "Error al registrar salida", ok: false });
     } finally {
-      setCheckingIn(false);
+      setWorking(false);
     }
   }
 
   if (loading) {
     return (
       <EmployeeLayout>
-        <p className="text-sm" style={{ color: "#9A9A9A" }}>Cargando...</p>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh" }}>
+          <div style={{ color: "#383838", fontSize: "0.8rem", letterSpacing: "0.1em" }}>CARGANDO</div>
+        </div>
       </EmployeeLayout>
     );
   }
 
+  const hasCheckIn = !!attendance?.checkIn;
+  const hasCheckOut = !!attendance?.checkOut;
+  const state: "none" | "in" | "done" = !hasCheckIn ? "none" : hasCheckOut ? "done" : "in";
+
+  const STATE_CONFIG = {
+    none: {
+      label: "SIN REGISTRO",
+      sublabel: "No has registrado entrada hoy",
+      dot: "#383838",
+      dotGlow: "none",
+    },
+    in: {
+      label: "EN TURNO",
+      sublabel: `Entrada: ${formatTime(attendance?.checkIn)}`,
+      dot: "#22C55E",
+      dotGlow: "0 0 12px #22C55E66",
+    },
+    done: {
+      label: "JORNADA COMPLETA",
+      sublabel: `${formatTime(attendance?.checkIn)} — ${formatTime(attendance?.checkOut)}`,
+      dot: "#3B82F6",
+      dotGlow: "0 0 12px #3B82F666",
+    },
+  };
+
+  const cfg = STATE_CONFIG[state];
+
   return (
-    <EmployeeLayout employee={employee}>
-      <div className="max-w-2xl mx-auto space-y-4">
-        {/* Checada */}
-        <div className="rounded-xl p-5 border" style={{ backgroundColor: "#161616", borderColor: "#2D2D2D" }}>
-          <h2 className="font-semibold mb-3 text-sm">Registrar asistencia</h2>
-          <div className="flex gap-3 flex-wrap">
-            <button
-              onClick={handleCheckin}
-              disabled={checkingIn}
-              className="text-sm px-4 py-2 rounded font-medium"
-              style={{ backgroundColor: "#22C55E22", color: "#22C55E", border: "1px solid #22C55E44" }}
-            >
-              {checkingIn ? "Registrando..." : "Entrada"}
-            </button>
-            <button
-              onClick={handleCheckout}
-              disabled={checkingIn}
-              className="text-sm px-4 py-2 rounded font-medium"
-              style={{ backgroundColor: "#EF444422", color: "#EF4444", border: "1px solid #EF444444" }}
-            >
-              {checkingIn ? "Registrando..." : "Salida"}
-            </button>
-          </div>
-          {checkMsg && (
-            <p className="text-xs mt-2" style={{ color: checkMsg.startsWith("✓") ? "#22C55E" : "#EF4444" }}>
-              {checkMsg}
-            </p>
+    <EmployeeLayout>
+      <div style={{ padding: "28px 20px 0" }}>
+        {/* Greeting */}
+        <div style={{ marginBottom: 28 }}>
+          <p style={{ color: "#383838", fontSize: "0.7rem", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 4 }}>
+            {formatDate()}
+          </p>
+          <h1 style={{ color: "#F5F5F5", fontSize: "1.35rem", fontWeight: 600, lineHeight: 1.2 }}>
+            {employee ? `Hola, ${employee.nombre.split(" ")[0]}` : "Portal del Empleado"}
+          </h1>
+          {employee?.puesto && (
+            <p style={{ color: "#505050", fontSize: "0.8rem", marginTop: 3 }}>{employee.puesto}</p>
           )}
         </div>
 
-        {/* Perfil */}
-        <div className="rounded-xl p-5 border" style={{ backgroundColor: "#161616", borderColor: "#2D2D2D" }}>
-          <h2 className="font-semibold mb-3 text-sm">Mi perfil</h2>
-          {employee ? (
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <span className="text-xs" style={{ color: "#9A9A9A" }}>Nombre</span>
-                <p className="font-medium">{employee.nombre}</p>
+        {/* Attendance Status Card */}
+        <div
+          style={{
+            background: "#0E0E0E",
+            border: "1px solid #1C1C1C",
+            borderRadius: 18,
+            padding: "24px 20px",
+            marginBottom: 16,
+          }}
+        >
+          {/* Status indicator */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+            <div
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: "50%",
+                background: cfg.dot,
+                boxShadow: cfg.dotGlow,
+                flexShrink: 0,
+              }}
+            />
+            <div>
+              <div style={{ color: "#F5F5F5", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.12em" }}>
+                {cfg.label}
               </div>
-              {employee.puesto && (
-                <div>
-                  <span className="text-xs" style={{ color: "#9A9A9A" }}>Puesto</span>
-                  <p className="font-medium">{employee.puesto}</p>
-                </div>
-              )}
-              {employee.departamento && (
-                <div>
-                  <span className="text-xs" style={{ color: "#9A9A9A" }}>Departamento</span>
-                  <p className="font-medium">{employee.departamento}</p>
-                </div>
-              )}
-              {employee.email && (
-                <div>
-                  <span className="text-xs" style={{ color: "#9A9A9A" }}>Correo</span>
-                  <p className="font-medium">{employee.email}</p>
-                </div>
-              )}
-              {employee.fechaIngreso && (
-                <div>
-                  <span className="text-xs" style={{ color: "#9A9A9A" }}>Fecha ingreso</span>
-                  <p className="font-medium">{new Date(employee.fechaIngreso).toLocaleDateString("es-MX")}</p>
-                </div>
-              )}
-              <div>
-                <span className="text-xs" style={{ color: "#9A9A9A" }}>Estatus</span>
-                <p className="font-medium">{employee.status ?? "ACTIVO"}</p>
-              </div>
+              <div style={{ color: "#505050", fontSize: "0.72rem", marginTop: 2 }}>{cfg.sublabel}</div>
             </div>
-          ) : (
-            <p className="text-sm" style={{ color: "#9A9A9A" }}>No se encontró perfil de empleado vinculado a tu usuario.</p>
+          </div>
+
+          {/* Time display */}
+          {state !== "none" && (
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                marginBottom: 20,
+                background: "#0A0A0A",
+                borderRadius: 12,
+                padding: "14px 16px",
+              }}
+            >
+              <div style={{ flex: 1 }}>
+                <div style={{ color: "#383838", fontSize: "0.6rem", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 4 }}>
+                  Entrada
+                </div>
+                <div style={{ color: "#22C55E", fontSize: "1.4rem", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+                  {formatTime(attendance?.checkIn)}
+                </div>
+              </div>
+              {hasCheckOut && (
+                <>
+                  <div style={{ width: 1, background: "#1C1C1C", margin: "4px 0" }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ color: "#383838", fontSize: "0.6rem", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 4 }}>
+                      Salida
+                    </div>
+                    <div style={{ color: "#3B82F6", fontSize: "1.4rem", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+                      {formatTime(attendance?.checkOut)}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Action button */}
+          {state === "none" && (
+            <button
+              onClick={handleCheckIn}
+              disabled={working}
+              style={{
+                width: "100%",
+                padding: "15px",
+                background: working ? "#1A1A1A" : "#22C55E15",
+                border: "1px solid #22C55E40",
+                borderRadius: 12,
+                color: working ? "#383838" : "#22C55E",
+                fontSize: "0.85rem",
+                fontWeight: 600,
+                letterSpacing: "0.08em",
+                cursor: working ? "not-allowed" : "pointer",
+              }}
+            >
+              {working ? "REGISTRANDO..." : "REGISTRAR ENTRADA"}
+            </button>
+          )}
+
+          {state === "in" && (
+            <button
+              onClick={handleCheckOut}
+              disabled={working}
+              style={{
+                width: "100%",
+                padding: "15px",
+                background: working ? "#1A1A1A" : "#EF444415",
+                border: "1px solid #EF444440",
+                borderRadius: 12,
+                color: working ? "#383838" : "#EF4444",
+                fontSize: "0.85rem",
+                fontWeight: 600,
+                letterSpacing: "0.08em",
+                cursor: working ? "not-allowed" : "pointer",
+              }}
+            >
+              {working ? "REGISTRANDO..." : "REGISTRAR SALIDA"}
+            </button>
+          )}
+
+          {state === "done" && (
+            <div
+              style={{
+                textAlign: "center",
+                color: "#3B82F6",
+                fontSize: "0.75rem",
+                letterSpacing: "0.1em",
+                padding: "10px 0 2px",
+              }}
+            >
+              Jornada completada
+            </div>
+          )}
+
+          {/* Feedback message */}
+          {message && (
+            <div
+              style={{
+                marginTop: 12,
+                padding: "10px 14px",
+                background: message.ok ? "#0D1A0D" : "#1A0808",
+                border: `1px solid ${message.ok ? "#22C55E30" : "#EF444430"}`,
+                borderRadius: 8,
+                color: message.ok ? "#22C55E" : "#EF4444",
+                fontSize: "0.78rem",
+              }}
+            >
+              {message.text}
+            </div>
           )}
         </div>
 
-        {/* Accesos rápidos */}
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={() => navigate("/employee/requests")}
-            className="rounded-xl p-4 border text-left"
-            style={{ backgroundColor: "#161616", borderColor: "#2D2D2D" }}
-          >
-            <div className="text-lg mb-1">📋</div>
-            <div className="text-sm font-medium">Mis Solicitudes</div>
-            <div className="text-xs" style={{ color: "#9A9A9A" }}>Vacaciones y permisos</div>
-          </button>
-          <button
-            onClick={() => navigate("/employee/documents")}
-            className="rounded-xl p-4 border text-left"
-            style={{ backgroundColor: "#161616", borderColor: "#2D2D2D" }}
-          >
-            <div className="text-lg mb-1">📁</div>
-            <div className="text-sm font-medium">Mis Documentos</div>
-            <div className="text-xs" style={{ color: "#9A9A9A" }}>Contratos, constancias</div>
-          </button>
-        </div>
+        {/* Method badge */}
+        {attendance?.method && (
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 20 }}>
+            <span
+              style={{
+                fontSize: "0.6rem",
+                color: "#303030",
+                letterSpacing: "0.12em",
+                border: "1px solid #1C1C1C",
+                borderRadius: 6,
+                padding: "3px 8px",
+              }}
+            >
+              {attendance.method}
+            </span>
+          </div>
+        )}
       </div>
     </EmployeeLayout>
   );

@@ -25,6 +25,7 @@ import EmployeeLogin from "./pages/employee/EmployeeLogin";
 import EmployeeHome from "./pages/employee/EmployeeHome";
 import EmployeeRequests from "./pages/employee/EmployeeRequests";
 import EmployeeDocuments from "./pages/employee/EmployeeDocuments";
+import EmployeeProfile from "./pages/employee/EmployeeProfile";
 import OnboardingWizard from "./components/OnboardingWizard";
 
 import LoginPage from "./pages/Login/LoginPage";
@@ -380,6 +381,7 @@ function App() {
       <Route path="/employee/home" element={<EmployeeHome />} />
       <Route path="/employee/requests" element={<EmployeeRequests />} />
       <Route path="/employee/documents" element={<EmployeeDocuments />} />
+      <Route path="/employee/profile" element={<EmployeeProfile />} />
 
       {/* Rutas de SOPORTE - Solo accesibles para rol SOPORTE */}
       <Route
