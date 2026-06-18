@@ -424,7 +424,6 @@ export default function HRPage() {
                       </td>
                       <td className="p-3">
                         <div className="flex gap-2">
-                          <button onClick={() => selectForExpediente(emp)} className="rounded bg-slate-700 px-2 py-1 text-xs hover:bg-slate-600">Expediente</button>
                           <button onClick={() => openEdit(emp)} className="rounded bg-blue-600 px-2 py-1 text-xs hover:bg-blue-700">Editar</button>
                           <button onClick={() => deleteEmployee(emp.id)} className="rounded bg-red-700 px-2 py-1 text-xs hover:bg-red-600">Eliminar</button>
                         </div>
