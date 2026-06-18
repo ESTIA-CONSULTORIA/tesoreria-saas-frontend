@@ -5,7 +5,7 @@ import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
 
-type Tab = "empleados" | "expedientes" | "nomina" | "asistencia" | "turnos" | "solicitudes";
+type Tab = "empleados" | "expedientes" | "nomina" | "asistencia" | "turnos" | "solicitudes" | "cumpleanos";
 
 interface Employee {
   id: string;
@@ -38,6 +38,9 @@ interface Employee {
   banco?: string;
   clabe?: string;
   periodoPago?: string;
+  // Datos personales adicionales
+  fechaNacimiento?: string;
+  genero?: string;
 }
 
 interface HrDocument {
@@ -69,6 +72,7 @@ const EMPTY_EMP: Partial<Employee> = {
   tipoJornada: "COMPLETA", tipoContrato: "INDETERMINADO", tipoSalario: "FIJO",
   salarioDiarioIntegrado: 0, claveRiesgoTrabajo: "",
   banco: "", clabe: "", periodoPago: "QUINCENAL",
+  fechaNacimiento: "", genero: "M",
 };
 
 function calcPeriodo(sd: number, periodo: string): number {
@@ -134,6 +138,10 @@ export default function HRPage() {
   const [loadingPending, setLoadingPending]   = useState(false);
   const [vacacionesCount, setVacacionesCount] = useState(0);
 
+  // Cumpleaños
+  const [birthdays, setBirthdays]             = useState<any[]>([]);
+  const [loadingBirthdays, setLoadingBirthdays] = useState(false);
+
   // Carga masiva
   const [showBulkPanel, setShowBulkPanel] = useState(false);
   const [bulkFiles, setBulkFiles]         = useState<{ file: File; tipo: string; status: "pending" | "uploading" | "done" | "error" }[]>([]);
@@ -165,6 +173,7 @@ export default function HRPage() {
   useEffect(() => {
     if (tab === "asistencia") loadAttendance();
     if (tab === "solicitudes") loadPending();
+    if (tab === "cumpleanos") loadBirthdays();
   }, [tab]);
 
   async function loadEmployees() {
@@ -180,7 +189,7 @@ export default function HRPage() {
           setEmployeePhotos(pr.data ?? {});
         } catch { /* photos optional */ }
       }
-    } catch { setError("Error al cargar empleados"); }
+    } catch (err) { console.error('loadEmployees error:', err); setError("Error al cargar empleados"); }
     finally { setLoading(false); }
   }
 
@@ -216,6 +225,15 @@ export default function HRPage() {
       const p = rRes.data ?? { vacaciones: [], permisos: [] };
       setVacacionesCount((p.vacaciones?.length || 0) + (p.permisos?.length || 0));
     } catch {}
+  }
+
+  async function loadBirthdays() {
+    setLoadingBirthdays(true);
+    try {
+      const res = await api.get("/hr/employees/birthdays", { headers });
+      setBirthdays(Array.isArray(res.data) ? res.data : []);
+    } catch { setBirthdays([]); }
+    finally { setLoadingBirthdays(false); }
   }
 
   async function loadPending() {
@@ -432,6 +450,7 @@ export default function HRPage() {
   const tabLabel: Record<Tab, string> = {
     empleados: 'Empleados', expedientes: 'Contratos', nomina: 'Nómina',
     asistencia: 'Asistencias', turnos: 'Turnos', solicitudes: 'Vacaciones',
+    cumpleanos: 'Cumpleaños',
   };
 
   // Common input style
@@ -483,7 +502,7 @@ export default function HRPage() {
 
         {/* ── Internal tabs ── */}
         <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.07)', marginBottom: 20, overflowX: 'auto' }}>
-          {(["empleados", "expedientes", "nomina", "asistencia", "turnos", "solicitudes"] as Tab[]).map((t) => (
+          {(["empleados", "expedientes", "nomina", "asistencia", "turnos", "solicitudes", "cumpleanos"] as Tab[]).map((t) => (
             <button key={t} onClick={() => setTab(t)} style={{
               padding: '8px 14px', fontSize: 12.5, fontWeight: tab === t ? 500 : 400,
               color: tab === t ? '#c8cdd8' : 'rgba(255,255,255,0.35)',
@@ -886,6 +905,76 @@ export default function HRPage() {
           </div>
         )}
 
+        {/* ── TAB: Cumpleaños ── */}
+        {tab === "cumpleanos" && (() => {
+          const today = new Date();
+          const todayDay   = today.getDate();
+          const todayMonth = today.getMonth() + 1;
+          return (
+            <div>
+              <h2 style={{ fontSize: 14, fontWeight: 500, marginBottom: 16, color: '#c8cdd8' }}>
+                Cumpleaños este mes
+              </h2>
+              {loadingBirthdays ? (
+                <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13 }}>Cargando...</div>
+              ) : birthdays.length === 0 ? (
+                <div style={{ padding: 24, borderRadius: 10, background: '#141820', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.25)', fontSize: 13, textAlign: 'center' }}>
+                  Sin cumpleaños este mes
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {birthdays.map((b: any) => {
+                    const bDate = new Date(b.fechaNacimiento);
+                    const bDay  = bDate.getUTCDate();
+                    const bMonth = bDate.getUTCMonth() + 1;
+                    const isToday = bDay === todayDay && bMonth === todayMonth;
+                    const age = todayMonth > bMonth || (todayMonth === bMonth && todayDay >= bDay)
+                      ? today.getFullYear() - bDate.getUTCFullYear()
+                      : today.getFullYear() - bDate.getUTCFullYear() - 1;
+                    const emp = employees.find(e => e.id === b.id);
+                    return (
+                      <div key={b.id} style={{
+                        display: 'flex', alignItems: 'center', gap: 14,
+                        padding: '12px 16px', borderRadius: 10,
+                        background: isToday ? 'rgba(123,156,204,0.06)' : '#141820',
+                        border: `1px solid ${isToday ? 'rgba(123,156,204,0.2)' : 'rgba(255,255,255,0.07)'}`,
+                      }}>
+                        {emp
+                          ? <EmpAvatar emp={emp} photos={employeePhotos} />
+                          : (
+                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#1c2030', color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11.5, fontWeight: 600, flexShrink: 0, border: '1px solid rgba(255,255,255,0.06)' }}>
+                              {((b.nombre?.[0] || '') + (b.apellidos?.[0] || '')).toUpperCase() || '?'}
+                            </div>
+                          )
+                        }
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 500, color: '#c8cdd8', fontSize: 13 }}>
+                            {b.nombre} {b.apellidos}
+                          </div>
+                          <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
+                            {b.puesto}{b.departamento ? ` · ${b.departamento}` : ''}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                          <div style={{ fontSize: 12.5, color: isToday ? '#7b9ccc' : 'rgba(255,255,255,0.55)', fontWeight: isToday ? 600 : 400 }}>
+                            {String(bDay).padStart(2, '0')}/{String(bMonth).padStart(2, '0')}
+                          </div>
+                          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', marginTop: 2 }}>
+                            {age} años
+                          </div>
+                        </div>
+                        {isToday && (
+                          <div style={{ fontSize: 18, marginLeft: 4 }} title="¡Cumpleaños hoy!">🎂</div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
       </div>
 
       {/* ── Modal empleado — 4 pestañas ── */}
@@ -922,6 +1011,14 @@ export default function HRPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div><label className="block text-xs text-slate-400 mb-1">Nombre *</label><input value={editingEmp.nombre ?? ""} onChange={(e) => setEditingEmp((p) => ({ ...p, nombre: e.target.value }))} className={inp} /></div>
                   <div><label className="block text-xs text-slate-400 mb-1">Apellidos</label><input value={editingEmp.apellidos ?? ""} onChange={(e) => setEditingEmp((p) => ({ ...p, apellidos: e.target.value }))} className={inp} /></div>
+                  <div><label className="block text-xs text-slate-400 mb-1">Fecha de Nacimiento</label><input type="date" value={editingEmp.fechaNacimiento ?? ""} onChange={(e) => setEditingEmp((p) => ({ ...p, fechaNacimiento: e.target.value }))} className={inp} /></div>
+                  <div><label className="block text-xs text-slate-400 mb-1">Género</label>
+                    <select value={editingEmp.genero ?? "M"} onChange={(e) => setEditingEmp((p) => ({ ...p, genero: e.target.value }))} className={inp}>
+                      <option value="M">Masculino</option>
+                      <option value="F">Femenino</option>
+                      <option value="OTRO">Otro</option>
+                    </select>
+                  </div>
                   <div><label className="block text-xs text-slate-400 mb-1">CURP (18 chars)</label><input value={editingEmp.curp ?? ""} onChange={(e) => setEditingEmp((p) => ({ ...p, curp: e.target.value.toUpperCase() }))} maxLength={18} className={`${inp} font-mono`} /></div>
                   <div><label className="block text-xs text-slate-400 mb-1">RFC (12-13 chars)</label><input value={editingEmp.rfc ?? ""} onChange={(e) => setEditingEmp((p) => ({ ...p, rfc: e.target.value.toUpperCase() }))} maxLength={13} className={`${inp} font-mono`} /></div>
                   <div><label className="block text-xs text-slate-400 mb-1">NSS (11 dígitos)</label><input value={editingEmp.nss ?? ""} onChange={(e) => setEditingEmp((p) => ({ ...p, nss: e.target.value.replace(/\D/g, "").slice(0, 11) }))} className={`${inp} font-mono`} /></div>
