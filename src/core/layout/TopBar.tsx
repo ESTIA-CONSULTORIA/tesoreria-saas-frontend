@@ -1,0 +1,423 @@
+import { useState, useEffect, useRef } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { useAuthStore } from "../store/useAuthStore";
+import { useCompanyStore } from "../store/useCompanyStore";
+import { useModulo } from "../hooks/useModulo";
+import { api } from "../api/api";
+import { jwtDecode } from "jwt-decode";
+
+interface Company { id: string; legalName: string; tradeName: string; }
+interface Branch  { id: string; name: string; }
+
+const IC: Record<string, React.ReactNode> = {
+  dashboard: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>,
+  rh:        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+  tesoreria: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>,
+  pos:       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>,
+  compras:   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>,
+  reportes:  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+  integraciones: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M4.22 4.22l2.12 2.12m11.32 11.32 2.12 2.12M2 12h3m14 0h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>,
+  auditoria: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+};
+
+type ModKey = "dashboard" | "rh" | "tesoreria" | "pos" | "compras" | "reportes" | "integraciones" | "auditoria";
+
+const NAV: { label: string; key: ModKey; path: string; modulo: string }[] = [
+  { label: "Dashboard",     key: "dashboard",     path: "/dashboard",    modulo: "dashboard" },
+  { label: "RH",            key: "rh",            path: "/hr",           modulo: "rh" },
+  { label: "Tesorería",     key: "tesoreria",     path: "/treasury",     modulo: "tesoreria" },
+  { label: "POS",           key: "pos",           path: "/pos",          modulo: "pos" },
+  { label: "Compras",       key: "compras",       path: "/purchases",    modulo: "compras" },
+  { label: "Reportes",      key: "reportes",      path: "/reports",      modulo: "reportes" },
+  { label: "Integraciones", key: "integraciones", path: "/integrations", modulo: "integraciones" },
+  { label: "Auditoría",     key: "auditoria",     path: "/settings",     modulo: "configuracion" },
+];
+
+const SUBNAV: Record<ModKey, { label: string; path: string }[]> = {
+  dashboard: [],
+  rh: [
+    { label: "Empleados",   path: "/hr?tab=empleados" },
+    { label: "Asistencias", path: "/hr?tab=asistencia" },
+    { label: "Vacaciones",  path: "/hr?tab=solicitudes" },
+    { label: "Nómina",      path: "/hr?tab=nomina" },
+    { label: "Contratos",   path: "/hr?tab=expedientes" },
+    { label: "Turnos",      path: "/hr?tab=turnos" },
+  ],
+  tesoreria: [
+    { label: "Bancos",         path: "/banks" },
+    { label: "Movimientos",    path: "/movements" },
+    { label: "Transferencias", path: "/transfers" },
+    { label: "Vista General",  path: "/treasury" },
+    { label: "Conciliación",   path: "/reconciliation" },
+  ],
+  pos:       [{ label: "POS", path: "/pos" }],
+  compras: [
+    { label: "Proveedores",    path: "/suppliers" },
+    { label: "Compras",        path: "/purchases" },
+    { label: "Costos",         path: "/costs" },
+    { label: "OCR Documentos", path: "/ocr" },
+  ],
+  reportes:      [{ label: "Reportes",      path: "/reports" }],
+  integraciones: [{ label: "Integraciones", path: "/integrations" }],
+  auditoria: [
+    { label: "Configuración",  path: "/settings" },
+    { label: "Config. Login",  path: "/settings/login-config" },
+  ],
+};
+
+const MODULE_PATHS: Record<ModKey, string[]> = {
+  dashboard:     ["/dashboard", "/companies", "/branches"],
+  rh:            ["/hr", "/employee"],
+  tesoreria:     ["/banks", "/movements", "/transfers", "/treasury", "/reconciliation"],
+  pos:           ["/pos"],
+  compras:       ["/suppliers", "/purchases", "/costs", "/ocr"],
+  reportes:      ["/reports"],
+  integraciones: ["/integrations"],
+  auditoria:     ["/settings", "/soporte"],
+};
+
+function getActiveKey(pathname: string): ModKey {
+  for (const [key, paths] of Object.entries(MODULE_PATHS) as [ModKey, string[]][]) {
+    if (paths.some(p => pathname === p || pathname.startsWith(p + '/'))) return key;
+  }
+  return "dashboard";
+}
+
+function isSubActive(item: { path: string }, loc: { pathname: string; search: string }): boolean {
+  const qi = item.path.indexOf('?');
+  if (qi === -1) {
+    return loc.pathname === item.path || loc.pathname.startsWith(item.path + '/');
+  }
+  const iPath = item.path.slice(0, qi);
+  const iSearch = item.path.slice(qi + 1);
+  if (loc.pathname !== iPath) return false;
+  const iTab = new URLSearchParams(iSearch).get('tab');
+  const cTab = new URLSearchParams(loc.search).get('tab') || 'empleados';
+  return iTab === cTab;
+}
+
+export default function TopBar() {
+  const loc = useLocation();
+  const { user, logout } = useAuthStore();
+  const { companyId: userCompanyId } = useAuthStore();
+  const { activeCompany, activeBranch, setActiveCompany, setActiveBranch } = useCompanyStore();
+
+  // Module access — hooks always in same order
+  const aD  = useModulo('dashboard');
+  const aR  = useModulo('rh');
+  const aT  = useModulo('tesoreria');
+  const aP  = useModulo('pos');
+  const aC  = useModulo('compras');
+  const aRe = useModulo('reportes');
+  const aI  = useModulo('integraciones');
+  const aA  = useModulo('configuracion');
+  const modAccess: Record<ModKey, boolean> = {
+    dashboard: aD, rh: aR, tesoreria: aT, pos: aP,
+    compras: aC, reportes: aRe, integraciones: aI, auditoria: aA,
+  };
+
+  // Context switcher state
+  const [ctxOpen, setCtxOpen]               = useState(false);
+  const [ctxPhase, setCtxPhase]             = useState<'company' | 'branch'>('company');
+  const [companies, setCompanies]           = useState<Company[]>([]);
+  const [branches, setBranches]             = useState<Branch[]>([]);
+  const [pendingCo, setPendingCo]           = useState<{ id: string; name: string } | null>(null);
+  const ctxRef = useRef<HTMLDivElement>(null);
+
+  const isAdmin = user?.roleCode === 'ADMIN' || user?.roleCode === 'SOPORTE';
+  const isRestricted = !!userCompanyId && !isAdmin;
+
+  useEffect(() => {
+    function onOut(e: MouseEvent) {
+      if (ctxRef.current && !ctxRef.current.contains(e.target as Node)) {
+        setCtxOpen(false);
+        setCtxPhase('company');
+      }
+    }
+    if (ctxOpen) document.addEventListener('mousedown', onOut);
+    return () => document.removeEventListener('mousedown', onOut);
+  }, [ctxOpen]);
+
+  async function openCtx() {
+    const next = !ctxOpen;
+    setCtxOpen(next);
+    if (!next) return;
+    // Load companies if not yet loaded
+    if (companies.length === 0) {
+      try {
+        const r = await api.get('/companies');
+        setCompanies(Array.isArray(r.data) ? r.data : []);
+      } catch {}
+    }
+    // Start at branch phase if company already selected
+    if (activeCompany) {
+      setPendingCo(activeCompany);
+      setCtxPhase('branch');
+      try {
+        const r = await api.get(`/branches?companyId=${activeCompany.id}`);
+        setBranches(Array.isArray(r.data) ? r.data : []);
+      } catch {}
+    } else {
+      setCtxPhase('company');
+    }
+  }
+
+  async function pickCompany(co: Company) {
+    const name = co.tradeName || co.legalName;
+    setPendingCo({ id: co.id, name });
+    setCtxPhase('branch');
+    setBranches([]);
+    try {
+      const r = await api.get(`/branches?companyId=${co.id}`);
+      setBranches(Array.isArray(r.data) ? r.data : []);
+    } catch {}
+  }
+
+  async function pickBranch(br: Branch) {
+    if (!pendingCo) return;
+    setActiveCompany(pendingCo);
+    setActiveBranch({ id: br.id, name: br.name });
+    setCtxOpen(false);
+    setCtxPhase('company');
+    try {
+      const r = await api.post('/auth/switch-company', { companyId: pendingCo.id });
+      const { access_token, user: nu } = r.data;
+      if (access_token) {
+        localStorage.setItem('access_token', access_token);
+        const dec: any = jwtDecode(access_token);
+        const mods = JSON.parse(localStorage.getItem('modulos_activos') || '[]');
+        useAuthStore.getState().login(access_token, dec.tenantId || '', {
+          id: nu?.id || dec.sub, email: nu?.email || dec.email, name: nu?.name,
+          roleCode: dec.roleCode, tenantId: dec.tenantId, companyId: pendingCo.id,
+        }, mods);
+      }
+    } catch {}
+  }
+
+  function clearCtx() {
+    setActiveCompany(null);
+    setActiveBranch(null);
+    ['active_company_id','active_company_name','active_branch_id','active_branch_name']
+      .forEach(k => localStorage.removeItem(k));
+    setCtxOpen(false);
+    setCtxPhase('company');
+  }
+
+  const ctxLabel = activeCompany
+    ? activeBranch
+      ? `${activeCompany.name} — ${activeBranch.name}`
+      : activeCompany.name
+    : "Vista Global";
+
+  const activeKey  = getActiveKey(loc.pathname);
+  const visibleNav = NAV.filter(m => modAccess[m.key]);
+  const subItems   = SUBNAV[activeKey] || [];
+
+  const userInitials = (() => {
+    const n = user?.name || user?.email || '';
+    const p = n.split(/[\s@]/);
+    return ((p[0]?.[0] || '') + (p[1]?.[0] || '')).toUpperCase() || '?';
+  })();
+
+  // Shared hover handler helpers
+  const hoverOn  = (el: HTMLElement, col: string) => { el.style.color = col; };
+  const hoverOff = (el: HTMLElement, col: string) => { el.style.color = col; };
+
+  return (
+    <>
+      {/* ── Main topbar ── */}
+      <div style={{
+        height: 52, background: '#141820',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        display: 'flex', alignItems: 'center',
+        padding: '0 20px', flexShrink: 0,
+        position: 'relative', zIndex: 100,
+      }}>
+        {/* Logo */}
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 1, marginRight: 28, flexShrink: 0 }}>
+          <span style={{ fontSize: 13.5, fontWeight: 700, color: '#c8cdd8', letterSpacing: '0.1em' }}>ESTIA</span>
+          <span style={{ fontSize: 13.5, fontWeight: 700, color: '#7b9ccc', letterSpacing: '0.1em' }}>ERP</span>
+        </div>
+
+        {/* Nav */}
+        <nav style={{ display: 'flex', alignItems: 'stretch', flex: 1, height: '100%', overflowX: 'auto', gap: 0 }}>
+          {visibleNav.map(m => {
+            const active = activeKey === m.key;
+            return (
+              <Link key={m.key} to={m.path} style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                padding: '0 13px', height: '100%', textDecoration: 'none',
+                fontSize: 12.5, fontWeight: active ? 500 : 400,
+                color: active ? '#c8cdd8' : 'rgba(255,255,255,0.35)',
+                borderBottom: active ? '2px solid #7b9ccc' : '2px solid transparent',
+                transition: 'color 0.15s', whiteSpace: 'nowrap', flexShrink: 0,
+              }}
+              onMouseEnter={e => { if (!active) hoverOn(e.currentTarget as HTMLElement, 'rgba(255,255,255,0.65)'); }}
+              onMouseLeave={e => { if (!active) hoverOff(e.currentTarget as HTMLElement, 'rgba(255,255,255,0.35)'); }}
+              >
+                <span style={{ opacity: active ? 0.9 : 0.55, display: 'flex' }}>{IC[m.key]}</span>
+                {m.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Right section */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, marginLeft: 12 }}>
+
+          {/* Context switcher */}
+          <div ref={ctxRef} style={{ position: 'relative' }}>
+            {isRestricted ? (
+              <div style={{
+                padding: '5px 10px', fontSize: 12, color: 'rgba(255,255,255,0.45)',
+                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+                borderRadius: 6, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}>
+                {ctxLabel}
+              </div>
+            ) : (
+              <button onClick={openCtx} style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '5px 10px', background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6,
+                color: '#c8cdd8', fontSize: 12, cursor: 'pointer',
+                maxWidth: 220, overflow: 'hidden',
+              }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ctxLabel}</span>
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d={ctxOpen ? "M18 15l-6-6-6 6" : "M6 9l6 6 6-6"}/></svg>
+              </button>
+            )}
+
+            {ctxOpen && (
+              <div style={{
+                position: 'absolute', top: 'calc(100% + 4px)', right: 0,
+                background: '#1a1f2e', border: '1px solid rgba(255,255,255,0.09)',
+                borderRadius: 8, width: 230, zIndex: 1000,
+                boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                overflow: 'hidden',
+              }}>
+                {ctxPhase === 'company' ? (
+                  <>
+                    <div style={{ padding: '8px 12px 4px', fontSize: 9.5, color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Empresa</div>
+                    {isAdmin && (
+                      <CtxItem label="Vista Global" icon={<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>} active={!activeCompany} onClick={clearCtx} />
+                    )}
+                    {companies.length === 0 && <div style={{ padding: '8px 12px', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>Cargando...</div>}
+                    {companies.map(co => (
+                      <CtxItem key={co.id} label={co.tradeName || co.legalName} active={activeCompany?.id === co.id}
+                        onClick={() => pickCompany(co)}
+                        after={<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>}
+                      />
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                      <button onClick={() => { setCtxPhase('company'); setPendingCo(null); }} style={{
+                        display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none',
+                        color: 'rgba(255,255,255,0.35)', cursor: 'pointer', fontSize: 11, padding: 0,
+                      }}>
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
+                        Volver
+                      </button>
+                      <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>{pendingCo?.name}</span>
+                    </div>
+                    <div style={{ padding: '6px 12px 4px', fontSize: 9.5, color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Sucursal</div>
+                    {branches.length === 0 && <div style={{ padding: '8px 12px', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>Cargando...</div>}
+                    {branches.map(br => (
+                      <CtxItem key={br.id} label={br.name} active={activeBranch?.id === br.id} onClick={() => pickBranch(br)} />
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Divider */}
+          <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.08)' }} />
+
+          {/* User */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: '50%',
+              background: '#1e2d45', border: '1px solid rgba(123,156,204,0.25)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 10.5, fontWeight: 600, color: '#8fafd4', flexShrink: 0,
+            }}>
+              {userInitials}
+            </div>
+            <div style={{ lineHeight: 1.2 }}>
+              <div style={{ fontSize: 11.5, color: '#c8cdd8', fontWeight: 500 }}>{user?.name?.split(' ')[0] || user?.email?.split('@')[0]}</div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{user?.roleCode}</div>
+            </div>
+            <button onClick={logout} style={{
+              fontSize: 11, color: 'rgba(255,255,255,0.28)', background: 'transparent',
+              border: 'none', cursor: 'pointer', padding: '4px 6px', borderRadius: 4,
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#c8cdd8'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.28)'; }}
+            >
+              Salir
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Subnav ── */}
+      {subItems.length > 0 && (
+        <div style={{
+          height: 40, background: '#111419',
+          borderBottom: '1px solid rgba(255,255,255,0.05)',
+          display: 'flex', alignItems: 'stretch',
+          padding: '0 20px', flexShrink: 0,
+          overflowX: 'auto', position: 'relative', zIndex: 99,
+        }}>
+          {subItems.map(item => {
+            const active = isSubActive(item, loc);
+            return (
+              <Link key={item.path} to={item.path} style={{
+                display: 'flex', alignItems: 'center',
+                padding: '0 14px', height: '100%', textDecoration: 'none',
+                fontSize: 12, fontWeight: active ? 500 : 400,
+                color: active ? '#c8cdd8' : 'rgba(255,255,255,0.35)',
+                borderBottom: active ? '2px solid rgba(255,255,255,0.25)' : '2px solid transparent',
+                whiteSpace: 'nowrap', transition: 'color 0.15s', flexShrink: 0,
+              }}
+              onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.65)'; }}
+              onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.35)'; }}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </>
+  );
+}
+
+// Helper item component for dropdown
+function CtxItem({
+  label, icon, after, active, onClick,
+}: {
+  label: string; icon?: React.ReactNode; after?: React.ReactNode;
+  active?: boolean; onClick: () => void;
+}) {
+  return (
+    <div onClick={onClick} style={{
+      padding: '8px 12px', fontSize: 12.5, cursor: 'pointer',
+      color: active ? '#c8cdd8' : 'rgba(255,255,255,0.55)',
+      background: active ? 'rgba(255,255,255,0.04)' : 'transparent',
+      display: 'flex', alignItems: 'center', gap: 8,
+      transition: 'background 0.1s',
+    }}
+    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)'; }}
+    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = active ? 'rgba(255,255,255,0.04)' : 'transparent'; }}
+    >
+      {icon && <span style={{ opacity: 0.6, display: 'flex' }}>{icon}</span>}
+      <span style={{ flex: 1 }}>{label}</span>
+      {after && <span style={{ opacity: 0.35, display: 'flex' }}>{after}</span>}
+    </div>
+  );
+}
