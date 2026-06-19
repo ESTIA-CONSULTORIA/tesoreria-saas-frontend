@@ -1129,6 +1129,12 @@ export default function HRPage() {
                         </span>
                       </label>
                     </div>
+                    {(ocrTipo === 'INE' || ocrTipo === 'CURP') && (
+                      <p style={{ margin: '10px 0 0', fontSize: 11.5, color: 'rgba(180,150,80,0.9)', display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                        <span style={{ flexShrink: 0 }}>⚠</span>
+                        Para mejores resultados con el OCR, sube el INE como imagen JPG o PNG. Los PDF escaneados no contienen texto y el análisis puede fallar.
+                      </p>
+                    )}
                   </div>
                   {docs.length === 0 ? (
                     <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.25)', fontSize: 13, padding: '16px 0' }}>Sin documentos en el expediente</p>
