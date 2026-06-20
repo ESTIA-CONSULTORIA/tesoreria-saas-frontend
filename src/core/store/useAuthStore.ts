@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { jwtDecode } from "jwt-decode";
+import { useCompanyStore } from "./useCompanyStore";
 
 interface User {
   id: string;
@@ -100,6 +101,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.removeItem("user_branch_id");
     localStorage.removeItem("active_company_id");
     localStorage.removeItem("active_branch_id");
+    localStorage.removeItem("active_company_name");
+    localStorage.removeItem("active_branch_name");
+
+    // Reset in-memory company store (localStorage already cleared above)
+    useCompanyStore.getState().setActiveCompany(null);
+    useCompanyStore.getState().setActiveBranch(null);
 
     set({
       token: null,
@@ -109,5 +116,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       companyId: null,
       branchId: null,
     });
+
+    window.location.href = '/';
   },
 }));

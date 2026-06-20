@@ -22,7 +22,7 @@ api.interceptors.request.use((config) => {
   }
 
   if (tenantId && tenantId !== '') {
-    config.headers["tenant-id"] = tenantId;
+    config.headers["x-tenant-id"] = tenantId;
   }
 
   if (activeCompanyId && activeCompanyId !== '') {
