@@ -323,6 +323,18 @@ export default function TopBar() {
                       </button>
                       <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>{pendingCo?.name}</span>
                     </div>
+                    <CtxItem
+                      label="Ver toda la empresa"
+                      icon={<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>}
+                      active={activeCompany?.id === pendingCo?.id && !activeBranch}
+                      onClick={() => {
+                        if (!pendingCo) return;
+                        setActiveCompany(pendingCo);
+                        setActiveBranch(null);
+                        setCtxOpen(false);
+                        setCtxPhase('company');
+                      }}
+                    />
                     <div style={{ padding: '6px 12px 4px', fontSize: 9.5, color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Sucursal</div>
                     {branches.length === 0 && <div style={{ padding: '8px 12px', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>Cargando...</div>}
                     {branches.map(br => (

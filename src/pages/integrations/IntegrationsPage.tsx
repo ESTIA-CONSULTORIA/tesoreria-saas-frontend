@@ -25,7 +25,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   comunicacion: "Comunicación",
 };
 
-const STATUS_COLORS: Record<string, string> = {
+const STATUS_DOT: Record<string, string> = {
   CONNECTED: "#22C55E",
   DISCONNECTED: "#6B7280",
   ERROR: "#EF4444",
@@ -102,103 +102,137 @@ export default function IntegrationsPage() {
 
   return (
     <MainLayout>
-      <div className="p-6" style={{ color: "#F5F5F5" }}>
-        <h1 className="text-xl font-semibold mb-1">Integraciones</h1>
-        <p className="text-sm mb-6" style={{ color: "#9A9A9A" }}>
-          Conecta ESTIA con sistemas externos
-        </p>
+      <div style={{ padding: "24px", color: "#c8cdd8" }}>
+        <div style={{ marginBottom: 20 }}>
+          <h1 style={{ fontSize: 15, fontWeight: 600, color: "#c8cdd8", marginBottom: 2 }}>Integraciones</h1>
+          <p style={{ fontSize: 12, color: "#6b7280" }}>Conecta ESTIA con sistemas externos</p>
+        </div>
 
         {loading ? (
-          <div className="text-sm" style={{ color: "#9A9A9A" }}>Cargando...</div>
+          <div style={{ fontSize: 12, color: "#6b7280" }}>Cargando...</div>
+        ) : integrations.length === 0 ? (
+          <div style={{ fontSize: 12, color: "#6b7280" }}>No hay integraciones disponibles.</div>
         ) : (
           categories.map((cat) => (
-            <div key={cat} className="mb-8">
-              <h2 className="text-xs font-semibold mb-3 uppercase tracking-wider" style={{ color: "#7E7E7E" }}>
+            <div key={cat} style={{ marginBottom: 28 }}>
+              <div style={{
+                fontSize: 10, fontWeight: 600, letterSpacing: "0.1em",
+                textTransform: "uppercase", color: "#4b5563", marginBottom: 10,
+              }}>
                 {CATEGORY_LABELS[cat] ?? cat}
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              </div>
+
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+                gap: 8,
+              }}>
                 {integrations
                   .filter((i) => i.category === cat)
-                  .map((entry) => (
-                    <div
-                      key={entry.slug}
-                      className="rounded-lg p-4 border"
-                      style={{ backgroundColor: "#161616", borderColor: "#2D2D2D" }}
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl">{entry.icon}</span>
-                          <div>
-                            <div className="text-sm font-medium">{entry.name}</div>
-                            <div className="text-xs" style={{ color: "#9A9A9A" }}>{entry.description}</div>
+                  .map((entry) => {
+                    const dotColor = STATUS_DOT[entry.status] ?? "#6b7280";
+                    const testR = testResult?.slug === entry.slug ? testResult : null;
+
+                    return (
+                      <div
+                        key={entry.slug}
+                        style={{
+                          background: "#141820",
+                          border: "1px solid rgba(255,255,255,0.07)",
+                          borderRadius: 8,
+                          padding: "10px 12px",
+                        }}
+                      >
+                        {/* Header row */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                          <span style={{ fontSize: 20, lineHeight: 1, flexShrink: 0 }}>{entry.icon}</span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                              <span style={{ fontSize: 12.5, fontWeight: 500, color: "#c8cdd8" }}>
+                                {entry.name}
+                              </span>
+                              <div style={{
+                                width: 6, height: 6, borderRadius: "50%",
+                                background: dotColor, flexShrink: 0,
+                              }} />
+                            </div>
+                            <p style={{
+                              fontSize: 11, color: "#6b7280", margin: 0,
+                              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                              maxWidth: "100%",
+                            }}>
+                              {entry.description}
+                            </p>
                           </div>
                         </div>
-                        <div
-                          className="text-xs px-2 py-0.5 rounded-full"
-                          style={{
-                            backgroundColor: (STATUS_COLORS[entry.status] ?? "#6B7280") + "22",
-                            color: STATUS_COLORS[entry.status] ?? "#6B7280",
-                          }}
-                        >
-                          {entry.isActive ? "Activo" : "Inactivo"}
-                        </div>
-                      </div>
 
-                      {entry.lastSync && (
-                        <div className="text-xs mb-2" style={{ color: "#7E7E7E" }}>
-                          Última sync: {new Date(entry.lastSync).toLocaleString("es-MX")}
-                        </div>
-                      )}
+                        {/* Test result */}
+                        {testR && (
+                          <div style={{
+                            fontSize: 11, padding: "4px 8px", borderRadius: 4, marginBottom: 6,
+                            background: testR.success ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)",
+                            color: testR.success ? "#22C55E" : "#ef4444",
+                            border: `1px solid ${testR.success ? "rgba(34,197,94,0.2)" : "rgba(239,68,68,0.2)"}`,
+                          }}>
+                            {testR.message}
+                          </div>
+                        )}
 
-                      {testResult?.slug === entry.slug && (
-                        <div
-                          className="text-xs mb-2 px-2 py-1 rounded"
-                          style={{
-                            backgroundColor: testResult.success ? "#22C55E22" : "#EF444422",
-                            color: testResult.success ? "#22C55E" : "#EF4444",
-                          }}
-                        >
-                          {testResult.message}
-                        </div>
-                      )}
-
-                      <div className="flex gap-2 mt-3">
-                        {entry.isActive ? (
-                          <>
-                            <button
-                              onClick={() => handleTest(entry.slug)}
-                              className="flex-1 text-xs py-1.5 rounded border"
-                              style={{ borderColor: "#2D2D2D", color: "#9A9A9A" }}
-                            >
-                              Probar
-                            </button>
+                        {/* Actions */}
+                        <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+                          {entry.isActive ? (
+                            <>
+                              <button
+                                onClick={() => handleTest(entry.slug)}
+                                style={{
+                                  flex: 1, fontSize: 11, padding: "4px 0",
+                                  background: "transparent",
+                                  border: "1px solid rgba(255,255,255,0.1)",
+                                  borderRadius: 5, color: "#9ca3af", cursor: "pointer",
+                                }}
+                              >
+                                Probar
+                              </button>
+                              <button
+                                onClick={() => openModal(entry)}
+                                style={{
+                                  flex: 1, fontSize: 11, padding: "4px 0",
+                                  background: "transparent",
+                                  border: "1px solid rgba(255,255,255,0.1)",
+                                  borderRadius: 5, color: "#9ca3af", cursor: "pointer",
+                                }}
+                              >
+                                Configurar
+                              </button>
+                              <button
+                                onClick={() => handleDeactivate(entry.slug)}
+                                style={{
+                                  fontSize: 11, padding: "4px 10px",
+                                  background: "rgba(239,68,68,0.08)",
+                                  border: "1px solid rgba(239,68,68,0.2)",
+                                  borderRadius: 5, color: "#ef4444", cursor: "pointer",
+                                }}
+                              >
+                                Off
+                              </button>
+                            </>
+                          ) : (
                             <button
                               onClick={() => openModal(entry)}
-                              className="flex-1 text-xs py-1.5 rounded border"
-                              style={{ borderColor: "#2D2D2D", color: "#9A9A9A" }}
+                              style={{
+                                flex: 1, fontSize: 11, padding: "5px 0",
+                                background: "rgba(123,156,204,0.08)",
+                                border: "1px solid rgba(123,156,204,0.2)",
+                                borderRadius: 5, color: "#7b9ccc", cursor: "pointer",
+                              }}
                             >
-                              Configurar
+                              Activar
                             </button>
-                            <button
-                              onClick={() => handleDeactivate(entry.slug)}
-                              className="text-xs py-1.5 px-3 rounded"
-                              style={{ backgroundColor: "#EF444422", color: "#EF4444" }}
-                            >
-                              Off
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            onClick={() => openModal(entry)}
-                            className="flex-1 text-xs py-1.5 rounded"
-                            style={{ backgroundColor: "#1A1A1A", border: "1px solid #3D3D3D", color: "#F5F5F5" }}
-                          >
-                            Activar
-                          </button>
-                        )}
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
               </div>
             </div>
           ))
@@ -207,47 +241,66 @@ export default function IntegrationsPage() {
 
       {/* Modal de configuración */}
       {modal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.7)" }}>
-          <div className="rounded-xl p-6 w-full max-w-md" style={{ backgroundColor: "#161616", border: "1px solid #2D2D2D" }}>
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-2xl">{modal.icon}</span>
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 50,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          background: "rgba(0,0,0,0.7)",
+        }}>
+          <div style={{
+            background: "#141820", border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: 12, padding: 24, width: "100%", maxWidth: 420,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <span style={{ fontSize: 24 }}>{modal.icon}</span>
               <div>
-                <h3 className="font-semibold">{modal.name}</h3>
-                <p className="text-xs" style={{ color: "#9A9A9A" }}>{modal.description}</p>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#c8cdd8" }}>{modal.name}</div>
+                <div style={{ fontSize: 11, color: "#6b7280" }}>{modal.description}</div>
               </div>
             </div>
 
-            <div className="space-y-3 mb-4">
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
               {modal.fields.map((field) => (
                 <div key={field}>
-                  <label className="text-xs mb-1 block capitalize" style={{ color: "#9A9A9A" }}>
+                  <label style={{ fontSize: 11, color: "#9ca3af", display: "block", marginBottom: 4, textTransform: "capitalize" }}>
                     {field.replace(/_/g, " ")}
                   </label>
                   <input
                     type={field.includes("contrasena") || field.includes("secret") || field.includes("token") ? "password" : "text"}
                     value={credentials[field] ?? ""}
                     onChange={(e) => setCredentials((p) => ({ ...p, [field]: e.target.value }))}
-                    className="w-full text-sm px-3 py-2 rounded"
-                    style={{ backgroundColor: "#0A0A0A", border: "1px solid #2D2D2D", color: "#F5F5F5" }}
                     placeholder={field.replace(/_/g, " ")}
+                    style={{
+                      width: "100%", fontSize: 12.5, padding: "7px 10px",
+                      background: "#0f1117", border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: 6, color: "#c8cdd8", boxSizing: "border-box",
+                    }}
                   />
                 </div>
               ))}
             </div>
 
-            <div className="flex gap-2">
+            <div style={{ display: "flex", gap: 8 }}>
               <button
                 onClick={() => setModal(null)}
-                className="flex-1 py-2 text-sm rounded"
-                style={{ border: "1px solid #2D2D2D", color: "#9A9A9A" }}
+                style={{
+                  flex: 1, padding: "8px 0", fontSize: 12.5,
+                  background: "transparent",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 6, color: "#9ca3af", cursor: "pointer",
+                }}
               >
                 Cancelar
               </button>
               <button
                 onClick={handleActivate}
                 disabled={saving}
-                className="flex-1 py-2 text-sm rounded font-medium"
-                style={{ backgroundColor: "#F5F5F5", color: "#0A0A0A" }}
+                style={{
+                  flex: 1, padding: "8px 0", fontSize: 12.5, fontWeight: 500,
+                  background: saving ? "rgba(255,255,255,0.05)" : "#7b9ccc",
+                  border: "none", borderRadius: 6,
+                  color: saving ? "#6b7280" : "#0f1117",
+                  cursor: saving ? "not-allowed" : "pointer",
+                }}
               >
                 {saving ? "Guardando..." : "Guardar y activar"}
               </button>
