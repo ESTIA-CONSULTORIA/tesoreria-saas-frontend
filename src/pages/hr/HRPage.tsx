@@ -807,9 +807,17 @@ export default function HRPage() {
                     {["Empleado", "Entrada", "Salida", "Método", "Estado"].map(h => <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11.5, fontWeight: 500, color: 'rgba(255,255,255,0.35)' }}>{h}</th>)}
                   </tr></thead>
                   <tbody>
-                    {attendance.map((a) => (
+                    {attendance.map((a) => {
+                      const emp = employees.find(e => e.id === a.employeeId);
+                      const empName = emp ? `${emp.nombre} ${emp.apellidos || ''}`.trim() : a.employeeId.slice(0, 8) + '…';
+                      return (
                       <tr key={a.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                        <td style={{ padding: '10px 14px', color: '#c8cdd8' }}>{a.employeeId}</td>
+                        <td style={{ padding: '10px 14px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            {emp && <EmpAvatar emp={emp} photos={employeePhotos} />}
+                            <span style={{ color: '#c8cdd8' }}>{empName}</span>
+                          </div>
+                        </td>
                         <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.5)' }}>{a.checkIn ? new Date(a.checkIn).toLocaleTimeString("es-MX") : "—"}</td>
                         <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.5)' }}>{a.checkOut ? new Date(a.checkOut).toLocaleTimeString("es-MX") : "—"}</td>
                         <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.35)', fontSize: 12 }}>{a.method}</td>
@@ -817,7 +825,8 @@ export default function HRPage() {
                           <span style={{ background: a.status === "PRESENTE" ? 'rgba(100,130,180,0.08)' : 'rgba(239,68,68,0.08)', color: a.status === "PRESENTE" ? '#7b9ccc' : 'rgba(252,165,165,0.8)', border: `1px solid ${a.status === "PRESENTE" ? 'rgba(100,130,180,0.15)' : 'rgba(239,68,68,0.2)'}`, borderRadius: 4, padding: '2px 8px', fontSize: 11 }}>{a.status}</span>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
