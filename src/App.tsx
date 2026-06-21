@@ -89,7 +89,7 @@ function App() {
     const applyTheme = async () => {
       if (tenantId) {
         try {
-          const res = await api.get(`/tenant-settings/${tenantId}`);
+          const res = await api.get(`/tenant-settings/${tenantId}`, { timeout: 5000 });
           const config = res.data;
           if (config) {
             if (config.primaryColor) {
