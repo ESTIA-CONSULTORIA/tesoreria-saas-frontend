@@ -125,6 +125,9 @@ export default function HRPage() {
   const [attendance, setAttendance]             = useState<any[]>([]);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
   const [attendanceCount, setAttendanceCount]   = useState(0);
+  const [showAttendanceModal, setShowAttendanceModal] = useState(false);
+  const [attendanceForm, setAttendanceForm]     = useState({ employeeId: '', date: new Date().toISOString().split('T')[0], checkIn: '08:00', checkOut: '' });
+  const [attendanceSaving, setAttendanceSaving] = useState(false);
 
   // Turnos
   const [shifts, setShifts]             = useState<any[]>([]);
@@ -200,6 +203,27 @@ export default function HRPage() {
       setAttendance(Array.isArray(res.data) ? res.data : []);
     } catch { setAttendance([]); }
     finally { setLoadingAttendance(false); }
+  }
+
+  async function createManualAttendance() {
+    if (!attendanceForm.employeeId) { setError('Selecciona un empleado'); return; }
+    if (!attendanceForm.date) { setError('Selecciona una fecha'); return; }
+    setAttendanceSaving(true);
+    try {
+      await api.post('/hr/attendance', {
+        employeeId: attendanceForm.employeeId,
+        date: attendanceForm.date,
+        checkIn: attendanceForm.checkIn || undefined,
+        checkOut: attendanceForm.checkOut || undefined,
+      }, { headers });
+      setShowAttendanceModal(false);
+      setAttendanceForm({ employeeId: '', date: new Date().toISOString().split('T')[0], checkIn: '08:00', checkOut: '' });
+      loadAttendance();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Error al registrar asistencia');
+    } finally {
+      setAttendanceSaving(false);
+    }
   }
 
   async function loadShifts() {
@@ -767,7 +791,10 @@ export default function HRPage() {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <h2 style={{ fontSize: 14, fontWeight: 500, margin: 0, color: '#c8cdd8' }}>Asistencia de hoy</h2>
-              <button onClick={loadAttendance} style={{ padding: '5px 12px', fontSize: 11.5, borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.45)', cursor: 'pointer' }}>Actualizar</button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={loadAttendance} style={{ padding: '5px 12px', fontSize: 11.5, borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.45)', cursor: 'pointer' }}>Actualizar</button>
+                <button onClick={() => { setShowAttendanceModal(true); setError(''); }} style={{ padding: '5px 14px', fontSize: 11.5, borderRadius: 6, background: '#1e2d45', border: '1px solid rgba(123,156,204,0.3)', color: '#8fafd4', cursor: 'pointer' }}>+ Registrar Asistencia</button>
+              </div>
             </div>
             {loadingAttendance ? (
               <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13 }}>Cargando...</div>
@@ -976,6 +1003,50 @@ export default function HRPage() {
         })()}
 
       </div>
+
+      {/* ── Modal Registrar Asistencia Manual ── */}
+      {showAttendanceModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 500 }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowAttendanceModal(false); }}>
+          <div style={{ background: '#141820', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 12, padding: 24, width: '100%', maxWidth: 420 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3 style={{ fontSize: 15, fontWeight: 600, margin: 0, color: '#c8cdd8' }}>Registrar Asistencia</h3>
+              <button onClick={() => setShowAttendanceModal(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', cursor: 'pointer', fontSize: 20, lineHeight: 1 }}>×</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.35)', display: 'block', marginBottom: 4 }}>Empleado</label>
+                <select value={attendanceForm.employeeId} onChange={(e) => setAttendanceForm(p => ({ ...p, employeeId: e.target.value }))} className={inp}>
+                  <option value="">Seleccionar empleado...</option>
+                  {employees.filter(e => e.status === 'ACTIVO').map(emp => (
+                    <option key={emp.id} value={emp.id}>{emp.nombre} {emp.apellidos || ''}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.35)', display: 'block', marginBottom: 4 }}>Fecha</label>
+                <input type="date" value={attendanceForm.date} onChange={(e) => setAttendanceForm(p => ({ ...p, date: e.target.value }))} className={inp} />
+              </div>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.35)', display: 'block', marginBottom: 4 }}>Hora entrada</label>
+                  <input type="time" value={attendanceForm.checkIn} onChange={(e) => setAttendanceForm(p => ({ ...p, checkIn: e.target.value }))} className={inp} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.35)', display: 'block', marginBottom: 4 }}>Hora salida <span style={{ opacity: 0.5, fontSize: 10 }}>(opcional)</span></label>
+                  <input type="time" value={attendanceForm.checkOut} onChange={(e) => setAttendanceForm(p => ({ ...p, checkOut: e.target.value }))} className={inp} />
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 20 }}>
+              <button onClick={() => setShowAttendanceModal(false)} style={{ padding: '7px 14px', fontSize: 12, borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={createManualAttendance} disabled={attendanceSaving} style={{ padding: '7px 18px', fontSize: 12, borderRadius: 6, background: '#1e2d45', border: '1px solid rgba(123,156,204,0.3)', color: '#8fafd4', fontWeight: 500, cursor: 'pointer', opacity: attendanceSaving ? 0.6 : 1 }}>
+                {attendanceSaving ? 'Guardando...' : 'Guardar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Modal empleado — 4 pestañas ── */}
       {showEmpModal && (
