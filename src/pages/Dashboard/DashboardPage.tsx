@@ -46,8 +46,8 @@ export default function DashboardPage() {
           `/dashboard/company/${activeCompany.id}/kpis`,
           { params: { period } }
         );
-        setCompanyKpis(res.data);
         setKpis(null);
+        setCompanyKpis(res.data);
       } else {
         // Vista global: cargar KPIs de todo el tenant
         const res = await api.get('/dashboard/kpis', {
@@ -69,6 +69,19 @@ export default function DashboardPage() {
   }, [loadData, loadPendingShifts]);
 
   const companyBarChartData = useMemo(() => {
+    // Vista empresa: mostrar por sucursal, sin fallback a datos globales
+    if (companyKpis !== null) {
+      if (companyKpis?.branchesBreakdown?.length > 0) {
+        return companyKpis.branchesBreakdown.map((branch: any) => ({
+          name: branch.branchName,
+          Ingresos: Number(branch.income),
+          Egresos: Number(branch.expense),
+          Saldo: Number(branch.balance),
+        }));
+      }
+      return [];
+    }
+    // Vista global: mostrar por empresa
     if (kpis?.companiesBreakdown?.length > 0) {
       return kpis.companiesBreakdown.map((company: any) => ({
         name: company.companyName,
@@ -84,7 +97,7 @@ export default function DashboardPage() {
       Egresos: Number(kpis?.expense || 0),
       Saldo: Number(kpis?.totalBalance || 0),
     }];
-  }, [kpis?.companiesBreakdown, kpis?.income, kpis?.expense, kpis?.totalBalance]);
+  }, [companyKpis, kpis?.companiesBreakdown, kpis?.income, kpis?.expense, kpis?.totalBalance]);
 
   const trendLineChartData = useMemo(() => {
     const data = [];
@@ -111,15 +124,18 @@ export default function DashboardPage() {
 
   // Lógica limpia de display
   const displayTotals = useMemo(() => {
-    // Con empresa o sucursal: sumar branchesBreakdown
-    if (companyKpis?.branchesBreakdown?.length) {
-      return companyKpis.branchesBreakdown.reduce(
-        (acc: any, b: any) => ({
-          income: acc.income + (Number(b.income) || 0),
-          expense: acc.expense + (Number(b.expense) || 0),
-          balance: acc.balance + (Number(b.balance) || 0),
-        }), { income: 0, expense: 0, balance: 0 }
-      );
+    // Vista empresa: usar solo companyKpis, sin fallback a datos globales
+    if (companyKpis !== null) {
+      if (companyKpis?.branchesBreakdown?.length) {
+        return companyKpis.branchesBreakdown.reduce(
+          (acc: any, b: any) => ({
+            income: acc.income + (Number(b.income) || 0),
+            expense: acc.expense + (Number(b.expense) || 0),
+            balance: acc.balance + (Number(b.balance) || 0),
+          }), { income: 0, expense: 0, balance: 0 }
+        );
+      }
+      return { income: 0, expense: 0, balance: 0 };
     }
     // Vista global: sumar companiesBreakdown
     if (kpis?.companiesBreakdown?.length) {
@@ -131,7 +147,7 @@ export default function DashboardPage() {
         }), { income: 0, expense: 0, balance: 0 }
       );
     }
-    // Sucursal o empresa sin breakdown: usar campos directos
+    // Sucursal: usar campos directos de kpis
     if (kpis?.income !== undefined || kpis?.expense !== undefined) {
       return {
         income: Number(kpis.income || 0),
@@ -140,7 +156,7 @@ export default function DashboardPage() {
       };
     }
     return { income: 0, expense: 0, balance: 0 };
-  }, [companyKpis?.branchesBreakdown, kpis?.companiesBreakdown, kpis?.income, kpis?.expense, kpis?.totalBalance]);
+  }, [companyKpis, kpis?.companiesBreakdown, kpis?.income, kpis?.expense, kpis?.totalBalance]);
 
   const ventasDisplay = displayTotals.income;
   const egresosDisplay = displayTotals.expense;
