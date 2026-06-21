@@ -39,6 +39,7 @@ export default function TreasuryPage() {
     concept: "",
     referencia: "",
   });
+  const [transferHistory, setTransferHistory] = useState<any[]>([]);
   const [alertForm, setAlertForm] = useState({
     saldoMinimo: "",
     diasAnticipacionAlerta: "",
@@ -71,6 +72,8 @@ export default function TreasuryPage() {
         case "traslados":
           const banksRes = await api.get("/banks");
           setBanks(Array.isArray(banksRes.data) ? banksRes.data : []);
+          const historyRes = await api.get("/treasury/transfers?limit=20");
+          setTransferHistory(Array.isArray(historyRes.data) ? historyRes.data : []);
           break;
         case "cxp":
           const cxpRes = await api.get("/treasury/accounts-payable");
@@ -651,7 +654,33 @@ export default function TreasuryPage() {
                 <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '24px' }}>
                   <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '16px' }}>Historial de Traslados</h3>
                   <div className="space-y-2">
-                    <p style={{ color: '#7E7E7E', textAlign: 'center', padding: '32px' }}>No hay traslados recientes</p>
+                    {transferHistory.length === 0 ? (
+                      <p style={{ color: '#7E7E7E', textAlign: 'center', padding: '32px' }}>No hay traslados recientes</p>
+                    ) : (
+                      transferHistory.map((t: any) => (
+                        <div key={t.id} style={{ padding: '12px', borderRadius: '4px', border: '1px solid #2D2D2D', backgroundColor: '#0F0F0F' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                              <span style={{ color: '#F5F5F5', fontSize: '14px', fontWeight: 500 }}>
+                                ${Number(t.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                              </span>
+                              <span style={{ marginLeft: '8px', fontSize: '11px', padding: '2px 6px', borderRadius: '4px', backgroundColor: t.tipo === 'INTERNA' ? '#1e3a5f' : '#3b1f5e', color: t.tipo === 'INTERNA' ? '#60a5fa' : '#c084fc' }}>
+                                {t.tipo === 'INTERNA' ? 'Interno' : 'Intercompañía'}
+                              </span>
+                            </div>
+                            <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px',
+                              backgroundColor: t.status === 'AUTORIZADA' ? '#14532d' : t.status === 'RECHAZADA' ? '#450a0a' : '#422006',
+                              color: t.status === 'AUTORIZADA' ? '#4ade80' : t.status === 'RECHAZADA' ? '#f87171' : '#fb923c'
+                            }}>
+                              {t.status}
+                            </span>
+                          </div>
+                          <p style={{ color: '#7E7E7E', fontSize: '12px', marginTop: '4px' }}>
+                            {t.concept || 'Sin concepto'} · {new Date(t.createdAt).toLocaleDateString('es-MX')}
+                          </p>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
