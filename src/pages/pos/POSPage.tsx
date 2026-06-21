@@ -815,6 +815,7 @@ export default function POSPage() {
         cajero: selectedCashier || user?.id,
         turnoId: shift.id,
         sucursalId: user?.branchId || branchId,
+        mesaId: selectedTableForPOS?.id || undefined,
       };
       const response = await api.post("/pos/sales", saleData);
       const sale = response.data;
@@ -824,6 +825,7 @@ export default function POSPage() {
       setShowPaymentModal(false);
       setTicket([]);
       setPaymentForms([]);
+      setSelectedTableForPOS(null);
       loadSalesHistory();
     } catch (error) {
       console.error("Error processing payment:", error);
