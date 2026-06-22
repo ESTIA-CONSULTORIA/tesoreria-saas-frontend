@@ -4,6 +4,7 @@ import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
+import { ConceptsEditor } from './ConceptsEditor';
 
 type Tab = "empleados" | "expedientes" | "nomina" | "asistencia" | "turnos" | "solicitudes" | "cumpleanos";
 
@@ -35,6 +36,7 @@ interface Employee {
   salarioDiarioIntegrado?: number;
   claveRiesgoTrabajo?: string;
   // Nómina
+  imssNumber?: string;
   banco?: string;
   clabe?: string;
   periodoPago?: string;
@@ -71,7 +73,7 @@ const EMPTY_EMP: Partial<Employee> = {
   domicilio: "", colonia: "", ciudad: "", estado: "", codigoPostal: "", numeroIne: "",
   tipoJornada: "COMPLETA", tipoContrato: "INDETERMINADO", tipoSalario: "FIJO",
   salarioDiarioIntegrado: 0, claveRiesgoTrabajo: "",
-  banco: "", clabe: "", periodoPago: "QUINCENAL",
+  imssNumber: "", banco: "", clabe: "", periodoPago: "QUINCENAL",
   fechaNacimiento: "", genero: "M",
 };
 
@@ -160,8 +162,21 @@ export default function HRPage() {
   const [ocrTipo, setOcrTipo]       = useState('INE');
   const [toast, setToast]           = useState('');
 
+  // Nómina (payroll runs)
+  const [payrollRuns, setPayrollRuns]       = useState<any[]>([]);
+  const [selectedRun, setSelectedRun]       = useState<any>(null);
+  const [payrollTab, setPayrollTab]         = useState<'lista' | 'prenomina' | 'nomina'>('lista');
+  const [showNewRunModal, setShowNewRunModal] = useState(false);
+  const [newRunForm, setNewRunForm]         = useState({ periodStart: '', periodEnd: '', periodType: 'QUINCENAL', notes: '' });
+  const [loadingPayroll, setLoadingPayroll] = useState(false);
+  const [selectedEntry, setSelectedEntry]   = useState<any>(null);
+  const [showConceptsModal, setShowConceptsModal] = useState(false);
+  const [cajas, setCajas]                   = useState<any[]>([]);
+  const [selectedCajaId, setSelectedCajaId] = useState('');
+
   const tenantId  = useAuthStore((s) => s.tenantId);
   const companyId = useAuthStore((s) => s.companyId);
+  const user      = useAuthStore((s) => s.user);
   const activeCompany = useCompanyStore((s) => s.activeCompany);
   const activeBranch  = useCompanyStore((s) => s.activeBranch);
 
@@ -171,6 +186,8 @@ export default function HRPage() {
     loadEmployees();
     loadShifts();
     loadMetrics();
+    loadPayrollRuns();
+    loadCajas();
   }, []);
 
   useEffect(() => {
@@ -268,6 +285,73 @@ export default function HRPage() {
     } catch { setPendingRequests({ vacaciones: [], permisos: [] }); }
     finally { setLoadingPending(false); }
   }
+
+  // ── Payroll functions ──
+
+  const loadPayrollRuns = async () => {
+    try {
+      const res = await api.get('/payroll/runs');
+      setPayrollRuns(Array.isArray(res.data) ? res.data : []);
+    } catch (e) { console.error(e); }
+  };
+
+  const loadCajas = async () => {
+    try {
+      const res = await api.get('/banks');
+      setCajas(Array.isArray(res.data) ? res.data : []);
+    } catch (e) { console.error(e); }
+  };
+
+  const loadRun = async (id: string) => {
+    try {
+      const res = await api.get(`/payroll/runs/${id}`);
+      // Backend returns { run, entries } — merge into a flat object
+      setSelectedRun({ ...res.data.run, entries: res.data.entries });
+    } catch (e) { console.error(e); }
+  };
+
+  const createPayrollRun = async () => {
+    if (!newRunForm.periodStart || !newRunForm.periodEnd) return;
+    setLoadingPayroll(true);
+    try {
+      const res = await api.post('/payroll/runs', { ...newRunForm, branchId: activeBranch?.id });
+      // Backend returns { run, entries }
+      setPayrollRuns((prev: any[]) => [res.data.run, ...prev]);
+      setSelectedRun({ ...res.data.run, entries: res.data.entries });
+      setPayrollTab('prenomina');
+      setShowNewRunModal(false);
+    } catch (e) { console.error(e); }
+    setLoadingPayroll(false);
+  };
+
+  const updateEntry = async (entryId: string, concepts: any[]) => {
+    try {
+      await api.put(`/payroll/entries/${entryId}`, { concepts });
+      if (selectedRun?.id) await loadRun(selectedRun.id);
+    } catch (e) { console.error(e); }
+  };
+
+  const approveRun = async () => {
+    if (!selectedRun) return;
+    try {
+      const res = await api.put(`/payroll/runs/${selectedRun.id}/approve`, {
+        approvedBy: (user as any)?.email || 'admin',
+      });
+      setSelectedRun((prev: any) => ({ ...res.data, entries: prev?.entries }));
+      setPayrollTab('nomina');
+    } catch (e) { console.error(e); }
+  };
+
+  const confirmPayment = async () => {
+    if (!selectedRun || !selectedCajaId) return;
+    try {
+      await api.put(`/payroll/runs/${selectedRun.id}/confirm-payment`, { bankId: selectedCajaId });
+      await loadPayrollRuns();
+      setSelectedRun(null);
+      setPayrollTab('lista');
+      setSelectedCajaId('');
+    } catch (e) { console.error(e); }
+  };
 
   async function saveShift() {
     try {
@@ -743,46 +827,272 @@ export default function HRPage() {
 
         {/* ── TAB: Nómina ── */}
         {tab === "nomina" && (
-          <div style={{ borderRadius: 10, border: '1px solid rgba(255,255,255,0.07)', background: '#141820', overflow: 'hidden' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead><tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                {["Empleado", "Puesto", "S.D.I.", "Período", "Estimado", "Deducciones", "Neto", "Estado"].map(h => (
-                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11.5, fontWeight: 500, color: 'rgba(255,255,255,0.35)' }}>{h}</th>
-                ))}
-              </tr></thead>
-              <tbody>
-                {employees.filter(e => e.status === "ACTIVO").map(emp => {
-                  const sd = Number(emp.salarioDiarioIntegrado) || 0;
-                  const periodo = emp.periodoPago || 'QUINCENAL';
-                  const estimado = sd > 0 ? calcPeriodo(sd, periodo) : Number(emp.salarioQuincenal) || 0;
-                  const neto = estimado - Number(emp.deducciones);
-                  return (
-                    <tr key={emp.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                      <td style={{ padding: '10px 14px' }}><div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><EmpAvatar emp={emp} photos={employeePhotos} /><span style={{ fontWeight: 500, color: '#c8cdd8' }}>{emp.nombre} {emp.apellidos}</span></div></td>
-                      <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.45)' }}>{emp.puesto || "—"}</td>
-                      <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.55)' }}>${sd.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</td>
-                      <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.35)', fontSize: 11 }}>{periodo}</td>
-                      <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.55)' }}>${estimado.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</td>
-                      <td style={{ padding: '10px 14px', color: 'rgba(248,113,113,0.8)' }}>-${Number(emp.deducciones).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</td>
-                      <td style={{ padding: '10px 14px', color: '#4ade80', fontWeight: 600 }}>${neto.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</td>
-                      <td style={{ padding: '10px 14px' }}>
-                        <span style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.55)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 4, padding: '2px 8px', fontSize: 11 }}>ACTIVO</span>
-                      </td>
-                    </tr>
-                  );
-                })}
-                {employees.filter(e => e.status === "ACTIVO").length === 0 && (
-                  <tr><td colSpan={8} style={{ padding: 24, textAlign: 'center', color: 'rgba(255,255,255,0.25)' }}>Sin empleados activos</td></tr>
+          <div>
+            {/* Sub-tabs internos */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+              {([
+                { key: 'lista',     label: 'Corridas de nómina', disabled: false },
+                { key: 'prenomina', label: 'Prenómina',          disabled: !selectedRun },
+                { key: 'nomina',    label: 'Nómina confirmada',  disabled: !selectedRun || selectedRun?.status === 'PRENOMINA' },
+              ] as { key: string; label: string; disabled: boolean }[]).map(t => (
+                <button key={t.key} disabled={t.disabled}
+                  onClick={() => !t.disabled && setPayrollTab(t.key as any)}
+                  style={{
+                    padding: '6px 16px', borderRadius: 8,
+                    border: payrollTab === t.key ? '1px solid rgba(123,156,204,0.5)' : '1px solid rgba(255,255,255,0.1)',
+                    background: payrollTab === t.key ? 'rgba(123,156,204,0.15)' : 'transparent',
+                    color: t.disabled ? 'rgba(255,255,255,0.2)' : payrollTab === t.key ? '#8fafd4' : '#c8cdd8',
+                    fontSize: 13, cursor: t.disabled ? 'not-allowed' : 'pointer',
+                  }}>{t.label}</button>
+              ))}
+              <button onClick={() => setShowNewRunModal(true)}
+                style={{
+                  marginLeft: 'auto', padding: '6px 16px', borderRadius: 8,
+                  border: '1px solid rgba(123,156,204,0.3)',
+                  background: 'rgba(123,156,204,0.1)', color: '#8fafd4', fontSize: 13, cursor: 'pointer',
+                }}>+ Nueva corrida</button>
+            </div>
+
+            {/* SUB-TAB: LISTA */}
+            {payrollTab === 'lista' && (
+              <div>
+                {payrollRuns.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.3)', background: '#141820', borderRadius: 10, border: '1px solid rgba(255,255,255,0.07)' }}>
+                    No hay corridas de nómina. Crea una nueva para comenzar.
+                  </div>
+                ) : (
+                  <div style={{ borderRadius: 10, border: '1px solid rgba(255,255,255,0.07)', background: '#141820', overflow: 'hidden' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                          {['Período', 'Tipo', 'Total', 'Estado', 'Acciones'].map(h => (
+                            <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 11.5 }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {payrollRuns.map((run: any) => (
+                          <tr key={run.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                            <td style={{ padding: '10px 12px', color: '#c8cdd8' }}>{run.periodStart} — {run.periodEnd}</td>
+                            <td style={{ padding: '10px 12px', color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>{run.periodType}</td>
+                            <td style={{ padding: '10px 12px', color: '#4ade80' }}>${Number(run.totalAmount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                            <td style={{ padding: '10px 12px' }}>
+                              <span style={{
+                                padding: '2px 10px', borderRadius: 99, fontSize: 11,
+                                background: run.status === 'PAGADA' ? 'rgba(74,222,128,0.15)' : run.status === 'APROBADA' ? 'rgba(123,156,204,0.15)' : 'rgba(255,255,255,0.07)',
+                                color: run.status === 'PAGADA' ? '#4ade80' : run.status === 'APROBADA' ? '#8fafd4' : 'rgba(255,255,255,0.5)',
+                              }}>{run.status}</span>
+                            </td>
+                            <td style={{ padding: '10px 12px' }}>
+                              <button
+                                onClick={async () => { await loadRun(run.id); setPayrollTab(run.status === 'PRENOMINA' ? 'prenomina' : 'nomina'); }}
+                                style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#c8cdd8', fontSize: 12, cursor: 'pointer' }}
+                              >Ver</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
-              </tbody>
-              <tfoot>
-                <tr style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                  <td colSpan={6} style={{ padding: '10px 14px', textAlign: 'right', color: 'rgba(255,255,255,0.35)', fontSize: 12 }}>Total nómina:</td>
-                  <td style={{ padding: '10px 14px', color: '#4ade80', fontWeight: 700 }}>${totalNomina.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</td>
-                  <td />
-                </tr>
-              </tfoot>
-            </table>
+              </div>
+            )}
+
+            {/* SUB-TAB: PRENÓMINA */}
+            {payrollTab === 'prenomina' && selectedRun && (
+              <div>
+                <div style={{ marginBottom: 16, padding: '12px 16px', background: '#141820', borderRadius: 10, border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>
+                    Período: {selectedRun.periodStart} al {selectedRun.periodEnd}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontSize: 20, fontWeight: 500, color: '#4ade80' }}>
+                      Total: ${Number(selectedRun.totalAmount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                    </div>
+                    <button onClick={approveRun}
+                      style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid rgba(74,222,128,0.3)', background: 'rgba(74,222,128,0.1)', color: '#4ade80', fontSize: 13, cursor: 'pointer' }}
+                    >Aprobar prenómina →</button>
+                  </div>
+                </div>
+
+                <div style={{ borderRadius: 10, border: '1px solid rgba(255,255,255,0.07)', background: '#141820', overflow: 'hidden' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                        {['Empleado', 'Días', 'Percepciones', 'Deducciones', 'Neto', 'Acciones'].map(h => (
+                          <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 11.5 }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(selectedRun.entries || []).map((entry: any) => {
+                        const emp = employees.find(e => e.id === entry.employeeId);
+                        const empName = emp ? `${emp.nombre} ${emp.apellidos || ''}`.trim() : entry.employeeId.slice(0, 8) + '…';
+                        return (
+                          <tr key={entry.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                            <td style={{ padding: '10px 12px', color: '#c8cdd8' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                {emp && <EmpAvatar emp={emp} photos={employeePhotos} />}
+                                {empName}
+                              </div>
+                            </td>
+                            <td style={{ padding: '10px 12px', color: 'rgba(255,255,255,0.5)' }}>{entry.workedDays}</td>
+                            <td style={{ padding: '10px 12px', color: '#4ade80' }}>${Number(entry.totalPerceptions).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                            <td style={{ padding: '10px 12px', color: 'rgba(252,165,165,0.8)' }}>-${Number(entry.totalDeductions).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                            <td style={{ padding: '10px 12px', fontWeight: 500, color: '#c8cdd8' }}>${Number(entry.netAmount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                            <td style={{ padding: '10px 12px' }}>
+                              <button onClick={() => { setSelectedEntry(entry); setShowConceptsModal(true); }}
+                                style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#c8cdd8', fontSize: 12, cursor: 'pointer' }}
+                              >Editar conceptos</button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {(selectedRun.entries || []).length === 0 && (
+                        <tr><td colSpan={6} style={{ padding: 24, textAlign: 'center', color: 'rgba(255,255,255,0.25)' }}>Sin empleados en esta corrida</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* SUB-TAB: NÓMINA CONFIRMADA */}
+            {payrollTab === 'nomina' && selectedRun && (
+              <div>
+                <div style={{ marginBottom: 16, padding: '12px 16px', background: '#141820', borderRadius: 10, border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Selecciona la caja desde donde sale el efectivo</div>
+                  <select value={selectedCajaId} onChange={e => setSelectedCajaId(e.target.value)}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13, marginBottom: 12 }}>
+                    <option value="">— Seleccionar caja —</option>
+                    {cajas.map((b: any) => (
+                      <option key={b.id} value={b.id}>{b.name} · Saldo: ${Number(b.balance).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</option>
+                    ))}
+                  </select>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontSize: 20, fontWeight: 500, color: '#4ade80' }}>
+                      Total a pagar: ${Number(selectedRun.totalAmount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                    </div>
+                    <button onClick={confirmPayment}
+                      disabled={!selectedCajaId || selectedRun.status === 'PAGADA'}
+                      style={{
+                        padding: '8px 20px', borderRadius: 8,
+                        border: '1px solid rgba(74,222,128,0.3)',
+                        background: selectedCajaId && selectedRun.status !== 'PAGADA' ? 'rgba(74,222,128,0.1)' : 'transparent',
+                        color: selectedCajaId && selectedRun.status !== 'PAGADA' ? '#4ade80' : 'rgba(255,255,255,0.2)',
+                        fontSize: 13, cursor: selectedCajaId ? 'pointer' : 'not-allowed',
+                      }}
+                    >{selectedRun.status === 'PAGADA' ? '✓ Nómina pagada' : 'Confirmar pago en efectivo'}</button>
+                  </div>
+                  <div style={{ marginTop: 8, fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
+                    Al confirmar se registra un egreso interno "NOMINA" en la caja seleccionada.
+                  </div>
+                </div>
+
+                <div style={{ borderRadius: 10, border: '1px solid rgba(255,255,255,0.07)', background: '#141820', overflow: 'hidden' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                        {['Empleado', 'Neto a pagar', 'Recibo'].map(h => (
+                          <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 11.5 }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(selectedRun.entries || []).map((entry: any) => {
+                        const emp = employees.find(e => e.id === entry.employeeId);
+                        const empName = emp ? `${emp.nombre} ${emp.apellidos || ''}`.trim() : entry.employeeId.slice(0, 8) + '…';
+                        return (
+                          <tr key={entry.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                            <td style={{ padding: '10px 12px', color: '#c8cdd8' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                {emp && <EmpAvatar emp={emp} photos={employeePhotos} />}
+                                {empName}
+                              </div>
+                            </td>
+                            <td style={{ padding: '10px 12px', fontWeight: 500, color: '#4ade80' }}>${Number(entry.netAmount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                            <td style={{ padding: '10px 12px' }}>
+                              <button onClick={() => window.print()}
+                                style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#c8cdd8', fontSize: 12, cursor: 'pointer' }}
+                              >Imprimir recibo</button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* MODAL: Nueva corrida */}
+            {showNewRunModal && (
+              <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ background: '#141820', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', padding: 24, width: 420 }}>
+                  <div style={{ fontSize: 16, fontWeight: 500, color: '#c8cdd8', marginBottom: 20 }}>Nueva corrida de nómina</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Fecha inicio</div>
+                      <input type="date" value={newRunForm.periodStart}
+                        onChange={e => setNewRunForm(p => ({ ...p, periodStart: e.target.value }))}
+                        style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13 }} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Fecha fin</div>
+                      <input type="date" value={newRunForm.periodEnd}
+                        onChange={e => setNewRunForm(p => ({ ...p, periodEnd: e.target.value }))}
+                        style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13 }} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Tipo de período</div>
+                      <select value={newRunForm.periodType}
+                        onChange={e => setNewRunForm(p => ({ ...p, periodType: e.target.value }))}
+                        style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13 }}>
+                        <option value="SEMANAL">Semanal</option>
+                        <option value="QUINCENAL">Quincenal</option>
+                        <option value="MENSUAL">Mensual</option>
+                      </select>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Notas (opcional)</div>
+                      <input value={newRunForm.notes}
+                        onChange={e => setNewRunForm(p => ({ ...p, notes: e.target.value }))}
+                        placeholder="Ej: Quincena junio primera parte"
+                        style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13 }} />
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
+                    <button onClick={() => setShowNewRunModal(false)}
+                      style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', fontSize: 13, cursor: 'pointer' }}>
+                      Cancelar
+                    </button>
+                    <button onClick={createPayrollRun} disabled={loadingPayroll}
+                      style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1px solid rgba(123,156,204,0.3)', background: 'rgba(123,156,204,0.1)', color: '#8fafd4', fontSize: 13, cursor: 'pointer', opacity: loadingPayroll ? 0.6 : 1 }}>
+                      {loadingPayroll ? 'Creando...' : 'Crear corrida'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* MODAL: Editar conceptos de un entry */}
+            {showConceptsModal && selectedEntry && (
+              <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ background: '#141820', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', padding: 24, width: 500, maxHeight: '80vh', overflowY: 'auto' }}>
+                  <div style={{ fontSize: 16, fontWeight: 500, color: '#c8cdd8', marginBottom: 16 }}>
+                    Conceptos — {(() => { const e = employees.find(x => x.id === selectedEntry.employeeId); return e ? `${e.nombre} ${e.apellidos || ''}`.trim() : selectedEntry.employeeId.slice(0, 8) + '…'; })()}
+                  </div>
+                  <ConceptsEditor
+                    entry={selectedEntry}
+                    onSave={async (concepts) => {
+                      await updateEntry(selectedEntry.id, concepts);
+                      setShowConceptsModal(false);
+                    }}
+                    onClose={() => setShowConceptsModal(false)}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -1189,6 +1499,11 @@ export default function HRPage() {
                   <div className="col-span-2">
                     <label className="block text-xs text-slate-400 mb-1">CLABE (18 dígitos)</label>
                     <input value={editingEmp.clabe ?? ""} onChange={(e) => setEditingEmp((p) => ({ ...p, clabe: e.target.value.replace(/\D/g, "").slice(0, 18) }))} className={`${inp} font-mono`} />
+                  </div>
+                  {/* No. IMSS */}
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">No. IMSS</label>
+                    <input value={editingEmp.imssNumber ?? ""} onChange={(e) => setEditingEmp((p) => ({ ...p, imssNumber: e.target.value }))} placeholder="Ej: 12345678901" className={`${inp} font-mono`} />
                   </div>
                 </div>
               )}
