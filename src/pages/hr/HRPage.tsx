@@ -96,6 +96,21 @@ function EmpAvatar({ emp, photos }: { emp: Employee; photos: Record<string, stri
   );
 }
 
+const INCIDENCE_KEYS = [
+  { key: 'A',   label: 'Asistencia',             color: '#4ade80',               status: 'PRESENTE' },
+  { key: 'F',   label: 'Falta',                  color: 'rgba(252,165,165,0.9)', status: 'FALTA' },
+  { key: 'PG',  label: 'Permiso con goce',       color: '#60a5fa',               status: 'JUSTIFICADO' },
+  { key: 'PS',  label: 'Permiso sin goce',       color: '#f59e0b',               status: 'JUSTIFICADO' },
+  { key: 'VG',  label: 'Vacaciones',             color: '#a78bfa',               status: 'JUSTIFICADO' },
+  { key: 'IC',  label: 'Incapacidad c/riesgo',  color: '#f97316',               status: 'JUSTIFICADO' },
+  { key: 'IS',  label: 'Incapacidad s/riesgo',  color: '#fb923c',               status: 'JUSTIFICADO' },
+  { key: 'SU',  label: 'Suspensión',            color: 'rgba(252,165,165,0.6)', status: 'FALTA' },
+  { key: 'DF',  label: 'Día festivo',           color: '#94a3b8',               status: 'JUSTIFICADO' },
+  { key: 'DFT', label: 'Día festivo trabajado', color: '#4ade80',               status: 'PRESENTE' },
+  { key: 'TE',  label: 'Tiempo extra',          color: '#34d399',               status: 'PRESENTE' },
+  { key: '7',   label: 'Séptimo día',           color: '#c084fc',               status: 'PRESENTE' },
+];
+
 export default function HRPage() {
   const [searchParams] = useSearchParams();
 
@@ -130,6 +145,16 @@ export default function HRPage() {
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [attendanceForm, setAttendanceForm]     = useState({ employeeId: '', date: new Date().toISOString().split('T')[0], checkIn: '08:00', checkOut: '' });
   const [attendanceSaving, setAttendanceSaving] = useState(false);
+
+  // Asistencia por período (tabla de incidencias)
+  const [attendancePeriod, setAttendancePeriod] = useState<{start: string, end: string}>({
+    start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
+    end: new Date().toISOString().split('T')[0],
+  });
+  const [periodAttendance, setPeriodAttendance] = useState<any[]>([]);
+  const [loadingPeriodAtt, setLoadingPeriodAtt] = useState(false);
+  const [showOvertimeModal, setShowOvertimeModal] = useState(false);
+  const [overtimeTarget, setOvertimeTarget] = useState<{employeeId: string, date: string, hours: number, note: string} | null>(null);
 
   // Turnos
   const [shifts, setShifts]             = useState<any[]>([]);
@@ -191,10 +216,14 @@ export default function HRPage() {
   }, []);
 
   useEffect(() => {
-    if (tab === "asistencia") loadAttendance();
+    if (tab === "asistencia") loadPeriodAttendance();
     if (tab === "solicitudes") loadPending();
     if (tab === "cumpleanos") loadBirthdays();
   }, [tab]);
+
+  useEffect(() => {
+    if (tab === "asistencia" && employees.length > 0) loadPeriodAttendance();
+  }, [attendancePeriod, employees]);
 
   async function loadEmployees() {
     setLoading(true);
@@ -220,6 +249,38 @@ export default function HRPage() {
       setAttendance(Array.isArray(res.data) ? res.data : []);
     } catch { setAttendance([]); }
     finally { setLoadingAttendance(false); }
+  }
+
+  async function loadPeriodAttendance() {
+    setLoadingPeriodAtt(true);
+    try {
+      const activeEmps = employees.filter(e => e.status === 'ACTIVO');
+      const results = await Promise.all(
+        activeEmps.map(emp =>
+          api.get(`/hr/attendance/employee/${emp.id}`, {
+            params: { startDate: attendancePeriod.start, endDate: attendancePeriod.end },
+            headers,
+          }).then(r => ({ employeeId: emp.id, records: r.data }))
+            .catch(() => ({ employeeId: emp.id, records: [] }))
+        )
+      );
+      setPeriodAttendance(results);
+    } catch (e) { console.error(e); }
+    setLoadingPeriodAtt(false);
+  }
+
+  async function setIncidence(employeeId: string, date: string, key: string, overtimeHours?: number, note?: string) {
+    const incKey = INCIDENCE_KEYS.find(k => k.key === key);
+    if (!incKey) return;
+    await api.post('/hr/attendance/upsert', {
+      employeeId,
+      date,
+      status: incKey.status,
+      incidenceType: key,
+      overtimeHours: overtimeHours || null,
+      incidenceNote: note || key,
+    }, { headers });
+    await loadPeriodAttendance();
   }
 
   async function createManualAttendance() {
@@ -1099,46 +1160,162 @@ export default function HRPage() {
         {/* ── TAB: Asistencia ── */}
         {tab === "asistencia" && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ fontSize: 14, fontWeight: 500, margin: 0, color: '#c8cdd8' }}>Asistencia de hoy</h2>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={loadAttendance} style={{ padding: '5px 12px', fontSize: 11.5, borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.45)', cursor: 'pointer' }}>Actualizar</button>
-                <button onClick={() => { setShowAttendanceModal(true); setError(''); }} style={{ padding: '5px 14px', fontSize: 11.5, borderRadius: 6, background: '#1e2d45', border: '1px solid rgba(123,156,204,0.3)', color: '#8fafd4', cursor: 'pointer' }}>+ Registrar Asistencia</button>
+            {/* Selector de período */}
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>Del</span>
+                <input type="date" value={attendancePeriod.start}
+                  onChange={e => setAttendancePeriod(p => ({ ...p, start: e.target.value }))}
+                  style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13 }} />
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>al</span>
+                <input type="date" value={attendancePeriod.end}
+                  onChange={e => setAttendancePeriod(p => ({ ...p, end: e.target.value }))}
+                  style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13 }} />
+                <button onClick={loadPeriodAttendance}
+                  style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(123,156,204,0.3)', background: 'rgba(123,156,204,0.1)', color: '#8fafd4', fontSize: 13, cursor: 'pointer' }}>
+                  Cargar
+                </button>
+              </div>
+              {/* Leyenda de claves */}
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginLeft: 'auto' }}>
+                {INCIDENCE_KEYS.map(k => (
+                  <span key={k.key} style={{ fontSize: 11, color: k.color, opacity: 0.8 }}>
+                    <strong>{k.key}</strong> {k.label}
+                  </span>
+                ))}
               </div>
             </div>
-            {loadingAttendance ? (
-              <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13 }}>Cargando...</div>
-            ) : attendance.length === 0 ? (
-              <div style={{ padding: 24, borderRadius: 10, background: '#141820', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.25)', fontSize: 13, textAlign: 'center' }}>Sin registros de asistencia hoy</div>
+
+            {loadingPeriodAtt ? (
+              <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.3)' }}>Cargando...</div>
             ) : (
-              <div style={{ borderRadius: 10, border: '1px solid rgba(255,255,255,0.07)', background: '#141820', overflow: 'hidden' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                  <thead><tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                    {["Empleado", "Entrada", "Salida", "Método", "Estado"].map(h => <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11.5, fontWeight: 500, color: 'rgba(255,255,255,0.35)' }}>{h}</th>)}
-                  </tr></thead>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ borderCollapse: 'collapse', fontSize: 12, minWidth: '100%' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                      <th style={{ padding: '8px 12px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontWeight: 500, minWidth: 160, position: 'sticky', left: 0, background: '#0f1117' }}>Empleado</th>
+                      {(() => {
+                        const days: Date[] = [];
+                        const start = new Date(attendancePeriod.start + 'T12:00:00');
+                        const end = new Date(attendancePeriod.end + 'T12:00:00');
+                        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) days.push(new Date(d));
+                        return days.map(d => {
+                          const dow = ['D','L','M','X','J','V','S'][d.getDay()];
+                          const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                          return (
+                            <th key={d.toISOString()} style={{
+                              padding: '8px 6px', textAlign: 'center', minWidth: 44,
+                              color: isWeekend ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.4)',
+                              fontWeight: 500,
+                            }}>
+                              <div>{dow}</div>
+                              <div style={{ fontSize: 10 }}>{d.getDate()}</div>
+                            </th>
+                          );
+                        });
+                      })()}
+                      <th style={{ padding: '8px 12px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>Días</th>
+                    </tr>
+                  </thead>
                   <tbody>
-                    {attendance.map((a) => {
-                      const emp = employees.find(e => e.id === a.employeeId);
-                      const empName = emp ? `${emp.nombre} ${emp.apellidos || ''}`.trim() : a.employeeId.slice(0, 8) + '…';
+                    {employees.filter(e => e.status === 'ACTIVO').map(emp => {
+                      const empData = periodAttendance.find(p => p.employeeId === emp.id);
+                      const records: any[] = empData?.records || [];
+                      const days: Date[] = [];
+                      const start = new Date(attendancePeriod.start + 'T12:00:00');
+                      const end = new Date(attendancePeriod.end + 'T12:00:00');
+                      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) days.push(new Date(d));
+                      const workedDays = records.filter(r => ['PRESENTE','TARDANZA'].includes(r.status)).length;
+
                       return (
-                      <tr key={a.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                        <td style={{ padding: '10px 14px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            {emp && <EmpAvatar emp={emp} photos={employeePhotos} />}
-                            <span style={{ color: '#c8cdd8' }}>{empName}</span>
-                          </div>
-                        </td>
-                        <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.5)' }}>{a.checkIn ? new Date(a.checkIn).toLocaleTimeString("es-MX") : "—"}</td>
-                        <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.5)' }}>{a.checkOut ? new Date(a.checkOut).toLocaleTimeString("es-MX") : "—"}</td>
-                        <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.35)', fontSize: 12 }}>{a.method}</td>
-                        <td style={{ padding: '10px 14px' }}>
-                          <span style={{ background: a.status === "PRESENTE" ? 'rgba(100,130,180,0.08)' : 'rgba(239,68,68,0.08)', color: a.status === "PRESENTE" ? '#7b9ccc' : 'rgba(252,165,165,0.8)', border: `1px solid ${a.status === "PRESENTE" ? 'rgba(100,130,180,0.15)' : 'rgba(239,68,68,0.2)'}`, borderRadius: 4, padding: '2px 8px', fontSize: 11 }}>{a.status}</span>
-                        </td>
-                      </tr>
+                        <tr key={emp.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                          <td style={{ padding: '8px 12px', position: 'sticky', left: 0, background: '#0f1117' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <EmpAvatar emp={emp} photos={employeePhotos} />
+                              <span style={{ color: '#c8cdd8', fontWeight: 500 }}>{emp.nombre}</span>
+                            </div>
+                          </td>
+                          {days.map(d => {
+                            const dateStr = d.toISOString().split('T')[0];
+                            const rec = records.find(r => r.date?.split('T')[0] === dateStr || r.date === dateStr);
+                            const incKey = rec ? INCIDENCE_KEYS.find(k => k.key === rec.incidenceType) || (rec.status === 'PRESENTE' ? INCIDENCE_KEYS[0] : null) : null;
+                            const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                            return (
+                              <td key={dateStr} style={{ padding: '4px 3px', textAlign: 'center' }}>
+                                <select
+                                  value={incKey?.key || ''}
+                                  onChange={async e => {
+                                    const val = e.target.value;
+                                    if (val === 'TE') {
+                                      setOvertimeTarget({ employeeId: emp.id, date: dateStr, hours: 1, note: '' });
+                                      setShowOvertimeModal(true);
+                                    } else if (val) {
+                                      await setIncidence(emp.id, dateStr, val);
+                                    }
+                                  }}
+                                  style={{
+                                    width: 44, padding: '3px 2px', borderRadius: 6, fontSize: 11, textAlign: 'center',
+                                    border: '1px solid rgba(255,255,255,0.08)',
+                                    background: incKey ? `${incKey.color}22` : (isWeekend ? 'rgba(255,255,255,0.03)' : '#141820'),
+                                    color: incKey ? incKey.color : 'rgba(255,255,255,0.2)',
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  <option value="">—</option>
+                                  {INCIDENCE_KEYS.map(k => (
+                                    <option key={k.key} value={k.key}>{k.key}</option>
+                                  ))}
+                                </select>
+                              </td>
+                            );
+                          })}
+                          <td style={{ padding: '8px 12px', textAlign: 'center', color: '#4ade80', fontWeight: 500 }}>
+                            {workedDays}
+                          </td>
+                        </tr>
                       );
                     })}
                   </tbody>
                 </table>
+              </div>
+            )}
+
+            {/* Modal: captura horas extra */}
+            {showOvertimeModal && overtimeTarget && (
+              <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ background: '#141820', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', padding: 24, width: 340 }}>
+                  <div style={{ fontSize: 15, fontWeight: 500, color: '#c8cdd8', marginBottom: 16 }}>Tiempo extra — {overtimeTarget.date}</div>
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Horas extra</div>
+                    <input type="number" min={0.5} max={12} step={0.5}
+                      value={overtimeTarget.hours}
+                      onChange={e => setOvertimeTarget(p => p ? ({ ...p, hours: parseFloat(e.target.value) || 0 }) : p)}
+                      style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13 }} />
+                  </div>
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Nota (opcional)</div>
+                    <input value={overtimeTarget.note}
+                      onChange={e => setOvertimeTarget(p => p ? ({ ...p, note: e.target.value }) : p)}
+                      placeholder="Ej: Cierre de mes"
+                      style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13 }} />
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => { setShowOvertimeModal(false); setOvertimeTarget(null); }}
+                      style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', fontSize: 13, cursor: 'pointer' }}>
+                      Cancelar
+                    </button>
+                    <button onClick={async () => {
+                      if (overtimeTarget) {
+                        await setIncidence(overtimeTarget.employeeId, overtimeTarget.date, 'TE', overtimeTarget.hours, overtimeTarget.note);
+                        setShowOvertimeModal(false);
+                        setOvertimeTarget(null);
+                      }
+                    }}
+                      style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid rgba(123,156,204,0.3)', background: 'rgba(123,156,204,0.1)', color: '#8fafd4', fontSize: 13, cursor: 'pointer' }}>
+                      Guardar
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
