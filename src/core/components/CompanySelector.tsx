@@ -37,12 +37,15 @@ export default function CompanySelector() {
       if (userCompanyId) {
         const myCompany = companies.find(c => c.id === userCompanyId);
         if (myCompany) {
-          handleCompanySelect(myCompany);
-          if (userBranchId) {
-            loadBranches(myCompany.id).then(() => {
-              const myBranch = branches.find(b => b.id === userBranchId);
-              if (myBranch) {
-                setActiveBranch({ id: myBranch.id, name: myBranch.name });
+          const savedBranchId = localStorage.getItem('active_branch_id');
+          handleCompanySelect(myCompany, true);
+          if (savedBranchId) {
+            loadBranches(myCompany.id).then((loadedBranches: Branch[]) => {
+              const savedBranch = loadedBranches?.find((b: Branch) => b.id === savedBranchId);
+              if (savedBranch) {
+                setActiveBranch({ id: savedBranch.id, name: savedBranch.name });
+                localStorage.setItem('active_branch_id', savedBranch.id);
+                localStorage.setItem('active_branch_name', savedBranch.name);
               }
             });
           }
@@ -78,31 +81,35 @@ export default function CompanySelector() {
     }
   }
 
-  async function loadBranches(companyId: string) {
+  async function loadBranches(companyId: string): Promise<Branch[]> {
     try {
       setLoading(true);
       const response = await api.get(`/branches?companyId=${companyId}`);
-      setBranches(Array.isArray(response.data) ? response.data : []);
+      const data: Branch[] = Array.isArray(response.data) ? response.data : [];
+      setBranches(data);
+      return data;
     } catch {
       setBranches([]);
+      return [];
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleCompanySelect(company: Company) {
+  const handleCompanySelect = (company: Company, preserveBranch = false) => {
     setActiveCompany({ id: company.id, name: company.tradeName || company.legalName });
-    setActiveBranch(null);
     localStorage.setItem('active_company_id', company.id);
     localStorage.setItem('active_company_name', company.tradeName || company.legalName);
-    localStorage.removeItem('active_branch_id');
-    localStorage.removeItem('active_branch_name');
+    if (!preserveBranch) {
+      setActiveBranch(null);
+      localStorage.removeItem('active_branch_id');
+      localStorage.removeItem('active_branch_name');
+    }
     loadBranches(company.id);
     setCompanyDropdownOpen(false);
 
-    // Switch company context — get a token scoped to this company
-    try {
-      const res = await api.post('/auth/switch-company', { companyId: company.id });
+    // Switch company context — best-effort, fire and forget
+    api.post('/auth/switch-company', { companyId: company.id }).then((res: any) => {
       const { access_token, user: newUser } = res.data;
       if (access_token) {
         localStorage.setItem('access_token', access_token);
@@ -122,10 +129,8 @@ export default function CompanySelector() {
           modulosActivos
         );
       }
-    } catch {
-      // silent — context switch is best-effort
-    }
-  }
+    }).catch(() => {});
+  };
 
   function handleBranchSelect(branch: Branch) {
     setActiveBranch({ id: branch.id, name: branch.name });
