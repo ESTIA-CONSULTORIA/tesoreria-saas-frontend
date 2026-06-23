@@ -51,6 +51,7 @@ export default function CompanySelector() {
           }
         }
       } else if (isAdmin) {
+        console.log('[CompanySelector] isAdmin branch — savedBranchId:', localStorage.getItem('active_branch_id'));
         localStorage.removeItem('active_company_id');
         localStorage.removeItem('active_company_name');
         setActiveCompany(null);
@@ -68,25 +69,29 @@ export default function CompanySelector() {
   useEffect(() => {
     const savedCompanyId = localStorage.getItem('active_company_id');
     const savedBranchId = localStorage.getItem('active_branch_id');
-    const savedBranchName = localStorage.getItem('active_branch_name');
+    console.log('[CompanySelector] mount — savedCompanyId:', savedCompanyId, 'savedBranchId:', savedBranchId);
 
     if (savedCompanyId && savedBranchId) {
       api.get(`/branches?companyId=${savedCompanyId}`)
         .then((res: any) => {
           const branchList: Branch[] = Array.isArray(res.data) ? res.data : [];
+          console.log('[CompanySelector] branches cargadas:', branchList.length, '— buscando:', savedBranchId);
           setBranches(branchList);
           const found = branchList.find(b => b.id === savedBranchId);
+          console.log('[CompanySelector] sucursal encontrada:', found);
           if (found) {
             setActiveBranch({ id: found.id, name: found.name });
             localStorage.setItem('active_branch_id', found.id);
             localStorage.setItem('active_branch_name', found.name);
           }
         })
-        .catch(() => {});
+        .catch((err: any) => { console.log('[CompanySelector] error cargando branches:', err); });
     } else if (savedCompanyId) {
+      console.log('[CompanySelector] solo empresa, sin sucursal — cargando branches');
       api.get(`/branches?companyId=${savedCompanyId}`)
         .then((res: any) => {
           const branchList: Branch[] = Array.isArray(res.data) ? res.data : [];
+          console.log('[CompanySelector] branches (solo empresa):', branchList.length);
           setBranches(branchList);
         })
         .catch(() => {});
