@@ -79,7 +79,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem("active_branch_id", branchId);
     } else {
       localStorage.removeItem("user_branch_id");
-      localStorage.removeItem("active_branch_id");
+      // No borrar active_branch_id — puede haber una sucursal seleccionada manualmente
+      // que el token no conoce (switch-company solo lleva companyId, no branchId)
     }
 
     set({
