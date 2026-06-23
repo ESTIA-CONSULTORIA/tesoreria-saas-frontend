@@ -5,6 +5,7 @@ import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
 import { ConceptsEditor } from './ConceptsEditor';
+import { IncidenceInput } from './IncidenceInput';
 
 type Tab = "empleados" | "expedientes" | "nomina" | "asistencia" | "turnos" | "solicitudes" | "cumpleanos";
 
@@ -1242,30 +1243,19 @@ export default function HRPage() {
                             const isWeekend = d.getDay() === 0 || d.getDay() === 6;
                             return (
                               <td key={dateStr} style={{ padding: '4px 3px', textAlign: 'center' }}>
-                                <select
+                                <IncidenceInput
                                   value={incKey?.key || ''}
-                                  onChange={async e => {
-                                    const val = e.target.value;
+                                  isWeekend={isWeekend}
+                                  locked={false}
+                                  onChange={async (val) => {
                                     if (val === 'TE') {
                                       setOvertimeTarget({ employeeId: emp.id, date: dateStr, hours: 1, note: '' });
                                       setShowOvertimeModal(true);
-                                    } else if (val) {
+                                    } else {
                                       await setIncidence(emp.id, dateStr, val);
                                     }
                                   }}
-                                  style={{
-                                    width: 44, padding: '3px 2px', borderRadius: 6, fontSize: 11, textAlign: 'center',
-                                    border: '1px solid rgba(255,255,255,0.08)',
-                                    background: incKey ? `${incKey.color}22` : (isWeekend ? 'rgba(255,255,255,0.03)' : '#141820'),
-                                    color: incKey ? incKey.color : 'rgba(255,255,255,0.2)',
-                                    cursor: 'pointer',
-                                  }}
-                                >
-                                  <option value="">—</option>
-                                  {INCIDENCE_KEYS.map(k => (
-                                    <option key={k.key} value={k.key}>{k.key}</option>
-                                  ))}
-                                </select>
+                                />
                               </td>
                             );
                           })}
