@@ -64,6 +64,35 @@ export default function CompanySelector() {
     }
   }, [companies, activeCompany, userCompanyId, userBranchId]);
 
+  // Restaurar sucursal al montar si hay empresa guardada en localStorage
+  useEffect(() => {
+    const savedCompanyId = localStorage.getItem('active_company_id');
+    const savedBranchId = localStorage.getItem('active_branch_id');
+    const savedBranchName = localStorage.getItem('active_branch_name');
+
+    if (savedCompanyId && savedBranchId) {
+      api.get(`/branches?companyId=${savedCompanyId}`)
+        .then((res: any) => {
+          const branchList: Branch[] = Array.isArray(res.data) ? res.data : [];
+          setBranches(branchList);
+          const found = branchList.find(b => b.id === savedBranchId);
+          if (found) {
+            setActiveBranch({ id: found.id, name: found.name });
+            localStorage.setItem('active_branch_id', found.id);
+            localStorage.setItem('active_branch_name', found.name);
+          }
+        })
+        .catch(() => {});
+    } else if (savedCompanyId) {
+      api.get(`/branches?companyId=${savedCompanyId}`)
+        .then((res: any) => {
+          const branchList: Branch[] = Array.isArray(res.data) ? res.data : [];
+          setBranches(branchList);
+        })
+        .catch(() => {});
+    }
+  }, []);
+
   async function loadCompanies() {
     try {
       setLoading(true);
