@@ -84,6 +84,7 @@ export function IncidenceInput({ value, locked, isWeekend, onChange }: Props) {
       <input
         value={inputVal}
         onFocus={() => { setOpen(true); handleInput(inputVal); }}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
         onChange={e => handleInput(e.target.value)}
         onKeyDown={e => {
           if (e.key === 'Escape') setOpen(false);

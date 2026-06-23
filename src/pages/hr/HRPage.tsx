@@ -1177,14 +1177,6 @@ export default function HRPage() {
                   Cargar
                 </button>
               </div>
-              {/* Leyenda de claves */}
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginLeft: 'auto' }}>
-                {INCIDENCE_KEYS.map(k => (
-                  <span key={k.key} style={{ fontSize: 11, color: k.color, opacity: 0.8 }}>
-                    <strong>{k.key}</strong> {k.label}
-                  </span>
-                ))}
-              </div>
             </div>
 
             {loadingPeriodAtt ? (
