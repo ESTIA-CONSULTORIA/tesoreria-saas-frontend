@@ -7,6 +7,7 @@ import { useCompanyStore } from "../../core/store/useCompanyStore";
 import { ConceptsEditor } from './ConceptsEditor';
 import { IncidenceInput } from './IncidenceInput';
 import { PayrollPrint } from './PayrollPrint';
+import { ContractsTab } from './ContractsTab';
 
 type Tab = "empleados" | "expedientes" | "nomina" | "asistencia" | "turnos" | "solicitudes" | "cumpleanos";
 
@@ -135,6 +136,7 @@ export default function HRPage() {
   const [employeePhotos, setEmployeePhotos] = useState<Record<string, string>>({});
 
   // Expedientes
+  const [expedienteSubTab, setExpedienteSubTab] = useState<'documentos'|'contratos'>('documentos');
   const [selectedEmp, setSelectedEmp]   = useState<Employee | null>(null);
   const [docs, setDocs]                 = useState<HrDocument[]>([]);
   const [showDocForm, setShowDocForm]   = useState(false);
@@ -788,6 +790,18 @@ export default function HRPage() {
         {/* ── TAB: Expedientes ── */}
         {tab === "expedientes" && (
           <div className="space-y-4">
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+              {[{ key: 'documentos', label: 'Expediente' }, { key: 'contratos', label: 'Contratos y firma' }].map(t => (
+                <button key={t.key} onClick={() => setExpedienteSubTab(t.key as any)}
+                  style={{
+                    padding: '6px 16px', borderRadius: 8, fontSize: 13, cursor: 'pointer',
+                    border: expedienteSubTab === t.key ? '1px solid rgba(123,156,204,0.5)' : '1px solid rgba(255,255,255,0.1)',
+                    background: expedienteSubTab === t.key ? 'rgba(123,156,204,0.15)' : 'transparent',
+                    color: expedienteSubTab === t.key ? '#8fafd4' : '#c8cdd8',
+                  }}>{t.label}</button>
+              ))}
+            </div>
+            {expedienteSubTab === 'documentos' && (<>
             {!selectedEmp ? (
               <div>
                 <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, marginBottom: 16 }}>Selecciona un empleado para ver sus contratos y documentos.</p>
@@ -918,6 +932,14 @@ export default function HRPage() {
                   </table>
                 </div>
               </>
+            )}
+            </>)}
+            {expedienteSubTab === 'contratos' && (
+              <ContractsTab
+                employees={employees}
+                tenantId={tenantId ?? ''}
+                companyId={companyId ?? ''}
+              />
             )}
           </div>
         )}
