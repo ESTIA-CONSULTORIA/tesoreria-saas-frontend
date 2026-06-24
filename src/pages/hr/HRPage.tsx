@@ -6,6 +6,7 @@ import { useAuthStore } from "../../core/store/useAuthStore";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
 import { ConceptsEditor } from './ConceptsEditor';
 import { IncidenceInput } from './IncidenceInput';
+import { PayrollPrint } from './PayrollPrint';
 
 type Tab = "empleados" | "expedientes" | "nomina" | "asistencia" | "turnos" | "solicitudes" | "cumpleanos";
 
@@ -191,7 +192,7 @@ export default function HRPage() {
   // Nómina (payroll runs)
   const [payrollRuns, setPayrollRuns]       = useState<any[]>([]);
   const [selectedRun, setSelectedRun]       = useState<any>(null);
-  const [payrollTab, setPayrollTab]         = useState<'lista' | 'prenomina' | 'nomina'>('lista');
+  const [payrollTab, setPayrollTab]         = useState<'lista' | 'prenomina' | 'nomina' | 'catalogo'>('lista');
   const [showNewRunModal, setShowNewRunModal] = useState(false);
   const [newRunForm, setNewRunForm]         = useState({ periodStart: '', periodEnd: '', periodType: 'QUINCENAL', notes: '' });
   const [loadingPayroll, setLoadingPayroll] = useState(false);
@@ -199,6 +200,11 @@ export default function HRPage() {
   const [showConceptsModal, setShowConceptsModal] = useState(false);
   const [cajas, setCajas]                   = useState<any[]>([]);
   const [selectedCajaId, setSelectedCajaId] = useState('');
+  const [catalog, setCatalog] = useState<any[]>([]);
+  const [showCatalogModal, setShowCatalogModal] = useState(false);
+  const [catalogForm, setCatalogForm] = useState({ name: '', type: 'P', defaultAmount: 0, category: 'OTRO' });
+  const [editingCatalogId, setEditingCatalogId] = useState<string | null>(null);
+  const [lockedDates, setLockedDates] = useState<Set<string>>(new Set());
 
   const tenantId  = useAuthStore((s) => s.tenantId);
   const companyId = useAuthStore((s) => s.companyId);
@@ -214,6 +220,7 @@ export default function HRPage() {
     loadMetrics();
     loadPayrollRuns();
     loadCajas();
+    loadCatalog();
   }, []);
 
   useEffect(() => {
@@ -268,7 +275,35 @@ export default function HRPage() {
       setPeriodAttendance(results);
     } catch (e) { console.error(e); }
     setLoadingPeriodAtt(false);
+    loadLockedDates();
   }
+
+  const loadLockedDates = async () => {
+    if (!activeBranch?.id) return;
+    try {
+      const days: string[] = [];
+      const start = new Date(attendancePeriod.start + 'T12:00:00');
+      const end = new Date(attendancePeriod.end + 'T12:00:00');
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        days.push(d.toISOString().split('T')[0]);
+      }
+      const results = await Promise.all(
+        days.map(date =>
+          api.get('/payroll/period-locked', { params: { branchId: activeBranch.id, date } })
+            .then(r => r.data ? date : null)
+            .catch(() => null)
+        )
+      );
+      setLockedDates(new Set(results.filter(Boolean) as string[]));
+    } catch(e) { console.error(e); }
+  };
+
+  const loadCatalog = async () => {
+    try {
+      const res = await api.get('/payroll/catalog');
+      setCatalog(Array.isArray(res.data) ? res.data : []);
+    } catch(e) { console.error(e); }
+  };
 
   async function setIncidence(employeeId: string, date: string, key: string, overtimeHours?: number, note?: string) {
     const incKey = INCIDENCE_KEYS.find(k => k.key === key);
@@ -896,6 +931,7 @@ export default function HRPage() {
                 { key: 'lista',     label: 'Corridas de nómina', disabled: false },
                 { key: 'prenomina', label: 'Prenómina',          disabled: !selectedRun },
                 { key: 'nomina',    label: 'Nómina confirmada',  disabled: !selectedRun || selectedRun?.status === 'PRENOMINA' },
+                { key: 'catalogo',  label: 'Catálogo',           disabled: false },
               ] as { key: string; label: string; disabled: boolean }[]).map(t => (
                 <button key={t.key} disabled={t.disabled}
                   onClick={() => !t.disabled && setPayrollTab(t.key as any)}
@@ -1051,11 +1087,18 @@ export default function HRPage() {
                   </div>
                 </div>
 
+                <PayrollPrint
+                  run={selectedRun}
+                  employees={employees}
+                  company={activeCompany}
+                  branch={activeBranch}
+                />
+
                 <div style={{ borderRadius: 10, border: '1px solid rgba(255,255,255,0.07)', background: '#141820', overflow: 'hidden' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                        {['Empleado', 'Neto a pagar', 'Recibo'].map(h => (
+                        {['Empleado', 'Neto a pagar'].map(h => (
                           <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 11.5 }}>{h}</th>
                         ))}
                       </tr>
@@ -1073,17 +1116,146 @@ export default function HRPage() {
                               </div>
                             </td>
                             <td style={{ padding: '10px 12px', fontWeight: 500, color: '#4ade80' }}>${Number(entry.netAmount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
-                            <td style={{ padding: '10px 12px' }}>
-                              <button onClick={() => window.print()}
-                                style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#c8cdd8', fontSize: 12, cursor: 'pointer' }}
-                              >Imprimir recibo</button>
-                            </td>
                           </tr>
                         );
                       })}
                     </tbody>
                   </table>
                 </div>
+              </div>
+            )}
+
+            {/* SUB-TAB: CATÁLOGO */}
+            {payrollTab === 'catalogo' && (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
+                    Los conceptos globales (ESTIA) no se pueden modificar. Agrega los propios de tu empresa.
+                  </div>
+                  <button
+                    onClick={() => { setCatalogForm({ name: '', type: 'P', defaultAmount: 0, category: 'OTRO' }); setEditingCatalogId(null); setShowCatalogModal(true); }}
+                    style={{ padding: '6px 16px', borderRadius: 8, border: '1px solid rgba(123,156,204,0.3)', background: 'rgba(123,156,204,0.1)', color: '#8fafd4', fontSize: 13, cursor: 'pointer' }}
+                  >+ Agregar concepto</button>
+                </div>
+
+                {/* Percepciones */}
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 12, color: '#4ade80', fontWeight: 500, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Percepciones</div>
+                  <div style={{ borderRadius: 10, border: '1px solid rgba(255,255,255,0.07)', background: '#141820', overflow: 'hidden' }}>
+                    {catalog.filter(c => c.type === 'P').map((c: any) => (
+                      <div key={c.id} style={{ display: 'flex', alignItems: 'center', padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                        <div style={{ flex: 1, color: '#c8cdd8', fontSize: 13 }}>{c.name}</div>
+                        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, marginRight: 16 }}>{c.category}</div>
+                        {c.isGlobal ? (
+                          <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: 'rgba(123,156,204,0.1)', color: '#8fafd4' }}>ESTIA</span>
+                        ) : (
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button
+                              onClick={() => { setEditingCatalogId(c.id); setCatalogForm({ name: c.name, type: c.type, defaultAmount: c.defaultAmount, category: c.category || 'OTRO' }); setShowCatalogModal(true); }}
+                              style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', fontSize: 11, cursor: 'pointer' }}
+                            >Editar</button>
+                            <button
+                              onClick={async () => { await api.delete(`/payroll/catalog/${c.id}`); await loadCatalog(); }}
+                              style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid rgba(252,165,165,0.2)', background: 'transparent', color: 'rgba(252,165,165,0.7)', fontSize: 11, cursor: 'pointer' }}
+                            >Eliminar</button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {catalog.filter(c => c.type === 'P').length === 0 && (
+                      <div style={{ padding: 20, textAlign: 'center', color: 'rgba(255,255,255,0.25)', fontSize: 13 }}>Sin percepciones</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Deducciones */}
+                <div>
+                  <div style={{ fontSize: 12, color: 'rgba(252,165,165,0.8)', fontWeight: 500, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Deducciones</div>
+                  <div style={{ borderRadius: 10, border: '1px solid rgba(255,255,255,0.07)', background: '#141820', overflow: 'hidden' }}>
+                    {catalog.filter(c => c.type === 'D').map((c: any) => (
+                      <div key={c.id} style={{ display: 'flex', alignItems: 'center', padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                        <div style={{ flex: 1, color: '#c8cdd8', fontSize: 13 }}>{c.name}</div>
+                        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, marginRight: 16 }}>{c.category}</div>
+                        {c.isGlobal ? (
+                          <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: 'rgba(123,156,204,0.1)', color: '#8fafd4' }}>ESTIA</span>
+                        ) : (
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button
+                              onClick={() => { setEditingCatalogId(c.id); setCatalogForm({ name: c.name, type: c.type, defaultAmount: c.defaultAmount, category: c.category || 'OTRO' }); setShowCatalogModal(true); }}
+                              style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', fontSize: 11, cursor: 'pointer' }}
+                            >Editar</button>
+                            <button
+                              onClick={async () => { await api.delete(`/payroll/catalog/${c.id}`); await loadCatalog(); }}
+                              style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid rgba(252,165,165,0.2)', background: 'transparent', color: 'rgba(252,165,165,0.7)', fontSize: 11, cursor: 'pointer' }}
+                            >Eliminar</button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {catalog.filter(c => c.type === 'D').length === 0 && (
+                      <div style={{ padding: 20, textAlign: 'center', color: 'rgba(255,255,255,0.25)', fontSize: 13 }}>Sin deducciones</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Modal agregar/editar concepto */}
+                {showCatalogModal && (
+                  <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ background: '#141820', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', padding: 24, width: 400 }}>
+                      <div style={{ fontSize: 15, fontWeight: 500, color: '#c8cdd8', marginBottom: 20 }}>
+                        {editingCatalogId ? 'Editar concepto' : 'Nuevo concepto'}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        <div>
+                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Nombre</div>
+                          <input value={catalogForm.name} onChange={e => setCatalogForm(p => ({ ...p, name: e.target.value }))}
+                            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13 }} />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Tipo</div>
+                          <select value={catalogForm.type} onChange={e => setCatalogForm(p => ({ ...p, type: e.target.value }))}
+                            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13 }}>
+                            <option value="P">Percepción</option>
+                            <option value="D">Deducción</option>
+                          </select>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Categoría</div>
+                          <select value={catalogForm.category} onChange={e => setCatalogForm(p => ({ ...p, category: e.target.value }))}
+                            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13 }}>
+                            <option value="SALARIO">Salario</option>
+                            <option value="TIEMPO_EXTRA">Tiempo extra</option>
+                            <option value="SEPTIMO_DIA">Séptimo día</option>
+                            <option value="BONO">Bono</option>
+                            <option value="DEDUCCION_FALTA">Deducción por falta</option>
+                            <option value="PRESTAMO">Préstamo</option>
+                            <option value="OTRO">Otro</option>
+                          </select>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Monto default (0 = se captura al momento)</div>
+                          <input type="number" value={catalogForm.defaultAmount}
+                            onChange={e => setCatalogForm(p => ({ ...p, defaultAmount: parseFloat(e.target.value) || 0 }))}
+                            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13 }} />
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
+                        <button onClick={() => setShowCatalogModal(false)}
+                          style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', fontSize: 13, cursor: 'pointer' }}>
+                          Cancelar
+                        </button>
+                        <button onClick={async () => {
+                          await api.post('/payroll/catalog', { ...catalogForm, id: editingCatalogId });
+                          await loadCatalog();
+                          setShowCatalogModal(false);
+                        }}
+                          style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid rgba(123,156,204,0.3)', background: 'rgba(123,156,204,0.1)', color: '#8fafd4', fontSize: 13, cursor: 'pointer' }}>
+                          {editingCatalogId ? 'Guardar cambios' : 'Agregar'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1146,6 +1318,7 @@ export default function HRPage() {
                   </div>
                   <ConceptsEditor
                     entry={selectedEntry}
+                    catalog={catalog}
                     onSave={async (concepts) => {
                       await updateEntry(selectedEntry.id, concepts);
                       setShowConceptsModal(false);
@@ -1238,7 +1411,7 @@ export default function HRPage() {
                                 <IncidenceInput
                                   value={incKey?.key || ''}
                                   isWeekend={isWeekend}
-                                  locked={false}
+                                  locked={lockedDates.has(dateStr)}
                                   onChange={async (val) => {
                                     if (val === 'TE') {
                                       setOvertimeTarget({ employeeId: emp.id, date: dateStr, hours: 1, note: '' });
