@@ -45,6 +45,7 @@ export function ContractsTab({ employees, tenantId: _tenantId, companyId: _compa
   }, []);
 
   const loadTemplates = async () => {
+    console.log('[ContractsTab] loadTemplates ejecutado');
     try {
       const res = await api.get('/contracts/templates');
       setTemplates(Array.isArray(res.data) ? res.data : []);
@@ -78,6 +79,7 @@ export function ContractsTab({ employees, tenantId: _tenantId, companyId: _compa
   };
 
   const uploadTemplate = async () => {
+    console.log('[ContractsTab] uploadTemplate ejecutado', { name: uploadForm.name, fileType: uploadForm.fileType, hasFile: !!uploadForm.fileBase64 });
     if (!uploadForm.name || !uploadForm.fileBase64) return;
     setLoading(true);
     try {
