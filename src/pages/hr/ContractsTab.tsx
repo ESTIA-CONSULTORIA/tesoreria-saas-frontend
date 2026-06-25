@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../../core/api/api';
+import { useCompanyStore } from '../../core/store/useCompanyStore';
 
 interface Props {
   employees: any[];
@@ -32,7 +33,8 @@ export function ContractsTab({ employees, tenantId, companyId }: Props) {
   const [signStep, setSignStep] = useState(0);
   const [signLevel, setSignLevel] = useState('SIMPLE');
   const [selectedTemplate, setSelectedTemplate] = useState('');
-  const [uploadForm, setUploadForm] = useState({ name: '', fileType: 'DOCX', fileBase64: '' });
+  const [uploadForm, setUploadForm] = useState({ name: '', fileType: 'DOCX', fileBase64: '', contractType: 'INDETERMINADO', employeeLevel: 'OPERATIVO' });
+  const activeCompany = useCompanyStore(s => s.activeCompany);
   const [signData, setSignData] = useState<any>({});
   const [loading, setLoading] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -90,7 +92,7 @@ export function ContractsTab({ employees, tenantId, companyId }: Props) {
       });
       await loadTemplates();
       setShowUploadModal(false);
-      setUploadForm({ name: '', fileType: 'DOCX', fileBase64: '' });
+      setUploadForm({ name: '', fileType: 'DOCX', fileBase64: '', contractType: 'INDETERMINADO', employeeLevel: 'OPERATIVO' });
     } catch(e) { console.error(e); }
     setLoading(false);
   };
@@ -196,6 +198,17 @@ export function ContractsTab({ employees, tenantId, companyId }: Props) {
     setLoading(false);
   };
 
+  const buildFileName = (contract: any, employee: any, template: any, ext: string) => {
+    const empresa = ((activeCompany as any)?.name || 'Empresa').replace(/\s+/g, '');
+    const empName = employee ? `${employee.nombre}${employee.apellidos || ''}`.replace(/\s+/g, '') : 'Empleado';
+    const tipo = template?.contractType === 'PRUEBA' ? 'Prueba'
+      : template?.contractType === 'DETERMINADO' ? 'Determinado'
+      : 'Indeterminado';
+    const nivel = template?.employeeLevel === 'EJECUTIVO' ? 'Ejecutivo' : 'Operativo';
+    const fecha = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    return `${empresa}_${empName}_${tipo}_${nivel}_${fecha}.${ext}`;
+  };
+
   const s = {
     card: { background: '#141820', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '12px 16px', marginBottom: 10 } as React.CSSProperties,
     btn: { padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#c8cdd8', fontSize: 12, cursor: 'pointer' } as React.CSSProperties,
@@ -283,9 +296,11 @@ export function ContractsTab({ employees, tenantId, companyId }: Props) {
                               ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
                               : 'application/pdf';
                             const ext = fileType === 'DOCX' ? 'docx' : 'pdf';
+                            const emp = employees.find(e => e.id === c.employeeId);
+                            const tmpl = templates.find(t => t.id === c.templateId);
                             const link = document.createElement('a');
                             link.href = `data:${mimeType};base64,${pdf}`;
-                            link.download = `contrato_${c.id}.${ext}`;
+                            link.download = buildFileName(c, emp, tmpl, ext);
                             link.click();
                           }} style={{ ...s.btn, fontSize: 11 }}>Descargar</button>
                           {c.status === 'PENDIENTE' && (
@@ -420,9 +435,11 @@ export function ContractsTab({ employees, tenantId, companyId }: Props) {
                     ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
                     : 'application/pdf';
                   const ext = fileType === 'DOCX' ? 'docx' : 'pdf';
+                  const emp = employees.find(e => e.id === currentContract.employeeId);
+                  const tmpl = templates.find(t => t.id === currentContract.templateId);
                   const link = document.createElement('a');
                   link.href = `data:${mimeType};base64,${pdf}`;
-                  link.download = `contrato_${currentContract.id}.${ext}`;
+                  link.download = buildFileName(currentContract, emp, tmpl, ext);
                   link.click();
                 }} style={{ ...s.btn, width: '100%', marginBottom: 12 }}>Descargar contrato</button>
               </div>
@@ -493,13 +510,28 @@ export function ContractsTab({ employees, tenantId, companyId }: Props) {
                 <input value={uploadForm.name} onChange={e => setUploadForm(p => ({ ...p, name: e.target.value }))} style={s.input} placeholder="ej: Contrato indefinido" />
               </div>
               <div>
+                <label style={s.label}>Tipo de contrato</label>
+                <select value={uploadForm.contractType} onChange={e => setUploadForm(p => ({ ...p, contractType: e.target.value }))} style={s.input}>
+                  <option value="PRUEBA">Período de prueba</option>
+                  <option value="DETERMINADO">Tiempo determinado</option>
+                  <option value="INDETERMINADO">Tiempo indeterminado</option>
+                </select>
+              </div>
+              <div>
+                <label style={s.label}>Nivel de empleado</label>
+                <select value={uploadForm.employeeLevel} onChange={e => setUploadForm(p => ({ ...p, employeeLevel: e.target.value }))} style={s.input}>
+                  <option value="OPERATIVO">Operativo</option>
+                  <option value="EJECUTIVO">Ejecutivo</option>
+                </select>
+              </div>
+              <div>
                 <label style={s.label}>Archivo (.docx o .pdf)</label>
                 <input type="file" accept=".docx,.pdf" onChange={handleFileUpload} style={s.input} />
                 {uploadForm.fileBase64 && <div style={{ fontSize: 11, color: '#4ade80', marginTop: 4 }}>✓ Archivo cargado ({uploadForm.fileType})</div>}
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
-              <button onClick={() => setShowUploadModal(false)} style={{ ...s.btn, flex: 1 }}>Cancelar</button>
+              <button onClick={() => { setShowUploadModal(false); setUploadForm({ name: '', fileType: 'DOCX', fileBase64: '', contractType: 'INDETERMINADO', employeeLevel: 'OPERATIVO' }); }} style={{ ...s.btn, flex: 1 }}>Cancelar</button>
               <button onClick={uploadTemplate} disabled={!uploadForm.name || !uploadForm.fileBase64 || loading}
                 style={{ ...s.btnPrimary, flex: 1, opacity: (!uploadForm.name || !uploadForm.fileBase64) ? 0.5 : 1 }}>
                 {loading ? 'Subiendo...' : 'Subir plantilla'}
