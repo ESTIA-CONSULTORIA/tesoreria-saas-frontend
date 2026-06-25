@@ -20,7 +20,7 @@ const FIELD_CATALOG = [
   'salario_diario','periodo_pago','empresa','sucursal','fecha_contrato'
 ];
 
-export function ContractsTab({ employees, tenantId: _tenantId, companyId: _companyId }: Props) {
+export function ContractsTab({ employees, tenantId, companyId }: Props) {
   const [subTab, setSubTab] = useState<'contratos'|'plantillas'>('contratos');
   const [templates, setTemplates] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
@@ -45,7 +45,6 @@ export function ContractsTab({ employees, tenantId: _tenantId, companyId: _compa
   }, []);
 
   const loadTemplates = async () => {
-    console.log('[ContractsTab] loadTemplates ejecutado');
     try {
       const res = await api.get('/contracts/templates');
       setTemplates(Array.isArray(res.data) ? res.data : []);
@@ -79,11 +78,14 @@ export function ContractsTab({ employees, tenantId: _tenantId, companyId: _compa
   };
 
   const uploadTemplate = async () => {
-    console.log('[ContractsTab] uploadTemplate ejecutado', { name: uploadForm.name, fileType: uploadForm.fileType, hasFile: !!uploadForm.fileBase64 });
     if (!uploadForm.name || !uploadForm.fileBase64) return;
     setLoading(true);
     try {
-      await api.post('/contracts/templates', uploadForm);
+      await api.post('/contracts/templates', {
+        ...uploadForm,
+        tenantId,
+        companyId,
+      });
       await loadTemplates();
       setShowUploadModal(false);
       setUploadForm({ name: '', fileType: 'DOCX', fileBase64: '' });
@@ -99,6 +101,8 @@ export function ContractsTab({ employees, tenantId: _tenantId, companyId: _compa
         employeeId: selectedEmp.id,
         templateId: selectedTemplate,
         signatureLevel: signLevel,
+        tenantId,
+        companyId,
       });
       setCurrentContract(res.data);
       setShowGenerateModal(false);
