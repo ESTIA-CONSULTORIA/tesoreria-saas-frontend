@@ -112,6 +112,12 @@ export function ContractsTab({ employees, tenantId, companyId }: Props) {
       setSignStep(0);
       setSignData({});
       setHasSignature(false);
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          pos => setSignData((p: any) => ({ ...p, lat: pos.coords.latitude, lng: pos.coords.longitude })),
+          () => {},
+        );
+      }
       await loadEmpContracts(selectedEmp.id);
     } catch(e) { console.error(e); }
     setLoading(false);
@@ -188,12 +194,6 @@ export function ContractsTab({ employees, tenantId, companyId }: Props) {
       if (selectedEmp) await loadEmpContracts(selectedEmp.id);
     } catch(e) { console.error(e); }
     setLoading(false);
-  };
-
-  const getLocation = () => {
-    navigator.geolocation.getCurrentPosition(pos => {
-      setSignData((p: any) => ({ ...p, lat: pos.coords.latitude, lng: pos.coords.longitude }));
-    });
   };
 
   const s = {
@@ -456,9 +456,7 @@ export function ContractsTab({ employees, tenantId, companyId }: Props) {
                   onTouchStart={startDraw} onTouchMove={draw} onTouchEnd={stopDraw} />
                 <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                   <button onClick={clearCanvas} style={{ ...s.btn, fontSize: 11 }}>Limpiar</button>
-                  <button onClick={getLocation} style={{ ...s.btn, fontSize: 11 }}>
-                    {signData.lat ? '✓ GPS capturado' : 'Capturar ubicación'}
-                  </button>
+                  {signData.lat && <span style={{ fontSize: 11, color: '#4ade80', padding: '6px 0' }}>✓ GPS capturado</span>}
                 </div>
               </div>
             )}
