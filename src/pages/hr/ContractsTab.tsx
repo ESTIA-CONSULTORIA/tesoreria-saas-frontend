@@ -314,14 +314,14 @@ export function ContractsTab({ employees, tenantId, companyId }: Props) {
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
-              Usa marcadores <code style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 6px', borderRadius: 4, fontSize: 11 }}>{`{{campo}}`}</code> en tu Word o PDF
+              Usa marcadores <code style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 6px', borderRadius: 4, fontSize: 11 }}>{`{campo}`}</code> en tu Word o PDF
             </div>
             <button onClick={() => setShowUploadModal(true)} style={s.btnPrimary}>+ Subir plantilla</button>
           </div>
 
           <div style={{ marginBottom: 8, fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
             Campos disponibles: {FIELD_CATALOG.map(f => (
-              <code key={f} style={{ background: 'rgba(255,255,255,0.06)', padding: '1px 5px', borderRadius: 3, margin: '0 2px', fontSize: 10 }}>{`{{${f}}}`}</code>
+              <code key={f} style={{ background: 'rgba(255,255,255,0.06)', padding: '1px 5px', borderRadius: 3, margin: '0 2px', fontSize: 10 }}>{`{${f}}`}</code>
             ))}
           </div>
 
