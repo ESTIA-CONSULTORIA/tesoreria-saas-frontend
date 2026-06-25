@@ -70,9 +70,11 @@ export function ContractsTab({ employees, tenantId, companyId }: Props) {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      const base64 = (ev.target?.result as string).split(',')[1];
-      const fileType = file.name.endsWith('.docx') ? 'DOCX' : 'PDF';
-      setUploadForm(p => ({ ...p, fileBase64: base64, fileType }));
+      const result = ev.target?.result as string;
+      const base64 = result.includes(',') ? result.split(',')[1] : result;
+      const fileType = file.name.toLowerCase().endsWith('.docx') ? 'DOCX' : 'PDF';
+      console.log('[upload] fileBase64 length:', base64?.length, 'fileType:', fileType);
+      setUploadForm(p => ({ ...p, fileBase64: base64 || '', fileType }));
     };
     reader.readAsDataURL(file);
   };
