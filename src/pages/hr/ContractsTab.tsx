@@ -277,11 +277,17 @@ export function ContractsTab({ employees, tenantId, companyId }: Props) {
                         <div style={{ display: 'flex', gap: 6 }}>
                           <button onClick={async () => {
                             const res = await api.get(`/contracts/${c.id}/pdf`);
+                            const pdf = res.data.pdf;
+                            const fileType = c.fileType || 'PDF';
+                            const mimeType = fileType === 'DOCX'
+                              ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                              : 'application/pdf';
+                            const ext = fileType === 'DOCX' ? 'docx' : 'pdf';
                             const link = document.createElement('a');
-                            link.href = `data:application/pdf;base64,${res.data.pdf}`;
-                            link.download = `contrato_${c.id}.pdf`;
+                            link.href = `data:${mimeType};base64,${pdf}`;
+                            link.download = `contrato_${c.id}.${ext}`;
                             link.click();
-                          }} style={{ ...s.btn, fontSize: 11 }}>Descargar PDF</button>
+                          }} style={{ ...s.btn, fontSize: 11 }}>Descargar</button>
                           {c.status === 'PENDIENTE' && (
                             <button onClick={async () => {
                               const res = await api.get(`/contracts/${c.id}/pdf`);
@@ -408,12 +414,17 @@ export function ContractsTab({ employees, tenantId, companyId }: Props) {
                 </div>
                 <button onClick={async () => {
                   const res = await api.get(`/contracts/${currentContract.id}/pdf`);
-                  const win = window.open('', '_blank');
-                  if (win) {
-                    win.document.write(`<iframe src="data:application/pdf;base64,${res.data.pdf}" width="100%" height="100%" style="border:none"></iframe>`);
-                    win.document.close();
-                  }
-                }} style={{ ...s.btn, width: '100%', marginBottom: 12 }}>Ver PDF del contrato</button>
+                  const pdf = res.data.pdf;
+                  const fileType = currentContract.fileType || 'PDF';
+                  const mimeType = fileType === 'DOCX'
+                    ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                    : 'application/pdf';
+                  const ext = fileType === 'DOCX' ? 'docx' : 'pdf';
+                  const link = document.createElement('a');
+                  link.href = `data:${mimeType};base64,${pdf}`;
+                  link.download = `contrato_${currentContract.id}.${ext}`;
+                  link.click();
+                }} style={{ ...s.btn, width: '100%', marginBottom: 12 }}>Descargar contrato</button>
               </div>
             )}
 
