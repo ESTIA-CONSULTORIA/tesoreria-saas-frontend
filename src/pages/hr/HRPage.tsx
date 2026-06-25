@@ -159,6 +159,9 @@ export default function HRPage() {
   const [loadingPeriodAtt, setLoadingPeriodAtt] = useState(false);
   const [showOvertimeModal, setShowOvertimeModal] = useState(false);
   const [overtimeTarget, setOvertimeTarget] = useState<{employeeId: string, date: string, hours: number, note: string} | null>(null);
+  const [showAuditModal, setShowAuditModal] = useState(false);
+  const [auditEmployee, setAuditEmployee] = useState<any>(null);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
 
   // Turnos
   const [shifts, setShifts]             = useState<any[]>([]);
@@ -310,6 +313,10 @@ export default function HRPage() {
   async function setIncidence(employeeId: string, date: string, key: string, overtimeHours?: number, note?: string) {
     const incKey = INCIDENCE_KEYS.find(k => k.key === key);
     if (!incKey) return;
+
+    const reason = window.prompt('Motivo del cambio (requerido):');
+    if (reason === null) return;
+
     await api.post('/hr/attendance/upsert', {
       employeeId,
       date,
@@ -317,9 +324,20 @@ export default function HRPage() {
       incidenceType: key,
       overtimeHours: overtimeHours || null,
       incidenceNote: note || key,
+      changeReason: reason,
+      changedBy: user?.email || 'admin',
     }, { headers });
     await loadPeriodAttendance();
   }
+
+  const loadAudit = async (emp: any) => {
+    setAuditEmployee(emp);
+    try {
+      const res = await api.get(`/hr/attendance/${emp.id}/audit`, { headers });
+      setAuditLogs(Array.isArray(res.data) ? res.data : []);
+    } catch (e) { console.error(e); }
+    setShowAuditModal(true);
+  };
 
   async function createManualAttendance() {
     if (!attendanceForm.employeeId) { setError('Selecciona un empleado'); return; }
@@ -1421,6 +1439,10 @@ export default function HRPage() {
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                               <EmpAvatar emp={emp} photos={employeePhotos} />
                               <span style={{ color: '#c8cdd8', fontWeight: 500 }}>{emp.nombre}</span>
+                              <button
+                                onClick={() => loadAudit(emp)}
+                                style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'rgba(255,255,255,0.3)', cursor: 'pointer' }}
+                              >historial</button>
                             </div>
                           </td>
                           {days.map(d => {
@@ -1492,6 +1514,61 @@ export default function HRPage() {
                       Guardar
                     </button>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Modal: historial de auditoría de incidencias */}
+            {showAuditModal && auditEmployee && (
+              <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ background: '#141820', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', padding: 24, width: 660, maxHeight: '80vh', overflowY: 'auto' }}>
+                  <div style={{ fontSize: 15, fontWeight: 500, color: '#c8cdd8', marginBottom: 16 }}>
+                    Historial de cambios — {auditEmployee.nombre} {auditEmployee.apellidos}
+                  </div>
+                  {auditLogs.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: 24, color: 'rgba(255,255,255,0.3)' }}>Sin cambios registrados</div>
+                  ) : (
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                          {['Fecha', 'Día', 'Anterior', 'Nuevo', 'Motivo', 'Por', 'Autorizado', 'Acciones'].map(h => (
+                            <th key={h} style={{ padding: '8px 6px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 11 }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {auditLogs.map((log: any) => (
+                          <tr key={log.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', opacity: log.reverted ? 0.4 : 1 }}>
+                            <td style={{ padding: '8px 6px', color: 'rgba(255,255,255,0.5)' }}>{new Date(log.createdAt).toLocaleDateString('es-MX')}</td>
+                            <td style={{ padding: '8px 6px', color: '#c8cdd8' }}>{log.date}</td>
+                            <td style={{ padding: '8px 6px', color: 'rgba(252,165,165,0.8)' }}>{log.previousIncidenceType || log.previousStatus || '—'}</td>
+                            <td style={{ padding: '8px 6px', color: '#4ade80' }}>{log.newIncidenceType || log.newStatus || '—'}</td>
+                            <td style={{ padding: '8px 6px', color: 'rgba(255,255,255,0.5)' }}>{log.changeReason || '—'}</td>
+                            <td style={{ padding: '8px 6px', color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>{log.changedBy}</td>
+                            <td style={{ padding: '8px 6px', color: log.approvedBy ? '#4ade80' : 'rgba(255,255,255,0.2)', fontSize: 11 }}>{log.approvedBy || 'Pendiente'}</td>
+                            <td style={{ padding: '8px 6px' }}>
+                              {!log.reverted && (
+                                <button
+                                  onClick={async () => {
+                                    if (!window.confirm('¿Revertir este cambio?')) return;
+                                    await api.post(`/hr/attendance/audit/${log.id}/revert`, { revertedBy: user?.email || 'admin' }, { headers });
+                                    await loadAudit(auditEmployee);
+                                    await loadPeriodAttendance();
+                                  }}
+                                  style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, border: '1px solid rgba(252,165,165,0.3)', background: 'transparent', color: 'rgba(252,165,165,0.7)', cursor: 'pointer' }}
+                                >Revertir</button>
+                              )}
+                              {log.reverted && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>Revertido</span>}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                  <button onClick={() => setShowAuditModal(false)}
+                    style={{ marginTop: 16, padding: '8px 20px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', fontSize: 13, cursor: 'pointer', width: '100%' }}>
+                    Cerrar
+                  </button>
                 </div>
               </div>
             )}
