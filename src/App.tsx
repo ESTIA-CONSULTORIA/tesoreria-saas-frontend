@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import CompaniesPage from "./pages/companies/CompaniesPage";
 import BranchesPage from "./pages/branches/BranchesPage";
 import UsersPage from "./pages/users/UsersPage";
@@ -31,10 +31,12 @@ import OnboardingWizard from "./components/OnboardingWizard";
 import LoginPage from "./pages/Login/LoginPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
 import LoginConfigPage from "./pages/settings/LoginConfigPage";
+import AppearancePage from "./pages/settings/AppearancePage";
 import ProtectedRoute from "./core/router/ProtectedRoute";
 import ModuloRoute from "./core/router/ModuloRoute";
 import { useAuthStore } from "./core/store/useAuthStore";
 import { useBrandingStore } from "./core/store/useBrandingStore";
+import { SplashScreen } from "./components/SplashScreen";
 import { api } from "./core/api/api";
 
 // Páginas de SOPORTE
@@ -47,9 +49,12 @@ import ConfiguracionGlobal from "./pages/soporte/ConfiguracionGlobal";
 function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showWizard, setShowWizard] = useState(false);
+  const [showSplash, setShowSplash] = useState(false);
   const user = useAuthStore((state) => state.user);
   const tenantId = useAuthStore((state) => state.tenantId);
   const loadBranding = useBrandingStore((state) => state.load);
+  const fontFamily = useBrandingStore((state) => state.fontFamily);
+  const prevUserRef = useRef(user);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -60,6 +65,31 @@ function App() {
   useEffect(() => {
     if (user) loadBranding();
   }, [user, loadBranding]);
+
+  // Mostrar splash solo en login fresco (no en refresco de página)
+  useEffect(() => {
+    if (!prevUserRef.current && user) {
+      setShowSplash(true);
+    }
+    prevUserRef.current = user;
+  }, [user]);
+
+  // Cargar Google Font dinámicamente cuando cambie fontFamily
+  useEffect(() => {
+    if (fontFamily && fontFamily !== 'Inter') {
+      const id = `gfont-${fontFamily.replace(/ /g, '-')}`;
+      if (!document.getElementById(id)) {
+        const link = document.createElement('link');
+        link.id = id;
+        link.rel = 'stylesheet';
+        link.href = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/ /g, '+')}:wght@300;400;500;600&display=swap`;
+        document.head.appendChild(link);
+      }
+      document.body.style.fontFamily = `'${fontFamily}', sans-serif`;
+    } else {
+      document.body.style.fontFamily = '';
+    }
+  }, [fontFamily]);
 
   useEffect(() => {
     const checkOnboarding = async () => {
@@ -137,6 +167,7 @@ function App() {
 
   return (
     <>
+    {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
     {showWizard && (
       <OnboardingWizard onComplete={() => setShowWizard(false)} />
     )}
@@ -301,6 +332,17 @@ function App() {
           <ProtectedRoute>
             <ModuloRoute modulo="configuracion">
               <LoginConfigPage />
+            </ModuloRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/settings/appearance"
+        element={
+          <ProtectedRoute>
+            <ModuloRoute modulo="configuracion">
+              <AppearancePage />
             </ModuloRoute>
           </ProtectedRoute>
         }

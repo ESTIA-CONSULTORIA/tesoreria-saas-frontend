@@ -13,18 +13,32 @@ interface BrandingState {
   logoUrl: string;
   accentColor: string;
   backgroundImage: string;
+  splashBg: string;
+  fontFamily: string;
+  theme: 'dark' | 'light';
+  companyDisplayName: string;
   loaded: boolean;
+
   load: () => Promise<void>;
   update: (systemName: string, logoUrl: string, accentColor: string, backgroundImage?: string) => void;
+  setBranding: (b: Partial<Omit<BrandingState, 'load' | 'update' | 'setBranding' | 'reset'>>) => void;
+  reset: () => void;
 }
 
-export const useBrandingStore = create<BrandingState>((set) => ({
-  // Initialize from localStorage so the UI has values immediately on refresh
+const defaults = {
   systemName: lsGet("system_name", "Tesorería SaaS"),
   logoUrl: lsGet("system_logo"),
-  accentColor: lsGet("system_accent", "#2563eb"),
+  accentColor: lsGet("system_accent", "#8fafd4"),
   backgroundImage: lsGet("system_bg"),
+  splashBg: '#0f1117',
+  fontFamily: 'Inter',
+  theme: 'dark' as const,
+  companyDisplayName: '',
   loaded: false,
+};
+
+export const useBrandingStore = create<BrandingState>((set) => ({
+  ...defaults,
 
   load: async () => {
     try {
@@ -34,16 +48,19 @@ export const useBrandingStore = create<BrandingState>((set) => ({
       if (res.data) {
         const systemName = res.data.name || "Tesorería SaaS";
         const logoUrl = res.data.logoUrl || "";
-        const accentColor = res.data.accentColor || "#2563eb";
+        const accentColor = res.data.accentColor || "#8fafd4";
         const backgroundImage = res.data.backgroundImage || "";
+        const splashBg = res.data.splashBg || '#0f1117';
+        const fontFamily = res.data.fontFamily || 'Inter';
+        const theme = res.data.theme || 'dark';
+        const companyDisplayName = res.data.companyDisplayName || res.data.name || '';
         lsSet("system_name", systemName);
         lsSet("system_logo", logoUrl);
         lsSet("system_accent", accentColor);
         lsSet("system_bg", backgroundImage);
-        set({ systemName, logoUrl, accentColor, backgroundImage, loaded: true });
+        set({ systemName, logoUrl, accentColor, backgroundImage, splashBg, fontFamily, theme, companyDisplayName, loaded: true });
       }
     } catch {
-      // Keep whatever was loaded from localStorage; just mark as loaded
       set((s) => ({ ...s, loaded: true }));
     }
   },
@@ -55,4 +72,8 @@ export const useBrandingStore = create<BrandingState>((set) => ({
     lsSet("system_bg", backgroundImage);
     set({ systemName, logoUrl, accentColor, backgroundImage });
   },
+
+  setBranding: (b) => set((s) => ({ ...s, ...b })),
+
+  reset: () => set({ ...defaults }),
 }));
