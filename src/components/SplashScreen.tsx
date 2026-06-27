@@ -130,6 +130,8 @@ export function SplashScreen({ onDone }: Props) {
             position: 'relative', zIndex: 1,
             filter: 'drop-shadow(0 0 40px rgba(60,120,200,0.4)) drop-shadow(0 0 80px rgba(30,80,150,0.2))',
             animation: 'logo-float 4s ease-in-out infinite',
+            WebkitMaskImage: 'radial-gradient(ellipse 85% 85% at 50% 50%, black 55%, transparent 80%)',
+            maskImage: 'radial-gradient(ellipse 85% 85% at 50% 50%, black 55%, transparent 80%)',
           }}
         />
 
