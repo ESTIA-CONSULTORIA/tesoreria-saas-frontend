@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 
-const ESTIA_LOGO = 'https://res.cloudinary.com/dv8wvstg2/image/upload/v1782525384/estia/brand/estia-logo-v2.png';
+const ESTIA_LOGO = 'https://res.cloudinary.com/dv8wvstg2/image/upload/v1782465248/estia/brand/estia-logo.png';
 
 interface Props {
   onDone: () => void;
@@ -72,7 +72,7 @@ export function SplashScreen({ onDone }: Props) {
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 9999,
-      background: '#1a1f2e',
+      background: '#000000',
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
       opacity: phase === 'out' ? 0 : 1,
@@ -82,7 +82,7 @@ export function SplashScreen({ onDone }: Props) {
       {/* Fondo con textura similar al logo */}
       <div style={{
         position: 'absolute', inset: 0,
-        background: 'radial-gradient(ellipse at 50% 35%, #1e2d4a 0%, #0e1520 50%, #080c14 100%)',
+        background: 'radial-gradient(ellipse at 50% 45%, #0a0f1a 0%, #000000 65%)',
       }} />
 
       {/* Canvas de partículas */}
