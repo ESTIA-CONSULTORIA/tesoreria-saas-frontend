@@ -12,8 +12,8 @@ export function SplashScreen({ onDone }: Props) {
 
   useEffect(() => {
     const t1 = setTimeout(() => setPhase('hold'), 800);
-    const t2 = setTimeout(() => setPhase('out'), 3200);
-    const t3 = setTimeout(() => onDone(), 3900);
+    const t2 = setTimeout(() => setPhase('out'), 4500);
+    const t3 = setTimeout(() => onDone(), 5200);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
 
@@ -123,8 +123,15 @@ export function SplashScreen({ onDone }: Props) {
 
         <img
           src={ESTIA_LOGO}
-          alt="ESTIA Consultoría"
-          style={{ width: 240, height: 240, objectFit: 'contain', position: 'relative', zIndex: 1 }}
+          alt="ESTIA"
+          style={{
+            width: 260, height: 260,
+            objectFit: 'contain',
+            position: 'relative', zIndex: 1,
+            mixBlendMode: 'screen',
+            filter: 'drop-shadow(0 0 30px rgba(60,120,200,0.3)) drop-shadow(0 0 60px rgba(30,80,150,0.15))',
+            animation: 'logo-float 4s ease-in-out infinite',
+          }}
         />
 
         {/* Tipografía destacada */}
@@ -203,6 +210,10 @@ export function SplashScreen({ onDone }: Props) {
           0%   { transform: translateX(-100%); }
           60%  { transform: translateX(400%); }
           100% { transform: translateX(400%); }
+        }
+        @keyframes logo-float {
+          0%, 100% { transform: translateY(0px); }
+          50%       { transform: translateY(-8px); }
         }
       `}</style>
     </div>
