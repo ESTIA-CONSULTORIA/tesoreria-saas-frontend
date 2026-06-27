@@ -30,11 +30,9 @@ const GOOGLE_FONTS = [
 
 interface Form {
   logoUrl: string;
-  splashBg: string;
   accentColor: string;
   fontFamily: string;
   theme: 'dark' | 'light';
-  companyDisplayName: string;
 }
 
 export default function AppearancePage() {
@@ -45,18 +43,15 @@ export default function AppearancePage() {
 
   const [form, setForm] = useState<Form>({
     logoUrl: store.logoUrl || '',
-    splashBg: store.splashBg || '#0f1117',
     accentColor: store.accentColor || '#8fafd4',
     fontFamily: store.fontFamily || 'Inter',
     theme: store.theme || 'dark',
-    companyDisplayName: store.companyDisplayName || '',
   });
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
   const [previewSplash, setPreviewSplash] = useState(false);
   const logoFileRef = useRef<HTMLInputElement>(null);
-  const splashFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadSettings();
@@ -68,11 +63,9 @@ export default function AppearancePage() {
       if (res.data) {
         setForm({
           logoUrl: res.data.logoUrl || '',
-          splashBg: res.data.splashBg || '#0f1117',
           accentColor: res.data.accentColor || '#8fafd4',
           fontFamily: res.data.fontFamily || 'Inter',
           theme: res.data.theme || 'dark',
-          companyDisplayName: res.data.companyDisplayName || res.data.name || '',
         });
       }
     } catch { /* ignore */ }
@@ -89,17 +82,6 @@ export default function AppearancePage() {
     reader.readAsDataURL(file);
   }
 
-  function handleSplashFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const result = ev.target?.result as string;
-      setForm(f => ({ ...f, splashBg: result }));
-    };
-    reader.readAsDataURL(file);
-  }
-
   async function save() {
     setSaving(true);
     setError('');
@@ -107,19 +89,15 @@ export default function AppearancePage() {
     try {
       await api.put(`/tenant-settings/${tenantId}`, {
         logoUrl: form.logoUrl,
-        splashBg: form.splashBg,
         accentColor: form.accentColor,
         fontFamily: form.fontFamily,
         theme: form.theme,
-        companyDisplayName: form.companyDisplayName,
       }, { headers });
       store.setBranding({
         logoUrl: form.logoUrl,
-        splashBg: form.splashBg,
         accentColor: form.accentColor,
         fontFamily: form.fontFamily,
         theme: form.theme,
-        companyDisplayName: form.companyDisplayName,
       });
       setSuccess('Apariencia guardada correctamente');
       setTimeout(() => setSuccess(''), 3000);
@@ -169,8 +147,6 @@ export default function AppearancePage() {
                 )}
               </div>
               <div style={{ flex: 1 }}>
-                <input type="text" value={form.logoUrl} onChange={e => setForm(f => ({ ...f, logoUrl: e.target.value }))}
-                  placeholder="URL del logo o sube un archivo" style={{ ...s.input, marginBottom: 8 }} />
                 <input ref={logoFileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleLogoFile} />
                 <button onClick={() => logoFileRef.current?.click()}
                   style={{ fontSize: 12, padding: '6px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>
@@ -184,36 +160,6 @@ export default function AppearancePage() {
                 )}
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Nombre en splash */}
-        <div style={s.section}>
-          <div style={s.card}>
-            <label style={s.label}>Nombre en pantalla de inicio</label>
-            <input type="text" value={form.companyDisplayName}
-              onChange={e => setForm(f => ({ ...f, companyDisplayName: e.target.value }))}
-              placeholder="Nombre que aparece en el splash" style={s.input} />
-          </div>
-        </div>
-
-        {/* Fondo del splash */}
-        <div style={s.section}>
-          <div style={s.card}>
-            <label style={s.label}>Fondo de pantalla de inicio</label>
-            <div style={{ display: 'flex', gap: 12, marginBottom: 12, alignItems: 'center' }}>
-              <input type="color" value={form.splashBg.startsWith('#') ? form.splashBg : '#0f1117'}
-                onChange={e => setForm(f => ({ ...f, splashBg: e.target.value }))}
-                style={{ width: 40, height: 36, border: 'none', borderRadius: 6, cursor: 'pointer', background: 'transparent' }} />
-              <input type="text" value={form.splashBg}
-                onChange={e => setForm(f => ({ ...f, splashBg: e.target.value }))}
-                placeholder="#0f1117 o URL de imagen" style={{ ...s.input, flex: 1 }} />
-            </div>
-            <input ref={splashFileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleSplashFile} />
-            <button onClick={() => splashFileRef.current?.click()}
-              style={{ fontSize: 12, padding: '6px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>
-              Subir imagen de fondo
-            </button>
           </div>
         </div>
 

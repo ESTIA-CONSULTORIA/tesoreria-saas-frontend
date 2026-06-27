@@ -242,7 +242,7 @@ export default function TopBar() {
         </div>
 
         {/* Nav */}
-        <nav style={{ display: 'flex', alignItems: 'stretch', flex: 1, height: '100%', overflowX: 'auto', gap: 0 }}>
+        <nav style={{ display: 'flex', alignItems: 'center', flex: 1, height: '100%', overflowX: 'auto', gap: 6, padding: '0 4px' }}>
           {visibleNav.map(m => {
             const active = activeKey === m.key;
             const isDisabled = !activeCompany && operationalModules.includes(m.key);
@@ -251,12 +251,16 @@ export default function TopBar() {
               return (
                 <span key={m.key} style={{
                   display: 'flex', alignItems: 'center', gap: 5,
-                  padding: '0 13px', height: '100%',
-                  fontSize: 12.5, fontWeight: 400,
-                  color: 'rgba(255,255,255,0.2)',
-                  borderBottom: '2px solid transparent',
+                  padding: '5px 12px',
+                  borderRadius: 6,
+                  border: '1px solid rgba(255,255,255,0.03)',
+                  background: 'rgba(255,255,255,0.02)',
+                  color: 'rgba(255,255,255,0.18)',
+                  fontSize: 13,
+                  cursor: 'not-allowed',
+                  boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.5)',
+                  userSelect: 'none',
                   whiteSpace: 'nowrap', flexShrink: 0,
-                  cursor: 'not-allowed', userSelect: 'none',
                 }}>
                   <span style={{ opacity: 0.3, display: 'flex' }}>{IC[m.key]}</span>
                   {m.label}
@@ -267,14 +271,34 @@ export default function TopBar() {
             return (
               <Link key={m.key} to={m.path} style={{
                 display: 'flex', alignItems: 'center', gap: 5,
-                padding: '0 13px', height: '100%', textDecoration: 'none',
-                fontSize: 12.5, fontWeight: active ? 500 : 400,
-                color: active ? '#c8cdd8' : 'rgba(255,255,255,0.35)',
-                borderBottom: active ? '2px solid #7b9ccc' : '2px solid transparent',
-                transition: 'color 0.15s', whiteSpace: 'nowrap', flexShrink: 0,
+                padding: '5px 12px',
+                borderRadius: 6,
+                border: active ? '1px solid rgba(123,156,204,0.4)' : '1px solid rgba(255,255,255,0.08)',
+                background: active ? 'rgba(123,156,204,0.15)' : 'rgba(255,255,255,0.04)',
+                color: active ? '#8fafd4' : '#c8cdd8',
+                fontSize: 13,
+                cursor: 'pointer',
+                boxShadow: active
+                  ? '0 1px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(123,156,204,0.15)'
+                  : '0 1px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
+                transition: 'all 0.15s ease',
+                textDecoration: 'none',
+                whiteSpace: 'nowrap', flexShrink: 0,
               }}
-              onMouseEnter={e => { if (!active) hoverOn(e.currentTarget as HTMLElement, 'rgba(255,255,255,0.65)'); }}
-              onMouseLeave={e => { if (!active) hoverOff(e.currentTarget as HTMLElement, 'rgba(255,255,255,0.35)'); }}
+              onMouseEnter={e => {
+                if (!active) {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.background = 'rgba(255,255,255,0.08)';
+                  el.style.color = '#e8ecf0';
+                }
+              }}
+              onMouseLeave={e => {
+                if (!active) {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.background = 'rgba(255,255,255,0.04)';
+                  el.style.color = '#c8cdd8';
+                }
+              }}
               >
                 <span style={{ opacity: active ? 0.9 : 0.55, display: 'flex' }}>{IC[m.key]}</span>
                 {m.label}
