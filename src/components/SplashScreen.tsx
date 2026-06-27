@@ -128,8 +128,7 @@ export function SplashScreen({ onDone }: Props) {
             width: 260, height: 260,
             objectFit: 'contain',
             position: 'relative', zIndex: 1,
-            mixBlendMode: 'screen',
-            filter: 'drop-shadow(0 0 30px rgba(60,120,200,0.3)) drop-shadow(0 0 60px rgba(30,80,150,0.15))',
+            filter: 'drop-shadow(0 0 40px rgba(60,120,200,0.4)) drop-shadow(0 0 80px rgba(30,80,150,0.2))',
             animation: 'logo-float 4s ease-in-out infinite',
           }}
         />
