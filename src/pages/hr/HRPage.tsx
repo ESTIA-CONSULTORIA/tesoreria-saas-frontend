@@ -682,16 +682,11 @@ export default function HRPage() {
   // Common input style
   const inp = "w-full rounded border border-slate-700 bg-slate-800 p-2 text-sm text-white outline-none focus:border-blue-500";
 
-  if (!activeCompany && !activeBranch) {
-    return (
-      <MainLayout>
-        <NoContextBanner />
-      </MainLayout>
-    );
-  }
-
   return (
     <MainLayout>
+      <div style={{ position: 'relative', minHeight: '80vh' }}>
+        {(!activeCompany || !activeBranch) && <NoContextBanner />}
+        {activeCompany && activeBranch && (<>
       <div style={{ padding: '24px 28px', minHeight: '100%', color: '#c8cdd8' }}>
 
         {/* ── Page header ── */}
@@ -2039,6 +2034,8 @@ export default function HRPage() {
           {toast}
         </div>
       )}
+        </>)}
+      </div>
     </MainLayout>
   );
 }

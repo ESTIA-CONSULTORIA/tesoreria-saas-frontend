@@ -336,9 +336,9 @@ export default function PurchasesPage() {
 
   return (
     <MainLayout>
-      {!activeCompany ? (
-        <NoContextBanner />
-      ) : (
+      <div style={{ position: 'relative', minHeight: '80vh' }}>
+        {(!activeCompany || !activeBranch) && <NoContextBanner />}
+        {activeCompany && activeBranch && (
         <div className="space-y-6">
         <div>
           <h2 className="text-3xl font-bold">Compras</h2>
@@ -1010,7 +1010,8 @@ export default function PurchasesPage() {
           </div>
         )}
       </div>
-      )}
+        )}
+      </div>
     </MainLayout>
   );
 }

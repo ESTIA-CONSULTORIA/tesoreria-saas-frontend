@@ -8,16 +8,21 @@ export function NoContextBanner() {
 
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      height: '65vh',
+      position: 'absolute',
+      top: 0, left: 0, right: 0, bottom: 0,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      pointerEvents: 'none',
     }}>
       <img
         src={logo}
         alt="Logo"
         style={{
-          width: 140, height: 140,
+          width: 200,
+          height: 200,
           objectFit: 'contain',
-          opacity: 0.12,
+          opacity: 0.5,
           WebkitMaskImage: 'radial-gradient(ellipse 85% 85% at 50% 50%, black 55%, transparent 80%)',
           maskImage: 'radial-gradient(ellipse 85% 85% at 50% 50%, black 55%, transparent 80%)',
         }}

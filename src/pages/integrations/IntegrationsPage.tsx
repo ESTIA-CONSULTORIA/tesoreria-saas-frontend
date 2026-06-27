@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
+import { useCompanyStore } from "../../core/store/useCompanyStore";
+import { NoContextBanner } from "../../core/components/NoContextBanner";
 
 interface CatalogEntry {
   slug: string;
@@ -33,6 +35,7 @@ const STATUS_DOT: Record<string, string> = {
 };
 
 export default function IntegrationsPage() {
+  const { activeCompany, activeBranch } = useCompanyStore();
   const [integrations, setIntegrations] = useState<CatalogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<CatalogEntry | null>(null);
@@ -102,6 +105,9 @@ export default function IntegrationsPage() {
 
   return (
     <MainLayout>
+      <div style={{ position: 'relative', minHeight: '80vh' }}>
+        {(!activeCompany || !activeBranch) && <NoContextBanner />}
+        {activeCompany && activeBranch && (<>
       <div style={{ padding: "24px", color: "#c8cdd8" }}>
         <div style={{ marginBottom: 20 }}>
           <h1 style={{ fontSize: 15, fontWeight: 600, color: "#c8cdd8", marginBottom: 2 }}>Integraciones</h1>
@@ -308,6 +314,8 @@ export default function IntegrationsPage() {
           </div>
         </div>
       )}
+          </>)}
+      </div>
     </MainLayout>
   );
 }

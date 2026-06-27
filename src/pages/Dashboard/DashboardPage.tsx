@@ -164,19 +164,13 @@ export default function DashboardPage() {
     return `${Math.round(value)}%`;
   };
 
-  if (!activeCompany && !activeBranch) {
-    return (
-      <MainLayout>
-        <NoContextBanner />
-      </MainLayout>
-    );
-  }
-
   return (
     <MainLayout>
       <DashboardInfoModal open={infoOpen} onClose={() => setInfoOpen(false)} />
-
-      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 48px)', backgroundColor: '#0A0A0A', overflowX: 'hidden' }}>
+      <div style={{ position: 'relative', minHeight: '80vh' }}>
+        {(!activeCompany || !activeBranch) && <NoContextBanner />}
+        {activeCompany && activeBranch && (
+        <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 48px)', backgroundColor: '#0A0A0A', overflowX: 'hidden' }}>
         {/* Header del módulo */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 24px', borderBottom: '1px solid #2D2D2D', backgroundColor: '#0A0A0A' }}>
           <div>
@@ -678,6 +672,8 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </>
+        )}
+      </div>
         )}
       </div>
     </MainLayout>

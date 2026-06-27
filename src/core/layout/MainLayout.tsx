@@ -52,6 +52,7 @@ export default function MainLayout({ children }: Props) {
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
+          position: 'relative',
           backgroundColor: backgroundImage ? 'transparent' : '#0f1117',
         }}>
           {children}
