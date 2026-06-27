@@ -5,6 +5,7 @@ import CreateOrderModal from "./CreateOrderModal";
 import ReceiveOrderModal from "./ReceiveOrderModal";
 import CreateInvoiceModal from "./CreateInvoiceModal";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
+import { NoContextBanner } from "../../core/components/NoContextBanner";
 
 interface PurchaseOrder {
   id: string;
@@ -336,9 +337,7 @@ export default function PurchasesPage() {
   return (
     <MainLayout>
       {!activeCompany ? (
-        <div style={{ padding: '24px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '8px', color: '#8A6A3A', textAlign: 'center' }}>
-          Selecciona una empresa para ver los datos
-        </div>
+        <NoContextBanner />
       ) : (
         <div className="space-y-6">
         <div>

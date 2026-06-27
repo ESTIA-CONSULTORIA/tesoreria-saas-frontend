@@ -4,6 +4,7 @@ import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
+import { NoContextBanner } from "../../core/components/NoContextBanner";
 import { ConceptsEditor } from './ConceptsEditor';
 import { IncidenceInput } from './IncidenceInput';
 import { PayrollPrint } from './PayrollPrint';
@@ -680,6 +681,14 @@ export default function HRPage() {
 
   // Common input style
   const inp = "w-full rounded border border-slate-700 bg-slate-800 p-2 text-sm text-white outline-none focus:border-blue-500";
+
+  if (!activeCompany && !activeBranch) {
+    return (
+      <MainLayout>
+        <NoContextBanner />
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>

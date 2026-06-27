@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import DashboardInfoModal from "./DashboardInfoModal";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
+import { NoContextBanner } from "../../core/components/NoContextBanner";
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -162,6 +163,14 @@ export default function DashboardPage() {
   const formatPercentDecimal = (value: number) => {
     return `${Math.round(value)}%`;
   };
+
+  if (!activeCompany && !activeBranch) {
+    return (
+      <MainLayout>
+        <NoContextBanner />
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
