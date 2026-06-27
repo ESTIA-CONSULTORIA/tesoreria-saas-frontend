@@ -5,7 +5,7 @@ import CreateOrderModal from "./CreateOrderModal";
 import ReceiveOrderModal from "./ReceiveOrderModal";
 import CreateInvoiceModal from "./CreateInvoiceModal";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
-import { NoContextBanner } from "../../core/components/NoContextBanner";
+
 
 interface PurchaseOrder {
   id: string;
@@ -336,9 +336,6 @@ export default function PurchasesPage() {
 
   return (
     <MainLayout>
-      <div style={{ position: 'relative', minHeight: '80vh' }}>
-        {(!activeCompany || !activeBranch) && <NoContextBanner />}
-        {activeCompany && activeBranch && (
         <div className="space-y-6">
         <div>
           <h2 className="text-3xl font-bold">Compras</h2>
@@ -1008,8 +1005,6 @@ export default function PurchasesPage() {
               </div>
             </div>
           </div>
-        )}
-      </div>
         )}
       </div>
     </MainLayout>

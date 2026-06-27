@@ -75,7 +75,7 @@ export default function LoginPage() {
         tenantId: user.tenantId,
       }, finalModulosActivos);
 
-      navigate("/dashboard");
+      navigate("/");
     } catch (error: any) {
       console.error(error);
       setError(error.response?.data?.message || "Usuario o contraseña incorrectos");

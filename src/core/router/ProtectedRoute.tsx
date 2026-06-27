@@ -12,16 +12,16 @@ export default function ProtectedRoute({
   const user = useAuthStore((state) => state.user) || JSON.parse(localStorage.getItem('user') || 'null');
 
   if (!token) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
     if (payload.exp && payload.exp < Date.now() / 1000) {
-      return <Navigate to="/" replace />;
+      return <Navigate to="/login" replace />;
     }
   } catch {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   // SOPORTE tiene acceso a todos los módulos sin verificación

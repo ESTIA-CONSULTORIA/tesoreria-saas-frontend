@@ -37,6 +37,9 @@ import ModuloRoute from "./core/router/ModuloRoute";
 import { useAuthStore } from "./core/store/useAuthStore";
 import { useBrandingStore } from "./core/store/useBrandingStore";
 import { SplashScreen } from "./components/SplashScreen";
+import { OutroSplash } from "./components/OutroSplash";
+import { NoContextBanner } from "./core/components/NoContextBanner";
+import TopBar from "./core/layout/TopBar";
 import { api } from "./core/api/api";
 
 // Páginas de SOPORTE
@@ -50,8 +53,10 @@ function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showWizard, setShowWizard] = useState(false);
   const [showSplash, setShowSplash] = useState(false);
+  const [showOutroSplash, setShowOutroSplash] = useState(false);
   const user = useAuthStore((state) => state.user);
   const tenantId = useAuthStore((state) => state.tenantId);
+  const logoutTrigger = useAuthStore((state) => state.logoutTrigger);
   const loadBranding = useBrandingStore((state) => state.load);
   const fontFamily = useBrandingStore((state) => state.fontFamily);
   const prevUserRef = useRef(user);
@@ -73,6 +78,13 @@ function App() {
     }
     prevUserRef.current = user;
   }, [user]);
+
+  useEffect(() => {
+    if (logoutTrigger) {
+      setShowOutroSplash(true);
+      useAuthStore.getState().clearLogoutTrigger();
+    }
+  }, [logoutTrigger]);
 
   // Cargar Google Font dinámicamente cuando cambie fontFamily
   useEffect(() => {
@@ -168,11 +180,23 @@ function App() {
   return (
     <>
     {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
+    {showOutroSplash && (
+      <OutroSplash onDone={() => {
+        setShowOutroSplash(false);
+        useAuthStore.getState().logout();
+      }} />
+    )}
     {showWizard && (
       <OnboardingWizard onComplete={() => setShowWizard(false)} />
     )}
     <Routes>
-      <Route path="/" element={<LoginPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/" element={
+        <ProtectedRoute>
+          <TopBar />
+          <NoContextBanner />
+        </ProtectedRoute>
+      } />
 
       <Route
         path="/dashboard"

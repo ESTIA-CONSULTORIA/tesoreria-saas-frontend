@@ -77,11 +77,12 @@ const MODULE_PATHS: Record<ModKey, string[]> = {
   auditoria:     ["/settings", "/soporte", "/settings/appearance"],
 };
 
-function getActiveKey(pathname: string): ModKey {
+function getActiveKey(pathname: string): ModKey | null {
+  if (pathname === '/') return null;
   for (const [key, paths] of Object.entries(MODULE_PATHS) as [ModKey, string[]][]) {
     if (paths.some(p => pathname === p || pathname.startsWith(p + '/'))) return key;
   }
-  return "dashboard";
+  return null;
 }
 
 function isSubActive(item: { path: string }, loc: { pathname: string; search: string }): boolean {
@@ -99,7 +100,7 @@ function isSubActive(item: { path: string }, loc: { pathname: string; search: st
 
 export default function TopBar() {
   const loc = useLocation();
-  const { user, logout } = useAuthStore();
+  const { user, triggerLogout } = useAuthStore();
   const { companyId: userCompanyId } = useAuthStore();
   const { activeCompany, activeBranch, setActiveCompany, setActiveBranch } = useCompanyStore();
 
@@ -213,7 +214,7 @@ export default function TopBar() {
   const activeKey  = getActiveKey(loc.pathname);
   const visibleNav = NAV.filter(m => modAccess[m.key]);
   const operationalModules: ModKey[] = ['rh', 'tesoreria', 'pos', 'compras', 'reportes', 'integraciones'];
-  const subItems   = SUBNAV[activeKey] || [];
+  const subItems   = activeKey ? (SUBNAV[activeKey] || []) : [];
 
   const userInitials = (() => {
     const n = user?.name || user?.email || '';
@@ -408,7 +409,7 @@ export default function TopBar() {
               <div style={{ fontSize: 11.5, color: '#c8cdd8', fontWeight: 500 }}>{user?.name?.split(' ')[0] || user?.email?.split('@')[0]}</div>
               <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{user?.roleCode}</div>
             </div>
-            <button onClick={logout} style={{
+            <button onClick={triggerLogout} style={{
               fontSize: 11, color: 'rgba(255,255,255,0.28)', background: 'transparent',
               border: 'none', cursor: 'pointer', padding: '4px 6px', borderRadius: 4,
             }}

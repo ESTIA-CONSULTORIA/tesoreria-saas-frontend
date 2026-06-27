@@ -20,6 +20,8 @@ interface AuthState {
   companyId: string | null;
   branchId: string | null;
 
+  logoutTrigger: boolean;
+
   login: (
     token: string,
     tenantId: string,
@@ -28,6 +30,8 @@ interface AuthState {
   ) => void;
 
   logout: () => void;
+  triggerLogout: () => void;
+  clearLogoutTrigger: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -37,6 +41,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   modulosActivos: JSON.parse(localStorage.getItem("modulos_activos") || "[]"),
   companyId: localStorage.getItem("user_company_id"),
   branchId: localStorage.getItem("user_branch_id"),
+  logoutTrigger: false,
 
   login: (token, tenantId, user, modulosActivos = []) => {
     // Decode JWT to extract companyId/branchId
@@ -113,6 +118,9 @@ export const useAuthStore = create<AuthState>((set) => ({
       branchId: null,
     });
 
-    window.location.href = '/';
+    window.location.href = '/login';
   },
+
+  triggerLogout: () => set({ logoutTrigger: true }),
+  clearLogoutTrigger: () => set({ logoutTrigger: false }),
 }));

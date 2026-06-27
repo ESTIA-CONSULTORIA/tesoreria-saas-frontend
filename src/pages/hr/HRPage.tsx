@@ -4,7 +4,7 @@ import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
-import { NoContextBanner } from "../../core/components/NoContextBanner";
+
 import { ConceptsEditor } from './ConceptsEditor';
 import { IncidenceInput } from './IncidenceInput';
 import { PayrollPrint } from './PayrollPrint';
@@ -684,9 +684,6 @@ export default function HRPage() {
 
   return (
     <MainLayout>
-      <div style={{ position: 'relative', minHeight: '80vh' }}>
-        {(!activeCompany || !activeBranch) && <NoContextBanner />}
-        {activeCompany && activeBranch && (<>
       <div style={{ padding: '24px 28px', minHeight: '100%', color: '#c8cdd8' }}>
 
         {/* ── Page header ── */}
@@ -2034,8 +2031,6 @@ export default function HRPage() {
           {toast}
         </div>
       )}
-        </>)}
-      </div>
     </MainLayout>
   );
 }

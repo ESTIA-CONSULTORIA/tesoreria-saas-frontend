@@ -4,12 +4,12 @@ import { api } from "../../core/api/api";
 import ReportsFiltersModal from "./ReportsFiltersModal";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
-import { NoContextBanner } from "../../core/components/NoContextBanner";
+
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
 export default function ReportsPage() {
-  const { activeCompany, activeBranch } = useCompanyStore();
+  const { activeCompany } = useCompanyStore();
   const [activeTab, setActiveTab] = useState("general");
   const [period, setPeriod] = useState("mes");
   const [startDate, setStartDate] = useState("");
@@ -115,9 +115,6 @@ export default function ReportsPage() {
           setEndDate(end);
         }}
       />
-      <div style={{ position: 'relative', minHeight: '80vh' }}>
-        {(!activeCompany || !activeBranch) && <NoContextBanner />}
-        {activeCompany && activeBranch && (
         <div className="p-6 space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div>
@@ -468,8 +465,6 @@ export default function ReportsPage() {
               </div>
             )}
           </div>
-        )}
-      </div>
         )}
       </div>
     </MainLayout>

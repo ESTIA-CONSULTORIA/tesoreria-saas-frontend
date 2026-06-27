@@ -4,7 +4,7 @@ import MainLayout from "../../core/layout/MainLayout";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import ExecutiveKPI from "../../components/ExecutiveKPI";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
-import { NoContextBanner } from "../../core/components/NoContextBanner";
+
 
 type TabType = "resumen" | "posicion" | "traslados" | "cxp" | "cxc" | "alertas" | "antiguedad" | "depositos";
 type PeriodType = "week" | "month" | "quarter";
@@ -165,9 +165,6 @@ export default function TreasuryPage() {
 
   return (
     <MainLayout>
-      <div style={{ position: 'relative', minHeight: '80vh' }}>
-        {(!activeCompany || !activeBranch) && <NoContextBanner />}
-        {activeCompany && activeBranch && (
         <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -1235,8 +1232,6 @@ export default function TreasuryPage() {
         </>
       )}
     </div>
-        )}
-      </div>
     </MainLayout>
   );
 }
