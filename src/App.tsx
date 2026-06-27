@@ -29,6 +29,7 @@ import EmployeeProfile from "./pages/employee/EmployeeProfile";
 import OnboardingWizard from "./components/OnboardingWizard";
 
 import LoginPage from "./pages/Login/LoginPage";
+import ExecutivePage from "./pages/executive/ExecutivePage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
 import LoginConfigPage from "./pages/settings/LoginConfigPage";
 import AppearancePage from "./pages/settings/AppearancePage";
@@ -191,6 +192,7 @@ function App() {
     )}
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/executive" element={<ExecutivePage />} />
       <Route path="/" element={
         <ProtectedRoute>
           <TopBar />
