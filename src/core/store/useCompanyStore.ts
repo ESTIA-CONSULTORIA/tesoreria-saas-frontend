@@ -12,15 +12,9 @@ interface CompanyState {
   setActiveBranch: (branch: Company | null) => void;
 }
 
-export const useCompanyStore = create<CompanyState>((set) => {
-  const companyId = localStorage.getItem("active_company_id");
-  const companyName = localStorage.getItem("active_company_name");
-  const branchId = localStorage.getItem("active_branch_id");
-  const branchName = localStorage.getItem("active_branch_name");
-
-  return {
-    activeCompany: companyId && companyName ? { id: companyId, name: companyName } : null,
-    activeBranch: branchId && branchName ? { id: branchId, name: branchName } : null,
+export const useCompanyStore = create<CompanyState>((set) => ({
+    activeCompany: null,
+    activeBranch: null,
 
     setActiveCompany: (company) => {
       if (company) {
@@ -43,5 +37,4 @@ export const useCompanyStore = create<CompanyState>((set) => {
       }
       set({ activeBranch: branch });
     },
-  };
-});
+}));

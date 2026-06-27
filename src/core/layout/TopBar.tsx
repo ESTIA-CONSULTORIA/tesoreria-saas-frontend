@@ -212,6 +212,7 @@ export default function TopBar() {
 
   const activeKey  = getActiveKey(loc.pathname);
   const visibleNav = NAV.filter(m => modAccess[m.key]);
+  const operationalModules: ModKey[] = ['rh', 'tesoreria', 'pos', 'compras', 'reportes', 'integraciones'];
   const subItems   = SUBNAV[activeKey] || [];
 
   const userInitials = (() => {
@@ -244,6 +245,25 @@ export default function TopBar() {
         <nav style={{ display: 'flex', alignItems: 'stretch', flex: 1, height: '100%', overflowX: 'auto', gap: 0 }}>
           {visibleNav.map(m => {
             const active = activeKey === m.key;
+            const isDisabled = !activeCompany && operationalModules.includes(m.key);
+
+            if (isDisabled) {
+              return (
+                <span key={m.key} style={{
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  padding: '0 13px', height: '100%',
+                  fontSize: 12.5, fontWeight: 400,
+                  color: 'rgba(255,255,255,0.2)',
+                  borderBottom: '2px solid transparent',
+                  whiteSpace: 'nowrap', flexShrink: 0,
+                  cursor: 'not-allowed', userSelect: 'none',
+                }}>
+                  <span style={{ opacity: 0.3, display: 'flex' }}>{IC[m.key]}</span>
+                  {m.label}
+                </span>
+              );
+            }
+
             return (
               <Link key={m.key} to={m.path} style={{
                 display: 'flex', alignItems: 'center', gap: 5,
