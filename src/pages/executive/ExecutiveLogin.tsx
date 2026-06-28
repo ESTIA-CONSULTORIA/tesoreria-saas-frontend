@@ -84,6 +84,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
         width: "100%",
         maxWidth: "100vw",
         overflowX: "hidden",
+        boxSizing: "border-box",
         display: "flex",
         flexDirection: "column",
         fontFamily: "'Inter', sans-serif",
@@ -98,7 +99,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          padding: "0 32px",
+          padding: "0 16px",
           gap: 12,
         }}
       >
@@ -148,7 +149,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
           alignItems: "center",
           justifyContent: "center",
           gap: 14,
-          padding: "0 32px",
+          padding: "0 16px",
         }}
       >
         <p

@@ -24,6 +24,12 @@ interface KPIs {
   flujo: number;
 }
 
+function pctChange(current: number, prev: number): string | null {
+  if (!prev || prev === 0) return null;
+  const pct = ((current - prev) / Math.abs(prev)) * 100;
+  return `${pct >= 0 ? "▲" : "▼"} ${Math.abs(pct).toFixed(1)}%`;
+}
+
 function companyName(c: Company): string {
   return (c as any).tradeName || (c as any).legalName || c.name || c.razonSocial || "Empresa";
 }
@@ -34,6 +40,12 @@ export default function ExecutiveDashboard({
 }: Props) {
   const t = getTheme(config.theme);
   const [kpis, setKpis] = useState<KPIs>({ venta: 0, costo: 0, gasto: 0, flujo: 0 });
+  const [prevKpis, setPrevKpis] = useState<KPIs | null>(() => {
+    try {
+      const s = localStorage.getItem("exec_kpis_prev");
+      return s ? (JSON.parse(s) as KPIs) : null;
+    } catch { return null; }
+  });
   const [costoLabel, setCostoLabel] = useState("COSTO");
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(new Date());
@@ -90,7 +102,12 @@ export default function ExecutiveDashboard({
           setCostoLabel("COSTO EST.");
         }
 
-        setKpis({ venta: income, costo, gasto: expense, flujo: income - expense });
+        const next: KPIs = { venta: income, costo, gasto: expense, flujo: income - expense };
+        setPrevKpis((prev) => {
+          localStorage.setItem("exec_kpis_prev", JSON.stringify(prev ?? next));
+          return prev;
+        });
+        setKpis(next);
       })
       .catch((err) => {
         if (err.response?.status === 401) onAuthError();
@@ -203,6 +220,19 @@ export default function ExecutiveDashboard({
             >
               {loading ? "—" : fmtValue(kpis[key], "currency")}
             </span>
+            {(() => {
+              const pct = !loading && prevKpis ? pctChange(kpis[key], prevKpis[key]) : null;
+              const up = pct?.startsWith("▲");
+              return (
+                <span style={{
+                  fontSize: "0.6rem",
+                  letterSpacing: "0.04em",
+                  color: pct ? (up ? "#4ade80" : "#f87171") : t.secondary,
+                }}>
+                  {pct ?? "— %"}
+                </span>
+              );
+            })()}
           </div>
         ))}
       </div>
