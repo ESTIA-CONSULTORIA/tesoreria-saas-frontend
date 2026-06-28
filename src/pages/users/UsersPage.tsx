@@ -483,193 +483,82 @@ export default function UsersPage() {
         )}
 
         {/* Modal de Permisos */}
-        {permissionsModalOpen && selectedRole && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4">
-            <div className="w-full max-w-6xl h-[90vh] rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl flex flex-col">
-              {/* Header */}
-              <div className="border-b border-slate-700 p-6 bg-slate-800/50">
-                <div className="flex items-start justify-between">
+        {permissionsModalOpen && selectedRole && (() => {
+          const MODULE_KEYS = [
+            'DASHBOARD', 'COMPANIES', 'BRANCHES', 'USERS', 'ROLES',
+            'BANKS', 'MOVEMENTS', 'TRANSFERS', 'REPORTS', 'POS',
+            'TREASURY', 'RECONCILIATION', 'ADMINISTRATION', 'SETTINGS',
+          ];
+          return (
+            <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.8)', padding: '16px' }}>
+              <div style={{ width: '100%', maxWidth: 560, borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                   <div>
-                    <h3 className="text-2xl font-bold text-white mb-1">{selectedRole.name}</h3>
-                    <p className="text-sm text-slate-400">{selectedRole.description || "Sin descripción"}</p>
-                    <p className="text-xs text-slate-500 mt-1">Código: {selectedRole.code}</p>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: '#c8cdd8' }}>{selectedRole.name}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{selectedRole.code}</div>
                   </div>
-                  <button
-                    onClick={() => setPermissionsModalOpen(false)}
-                    className="rounded-lg bg-slate-700 px-4 py-2 text-sm text-white hover:bg-slate-600 transition-colors"
-                  >
+                  <button onClick={() => setPermissionsModalOpen(false)}
+                    style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', fontSize: 12, cursor: 'pointer' }}>
                     ✕
                   </button>
                 </div>
-              </div>
 
-              {/* Botones de acción rápida */}
-              <div className="border-b border-slate-700 p-4 bg-slate-800/30">
-                <div className="flex gap-3">
-                  <button
-                    onClick={activateAll}
-                    className="rounded-lg bg-green-600/20 border border-green-600/50 px-4 py-2 text-sm font-medium text-green-400 hover:bg-green-600/30 transition-colors"
-                  >
-                    ✅ Activar todo
-                  </button>
-                  <button
-                    onClick={deactivateAll}
-                    className="rounded-lg bg-red-600/20 border border-red-600/50 px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-600/30 transition-colors"
-                  >
-                    ❌ Desactivar todo
-                  </button>
-                  <button
-                    onClick={setReadOnly}
-                    className="rounded-lg bg-blue-600/20 border border-blue-600/50 px-4 py-2 text-sm font-medium text-blue-400 hover:bg-blue-600/30 transition-colors"
-                  >
-                    👁️ Solo lectura
-                  </button>
-                </div>
-              </div>
-
-              {/* Grid de permisos */}
-              <div className="flex-1 overflow-y-auto p-4">
-                {localPermissions.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                    {localPermissions.map((permission) => (
-                      <div
-                        key={permission.id}
-                        className="rounded-lg border border-slate-700 bg-slate-800/50 p-3 hover:bg-slate-800/70 transition-colors"
-                      >
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className="text-xl">{moduleIcons[permission.module] || "📦"}</span>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-white text-xs">
-                              {moduleNames[permission.module] || permission.module}
-                            </h4>
-                          </div>
-                          {hasSubPermissions(permission.module) && (
-                            <button
-                              onClick={() => toggleCardExpansion(permission.module)}
-                              className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                            >
-                              {expandedCards.has(permission.module) ? "▲" : "▼"}
-                            </button>
-                          )}
-                        </div>
-
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-slate-400">Ver</span>
-                            <button
-                              onClick={() => updatePermission(permission.module, "canView", !permission.canView)}
-                              className={`w-10 h-5 rounded-full transition-colors ${
-                                permission.canView ? "bg-blue-600" : "bg-slate-700"
-                              }`}
-                            >
-                              <div
-                                className={`w-4 h-4 rounded-full bg-white transition-transform ${
-                                  permission.canView ? "translate-x-5" : "translate-x-0.5"
-                                }`}
-                              />
-                            </button>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-slate-400">Crear</span>
-                            <button
-                              onClick={() => updatePermission(permission.module, "canCreate", !permission.canCreate)}
-                              className={`w-10 h-5 rounded-full transition-colors ${
-                                permission.canCreate ? "bg-blue-600" : "bg-slate-700"
-                              }`}
-                            >
-                              <div
-                                className={`w-4 h-4 rounded-full bg-white transition-transform ${
-                                  permission.canCreate ? "translate-x-5" : "translate-x-0.5"
-                                }`}
-                              />
-                            </button>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-slate-400">Editar</span>
-                            <button
-                              onClick={() => updatePermission(permission.module, "canEdit", !permission.canEdit)}
-                              className={`w-10 h-5 rounded-full transition-colors ${
-                                permission.canEdit ? "bg-blue-600" : "bg-slate-700"
-                              }`}
-                            >
-                              <div
-                                className={`w-4 h-4 rounded-full bg-white transition-transform ${
-                                  permission.canEdit ? "translate-x-5" : "translate-x-0.5"
-                                }`}
-                              />
-                            </button>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-slate-400">Eliminar</span>
-                            <button
-                              onClick={() => updatePermission(permission.module, "canDelete", !permission.canDelete)}
-                              className={`w-10 h-5 rounded-full transition-colors ${
-                                permission.canDelete ? "bg-blue-600" : "bg-slate-700"
-                              }`}
-                            >
-                              <div
-                                className={`w-4 h-4 rounded-full bg-white transition-transform ${
-                                  permission.canDelete ? "translate-x-5" : "translate-x-0.5"
-                                }`}
-                              />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Panel de sub-permisos */}
-                        {hasSubPermissions(permission.module) && expandedCards.has(permission.module) && (
-                          <div className={`mt-3 pt-3 border-t border-slate-700 ${!permission.canView ? 'opacity-50 pointer-events-none' : ''}`}>
-                            <div className="space-y-1.5">
-                              {subPermissionsConfig[permission.module]?.map((subPerm) => {
-                                const isChecked = (permission.subPermissions || []).includes(subPerm.key);
-                                return (
-                                  <div key={subPerm.key} className="flex items-center gap-2">
-                                    <input
-                                      type="checkbox"
-                                      checked={isChecked}
-                                      onChange={(e) => updateSubPermission(permission.module, subPerm.key, e.target.checked)}
-                                      className="rounded w-3 h-3"
-                                    />
-                                    <span className="text-xs text-slate-300">{subPerm.label}</span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                {/* Tabla de permisos */}
+                <div style={{ overflowY: 'auto', flex: 1 }}>
+                  {/* Cabecera columnas */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: 8, padding: '8px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'sticky', top: 0, background: '#0f1117' }}>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Módulo</div>
+                    {['Ver', 'Crear', 'Editar', 'Eliminar'].map(a => (
+                      <div key={a} style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.06em', textAlign: 'center' }}>{a}</div>
                     ))}
                   </div>
-                ) : (
-                  <div className="rounded-xl bg-slate-800/50 p-8 text-center text-slate-400">
-                    <p className="text-lg">No hay permisos configurados para este rol</p>
-                  </div>
-                )}
-              </div>
+                  {/* Filas */}
+                  {MODULE_KEYS.map(key => {
+                    const perm = localPermissions.find(p => p.module === key);
+                    return (
+                      <div key={key} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: 8, padding: '9px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', alignItems: 'center' }}>
+                        <div style={{ fontSize: 12, color: '#c8cdd8' }}>{moduleNames[key] || key}</div>
+                        {(['canView', 'canCreate', 'canEdit', 'canDelete'] as const).map(action => (
+                          <div key={action} style={{ display: 'flex', justifyContent: 'center' }}>
+                            <input
+                              type="checkbox"
+                              checked={perm ? !!perm[action] : false}
+                              onChange={e => updatePermission(key, action, e.target.checked)}
+                              style={{ width: 15, height: 15, cursor: perm ? 'pointer' : 'not-allowed', accentColor: '#8fafd4' }}
+                              disabled={!perm}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
 
-              {/* Footer */}
-              <div className="border-t border-slate-700 p-4 bg-slate-800/50">
-                <div className="flex justify-end gap-3">
-                  <button
-                    onClick={() => setPermissionsModalOpen(false)}
-                    className="rounded-lg bg-slate-700 px-6 py-2 text-sm font-medium text-white hover:bg-slate-600 transition-colors"
-                  >
-                    Cancelar
+                {/* Acciones rápidas + cerrar */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.07)', flexWrap: 'wrap' }}>
+                  <button onClick={activateAll}
+                    style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid rgba(74,222,128,0.3)', background: 'rgba(74,222,128,0.08)', color: '#4ade80', fontSize: 11, cursor: 'pointer' }}>
+                    ✓ Activar todo
                   </button>
-                  <button
-                    onClick={() => setPermissionsModalOpen(false)}
-                    className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
-                  >
-                    Guardar cambios
+                  <button onClick={deactivateAll}
+                    style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid rgba(252,165,165,0.2)', background: 'transparent', color: 'rgba(252,165,165,0.7)', fontSize: 11, cursor: 'pointer' }}>
+                    ✕ Desactivar todo
+                  </button>
+                  <button onClick={setReadOnly}
+                    style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'rgba(255,255,255,0.5)', fontSize: 11, cursor: 'pointer' }}>
+                    Solo lectura
+                  </button>
+                  <div style={{ flex: 1 }} />
+                  <button onClick={() => setPermissionsModalOpen(false)}
+                    style={{ padding: '5px 16px', borderRadius: 7, border: '1px solid rgba(123,156,204,0.3)', background: 'rgba(123,156,204,0.1)', color: '#8fafd4', fontSize: 11, cursor: 'pointer' }}>
+                    Cerrar
                   </button>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
     </MainLayout>
   );
