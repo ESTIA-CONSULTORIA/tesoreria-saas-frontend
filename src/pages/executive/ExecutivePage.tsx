@@ -45,9 +45,10 @@ export default function ExecutivePage() {
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
   const [config, setConfig] = useState<ExecConfig>(() => {
     try {
-      return JSON.parse(localStorage.getItem("executive_config") || "null") ?? DEFAULT_CONFIG;
+      const saved = localStorage.getItem("executive_config");
+      return saved ? JSON.parse(saved) : { theme: "dark", modules: {} };
     } catch {
-      return DEFAULT_CONFIG;
+      return { theme: "dark", modules: {} };
     }
   });
   // Separate displayTheme so ExecutiveConfig can preview theme changes before saving

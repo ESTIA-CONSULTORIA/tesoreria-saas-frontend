@@ -12,7 +12,7 @@ const STORAGE_KEY = "exec_tenant_id";
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "del"];
 
 export default function ExecutiveLogin({ onLogin, config }: Props) {
-  const t = getTheme(config.theme);
+  const t = getTheme(config?.theme || "dark");
   const [brandLogo, setBrandLogo] = useState("");
   const [brandName, setBrandName] = useState("Vista Ejecutiva");
 
