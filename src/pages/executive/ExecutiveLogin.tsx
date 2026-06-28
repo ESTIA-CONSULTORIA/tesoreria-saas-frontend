@@ -16,11 +16,15 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
   const [brandLogo, setBrandLogo] = useState("");
   const [brandName, setBrandName] = useState("Vista Ejecutiva");
 
+  const tenantId =
+    localStorage.getItem("tenant_id") ||
+    localStorage.getItem(STORAGE_KEY) ||
+    "";
+
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return;
+    if (!tenantId) return;
     execPublicApi
-      .get(`/tenant-settings/${stored}`)
+      .get(`/tenant-settings/${tenantId}`)
       .then((r) => {
         if (r.data) {
           const lu = r.data.logoUrl || r.data.logo_url || r.data.logoURL || "";
@@ -30,29 +34,21 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
       })
       .catch(() => {});
   }, []);
-
-  // Reactive so "Cambiar empresa" can clear it and show the input
-  const [storedTenant, setStoredTenant] = useState(
-    () => localStorage.getItem(STORAGE_KEY) || "",
-  );
-  const [tenantId, setTenantId] = useState(storedTenant);
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [pressedKey, setPressedKey] = useState<string | null>(null);
 
   async function submit(p: string) {
-    if (!tenantId.trim()) { setError("Ingresa el ID de empresa"); return; }
+    if (!tenantId) { setError("Empresa no configurada"); setPin(""); return; }
     setLoading(true);
     setError("");
     try {
       const res = await execPublicApi.post("/auth/executive-login", {
-        tenantId: tenantId.trim(),
+        tenantId,
         pin: p,
       });
-      // Persist tenant and token on success
-      localStorage.setItem(STORAGE_KEY, tenantId.trim());
-      setStoredTenant(tenantId.trim());
+      localStorage.setItem(STORAGE_KEY, tenantId);
       onLogin(res.data.access_token, res.data.user?.name || "");
     } catch {
       setError("PIN incorrecto");
@@ -68,14 +64,6 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
     const next = pin + k;
     setPin(next);
     if (next.length === 4) submit(next);
-  }
-
-  function handleChangeTenant() {
-    localStorage.removeItem(STORAGE_KEY);
-    setStoredTenant("");
-    setTenantId("");
-    setPin("");
-    setError("");
   }
 
   return (
@@ -149,28 +137,6 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
           padding: "0 32px",
         }}
       >
-        {/* Tenant input — only when no stored tenant */}
-        {!storedTenant && (
-          <input
-            value={tenantId}
-            onChange={(e) => setTenantId(e.target.value)}
-            placeholder="ID de empresa"
-            autoComplete="off"
-            style={{
-              width: 160,
-              padding: "8px 12px",
-              background: "transparent",
-              border: `1px solid ${t.border}`,
-              borderRadius: 6,
-              color: t.text,
-              fontSize: 13,
-              fontFamily: "'Inter', sans-serif",
-              outline: "none",
-              textAlign: "center",
-            }}
-          />
-        )}
-
         <p
           style={{
             color: t.secondary,
@@ -268,32 +234,11 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
           </div>
         </div>
 
-        {/* "Cambiar empresa" — only when there's a stored tenant */}
-        {storedTenant && (
-          <div
-            style={{
-              flexShrink: 0,
-              textAlign: "center",
-              paddingBottom: 14,
-              paddingTop: 4,
-            }}
-          >
-            <button
-              onClick={handleChangeTenant}
-              style={{
-                background: "none",
-                border: "none",
-                color: t.secondary,
-                fontSize: "0.7rem",
-                letterSpacing: "0.1em",
-                cursor: "pointer",
-                fontFamily: "'Inter', sans-serif",
-                WebkitTapHighlightColor: "transparent",
-                padding: "4px 8px",
-              }}
-            >
-              Cambiar empresa
-            </button>
+        {!tenantId && (
+          <div style={{ flexShrink: 0, textAlign: "center", paddingBottom: 14, paddingTop: 4 }}>
+            <p style={{ color: "#EF4444", fontSize: "0.7rem", letterSpacing: "0.05em" }}>
+              No hay empresa configurada
+            </p>
           </div>
         )}
       </div>
