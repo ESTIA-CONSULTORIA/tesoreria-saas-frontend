@@ -178,11 +178,13 @@ export default function ExecutiveDashboard({
         style={{
           flexShrink: 0,
           height: "50vh",
+          width: "100%",
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
+          gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
           gridTemplateRows: "1fr 1fr",
           gap: 10,
-          padding: "0 20px",
+          padding: "0 12px",
+          boxSizing: "border-box",
         }}
       >
         {cardKeys.map((key) => (
@@ -199,6 +201,9 @@ export default function ExecutiveDashboard({
               justifyContent: "space-between",
               padding: "14px 16px",
               minHeight: 0,
+              width: "100%",
+              minWidth: 0,
+              overflow: "hidden",
             }}
           >
             <span
@@ -215,7 +220,7 @@ export default function ExecutiveDashboard({
             <span
               style={{
                 color: loading ? t.secondary : t.text,
-                fontSize: "2.2rem",
+                fontSize: "clamp(18px, 5vw, 28px)",
                 fontWeight: 200,
                 letterSpacing: "-0.02em",
                 lineHeight: 1,
