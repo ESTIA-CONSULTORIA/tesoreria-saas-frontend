@@ -12,6 +12,8 @@ interface User {
   roleCode?: string;
   roleName?: string;
   isActive: boolean;
+  companyId?: string;
+  branchId?: string;
 }
 
 interface Permission {
@@ -21,7 +23,6 @@ interface Permission {
   canCreate: boolean;
   canEdit: boolean;
   canDelete: boolean;
-  subPermissions?: string[] | null;
 }
 
 interface Role {
@@ -33,47 +34,61 @@ interface Role {
   permissions?: Permission[];
 }
 
+const MODULE_KEYS = [
+  'DASHBOARD', 'COMPANIES', 'BRANCHES', 'USERS', 'ROLES',
+  'BANKS', 'MOVEMENTS', 'TRANSFERS', 'REPORTS', 'POS',
+  'TREASURY', 'RECONCILIATION', 'ADMINISTRATION', 'SETTINGS',
+] as const;
+
+const MODULE_NAMES: Record<string, string> = {
+  DASHBOARD: 'Dashboard',      COMPANIES: 'Empresas',
+  BRANCHES: 'Sucursales',      USERS: 'Usuarios',
+  ROLES: 'Roles',              BANKS: 'Bancos',
+  MOVEMENTS: 'Movimientos',    TRANSFERS: 'Traslado de Fondos',
+  REPORTS: 'Reportes',         POS: 'POS',
+  TREASURY: 'Tesorería',       RECONCILIATION: 'Conciliación',
+  ADMINISTRATION: 'Administración', SETTINGS: 'Configuración',
+};
+
 export default function UsersPage() {
   const { activeCompany } = useCompanyStore();
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Modals
   const [modalOpen, setModalOpen] = useState(false);
   const [roleModalOpen, setRoleModalOpen] = useState(false);
-  const [permissionsModalOpen, setPermissionsModalOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [localPermissions, setLocalPermissions] = useState<Permission[]>([]);
-  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadData();
-  }, [activeCompany?.id]);
+  // Two-panel state
+  const [selectedRol, setSelectedRol] = useState<Role | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [view, setView] = useState<'rol' | 'user' | null>(null);
+  const [localPermissions, setLocalPermissions] = useState<Permission[]>([]);
+
+  useEffect(() => { loadData(); }, [activeCompany?.id]);
 
   async function loadData() {
     try {
       setLoading(true);
       setError("");
-
-      const [usersResponse, rolesResponse] = await Promise.all([
-        api.get("/users"),
-        api.get("/roles"),
-      ]);
-
-      const usersList = Array.isArray(usersResponse.data) ? usersResponse.data : [];
-      const rolesList = Array.isArray(rolesResponse.data) ? rolesResponse.data : [];
-
-      // Mapear nombres de roles a usuarios
-      const usersWithRoleNames = usersList.map((user: User) => {
-        const role = rolesList.find((r: Role) => r.code === user.roleCode);
-        return { ...user, roleName: role?.name };
-      });
-
-      setUsers(usersWithRoleNames);
+      const [usersRes, rolesRes] = await Promise.all([api.get("/users"), api.get("/roles")]);
+      const usersList = Array.isArray(usersRes.data) ? usersRes.data : [];
+      const rolesList = Array.isArray(rolesRes.data) ? rolesRes.data : [];
+      setUsers(usersList.map((u: User) => {
+        const role = rolesList.find((r: Role) => r.code === u.roleCode);
+        return { ...u, roleName: role?.name };
+      }));
       setRoles(rolesList);
+      // Refresh selected role permissions
+      if (selectedRol) {
+        const updated = rolesList.find((r: Role) => r.id === selectedRol.id);
+        if (updated) { setSelectedRol(updated); setLocalPermissions(updated.permissions || []); }
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || "No fue posible cargar datos");
     } finally {
@@ -81,319 +96,89 @@ export default function UsersPage() {
     }
   }
 
-  async function handleRoleClick(role: Role) {
-    setSelectedRole(role);
-    setLocalPermissions(role.permissions || []);
-    setPermissionsModalOpen(true);
+  async function updatePermission(module: string, field: keyof Permission, value: boolean) {
+    if (!selectedRol) return;
+    const prev = [...localPermissions];
+    setLocalPermissions(ps => ps.map(p => p.module === module ? { ...p, [field]: value } : p));
+    try {
+      await api.put(`/roles/${selectedRol.id}/permissions/${module}`, { [field]: value });
+      loadData();
+    } catch (err: any) {
+      setLocalPermissions(prev);
+      setError(err.response?.data?.message || "No fue posible actualizar permiso");
+    }
   }
 
-  function deleteUser(id: string) {
-    setDeleteConfirmId(id);
-    setDeleteConfirmOpen(true);
+  async function activateAll() {
+    if (!selectedRol) return;
+    const prev = [...localPermissions];
+    const all = { canView: true, canCreate: true, canEdit: true, canDelete: true };
+    setLocalPermissions(ps => ps.map(p => ({ ...p, ...all })));
+    try {
+      await Promise.all(localPermissions.map(p => api.put(`/roles/${selectedRol!.id}/permissions/${p.module}`, all)));
+      loadData();
+    } catch (err: any) { setLocalPermissions(prev); setError("Error al activar permisos"); }
   }
+
+  async function deactivateAll() {
+    if (!selectedRol) return;
+    const prev = [...localPermissions];
+    const none = { canView: false, canCreate: false, canEdit: false, canDelete: false };
+    setLocalPermissions(ps => ps.map(p => ({ ...p, ...none })));
+    try {
+      await Promise.all(localPermissions.map(p => api.put(`/roles/${selectedRol!.id}/permissions/${p.module}`, none)));
+      loadData();
+    } catch (err: any) { setLocalPermissions(prev); setError("Error al desactivar permisos"); }
+  }
+
+  async function setReadOnly() {
+    if (!selectedRol) return;
+    const prev = [...localPermissions];
+    const ro = { canView: true, canCreate: false, canEdit: false, canDelete: false };
+    setLocalPermissions(ps => ps.map(p => ({ ...p, ...ro })));
+    try {
+      await Promise.all(localPermissions.map(p => api.put(`/roles/${selectedRol!.id}/permissions/${p.module}`, ro)));
+      loadData();
+    } catch (err: any) { setLocalPermissions(prev); setError("Error al establecer solo lectura"); }
+  }
+
+  function handleSelectAll(value: boolean) { if (value) activateAll(); else deactivateAll(); }
+  function handleViewOnly() { setReadOnly(); }
+  function handleSavePermissions() { loadData(); }
+
+  function handleDelete(id: string) { setDeleteConfirmId(id); setDeleteConfirmOpen(true); }
 
   async function handleDeleteConfirm() {
     if (!deleteConfirmId) return;
     setDeleteConfirmOpen(false);
     try {
       await api.delete(`/users/${deleteConfirmId}`);
+      if (selectedUser?.id === deleteConfirmId) { setSelectedUser(null); setView(null); }
       loadData();
     } catch (err: any) {
       setError(err.response?.data?.message || "No fue posible eliminar el usuario");
-    } finally {
-      setDeleteConfirmId(null);
-    }
+    } finally { setDeleteConfirmId(null); }
   }
 
-  function handleEditUser(user: User) {
-    setSelectedUser(user);
-    setModalOpen(true);
-  }
-
-  function handleCreateUser() {
-    setSelectedUser(null);
-    setModalOpen(true);
-  }
-
-  function handleCloseUserModal() {
-    setModalOpen(false);
-    setSelectedUser(null);
-  }
-
-  async function updatePermission(module: string, field: keyof Permission, value: boolean) {
-    if (!selectedRole) return;
-
-    // Optimistic update
-    const previousPermissions = [...localPermissions];
-    setLocalPermissions((prev) =>
-      prev.map((p) =>
-        p.module === module ? { ...p, [field]: value } : p
-      )
-    );
-
-    try {
-      await api.put(`/roles/${selectedRole.id}/permissions/${module}`, { [field]: value });
-      loadData();
-    } catch (err: any) {
-      // Revert on error
-      setLocalPermissions(previousPermissions);
-      setError(err.response?.data?.message || "No fue posible actualizar permiso");
-    }
-  }
-
-  async function updateSubPermission(module: string, subPermissionKey: string, value: boolean) {
-    if (!selectedRole) return;
-
-    const permission = localPermissions.find((p) => p.module === module);
-    if (!permission) return;
-
-    const currentSubPermissions = permission.subPermissions || [];
-    const previousPermissions = [...localPermissions];
-
-    let newSubPermissions: string[];
-    if (value) {
-      newSubPermissions = [...currentSubPermissions, subPermissionKey];
-    } else {
-      newSubPermissions = currentSubPermissions.filter((key) => key !== subPermissionKey);
-    }
-
-    // Optimistic update
-    setLocalPermissions((prev) =>
-      prev.map((p) =>
-        p.module === module ? { ...p, subPermissions: newSubPermissions } : p
-      )
-    );
-
-    try {
-      await api.put(`/roles/${selectedRole.id}/permissions/${module}`, { subPermissions: newSubPermissions });
-      loadData();
-    } catch (err: any) {
-      setLocalPermissions(previousPermissions);
-      setError(err.response?.data?.message || "No fue posible actualizar sub-permiso");
-    }
-  }
-
-  async function activateAll() {
-    if (!selectedRole) return;
-
-    // Optimistic update
-    const previousPermissions = [...localPermissions];
-    setLocalPermissions((prev) =>
-      prev.map((p) => ({
-        ...p,
-        canView: true,
-        canCreate: true,
-        canEdit: true,
-        canDelete: true,
-      }))
-    );
-
-    try {
-      const modules = localPermissions.map((p) => p.module);
-      await Promise.all(
-        modules.map((module) =>
-          api.put(`/roles/${selectedRole!.id}/permissions/${module}`, {
-            canView: true,
-            canCreate: true,
-            canEdit: true,
-            canDelete: true,
-          }),
-        ),
-      );
-      loadData();
-    } catch (err: any) {
-      setLocalPermissions(previousPermissions);
-      setError(err.response?.data?.message || "No fue posible activar todos los permisos");
-    }
-  }
-
-  async function deactivateAll() {
-    if (!selectedRole) return;
-
-    // Optimistic update
-    const previousPermissions = [...localPermissions];
-    setLocalPermissions((prev) =>
-      prev.map((p) => ({
-        ...p,
-        canView: false,
-        canCreate: false,
-        canEdit: false,
-        canDelete: false,
-      }))
-    );
-
-    try {
-      const modules = localPermissions.map((p) => p.module);
-      await Promise.all(
-        modules.map((module) =>
-          api.put(`/roles/${selectedRole!.id}/permissions/${module}`, {
-            canView: false,
-            canCreate: false,
-            canEdit: false,
-            canDelete: false,
-          }),
-        ),
-      );
-      loadData();
-    } catch (err: any) {
-      setLocalPermissions(previousPermissions);
-      setError(err.response?.data?.message || "No fue posible desactivar todos los permisos");
-    }
-  }
-
-  async function setReadOnly() {
-    if (!selectedRole) return;
-
-    // Optimistic update
-    const previousPermissions = [...localPermissions];
-    setLocalPermissions((prev) =>
-      prev.map((p) => ({
-        ...p,
-        canView: true,
-        canCreate: false,
-        canEdit: false,
-        canDelete: false,
-      }))
-    );
-
-    try {
-      const modules = localPermissions.map((p) => p.module);
-      await Promise.all(
-        modules.map((module) =>
-          api.put(`/roles/${selectedRole!.id}/permissions/${module}`, {
-            canView: true,
-            canCreate: false,
-            canEdit: false,
-            canDelete: false,
-          }),
-        ),
-      );
-      loadData();
-    } catch (err: any) {
-      setLocalPermissions(previousPermissions);
-      setError(err.response?.data?.message || "No fue posible establecer solo lectura");
-    }
-  }
-
-  const moduleIcons: Record<string, string> = {
-    DASHBOARD: "📊",
-    COMPANIES: "🏢",
-    BRANCHES: "🏪",
-    USERS: "👤",
-    ROLES: "👥",
-    BANKS: "🏦",
-    MOVEMENTS: "🧾",
-    TRANSFERS: "🔁",
-    REPORTS: "📑",
-    TREASURY: "💰",
-    RECONCILIATION: "📋",
-    ADMINISTRATION: "🔐",
-    SETTINGS: "⚙️",
-  };
-
-  const moduleNames: Record<string, string> = {
-    DASHBOARD: "Dashboard",
-    COMPANIES: "Empresas",
-    BRANCHES: "Sucursales",
-    USERS: "Usuarios",
-    ROLES: "Roles",
-    BANKS: "Bancos",
-    MOVEMENTS: "Movimientos",
-    TRANSFERS: "Traslado de Fondos",
-    REPORTS: "Reportes",
-    POS: "POS",
-    TREASURY: "Tesorería",
-    RECONCILIATION: "Conciliación",
-    ADMINISTRATION: "Administración",
-    SETTINGS: "Configuración",
-  };
-
-  const subPermissionsConfig: Record<string, { label: string; key: string }[]> = {
-    REPORTS: [
-      { label: "Reporte de ventas", key: "sales_report" },
-      { label: "Reporte de gastos", key: "expenses_report" },
-      { label: "Reporte de compras", key: "purchases_report" },
-      { label: "Descuentos y cortesías", key: "discounts_courtesies" },
-      { label: "Venta por área/grupo/mesa", key: "sales_by_area" },
-      { label: "Flujo de efectivo", key: "cash_flow" },
-      { label: "Balance por cuenta", key: "balance_by_account" },
-      { label: "Estado de resultados", key: "income_statement" },
-      { label: "Punto de equilibrio", key: "break_even_point" },
-    ],
-    POS: [
-      { label: "Apertura y cierre de turno", key: "open_close_shift" },
-      { label: "Cancelar productos", key: "cancel_products" },
-      { label: "Cancelar ticket completo", key: "cancel_ticket" },
-      { label: "Aplicar descuentos", key: "apply_discounts" },
-      { label: "Aplicar cortesías", key: "apply_courtesies" },
-      { label: "Ver costos en pantalla", key: "view_costs" },
-      { label: "Reimprimir tickets", key: "reprint_tickets" },
-      { label: "Cambio de precio manual", key: "manual_price_change" },
-      { label: "Cobro con tarjeta", key: "card_payment" },
-      { label: "Cobro en efectivo", key: "cash_payment" },
-      { label: "Dividir cuenta", key: "split_bill" },
-      { label: "Transferir mesa", key: "transfer_table" },
-      { label: "Abrir cajón de dinero", key: "open_cash_drawer" },
-    ],
-    MOVEMENTS: [
-      { label: "Ver solo movimientos propios", key: "view_own_movements" },
-      { label: "Ver todos los movimientos", key: "view_all_movements" },
-      { label: "Aprobar movimientos", key: "approve_movements" },
-      { label: "Exportar movimientos", key: "export_movements" },
-    ],
-    RECONCILIATION: [
-      { label: "Ver conciliaciones", key: "view_reconciliations" },
-      { label: "Conciliar manualmente", key: "manual_reconciliation" },
-      { label: "Aprobar conciliación", key: "approve_reconciliation" },
-    ],
-  };
-
-  function toggleCardExpansion(module: string) {
-    setExpandedCards((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(module)) {
-        newSet.delete(module);
-      } else {
-        newSet.add(module);
-      }
-      return newSet;
-    });
-  }
-
-  function hasSubPermissions(module: string): boolean {
-    return module in subPermissionsConfig;
-  }
+  function handleCloseUserModal() { setModalOpen(false); setEditingUser(null); }
 
   return (
     <MainLayout>
-      <CreateUserModal
-        open={modalOpen}
-        onClose={handleCloseUserModal}
-        onCreated={loadData}
-        user={selectedUser}
-      />
-      <CreateRoleModal
-        open={roleModalOpen}
-        onClose={() => setRoleModalOpen(false)}
-        onCreated={loadData}
-      />
+      <CreateUserModal open={modalOpen} onClose={handleCloseUserModal} onCreated={loadData} user={editingUser} />
+      <CreateRoleModal open={roleModalOpen} onClose={() => setRoleModalOpen(false)} onCreated={loadData} />
 
       {deleteConfirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-sm rounded-xl border border-slate-700 bg-slate-900 p-6">
-            <h3 className="text-base font-semibold text-white mb-2">Eliminar usuario</h3>
-            <p className="text-sm text-slate-400 mb-6">¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.</p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => { setDeleteConfirmOpen(false); setDeleteConfirmId(null); }}
-                className="rounded-lg bg-slate-700 px-4 py-2 text-sm text-white hover:bg-slate-600"
-              >
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.7)' }}>
+          <div style={{ width: 360, borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#141820', padding: 24 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#c8cdd8', marginBottom: 8 }}>Eliminar usuario</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>¿Estás seguro? Esta acción no se puede deshacer.</div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button onClick={() => { setDeleteConfirmOpen(false); setDeleteConfirmId(null); }}
+                style={{ padding: '6px 16px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', fontSize: 12, cursor: 'pointer' }}>
                 Cancelar
               </button>
-              <button
-                onClick={handleDeleteConfirm}
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
-              >
+              <button onClick={handleDeleteConfirm}
+                style={{ padding: '6px 16px', borderRadius: 7, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.1)', color: '#f87171', fontSize: 12, cursor: 'pointer' }}>
                 Eliminar
               </button>
             </div>
@@ -401,164 +186,190 @@ export default function UsersPage() {
         </div>
       )}
 
-      <div className="space-y-6">
-        <div>
-          <h2 style={{ fontSize: 18, fontWeight: 600, color: '#c8cdd8', marginBottom: 2 }}>Usuarios y Roles</h2>
-          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>Administración de usuarios y roles</p>
+      <div style={{ padding: '0 0 16px' }}>
+        <div style={{ marginBottom: 12 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 600, color: '#c8cdd8', marginBottom: 2 }}>Usuarios y Roles</h2>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>Administración de usuarios y roles</p>
         </div>
 
         {error && (
-          <div className="rounded-xl border border-red-700 bg-red-900/30 p-4 text-red-300">
+          <div style={{ marginBottom: 10, padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', color: '#f87171', fontSize: 12 }}>
             {error}
           </div>
         )}
 
         {loading ? (
-          <div className="rounded-xl bg-slate-900 p-6">Cargando datos...</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', padding: 24 }}>Cargando datos...</div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {/* ROLES — grid 3 columnas */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <h2 style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Roles</h2>
+          <div style={{ display: 'flex', height: 'calc(100vh - 130px)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, overflow: 'hidden' }}>
+
+            {/* ── PANEL IZQUIERDO ── */}
+            <div style={{ width: 260, borderRight: '1px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', background: '#0f1117', flexShrink: 0 }}>
+
+              {/* Header Roles */}
+              <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 10, fontWeight: 500, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Roles</span>
                 <button onClick={() => setRoleModalOpen(true)}
-                  style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', fontSize: 11, cursor: 'pointer' }}>
-                  + Nuevo Rol
+                  style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', cursor: 'pointer' }}>
+                  + Nuevo
                 </button>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-                {roles.map((role) => (
-                  <div key={role.id} onClick={() => handleRoleClick(role)}
-                    style={{ padding: '10px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', background: '#141820', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 500, color: '#c8cdd8' }}>{role.name}</div>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{role.code}</div>
+              {/* Lista roles */}
+              <div style={{ flexShrink: 0 }}>
+                {roles.map(rol => (
+                  <div key={rol.id}
+                    onClick={() => { setSelectedRol(rol); setLocalPermissions(rol.permissions || []); setSelectedUser(null); setView('rol'); }}
+                    style={{
+                      padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)',
+                      background: selectedRol?.id === rol.id ? 'rgba(123,156,204,0.1)' : 'transparent',
+                      borderLeft: selectedRol?.id === rol.id ? '3px solid #8fafd4' : '3px solid transparent',
+                    }}>
+                    <div style={{ fontSize: 12, color: '#c8cdd8' }}>{rol.name}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)' }}>{rol.code}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Header Usuarios */}
+              <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.07)', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 10, fontWeight: 500, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Usuarios</span>
+                <button onClick={() => { setEditingUser(null); setModalOpen(true); }}
+                  style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, border: '1px solid rgba(123,156,204,0.3)', background: 'rgba(123,156,204,0.08)', color: '#8fafd4', cursor: 'pointer' }}>
+                  + Nuevo
+                </button>
+              </div>
+              {/* Lista usuarios */}
+              <div style={{ flex: 1, overflowY: 'auto' }}>
+                {users.map(u => (
+                  <div key={u.id}
+                    onClick={() => { setSelectedUser(u); setSelectedRol(null); setView('user'); }}
+                    style={{
+                      padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)',
+                      background: selectedUser?.id === u.id ? 'rgba(123,156,204,0.1)' : 'transparent',
+                      borderLeft: selectedUser?.id === u.id ? '3px solid #8fafd4' : '3px solid transparent',
+                    }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
+                      <div style={{ fontSize: 12, color: '#c8cdd8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name || u.email}</div>
+                      <span style={{ fontSize: 10, padding: '1px 5px', borderRadius: 99, flexShrink: 0,
+                        background: u.isActive ? 'rgba(74,222,128,0.12)' : 'rgba(255,255,255,0.06)',
+                        color: u.isActive ? '#4ade80' : 'rgba(255,255,255,0.3)' }}>
+                        {u.isActive ? 'Activo' : 'Inactivo'}
+                      </span>
                     </div>
-                    <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 99, background: 'rgba(74,222,128,0.12)', color: '#4ade80' }}>Activo</span>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.22)' }}>{u.roleCode}</div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* USUARIOS — tabla compacta */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <h2 style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Usuarios</h2>
-                <button onClick={handleCreateUser}
-                  style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid rgba(123,156,204,0.3)', background: 'rgba(123,156,204,0.1)', color: '#8fafd4', fontSize: 11, cursor: 'pointer' }}>
-                  + Nuevo Usuario
-                </button>
-              </div>
-              <div style={{ borderRadius: 10, border: '1px solid rgba(255,255,255,0.07)', background: '#141820', overflow: 'hidden' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr auto', padding: '6px 14px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                  {['Nombre', 'Email', 'Rol', 'Estado', ''].map(h => (
-                    <div key={h} style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</div>
-                  ))}
+            {/* ── PANEL DERECHO ── */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#141820', minWidth: 0 }}>
+
+              {/* Estado vacío */}
+              {!view && (
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.18)', fontSize: 13 }}>
+                  Selecciona un rol o usuario para ver el detalle
                 </div>
-                {users.map((user) => (
-                  <div key={user.id} style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr auto', padding: '8px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)', alignItems: 'center' }}>
-                    <div style={{ fontSize: 12, color: '#c8cdd8', fontWeight: 500 }}>{user.name || 'Sin nombre'}</div>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{user.email}</div>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{user.roleCode}</div>
-                    <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 99, width: 'fit-content',
-                      background: user.isActive ? 'rgba(74,222,128,0.12)' : 'rgba(255,255,255,0.06)',
-                      color: user.isActive ? '#4ade80' : 'rgba(255,255,255,0.3)' }}>
-                      {user.isActive ? 'Activo' : 'Inactivo'}
-                    </span>
-                    <div style={{ display: 'flex', gap: 5 }}>
-                      <button onClick={() => handleEditUser(user)}
-                        style={{ padding: '3px 8px', borderRadius: 5, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', fontSize: 11, cursor: 'pointer' }}>
+              )}
+
+              {/* Vista ROL — tabla de permisos */}
+              {view === 'rol' && selectedRol && (
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                  {/* Header */}
+                  <div style={{ padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: '#c8cdd8' }}>{selectedRol.name}</div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{selectedRol.description} · {selectedRol.code}</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      <button onClick={() => handleSelectAll(true)}
+                        style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(74,222,128,0.3)', background: 'rgba(74,222,128,0.08)', color: '#4ade80', fontSize: 11, cursor: 'pointer' }}>
+                        ✓ Activar todo
+                      </button>
+                      <button onClick={() => handleSelectAll(false)}
+                        style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(252,165,165,0.2)', background: 'transparent', color: 'rgba(252,165,165,0.7)', fontSize: 11, cursor: 'pointer' }}>
+                        ✕ Desactivar todo
+                      </button>
+                      <button onClick={handleViewOnly}
+                        style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'rgba(255,255,255,0.4)', fontSize: 11, cursor: 'pointer' }}>
+                        Solo lectura
+                      </button>
+                      <button onClick={handleSavePermissions}
+                        style={{ padding: '4px 12px', borderRadius: 7, border: '1px solid rgba(123,156,204,0.3)', background: 'rgba(123,156,204,0.1)', color: '#8fafd4', fontSize: 11, cursor: 'pointer' }}>
+                        Guardar cambios
+                      </button>
+                    </div>
+                  </div>
+                  {/* Tabla permisos */}
+                  <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', padding: '9px 0', borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'sticky', top: 0, background: '#141820', zIndex: 1 }}>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Módulo</div>
+                      {['Ver', 'Crear', 'Editar', 'Eliminar'].map(a => (
+                        <div key={a} style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.06em', textAlign: 'center' }}>{a}</div>
+                      ))}
+                    </div>
+                    {MODULE_KEYS.map(key => {
+                      const perm = localPermissions.find(p => p.module === key);
+                      return (
+                        <div key={key} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', padding: '9px 0', borderBottom: '1px solid rgba(255,255,255,0.04)', alignItems: 'center' }}>
+                          <div style={{ fontSize: 12, color: '#c8cdd8' }}>{MODULE_NAMES[key]}</div>
+                          {(['canView', 'canCreate', 'canEdit', 'canDelete'] as const).map(action => (
+                            <div key={action} style={{ display: 'flex', justifyContent: 'center' }}>
+                              <input type="checkbox"
+                                checked={perm ? !!perm[action] : false}
+                                onChange={e => updatePermission(key, action, e.target.checked)}
+                                disabled={!perm}
+                                style={{ width: 15, height: 15, cursor: perm ? 'pointer' : 'not-allowed', accentColor: '#8fafd4' }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Vista USUARIO — detalle */}
+              {view === 'user' && selectedUser && (
+                <div style={{ flex: 1, padding: 24, overflowY: 'auto' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+                    <div>
+                      <div style={{ fontSize: 17, fontWeight: 500, color: '#c8cdd8', marginBottom: 4 }}>{selectedUser.name || selectedUser.email}</div>
+                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>{selectedUser.email}</div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>Rol: {selectedUser.roleCode}</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={() => { setEditingUser(selectedUser); setModalOpen(true); }}
+                        style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', fontSize: 12, cursor: 'pointer' }}>
                         Editar
                       </button>
-                      <button onClick={() => deleteUser(user.id)}
-                        style={{ padding: '3px 8px', borderRadius: 5, border: '1px solid rgba(252,165,165,0.2)', background: 'transparent', color: 'rgba(252,165,165,0.7)', fontSize: 11, cursor: 'pointer' }}>
+                      <button onClick={() => handleDelete(selectedUser.id)}
+                        style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(252,165,165,0.2)', background: 'transparent', color: 'rgba(252,165,165,0.7)', fontSize: 12, cursor: 'pointer' }}>
                         Eliminar
                       </button>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Modal de Permisos */}
-        {permissionsModalOpen && selectedRole && (() => {
-          const MODULE_KEYS = [
-            'DASHBOARD', 'COMPANIES', 'BRANCHES', 'USERS', 'ROLES',
-            'BANKS', 'MOVEMENTS', 'TRANSFERS', 'REPORTS', 'POS',
-            'TREASURY', 'RECONCILIATION', 'ADMINISTRATION', 'SETTINGS',
-          ];
-          return (
-            <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.8)', padding: '16px' }}>
-              <div style={{ width: '100%', maxWidth: 560, borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
-                {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: '#c8cdd8' }}>{selectedRole.name}</div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{selectedRole.code}</div>
-                  </div>
-                  <button onClick={() => setPermissionsModalOpen(false)}
-                    style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', fontSize: 12, cursor: 'pointer' }}>
-                    ✕
-                  </button>
-                </div>
-
-                {/* Tabla de permisos */}
-                <div style={{ overflowY: 'auto', flex: 1 }}>
-                  {/* Cabecera columnas */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: 8, padding: '8px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'sticky', top: 0, background: '#0f1117' }}>
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Módulo</div>
-                    {['Ver', 'Crear', 'Editar', 'Eliminar'].map(a => (
-                      <div key={a} style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.06em', textAlign: 'center' }}>{a}</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    {[
+                      { label: 'Estado', value: selectedUser.isActive ? 'Activo' : 'Inactivo' },
+                      { label: 'Rol', value: selectedUser.roleName || selectedUser.roleCode || '—' },
+                      { label: 'Empresa', value: selectedUser.companyId || 'Todas' },
+                      { label: 'Sucursal', value: selectedUser.branchId || 'Todas' },
+                    ].map(item => (
+                      <div key={item.label} style={{ padding: '12px 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', background: '#0f1117' }}>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.label}</div>
+                        <div style={{ fontSize: 13, color: '#c8cdd8' }}>{item.value}</div>
+                      </div>
                     ))}
                   </div>
-                  {/* Filas */}
-                  {MODULE_KEYS.map(key => {
-                    const perm = localPermissions.find(p => p.module === key);
-                    return (
-                      <div key={key} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: 8, padding: '9px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', alignItems: 'center' }}>
-                        <div style={{ fontSize: 12, color: '#c8cdd8' }}>{moduleNames[key] || key}</div>
-                        {(['canView', 'canCreate', 'canEdit', 'canDelete'] as const).map(action => (
-                          <div key={action} style={{ display: 'flex', justifyContent: 'center' }}>
-                            <input
-                              type="checkbox"
-                              checked={perm ? !!perm[action] : false}
-                              onChange={e => updatePermission(key, action, e.target.checked)}
-                              style={{ width: 15, height: 15, cursor: perm ? 'pointer' : 'not-allowed', accentColor: '#8fafd4' }}
-                              disabled={!perm}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  })}
                 </div>
-
-                {/* Acciones rápidas + cerrar */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.07)', flexWrap: 'wrap' }}>
-                  <button onClick={activateAll}
-                    style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid rgba(74,222,128,0.3)', background: 'rgba(74,222,128,0.08)', color: '#4ade80', fontSize: 11, cursor: 'pointer' }}>
-                    ✓ Activar todo
-                  </button>
-                  <button onClick={deactivateAll}
-                    style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid rgba(252,165,165,0.2)', background: 'transparent', color: 'rgba(252,165,165,0.7)', fontSize: 11, cursor: 'pointer' }}>
-                    ✕ Desactivar todo
-                  </button>
-                  <button onClick={setReadOnly}
-                    style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'rgba(255,255,255,0.5)', fontSize: 11, cursor: 'pointer' }}>
-                    Solo lectura
-                  </button>
-                  <div style={{ flex: 1 }} />
-                  <button onClick={() => setPermissionsModalOpen(false)}
-                    style={{ padding: '5px 16px', borderRadius: 7, border: '1px solid rgba(123,156,204,0.3)', background: 'rgba(123,156,204,0.1)', color: '#8fafd4', fontSize: 11, cursor: 'pointer' }}>
-                    Cerrar
-                  </button>
-                </div>
-              </div>
+              )}
             </div>
-          );
-        })()}
+
+          </div>
+        )}
       </div>
     </MainLayout>
   );
