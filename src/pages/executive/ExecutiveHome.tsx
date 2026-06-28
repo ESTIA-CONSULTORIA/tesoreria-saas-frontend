@@ -47,9 +47,12 @@ export default function ExecutiveHome({
   return (
     <div
       style={{
-        height: "100%",
+        position: "fixed",
+        inset: 0,
         display: "flex",
         flexDirection: "column",
+        overflow: "hidden",
+        boxSizing: "border-box",
         fontFamily: "'Inter', sans-serif",
       }}
     >

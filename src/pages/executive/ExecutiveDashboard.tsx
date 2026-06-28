@@ -126,9 +126,12 @@ export default function ExecutiveDashboard({
   return (
     <div
       style={{
-        height: "100%",
+        position: "fixed",
+        inset: 0,
         display: "flex",
         flexDirection: "column",
+        overflow: "hidden",
+        boxSizing: "border-box",
         fontFamily: "'Inter', sans-serif",
       }}
     >
@@ -237,8 +240,8 @@ export default function ExecutiveDashboard({
         ))}
       </div>
 
-      {/* Company selector — each button navigates directly to grid */}
-      <div style={{ flexShrink: 0, padding: "24px 20px 0", textAlign: "center" }}>
+      {/* Company selector — scrollable if list is long */}
+      <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "16px 20px 0", textAlign: "center" }}>
         <p
           style={{
             color: t.secondary,
@@ -297,9 +300,6 @@ export default function ExecutiveDashboard({
           })}
         </div>
       </div>
-
-      {/* Spacer */}
-      <div style={{ flex: 1 }} />
 
       {/* Footer — logout only */}
       <div
