@@ -434,89 +434,64 @@ export default function UsersPage() {
           <div className="rounded-xl bg-slate-900 p-6">Cargando datos...</div>
         ) : (
           <div className="space-y-8">
-            {/* Sección de Roles */}
-            <div>
-              <h3 className="text-xl font-semibold mb-4">Roles</h3>
-              <div className="space-y-4">
-                {roles.length === 0 ? (
-                  <div className="rounded-xl bg-slate-900 p-6">
-                    No existen roles registrados
+            {/* ROLES — tabla compacta */}
+            <div style={{ marginBottom: 32 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <h2 style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Roles</h2>
+                <button onClick={() => setRoleModalOpen(true)}
+                  style={{ padding: '5px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', fontSize: 12, cursor: 'pointer' }}>
+                  + Nuevo Rol
+                </button>
+              </div>
+              <div style={{ borderRadius: 10, border: '1px solid rgba(255,255,255,0.07)', background: '#141820', overflow: 'hidden' }}>
+                {roles.map((role) => (
+                  <div key={role.id} onClick={() => handleRoleClick(role)} style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}>
+                    <div style={{ flex: 1, fontSize: 13, color: '#c8cdd8', fontWeight: 500 }}>{role.name}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginRight: 16 }}>Código: {role.code}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', marginRight: 16 }}>{role.description}</div>
+                    <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: 'rgba(74,222,128,0.12)', color: '#4ade80' }}>Activo</span>
                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {roles.map((role) => (
-                      <div
-                        key={role.id}
-                        onClick={() => handleRoleClick(role)}
-                        className="rounded-xl border border-slate-800 bg-slate-900 p-4 cursor-pointer hover:bg-slate-800/50 transition-colors"
-                      >
-                        <div className="flex flex-col gap-2">
-                          <div>
-                            <h4 className="text-lg font-semibold">{role.name}</h4>
-                            <p className="text-sm text-slate-400">Código: {role.code}</p>
-                          </div>
-                          <p className="text-xs text-slate-500">
-                            {role.description || "Sin descripción"}
-                          </p>
-                          <span className="rounded-full bg-green-900/40 px-3 py-1 text-sm text-green-300 w-fit">
-                            {role.isActive ? "Activo" : "Inactivo"}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                ))}
               </div>
             </div>
 
-            {/* Sección de Usuarios */}
+            {/* USUARIOS — tabla compacta */}
             <div>
-              <h3 className="text-xl font-semibold mb-4">Usuarios</h3>
-              <div className="space-y-4">
-                {users.length === 0 ? (
-                  <div className="rounded-xl bg-slate-900 p-6">
-                    No existen usuarios registrados
-                  </div>
-                ) : (
-                  users.map((user) => (
-                    <div
-                      key={user.id}
-                      className="rounded-xl border border-slate-800 bg-slate-900 p-6"
-                    >
-                      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                        <div>
-                          <h3 className="text-lg font-semibold">
-                            {user.name || "Sin nombre"}
-                          </h3>
-
-                          <p className="text-sm text-slate-400">{user.email}</p>
-
-                          <p className="text-xs text-slate-500">
-                            Rol: {user.roleName || user.roleCode || "USER"}
-                          </p>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <span className="rounded-full bg-green-900/40 px-3 py-1 text-sm text-green-300">
-                            {user.isActive ? "Activo" : "Inactivo"}
-                          </span>
-                          <button
-                            onClick={() => handleEditUser(user)}
-                            className="rounded-lg bg-slate-700 px-3 py-2 text-sm text-white hover:bg-slate-600"
-                          >
-                            Editar
-                          </button>
-                          <button
-                            onClick={() => deleteUser(user.id)}
-                            className="rounded-lg bg-red-600 px-3 py-2 text-sm text-white hover:bg-red-700"
-                          >
-                            Eliminar
-                          </button>
-                        </div>
-                      </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <h2 style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Usuarios</h2>
+                <button onClick={handleCreateUser}
+                  style={{ padding: '5px 14px', borderRadius: 8, border: '1px solid rgba(123,156,204,0.3)', background: 'rgba(123,156,204,0.1)', color: '#8fafd4', fontSize: 12, cursor: 'pointer' }}>
+                  + Nuevo Usuario
+                </button>
+              </div>
+              <div style={{ borderRadius: 10, border: '1px solid rgba(255,255,255,0.07)', background: '#141820', overflow: 'hidden' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr auto', padding: '8px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                  {['Nombre', 'Email', 'Rol', 'Estado', ''].map(h => (
+                    <div key={h} style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</div>
+                  ))}
+                </div>
+                {users.map((user) => (
+                  <div key={user.id} style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr auto', padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', alignItems: 'center' }}>
+                    <div style={{ fontSize: 13, color: '#c8cdd8', fontWeight: 500 }}>{user.name || 'Sin nombre'}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{user.email}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{user.roleCode}</div>
+                    <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, width: 'fit-content',
+                      background: user.isActive ? 'rgba(74,222,128,0.12)' : 'rgba(255,255,255,0.06)',
+                      color: user.isActive ? '#4ade80' : 'rgba(255,255,255,0.3)' }}>
+                      {user.isActive ? 'Activo' : 'Inactivo'}
+                    </span>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button onClick={() => handleEditUser(user)}
+                        style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', fontSize: 11, cursor: 'pointer' }}>
+                        Editar
+                      </button>
+                      <button onClick={() => deleteUser(user.id)}
+                        style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(252,165,165,0.2)', background: 'transparent', color: 'rgba(252,165,165,0.7)', fontSize: 11, cursor: 'pointer' }}>
+                        Eliminar
+                      </button>
                     </div>
-                  ))
-                )}
+                  </div>
+                ))}
               </div>
             </div>
           </div>

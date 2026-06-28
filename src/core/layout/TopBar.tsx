@@ -60,6 +60,7 @@ const SUBNAV: Record<ModKey, { label: string; path: string }[]> = {
   reportes:      [{ label: "Reportes",      path: "/reports" }],
   integraciones: [{ label: "Integraciones", path: "/integrations" }],
   auditoria: [
+    { label: "Usuarios",       path: "/users" },
     { label: "Configuración",  path: "/settings" },
     { label: "Config. Login",  path: "/settings/login-config" },
     { label: "Apariencia",     path: "/settings/appearance" },
@@ -74,7 +75,7 @@ const MODULE_PATHS: Record<ModKey, string[]> = {
   compras:       ["/suppliers", "/purchases", "/costs", "/ocr"],
   reportes:      ["/reports"],
   integraciones: ["/integrations"],
-  auditoria:     ["/settings", "/soporte", "/settings/appearance"],
+  auditoria:     ["/settings", "/soporte", "/settings/appearance", "/users"],
 };
 
 function getActiveKey(pathname: string): ModKey | null {
