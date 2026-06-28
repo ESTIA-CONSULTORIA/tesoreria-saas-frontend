@@ -16,10 +16,21 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
   const [brandLogo, setBrandLogo] = useState("");
   const [brandName, setBrandName] = useState("Vista Ejecutiva");
 
-  const tenantId =
-    localStorage.getItem("tenant_id") ||
-    localStorage.getItem(STORAGE_KEY) ||
-    "";
+  const [tenantId] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlTenant = params.get("tenant");
+    if (urlTenant) {
+      localStorage.setItem(STORAGE_KEY, urlTenant);
+      return urlTenant;
+    }
+    const envTenant = import.meta.env.VITE_EXECUTIVE_TENANT_ID as string;
+    if (envTenant) return envTenant;
+    return (
+      localStorage.getItem(STORAGE_KEY) ||
+      localStorage.getItem("tenant_id") ||
+      ""
+    );
+  });
 
   useEffect(() => {
     if (!tenantId) return;
