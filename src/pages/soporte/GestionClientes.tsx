@@ -31,6 +31,13 @@ export default function GestionClientes() {
   const [selectedTenant, setSelectedTenant] = useState<TenantDetail | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [planModalOpen, setPlanModalOpen] = useState(false);
+  const [newClientOpen, setNewClientOpen] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [newPlan, setNewPlan] = useState('BASIC');
+  const [newLoading, setNewLoading] = useState(false);
+  const [newError, setNewError] = useState('');
 
   useEffect(() => {
     loadTenants();
@@ -76,6 +83,27 @@ export default function GestionClientes() {
     }
   }
 
+  async function handleCreateTenant(e: React.FormEvent) {
+    e.preventDefault();
+    setNewLoading(true);
+    setNewError('');
+    try {
+      await api.post('/tenants', {
+        name: newName,
+        email: newEmail,
+        password: newPassword,
+        plan: newPlan,
+      });
+      setNewClientOpen(false);
+      setNewName(''); setNewEmail(''); setNewPassword(''); setNewPlan('BASIC');
+      loadTenants();
+    } catch (err: any) {
+      setNewError(err.response?.data?.message || 'Error al crear el cliente');
+    } finally {
+      setNewLoading(false);
+    }
+  }
+
   function getModulesForPlan(plan: string): string[] {
     const modulesByPlan: Record<string, string[]> = {
       BASIC: ["Dashboard", "Movimientos", "Bancos"],
@@ -97,9 +125,17 @@ export default function GestionClientes() {
   return (
     <MainLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Gestión de Clientes</h1>
-          <p className="text-slate-400">Administra todos los tenants del sistema</p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Gestión de Clientes</h1>
+            <p className="text-slate-400">Administra todos los tenants del sistema</p>
+          </div>
+          <button
+            onClick={() => setNewClientOpen(true)}
+            className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+          >
+            + Nuevo Cliente
+          </button>
         </div>
 
         <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
@@ -189,6 +225,70 @@ export default function GestionClientes() {
             </table>
           </div>
         </div>
+
+        {/* Modal nuevo cliente */}
+        {newClientOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden">
+              <div className="flex items-center justify-between p-6 border-b border-slate-800">
+                <div>
+                  <h3 className="text-xl font-bold text-white">Nuevo Cliente</h3>
+                  <p className="text-sm text-slate-400">Crea un nuevo tenant en el sistema</p>
+                </div>
+                <button onClick={() => { setNewClientOpen(false); setNewError(''); }}
+                  className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700">
+                  Cerrar
+                </button>
+              </div>
+              <form onSubmit={handleCreateTenant} className="p-6 space-y-4">
+                {newError && (
+                  <div className="rounded-lg border border-red-700 bg-red-900/30 p-3 text-sm text-red-300">{newError}</div>
+                )}
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Nombre del tenant</label>
+                  <input
+                    value={newName} onChange={e => setNewName(e.target.value)}
+                    placeholder="Ej: Restaurante El Sazón"
+                    required
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Email del administrador</label>
+                  <input
+                    type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)}
+                    placeholder="admin@empresa.com"
+                    required
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Password del administrador</label>
+                  <input
+                    type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
+                    placeholder="Mínimo 8 caracteres"
+                    required
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Plan</label>
+                  <select value={newPlan} onChange={e => setNewPlan(e.target.value)}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500">
+                    <option value="BASIC">BASIC</option>
+                    <option value="PRO">PRO</option>
+                    <option value="BUSINESS">BUSINESS</option>
+                    <option value="ENTERPRISE">ENTERPRISE</option>
+                  </select>
+                </div>
+                <button disabled={newLoading}
+                  className="w-full rounded-lg bg-blue-600 p-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-60">
+                  {newLoading ? 'Creando...' : 'Crear Cliente'}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Modal detalle */}
         {detailModalOpen && selectedTenant && (
