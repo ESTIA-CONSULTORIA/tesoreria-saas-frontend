@@ -213,7 +213,7 @@ export default function GestionClientes() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-400">
-                      {new Date(tenant.createdAt).toLocaleDateString('es-MX')}
+                      {tenant.createdAt ? new Date(tenant.createdAt).toLocaleDateString('es-MX') : 'Sin fecha'}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${
@@ -392,7 +392,7 @@ export default function GestionClientes() {
 
                 <div className="p-4 rounded-lg bg-slate-800">
                   <h4 className="text-sm text-slate-400 mb-3">Fecha de Registro</h4>
-                  <p className="text-white">{new Date(selectedTenant.createdAt).toLocaleString()}</p>
+                  <p className="text-white">{selectedTenant.createdAt ? new Date(selectedTenant.createdAt).toLocaleString('es-MX') : 'Sin fecha'}</p>
                 </div>
               </div>
             </div>
@@ -419,7 +419,7 @@ export default function GestionClientes() {
               </div>
               <div className="flex-1 overflow-y-auto p-6">
                 <div className="space-y-3">
-                  {["BASIC", "PROFESIONAL", "BUSINESS", "ENTERPRISE"].map((plan) => (
+                  {["LITE", "BASIC", "PROFESIONAL", "BUSINESS", "ENTERPRISE"].map((plan) => (
                     <button
                       key={plan}
                       onClick={() => handleChangePlan(selectedTenant.id, plan)}

@@ -43,6 +43,20 @@ export default function PlanesModulos() {
     }
   }
 
+  const LITE_PLAN: Plan = {
+    id: 'lite-static',
+    code: 'LITE',
+    name: 'LITE',
+    price: 0,
+    description: 'Solo Corte de Caja',
+    features: ['Corte de caja diario', 'Gestión de turnos POS'],
+    modules: ['pos'],
+  };
+
+  const effectivePlans = plans.some(p => p.code === 'LITE')
+    ? plans
+    : [LITE_PLAN, ...plans];
+
   function getClientCountForPlan(planCode: string): number {
     return tenants.filter((t) => t.plan === planCode).length;
   }
@@ -74,7 +88,7 @@ export default function PlanesModulos() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {plans.map((plan) => (
+          {effectivePlans.map((plan) => (
             <div key={plan.id} className="rounded-xl border border-slate-800 bg-slate-900 p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>

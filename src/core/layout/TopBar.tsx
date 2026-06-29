@@ -68,6 +68,7 @@ const SUBNAV: Record<ModKey, { label: string; path: string }[]> = {
     { label: "Apariencia",     path: "/settings/appearance" },
   ],
   soporte: [
+    { label: "Panel",          path: "/soporte/dashboard" },
     { label: "Clientes",       path: "/soporte/clientes" },
     { label: "Planes",         path: "/soporte/planes" },
     { label: "Monitoreo",      path: "/soporte/monitoreo" },
