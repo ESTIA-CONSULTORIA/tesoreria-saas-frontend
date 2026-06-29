@@ -111,13 +111,15 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
       const isExecRole = roleCode === "ADMIN" || roleCode === "GERENTE";
 
       if (user) {
-        await api.put(`/users/${user.id}`, {
+        const payload: Record<string, any> = {
           name: fullName,
           roleId: roleId || undefined,
           roleCode,
           isActive,
           ...(isExecRole ? { executivePin: executivePin || undefined } : {}),
-        });
+        };
+        if (password) payload.password = password;
+        await api.put(`/users/${user.id}`, payload);
       } else {
         await api.post("/users", {
           name: fullName,
@@ -222,6 +224,19 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
                 required
                 className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
               />
+            )}
+
+            {user && (
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">Nuevo password / PIN (dejar vacío para no cambiar)</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Dejar vacío para mantener el actual"
+                  className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                />
+              </div>
             )}
 
             <select
