@@ -54,6 +54,7 @@ export default function GestionClientes() {
   const [editError, setEditError] = useState('');
   const [newClientOpen, setNewClientOpen] = useState(false);
   const [newName, setNewName] = useState('');
+  const [newOwnerName, setNewOwnerName] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newPlan, setNewPlan] = useState('BASIC');
@@ -152,13 +153,14 @@ export default function GestionClientes() {
       await api.post('/tenants', {
         legalName: newName,
         tradeName: newName,
+        ownerName: newOwnerName,
         email: newEmail,
         password: newPassword,
         plan: newPlan,
         modules: selectedModules,
       });
       setNewClientOpen(false);
-      setNewName(''); setNewEmail(''); setNewPassword('');
+      setNewName(''); setNewOwnerName(''); setNewEmail(''); setNewPassword('');
       setNewPlan('BASIC'); setSelectedModules([...PLAN_MODULES['BASIC']]);
       loadTenants();
     } catch (err: any) {
@@ -366,6 +368,15 @@ export default function GestionClientes() {
                   <input
                     value={newName} onChange={e => setNewName(e.target.value)}
                     placeholder="Ej: Restaurante El Sazón"
+                    required
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Nombre del dueño / administrador</label>
+                  <input
+                    value={newOwnerName} onChange={e => setNewOwnerName(e.target.value)}
+                    placeholder="Ej: Juan García"
                     required
                     className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
                   />
