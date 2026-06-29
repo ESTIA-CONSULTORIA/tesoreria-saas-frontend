@@ -46,6 +46,12 @@ export default function GestionClientes() {
   const [selectedTenant, setSelectedTenant] = useState<TenantDetail | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [planModalOpen, setPlanModalOpen] = useState(false);
+  const [editTenantOpen, setEditTenantOpen] = useState(false);
+  const [editTenant, setEditTenant] = useState<Tenant | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editPlan, setEditPlan] = useState('BASIC');
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState('');
   const [newClientOpen, setNewClientOpen] = useState(false);
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
@@ -96,6 +102,34 @@ export default function GestionClientes() {
       loadTenants();
     } catch (error) {
       console.error("Error toggling tenant status:", error);
+    }
+  }
+
+  function openEditTenant(tenant: Tenant) {
+    setEditTenant(tenant);
+    setEditName(tenant.legalName || tenant.tradeName || '');
+    setEditPlan(tenant.plan || 'BASIC');
+    setEditError('');
+    setEditTenantOpen(true);
+  }
+
+  async function handleSaveEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editTenant) return;
+    setEditLoading(true);
+    setEditError('');
+    try {
+      await api.put(`/tenants/${editTenant.id}`, {
+        legalName: editName,
+        tradeName: editName,
+        plan: editPlan,
+      });
+      setEditTenantOpen(false);
+      loadTenants();
+    } catch (err: any) {
+      setEditError(err.response?.data?.message || 'Error al guardar');
+    } finally {
+      setEditLoading(false);
     }
   }
 
@@ -225,6 +259,12 @@ export default function GestionClientes() {
                     <td className="px-6 py-4">
                       <div className="flex gap-2">
                         <button
+                          onClick={() => openEditTenant(tenant)}
+                          className="px-3 py-1.5 rounded bg-slate-600 text-white text-sm hover:bg-slate-500"
+                        >
+                          Editar
+                        </button>
+                        <button
                           onClick={() => handleViewDetail(tenant.id)}
                           className="px-3 py-1.5 rounded bg-slate-700 text-white text-sm hover:bg-slate-600"
                         >
@@ -255,6 +295,53 @@ export default function GestionClientes() {
             </table>
           </div>
         </div>
+
+        {/* Modal editar tenant */}
+        {editTenantOpen && editTenant && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden">
+              <div className="flex items-center justify-between p-6 border-b border-slate-800">
+                <div>
+                  <h3 className="text-xl font-bold text-white">Editar Cliente</h3>
+                  <p className="text-sm text-slate-400 font-mono">{editTenant.id}</p>
+                </div>
+                <button onClick={() => setEditTenantOpen(false)}
+                  className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700">
+                  Cerrar
+                </button>
+              </div>
+              <form onSubmit={handleSaveEdit} className="p-6 space-y-4">
+                {editError && (
+                  <div className="rounded-lg border border-red-700 bg-red-900/30 p-3 text-sm text-red-300">{editError}</div>
+                )}
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Nombre</label>
+                  <input
+                    value={editName} onChange={e => setEditName(e.target.value)}
+                    placeholder="Nombre del tenant"
+                    required
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Plan</label>
+                  <select value={editPlan} onChange={e => setEditPlan(e.target.value)}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500">
+                    <option value="LITE">LITE — Corte de Caja</option>
+                    <option value="BASIC">BASIC</option>
+                    <option value="PRO">PRO</option>
+                    <option value="BUSINESS">BUSINESS</option>
+                    <option value="ENTERPRISE">ENTERPRISE</option>
+                  </select>
+                </div>
+                <button disabled={editLoading}
+                  className="w-full rounded-lg bg-blue-600 p-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-60">
+                  {editLoading ? 'Guardando...' : 'Guardar cambios'}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Modal nuevo cliente */}
         {newClientOpen && (

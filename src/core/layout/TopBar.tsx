@@ -32,7 +32,7 @@ const NAV: { label: string; key: ModKey; path: string; modulo: string }[] = [
   { label: "Reportes",      key: "reportes",      path: "/reports",      modulo: "reportes" },
   { label: "Integraciones", key: "integraciones", path: "/integrations", modulo: "integraciones" },
   { label: "Auditoría",     key: "auditoria",     path: "/settings",          modulo: "configuracion" },
-  { label: "Soporte",       key: "soporte",       path: "/soporte/dashboard", modulo: "soporte" },
+  { label: "Soporte",       key: "soporte",       path: "/soporte/clientes",  modulo: "soporte" },
 ];
 
 const SUBNAV: Record<ModKey, { label: string; path: string }[]> = {
