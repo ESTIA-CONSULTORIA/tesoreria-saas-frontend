@@ -34,9 +34,8 @@ export default function CorteCajaLite() {
     const tenantId = (import.meta.env.VITE_EXECUTIVE_TENANT_ID as string) ||
       localStorage.getItem('exec_tenant_id') || '';
     if (!tenantId) return;
-    axios.get(`${API}/companies`, {
-      headers: { 'x-tenant-id': tenantId },
-    }).then(r => setCompanies(Array.isArray(r.data) ? r.data : [])).catch(() => {});
+    axios.get(`${API}/companies/tenant/${tenantId}`)
+      .then(r => setCompanies(Array.isArray(r.data) ? r.data : [])).catch(() => {});
   }, []);
 
   const handlePin = async (digit: string) => {
