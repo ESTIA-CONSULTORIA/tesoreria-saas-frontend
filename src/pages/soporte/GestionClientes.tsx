@@ -52,6 +52,13 @@ export default function GestionClientes() {
   const [editPlan, setEditPlan] = useState('BASIC');
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState('');
+  const [newUserName, setNewUserName] = useState('');
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPass, setNewUserPass] = useState('');
+  const [newUserRole, setNewUserRole] = useState('ADMIN');
+  const [newUserLoading, setNewUserLoading] = useState(false);
+  const [newUserError, setNewUserError] = useState('');
+  const [newUserSuccess, setNewUserSuccess] = useState('');
   const [newClientOpen, setNewClientOpen] = useState(false);
   const [newName, setNewName] = useState('');
   const [newOwnerName, setNewOwnerName] = useState('');
@@ -111,7 +118,31 @@ export default function GestionClientes() {
     setEditName(tenant.legalName || tenant.tradeName || '');
     setEditPlan(tenant.plan || 'BASIC');
     setEditError('');
+    setNewUserName(''); setNewUserEmail(''); setNewUserPass('');
+    setNewUserRole('ADMIN'); setNewUserError(''); setNewUserSuccess('');
     setEditTenantOpen(true);
+  }
+
+  async function handleCreateUser() {
+    if (!editTenant || !newUserEmail || !newUserPass) return;
+    setNewUserLoading(true);
+    setNewUserError('');
+    setNewUserSuccess('');
+    try {
+      await api.post('/users', {
+        name: newUserName,
+        email: newUserEmail,
+        password: newUserPass,
+        roleCode: newUserRole,
+        tenantId: editTenant.id,
+      });
+      setNewUserSuccess('Usuario creado correctamente');
+      setNewUserName(''); setNewUserEmail(''); setNewUserPass('');
+    } catch (err: any) {
+      setNewUserError(err.response?.data?.message || 'Error al crear usuario');
+    } finally {
+      setNewUserLoading(false);
+    }
   }
 
   async function handleSaveEdit(e: React.FormEvent) {
@@ -301,46 +332,87 @@ export default function GestionClientes() {
         {/* Modal editar tenant */}
         {editTenantOpen && editTenant && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden">
-              <div className="flex items-center justify-between p-6 border-b border-slate-800">
+            <div className="w-full max-w-md max-h-[90vh] flex flex-col rounded-xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden">
+              <div className="flex-shrink-0 flex items-center justify-between p-6 border-b border-slate-800">
                 <div>
                   <h3 className="text-xl font-bold text-white">Editar Cliente</h3>
-                  <p className="text-sm text-slate-400 font-mono">{editTenant.id}</p>
+                  <p className="text-sm text-slate-400 font-mono truncate max-w-[220px]">{editTenant.id}</p>
                 </div>
                 <button onClick={() => setEditTenantOpen(false)}
                   className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700">
                   Cerrar
                 </button>
               </div>
-              <form onSubmit={handleSaveEdit} className="p-6 space-y-4">
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 {editError && (
                   <div className="rounded-lg border border-red-700 bg-red-900/30 p-3 text-sm text-red-300">{editError}</div>
                 )}
-                <div>
-                  <label className="block text-xs text-slate-400 mb-1">Nombre</label>
+                <form onSubmit={handleSaveEdit} className="space-y-4">
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Nombre</label>
+                    <input
+                      value={editName} onChange={e => setEditName(e.target.value)}
+                      placeholder="Nombre del tenant"
+                      required
+                      className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Plan</label>
+                    <select value={editPlan} onChange={e => setEditPlan(e.target.value)}
+                      className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500">
+                      <option value="LITE">LITE — Corte de Caja</option>
+                      <option value="BASIC">BASIC</option>
+                      <option value="PRO">PRO</option>
+                      <option value="BUSINESS">BUSINESS</option>
+                      <option value="ENTERPRISE">ENTERPRISE</option>
+                    </select>
+                  </div>
+                  <button disabled={editLoading}
+                    className="w-full rounded-lg bg-blue-600 p-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-60">
+                    {editLoading ? 'Guardando...' : 'Guardar cambios'}
+                  </button>
+                </form>
+
+                {/* Sección crear usuario */}
+                <div className="border-t border-slate-700 pt-4 mt-2 space-y-3">
+                  <div className="text-xs text-slate-400">Crear usuario para este tenant</div>
+                  {newUserError && (
+                    <div className="rounded-lg border border-red-700 bg-red-900/30 p-2 text-xs text-red-300">{newUserError}</div>
+                  )}
+                  {newUserSuccess && (
+                    <div className="rounded-lg border border-green-700 bg-green-900/30 p-2 text-xs text-green-300">{newUserSuccess}</div>
+                  )}
                   <input
-                    value={editName} onChange={e => setEditName(e.target.value)}
-                    placeholder="Nombre del tenant"
-                    required
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                    value={newUserName} onChange={e => setNewUserName(e.target.value)}
+                    placeholder="Nombre"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2.5 text-sm text-white outline-none focus:border-blue-500"
                   />
-                </div>
-                <div>
-                  <label className="block text-xs text-slate-400 mb-1">Plan</label>
-                  <select value={editPlan} onChange={e => setEditPlan(e.target.value)}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500">
-                    <option value="LITE">LITE — Corte de Caja</option>
-                    <option value="BASIC">BASIC</option>
-                    <option value="PRO">PRO</option>
-                    <option value="BUSINESS">BUSINESS</option>
-                    <option value="ENTERPRISE">ENTERPRISE</option>
+                  <input
+                    type="email" value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)}
+                    placeholder="Email"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2.5 text-sm text-white outline-none focus:border-blue-500"
+                  />
+                  <input
+                    type="password" value={newUserPass} onChange={e => setNewUserPass(e.target.value)}
+                    placeholder="Password / PIN"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2.5 text-sm text-white outline-none focus:border-blue-500"
+                  />
+                  <select value={newUserRole} onChange={e => setNewUserRole(e.target.value)}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2.5 text-sm text-white outline-none focus:border-blue-500">
+                    <option value="ADMIN">Administrador</option>
+                    <option value="CAJERO">Cajero</option>
+                    <option value="GERENTE">Gerente</option>
                   </select>
+                  <button
+                    onClick={handleCreateUser}
+                    disabled={newUserLoading || !newUserEmail || !newUserPass}
+                    className="w-full rounded-lg border border-slate-600 bg-slate-800 p-2.5 text-sm text-white hover:bg-slate-700 disabled:opacity-40"
+                  >
+                    {newUserLoading ? 'Creando...' : '+ Crear usuario'}
+                  </button>
                 </div>
-                <button disabled={editLoading}
-                  className="w-full rounded-lg bg-blue-600 p-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-60">
-                  {editLoading ? 'Guardando...' : 'Guardar cambios'}
-                </button>
-              </form>
+              </div>
             </div>
           </div>
         )}
