@@ -32,7 +32,9 @@ export default function CorteCajaLite() {
 
   useEffect(() => {
     const tenantId = (import.meta.env.VITE_EXECUTIVE_TENANT_ID as string) ||
-      localStorage.getItem('exec_tenant_id') || '';
+      localStorage.getItem('exec_tenant_id') ||
+      localStorage.getItem('tenant_id') ||
+      '0e46b4f4-5f82-473c-b7b8-f04b3bf9fd02';
     if (!tenantId) return;
     axios.get(`${API}/companies/tenant/${tenantId}`)
       .then(r => setCompanies(Array.isArray(r.data) ? r.data : [])).catch(() => {});
