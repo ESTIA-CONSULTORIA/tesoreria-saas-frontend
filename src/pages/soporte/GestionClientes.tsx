@@ -25,6 +25,21 @@ interface TenantDetail extends Tenant {
   }>;
 }
 
+const PLAN_MODULES: Record<string, string[]> = {
+  LITE:       ['pos'],
+  BASIC:      ['dashboard', 'bancos', 'tesoreria'],
+  PRO:        ['dashboard', 'bancos', 'tesoreria', 'compras', 'rh'],
+  BUSINESS:   ['dashboard', 'bancos', 'tesoreria', 'compras', 'rh', 'reportes', 'integraciones'],
+  ENTERPRISE: ['dashboard', 'bancos', 'tesoreria', 'compras', 'rh', 'reportes', 'integraciones', 'pos', 'conciliacion', 'audit'],
+};
+
+const MODULE_LABELS: Record<string, string> = {
+  dashboard: 'Dashboard', bancos: 'Bancos', tesoreria: 'Tesorería',
+  compras: 'Compras', rh: 'RH', reportes: 'Reportes',
+  integraciones: 'Integraciones', pos: 'POS / Corte Caja',
+  conciliacion: 'Conciliación', audit: 'Auditoría',
+};
+
 export default function GestionClientes() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +51,7 @@ export default function GestionClientes() {
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newPlan, setNewPlan] = useState('BASIC');
+  const [selectedModules, setSelectedModules] = useState<string[]>([...PLAN_MODULES['BASIC']]);
   const [newLoading, setNewLoading] = useState(false);
   const [newError, setNewError] = useState('');
 
@@ -83,19 +99,33 @@ export default function GestionClientes() {
     }
   }
 
+  function handlePlanChange(plan: string) {
+    setNewPlan(plan);
+    setSelectedModules([...(PLAN_MODULES[plan] || [])]);
+  }
+
+  function toggleModule(mod: string) {
+    setSelectedModules(prev =>
+      prev.includes(mod) ? prev.filter(m => m !== mod) : [...prev, mod]
+    );
+  }
+
   async function handleCreateTenant(e: React.FormEvent) {
     e.preventDefault();
     setNewLoading(true);
     setNewError('');
     try {
       await api.post('/tenants', {
-        name: newName,
+        legalName: newName,
+        tradeName: newName,
         email: newEmail,
         password: newPassword,
         plan: newPlan,
+        modules: selectedModules,
       });
       setNewClientOpen(false);
-      setNewName(''); setNewEmail(''); setNewPassword(''); setNewPlan('BASIC');
+      setNewName(''); setNewEmail(''); setNewPassword('');
+      setNewPlan('BASIC'); setSelectedModules([...PLAN_MODULES['BASIC']]);
       loadTenants();
     } catch (err: any) {
       setNewError(err.response?.data?.message || 'Error al crear el cliente');
@@ -183,7 +213,7 @@ export default function GestionClientes() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-400">
-                      {new Date(tenant.createdAt).toLocaleDateString()}
+                      {new Date(tenant.createdAt).toLocaleDateString('es-MX')}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${
@@ -229,8 +259,8 @@ export default function GestionClientes() {
         {/* Modal nuevo cliente */}
         {newClientOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden">
-              <div className="flex items-center justify-between p-6 border-b border-slate-800">
+            <div className="w-full max-w-md max-h-[90vh] flex flex-col rounded-xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden">
+              <div className="flex-shrink-0 flex items-center justify-between p-6 border-b border-slate-800">
                 <div>
                   <h3 className="text-xl font-bold text-white">Nuevo Cliente</h3>
                   <p className="text-sm text-slate-400">Crea un nuevo tenant en el sistema</p>
@@ -240,7 +270,7 @@ export default function GestionClientes() {
                   Cerrar
                 </button>
               </div>
-              <form onSubmit={handleCreateTenant} className="p-6 space-y-4">
+              <form onSubmit={handleCreateTenant} className="flex-1 overflow-y-auto p-6 space-y-4">
                 {newError && (
                   <div className="rounded-lg border border-red-700 bg-red-900/30 p-3 text-sm text-red-300">{newError}</div>
                 )}
@@ -273,7 +303,7 @@ export default function GestionClientes() {
                 </div>
                 <div>
                   <label className="block text-xs text-slate-400 mb-1">Plan</label>
-                  <select value={newPlan} onChange={e => setNewPlan(e.target.value)}
+                  <select value={newPlan} onChange={e => handlePlanChange(e.target.value)}
                     className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500">
                     <option value="LITE">LITE — Corte de Caja</option>
                     <option value="BASIC">BASIC</option>
@@ -282,6 +312,24 @@ export default function GestionClientes() {
                     <option value="ENTERPRISE">ENTERPRISE</option>
                   </select>
                 </div>
+
+                <div>
+                  <label className="block text-xs text-slate-400 mb-2">Módulos incluidos</label>
+                  <div className="rounded-lg border border-slate-700 bg-slate-800 p-3 grid grid-cols-2 gap-2">
+                    {Object.keys(MODULE_LABELS).map(mod => (
+                      <label key={mod} className="flex items-center gap-2 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={selectedModules.includes(mod)}
+                          onChange={() => toggleModule(mod)}
+                          className="rounded accent-blue-500"
+                        />
+                        <span className="text-sm text-slate-300">{MODULE_LABELS[mod]}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
                 <button disabled={newLoading}
                   className="w-full rounded-lg bg-blue-600 p-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-60">
                   {newLoading ? 'Creando...' : 'Crear Cliente'}
