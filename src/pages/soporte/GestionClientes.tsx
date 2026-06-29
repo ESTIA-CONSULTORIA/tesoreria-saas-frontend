@@ -275,6 +275,7 @@ export default function GestionClientes() {
                   <label className="block text-xs text-slate-400 mb-1">Plan</label>
                   <select value={newPlan} onChange={e => setNewPlan(e.target.value)}
                     className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500">
+                    <option value="LITE">LITE — Corte de Caja</option>
                     <option value="BASIC">BASIC</option>
                     <option value="PRO">PRO</option>
                     <option value="BUSINESS">BUSINESS</option>
