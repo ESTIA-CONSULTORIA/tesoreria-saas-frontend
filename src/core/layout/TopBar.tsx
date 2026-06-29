@@ -215,7 +215,21 @@ export default function TopBar() {
   const activeKey  = getActiveKey(loc.pathname);
   const visibleNav = NAV.filter(m => modAccess[m.key]);
   const operationalModules: ModKey[] = ['rh', 'tesoreria', 'pos', 'compras', 'reportes', 'integraciones'];
-  const subItems   = activeKey ? (SUBNAV[activeKey] || []) : [];
+
+  const auditSubItems = user?.roleCode === 'SOPORTE' ? [
+    { label: 'Panel Soporte',  path: '/soporte/dashboard' },
+    { label: 'Clientes',       path: '/soporte/clientes' },
+    { label: 'Planes',         path: '/soporte/planes' },
+    { label: 'Monitoreo',      path: '/soporte/monitoreo' },
+    { label: 'Config. Global', path: '/soporte/config' },
+    { label: 'Usuarios',       path: '/users' },
+    { label: 'Configuración',  path: '/settings' },
+    { label: 'Apariencia',     path: '/settings/appearance' },
+  ] : SUBNAV.auditoria;
+
+  const subItems = activeKey
+    ? (activeKey === 'auditoria' ? auditSubItems : (SUBNAV[activeKey] || []))
+    : [];
 
   const userInitials = (() => {
     const n = user?.name || user?.email || '';
