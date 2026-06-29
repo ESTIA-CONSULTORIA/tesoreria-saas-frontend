@@ -62,6 +62,10 @@ export default function PlanesModulos() {
   }
 
   async function handleUpdatePlan(planId: string, data: Partial<Plan>) {
+    if (planId === 'lite-static') {
+      alert('El plan LITE es gestionado por el sistema y no puede editarse');
+      return;
+    }
     try {
       await api.put(`/plans/${planId}`, data);
       loadData();

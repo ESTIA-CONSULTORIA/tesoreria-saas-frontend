@@ -181,13 +181,25 @@ export default function CorteCajaLite() {
     setTimeout(() => { win.print(); win.close(); }, 300);
   };
 
+  const isDesktop = window.innerWidth > 768;
+
   const s = {
-    container: {
+    outer: {
       position: 'fixed' as const, inset: 0,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: '#050709',
+    },
+    container: {
+      width: '100%',
+      maxWidth: 480,
+      height: '100%',
+      maxHeight: 900,
       background: '#0a0c12',
       display: 'flex', flexDirection: 'column' as const,
       overflow: 'hidden', boxSizing: 'border-box' as const,
       fontFamily: "'Inter', -apple-system, sans-serif",
+      borderRadius: isDesktop ? 20 : 0,
+      boxShadow: isDesktop ? '0 25px 60px rgba(0,0,0,0.5)' : 'none',
     },
     header: {
       padding: '16px 20px 12px',
@@ -242,6 +254,7 @@ export default function CorteCajaLite() {
   void savedShift;
 
   return (
+    <div style={s.outer}>
     <div style={s.container}>
 
       {/* ── EMPRESA ── */}
@@ -420,6 +433,7 @@ export default function CorteCajaLite() {
           </div>
         </>
       )}
+    </div>
     </div>
   );
 }
