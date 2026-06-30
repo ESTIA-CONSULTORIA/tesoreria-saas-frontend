@@ -32,6 +32,7 @@ import LoginPage from "./pages/Login/LoginPage";
 import ExecutivePage from "./pages/executive/ExecutivePage";
 import CorteCajaLite from "./pages/lite/CorteCajaLite";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
+import DashboardLite from "./pages/Dashboard/DashboardLite";
 import LoginConfigPage from "./pages/settings/LoginConfigPage";
 import AppearancePage from "./pages/settings/AppearancePage";
 import ProtectedRoute from "./core/router/ProtectedRoute";
@@ -50,6 +51,12 @@ import GestionClientes from "./pages/soporte/GestionClientes";
 import PlanesModulos from "./pages/soporte/PlanesModulos";
 import Monitoreo from "./pages/soporte/Monitoreo";
 import ConfiguracionGlobal from "./pages/soporte/ConfiguracionGlobal";
+
+function DashboardRouter() {
+  const modulosActivos = useAuthStore(s => s.modulosActivos);
+  const isLite = modulosActivos.includes('corte-caja-lite') || modulosActivos.includes('pos-sin-inventario');
+  return isLite ? <DashboardLite /> : <DashboardPage />;
+}
 
 function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -206,7 +213,7 @@ function App() {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <DashboardPage />
+            <DashboardRouter />
           </ProtectedRoute>
         }
       />
