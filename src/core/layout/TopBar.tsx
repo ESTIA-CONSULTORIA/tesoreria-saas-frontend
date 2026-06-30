@@ -116,6 +116,7 @@ export default function TopBar() {
   const { activeCompany, activeBranch, setActiveCompany, setActiveBranch } = useCompanyStore();
 
   // Module access — hooks always in same order
+  const modulosActivos = useAuthStore((state) => state.modulosActivos);
   const aD  = useModulo('dashboard');
   const aR  = useModulo('rh');
   const aT  = useModulo('tesoreria');
@@ -227,7 +228,17 @@ export default function TopBar() {
   const visibleNav = NAV.filter(m => modAccess[m.key]);
   const operationalModules: ModKey[] = ['rh', 'tesoreria', 'pos', 'compras', 'reportes', 'integraciones'];
 
-  const subItems = activeKey ? (SUBNAV[activeKey] || []) : [];
+  const dashboardSubItems = (modulosActivos?.includes('empresas') || modulosActivos?.includes('sucursales'))
+    ? [
+        { label: 'Dashboard',  path: '/dashboard' },
+        { label: 'Empresas',   path: '/companies' },
+        { label: 'Sucursales', path: '/branches' },
+      ]
+    : [];
+
+  const subItems = activeKey === 'dashboard' && dashboardSubItems.length > 0
+    ? dashboardSubItems
+    : activeKey ? (SUBNAV[activeKey] || []) : [];
 
   const userInitials = (() => {
     const n = user?.name || user?.email || '';
