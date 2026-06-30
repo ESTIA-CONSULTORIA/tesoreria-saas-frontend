@@ -228,11 +228,12 @@ export default function TopBar() {
   const visibleNav = NAV.filter(m => modAccess[m.key]);
   const operationalModules: ModKey[] = ['rh', 'tesoreria', 'pos', 'compras', 'reportes', 'integraciones'];
 
-  const dashboardSubItems = (modulosActivos?.includes('empresas') || modulosActivos?.includes('sucursales'))
+  const dashboardSubItems = (modulosActivos?.includes('empresas') || modulosActivos?.includes('sucursales') || modulosActivos?.includes('usuarios'))
     ? [
         { label: 'Dashboard',  path: '/dashboard' },
-        { label: 'Empresas',   path: '/companies' },
-        { label: 'Sucursales', path: '/branches' },
+        ...(modulosActivos?.includes('empresas')   ? [{ label: 'Empresas',   path: '/companies' }] : []),
+        ...(modulosActivos?.includes('sucursales') ? [{ label: 'Sucursales', path: '/branches'  }] : []),
+        ...(modulosActivos?.includes('usuarios')   ? [{ label: 'Usuarios',   path: '/users'     }] : []),
       ]
     : [];
 
