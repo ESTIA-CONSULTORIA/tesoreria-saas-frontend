@@ -32,8 +32,8 @@ export default function CorteCajaLite() {
 
   useEffect(() => {
     const qp = new URLSearchParams(window.location.search).get('tenant');
-    const tenantId = (import.meta.env.VITE_EXECUTIVE_TENANT_ID as string) ||
-      qp ||
+    const tenantId = qp ||
+      (import.meta.env.VITE_EXECUTIVE_TENANT_ID as string) ||
       localStorage.getItem('exec_tenant_id') ||
       localStorage.getItem('tenant_id') ||
       '0e46b4f4-5f82-473c-b7b8-f04b3bf9fd02';
@@ -51,8 +51,8 @@ export default function CorteCajaLite() {
       setError('');
       try {
         const qp = new URLSearchParams(window.location.search).get('tenant');
-        const tenantId = (import.meta.env.VITE_EXECUTIVE_TENANT_ID as string) ||
-          qp ||
+        const tenantId = qp ||
+          (import.meta.env.VITE_EXECUTIVE_TENANT_ID as string) ||
           localStorage.getItem('exec_tenant_id') ||
           localStorage.getItem('tenant_id') || '';
         const res = await axios.post(`${API}/pos/cashiers/nip`, {
