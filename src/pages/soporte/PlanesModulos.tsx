@@ -43,27 +43,41 @@ export default function PlanesModulos() {
     }
   }
 
-  const LITE_PLAN: Plan = {
-    id: 'lite-static',
-    code: 'LITE',
-    name: 'LITE',
+  const LITE_CORTE_PLAN: Plan = {
+    id: 'lite-corte-static',
+    code: 'LITE_CORTE',
+    name: 'LITE — Corte de Caja',
     price: 0,
-    description: 'Solo Corte de Caja',
-    features: ['Corte de caja diario', 'Gestión de turnos POS'],
-    modules: ['pos'],
+    description: 'Corte de caja manual diario',
+    features: ['Corte de caja diario', 'Dashboard básico', 'Hasta 3 usuarios'],
+    modules: ['dashboard', 'corte-caja-lite', 'usuarios', 'empresas', 'sucursales', 'apariencia-logo-only'],
   };
 
-  const effectivePlans = plans.some(p => p.code === 'LITE')
-    ? plans
-    : [LITE_PLAN, ...plans];
+  const LITE_POS_PLAN: Plan = {
+    id: 'lite-pos-static',
+    code: 'LITE_POS',
+    name: 'LITE — POS sin inventario',
+    price: 0,
+    description: 'Punto de venta sin gestión de inventario',
+    features: ['POS sin inventario', 'Dashboard básico', 'Hasta 3 usuarios'],
+    modules: ['dashboard', 'pos-sin-inventario', 'usuarios', 'empresas', 'sucursales', 'apariencia-logo-only'],
+  };
+
+  const staticCodes = ['LITE_CORTE', 'LITE_POS'];
+  const effectivePlans = [
+    ...(plans.some(p => p.code === 'LITE_CORTE') ? [] : [LITE_CORTE_PLAN]),
+    ...(plans.some(p => p.code === 'LITE_POS')   ? [] : [LITE_POS_PLAN]),
+    ...plans,
+  ];
 
   function getClientCountForPlan(planCode: string): number {
     return tenants.filter((t) => t.plan === planCode).length;
   }
 
   async function handleUpdatePlan(planId: string, data: Partial<Plan>) {
-    if (planId === 'lite-static') {
-      alert('El plan LITE es gestionado por el sistema y no puede editarse');
+    if (staticCodes.some(code => planId === `${code.toLowerCase().replace('_', '-')}-static`) ||
+        planId === 'lite-corte-static' || planId === 'lite-pos-static') {
+      alert('Los planes LITE son gestionados por el sistema y no pueden editarse');
       return;
     }
     try {

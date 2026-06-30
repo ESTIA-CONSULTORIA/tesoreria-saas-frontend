@@ -26,7 +26,8 @@ interface TenantDetail extends Tenant {
 }
 
 const PLAN_MODULES: Record<string, string[]> = {
-  LITE:       ['pos'],
+  LITE_CORTE: ['dashboard', 'corte-caja-lite', 'usuarios', 'empresas', 'sucursales', 'apariencia-logo-only'],
+  LITE_POS:   ['dashboard', 'pos-sin-inventario', 'usuarios', 'empresas', 'sucursales', 'apariencia-logo-only'],
   BASIC:      ['dashboard', 'bancos', 'tesoreria'],
   PRO:        ['dashboard', 'bancos', 'tesoreria', 'compras', 'rh'],
   BUSINESS:   ['dashboard', 'bancos', 'tesoreria', 'compras', 'rh', 'reportes', 'integraciones'],
@@ -38,6 +39,9 @@ const MODULE_LABELS: Record<string, string> = {
   compras: 'Compras', rh: 'RH', reportes: 'Reportes',
   integraciones: 'Integraciones', pos: 'POS / Corte Caja',
   conciliacion: 'Conciliación', audit: 'Auditoría',
+  'corte-caja-lite': 'Corte de Caja', 'pos-sin-inventario': 'POS sin inventario',
+  usuarios: 'Usuarios', empresas: 'Empresas', sucursales: 'Sucursales',
+  'apariencia-logo-only': 'Apariencia (logo)',
 };
 
 export default function GestionClientes() {
@@ -361,7 +365,8 @@ export default function GestionClientes() {
                     <label className="block text-xs text-slate-400 mb-1">Plan</label>
                     <select value={editPlan} onChange={e => setEditPlan(e.target.value)}
                       className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500">
-                      <option value="LITE">LITE — Corte de Caja</option>
+                      <option value="LITE_CORTE">LITE — Corte de Caja (manual)</option>
+                      <option value="LITE_POS">LITE — POS sin inventario</option>
                       <option value="BASIC">BASIC</option>
                       <option value="PRO">PRO</option>
                       <option value="BUSINESS">BUSINESS</option>
@@ -475,7 +480,8 @@ export default function GestionClientes() {
                   <label className="block text-xs text-slate-400 mb-1">Plan</label>
                   <select value={newPlan} onChange={e => handlePlanChange(e.target.value)}
                     className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500">
-                    <option value="LITE">LITE — Corte de Caja</option>
+                    <option value="LITE_CORTE">LITE — Corte de Caja (manual)</option>
+                    <option value="LITE_POS">LITE — POS sin inventario</option>
                     <option value="BASIC">BASIC</option>
                     <option value="PRO">PRO</option>
                     <option value="BUSINESS">BUSINESS</option>
@@ -589,7 +595,7 @@ export default function GestionClientes() {
               </div>
               <div className="flex-1 overflow-y-auto p-6">
                 <div className="space-y-3">
-                  {["LITE", "BASIC", "PROFESIONAL", "BUSINESS", "ENTERPRISE"].map((plan) => (
+                  {["LITE_CORTE", "LITE_POS", "BASIC", "PRO", "BUSINESS", "ENTERPRISE"].map((plan) => (
                     <button
                       key={plan}
                       onClick={() => handleChangePlan(selectedTenant.id, plan)}
