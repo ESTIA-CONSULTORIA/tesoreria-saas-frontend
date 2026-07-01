@@ -66,6 +66,7 @@ const SUBNAV: Record<ModKey, { label: string; path: string }[]> = {
     { label: "Configuración",  path: "/settings" },
     { label: "Config. Login",  path: "/settings/login-config" },
     { label: "Apariencia",     path: "/settings/appearance" },
+    { label: "Campos del Corte", path: "/settings/corte-fields" },
   ],
   soporte: [
     { label: "Panel",          path: "/soporte/dashboard" },
@@ -84,7 +85,7 @@ const MODULE_PATHS: Record<ModKey, string[]> = {
   compras:       ["/suppliers", "/purchases", "/costs", "/ocr"],
   reportes:      ["/reports"],
   integraciones: ["/integrations"],
-  auditoria:     ["/settings", "/settings/appearance", "/users"],
+  auditoria:     ["/settings", "/settings/appearance", "/settings/corte-fields", "/users"],
   soporte:       ["/soporte"],
 };
 

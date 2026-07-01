@@ -35,6 +35,7 @@ import DashboardPage from "./pages/Dashboard/DashboardPage";
 import DashboardLite from "./pages/Dashboard/DashboardLite";
 import LoginConfigPage from "./pages/settings/LoginConfigPage";
 import AppearancePage from "./pages/settings/AppearancePage";
+import CorteFieldsConfig from "./pages/settings/CorteFieldsConfig";
 import ProtectedRoute from "./core/router/ProtectedRoute";
 import ModuloRoute from "./core/router/ModuloRoute";
 import { useAuthStore } from "./core/store/useAuthStore";
@@ -379,6 +380,15 @@ function App() {
             <ModuloRoute modulo="configuracion">
               <AppearancePage />
             </ModuloRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/settings/corte-fields"
+        element={
+          <ProtectedRoute>
+            <CorteFieldsConfig />
           </ProtectedRoute>
         }
       />

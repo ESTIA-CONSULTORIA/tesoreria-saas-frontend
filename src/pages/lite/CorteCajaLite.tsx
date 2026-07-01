@@ -67,11 +67,16 @@ export default function CorteCajaLite() {
   const [pin, setPin] = useState('');
   const [totales, setTotales] = useState<Totales>({ efectivo: 0, tarjeta: 0, transferencia: 0, cortesia: 0, descuento: 0, gasto: 0 });
   const [activeField, setActiveField] = useState<keyof Totales | null>(null);
+  const [dynamicFields, setDynamicFields] = useState<{ key: keyof Totales; label: string; resta?: boolean }[]>(FIELDS);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const total = totales.efectivo + totales.tarjeta + totales.transferencia - totales.cortesia - totales.descuento;
+  const activeFieldOrder = dynamicFields.map(f => f.key);
+  const total = dynamicFields.reduce((sum, f) => {
+    const v = totales[f.key] ?? 0;
+    return f.resta ? sum - v : sum + v;
+  }, 0);
 
   useEffect(() => {
     if (!tenantId) return;
@@ -84,7 +89,7 @@ export default function CorteCajaLite() {
     if (screen !== 'corte') return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key >= '0' && e.key <= '9') {
-        if (!activeField) setActiveField(FIELD_ORDER[0]);
+        if (!activeField) setActiveField(activeFieldOrder[0]);
         handleMonto(e.key);
       } else if (e.key === '.') {
         handleMonto('.');
@@ -152,6 +157,18 @@ export default function CorteCajaLite() {
             return;
           }
         }
+        // Cargar campos configurables del corte
+        try {
+          const fieldsRes = await axios.get(`${API}/pos/corte-fields`, {
+            headers: { Authorization: `Bearer ${res.data.access_token}` },
+          });
+          const active = (fieldsRes.data as any[])
+            .filter(f => f.isActive)
+            .sort((a, b) => a.order - b.order)
+            .map(f => ({ key: f.key as keyof Totales, label: f.label, resta: f.resta }));
+          if (active.length > 0) setDynamicFields(active);
+        } catch { /* usa FIELDS por defecto */ }
+
         setShift(currentShift);
         setToken(res.data.access_token);
         sessionStorage.setItem('lite_token', res.data.access_token);
@@ -177,9 +194,9 @@ export default function CorteCajaLite() {
     if (!activeField) return;
     const val = parseFloat(inputValue) || 0;
     setTotales(t => ({ ...t, [activeField]: val }));
-    const idx = FIELD_ORDER.indexOf(activeField);
-    if (idx < FIELD_ORDER.length - 1) {
-      setActiveField(FIELD_ORDER[idx + 1]);
+    const idx = activeFieldOrder.indexOf(activeField);
+    if (idx < activeFieldOrder.length - 1) {
+      setActiveField(activeFieldOrder[idx + 1]);
       setInputValue('');
     } else {
       setActiveField(null);
@@ -366,7 +383,7 @@ export default function CorteCajaLite() {
 
           {/* Campos + teclado inline */}
           <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '8px 28px 0' }}>
-            {FIELDS.map((f) => (
+            {dynamicFields.map((f) => (
               <div key={f.key}>
                 {/* Fila del campo */}
                 <div onClick={() => { setActiveField(f.key); setInputValue(''); }}
@@ -413,7 +430,7 @@ export default function CorteCajaLite() {
                       background: 'rgba(143,175,212,0.07)', color: '#8fafd4',
                       fontSize: 11, cursor: 'pointer', letterSpacing: '0.12em', textTransform: 'uppercase' as const,
                     }}>
-                      {FIELD_ORDER.indexOf(f.key) < FIELD_ORDER.length - 1 ? 'Siguiente →' : '✓ Listo'}
+                      {activeFieldOrder.indexOf(f.key) < activeFieldOrder.length - 1 ? 'Siguiente →' : '✓ Listo'}
                     </button>
                   </div>
                 )}
