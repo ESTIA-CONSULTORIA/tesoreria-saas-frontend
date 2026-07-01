@@ -15,6 +15,16 @@ interface Totales {
 type Screen = 'empresa' | 'pin' | 'corte' | 'confirmacion';
 
 export default function CorteCajaLite() {
+  const [tenantId] = useState<string>(() => {
+    const qp = new URLSearchParams(window.location.search).get('tenant');
+    const resolved = qp ||
+      (import.meta.env.VITE_EXECUTIVE_TENANT_ID as string) ||
+      localStorage.getItem('exec_tenant_id') ||
+      localStorage.getItem('tenant_id') || '';
+    if (resolved) localStorage.setItem('exec_tenant_id', resolved);
+    return resolved;
+  });
+
   const [screen, setScreen] = useState<Screen>('empresa');
   const [companies, setCompanies] = useState<any[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<any>(null);
@@ -31,16 +41,10 @@ export default function CorteCajaLite() {
   const [savedShift, setSavedShift] = useState<any>(null);
 
   useEffect(() => {
-    const qp = new URLSearchParams(window.location.search).get('tenant');
-    const tenantId = qp ||
-      (import.meta.env.VITE_EXECUTIVE_TENANT_ID as string) ||
-      localStorage.getItem('exec_tenant_id') ||
-      localStorage.getItem('tenant_id') ||
-      '0e46b4f4-5f82-473c-b7b8-f04b3bf9fd02';
     if (!tenantId) return;
     axios.get(`${API}/companies/tenant/${tenantId}`)
       .then(r => setCompanies(Array.isArray(r.data) ? r.data : [])).catch(() => {});
-  }, []);
+  }, [tenantId]);
 
   const handlePin = async (digit: string) => {
     if (digit === 'del') { setPin(p => p.slice(0, -1)); return; }
@@ -50,11 +54,6 @@ export default function CorteCajaLite() {
       setLoading(true);
       setError('');
       try {
-        const qp = new URLSearchParams(window.location.search).get('tenant');
-        const tenantId = qp ||
-          (import.meta.env.VITE_EXECUTIVE_TENANT_ID as string) ||
-          localStorage.getItem('exec_tenant_id') ||
-          localStorage.getItem('tenant_id') || '';
         const res = await axios.post(`${API}/pos/cashiers/nip`, {
           nip: newPin,
           companyId: selectedCompany.id,
@@ -185,6 +184,12 @@ export default function CorteCajaLite() {
     win.document.close();
     setTimeout(() => { win.print(); win.close(); }, 300);
   };
+
+  if (!tenantId) return (
+    <div style={{ position: 'fixed', inset: 0, background: '#0a0c12', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>
+      URL incorrecta. Contacta a tu administrador.
+    </div>
+  );
 
   const isDesktop = window.innerWidth > 768;
 
