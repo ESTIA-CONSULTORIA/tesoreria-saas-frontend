@@ -35,12 +35,22 @@ export default function CorteCajaLite() {
     return resolved;
   });
 
-  const [screen, setScreen] = useState<Screen>('empresa');
+  const [token, setToken] = useState<string>(() => sessionStorage.getItem('lite_token') || '');
+  const [shift, setShift] = useState<any>(() => {
+    const s = sessionStorage.getItem('lite_shift');
+    return s ? JSON.parse(s) : null;
+  });
+  const [screen, setScreen] = useState<Screen>(() => {
+    const hasSession = sessionStorage.getItem('lite_token') && sessionStorage.getItem('lite_shift');
+    return hasSession ? 'corte' : 'empresa';
+  });
+  const [selectedCompany, setSelectedCompany] = useState<any>(() => {
+    const s = sessionStorage.getItem('lite_company');
+    return s ? JSON.parse(s) : null;
+  });
+
   const [companies, setCompanies] = useState<any[]>([]);
-  const [selectedCompany, setSelectedCompany] = useState<any>(null);
   const [pin, setPin] = useState('');
-  const [token, setToken] = useState('');
-  const [shift, setShift] = useState<any>(null);
   const [totales, setTotales] = useState<Totales>({ efectivo: 0, tarjeta: 0, transferencia: 0, cortesia: 0, descuento: 0 });
   const [activeField, setActiveField] = useState<keyof Totales | null>(null);
   const [inputValue, setInputValue] = useState('');
@@ -91,7 +101,6 @@ export default function CorteCajaLite() {
           companyId: selectedCompany.id,
           tenantId,
         });
-        setToken(res.data.access_token);
         let currentShift = null;
         try {
           const shiftRes = await axios.get(`${API}/pos/shifts/open`, {
@@ -124,6 +133,10 @@ export default function CorteCajaLite() {
           } else throw e;
         }
         setShift(currentShift);
+        setToken(res.data.access_token);
+        sessionStorage.setItem('lite_token', res.data.access_token);
+        sessionStorage.setItem('lite_shift', JSON.stringify(currentShift));
+        sessionStorage.setItem('lite_company', JSON.stringify(selectedCompany));
         setScreen('corte');
       } catch {
         setError('PIN incorrecto');
@@ -170,6 +183,9 @@ export default function CorteCajaLite() {
         efectivoContado: totales.efectivo,
         notas: `Tarjeta: $${totales.tarjeta} / Transferencia: $${totales.transferencia} / Cortesías: $${totales.cortesia} / Descuentos: $${totales.descuento}`,
       }, { headers: { Authorization: `Bearer ${token}` } });
+      sessionStorage.removeItem('lite_token');
+      sessionStorage.removeItem('lite_shift');
+      sessionStorage.removeItem('lite_company');
       setScreen('confirmacion');
     } catch (e: any) {
       setError(e?.response?.data?.message || 'Error al guardar');
@@ -235,13 +251,12 @@ export default function CorteCajaLite() {
   const PIN_KEYS = ['1','2','3','4','5','6','7','8','9','','0','del'];
 
   const shared = {
-    outer: { position: 'fixed' as const, inset: 0, background: '#050709', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+    outer: { position: 'fixed' as const, inset: 0, background: 'radial-gradient(ellipse at 30% 20%, #0d1520 0%, #050709 70%)', display: 'flex', alignItems: 'center', justifyContent: 'center' },
     wrap: { width: '100%', maxWidth: 420, height: '100%', maxHeight: 860, background: '#080a0f', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', borderRadius: window.innerWidth > 500 ? 20 : 0 },
-    header: { padding: '28px 28px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 },
-    logo: { fontSize: 9, letterSpacing: '0.35em', color: 'rgba(255,255,255,0.18)', textTransform: 'uppercase' as const, marginBottom: 6 },
-    title: { fontSize: 20, fontWeight: 300, color: '#e8ecf0', letterSpacing: '-0.02em' },
-    content: { flex: 1, overflowY: 'auto' as const, overflowX: 'hidden' as const, padding: '24px 28px' },
-    numBtn: { padding: '16px 8px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)', color: '#c8d0d8', fontSize: 20, fontWeight: 300, cursor: 'pointer', textAlign: 'center' as const },
+    header: { padding: '32px 32px 24px', borderBottom: '1px solid rgba(255,255,255,0.04)', flexShrink: 0 },
+    logo: { fontSize: 9, letterSpacing: '0.35em', color: 'rgba(255,255,255,0.15)', textTransform: 'uppercase' as const, marginBottom: 8 },
+    title: { fontSize: 20, fontWeight: 200, color: '#e8ecf0', letterSpacing: '0.02em' },
+    content: { flex: 1, overflowY: 'auto' as const, overflowX: 'hidden' as const, padding: '32px' },
     btnWhatsApp: { width: '100%', padding: 16, borderRadius: 12, border: 'none', background: '#128C7E', color: '#fff', fontSize: 15, fontWeight: 400, cursor: 'pointer', letterSpacing: '0.02em' },
     btnSecondary: { width: '100%', padding: 15, borderRadius: 12, border: '1px solid rgba(255,255,255,0.07)', background: 'transparent', color: 'rgba(255,255,255,0.4)', fontSize: 14, cursor: 'pointer' },
   };
@@ -258,16 +273,16 @@ export default function CorteCajaLite() {
             </div>
             <div style={shared.content}>
               {companies.length === 0 ? (
-                <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 13, textAlign: 'center', marginTop: 60, letterSpacing: '0.05em' }}>Cargando...</div>
+                <div style={{ color: 'rgba(255,255,255,0.15)', fontSize: 12, textAlign: 'center', marginTop: 60, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Cargando...</div>
               ) : companies.map((c: any) => (
                 <button key={c.id}
                   onClick={() => { setSelectedCompany(c); setPin(''); setError(''); setScreen('pin'); }}
-                  style={{ width: '100%', padding: '22px 28px', marginBottom: 12, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.015)', borderRadius: 14, cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s' }}>
-                  <div style={{ fontSize: 17, fontWeight: 300, color: '#e8ecf0', marginBottom: 4, letterSpacing: '-0.01em' }}>
+                  style={{ width: '100%', padding: '24px 28px', marginBottom: 10, border: 'none', borderLeft: '2px solid rgba(143,175,212,0.4)', background: 'rgba(143,175,212,0.04)', borderRadius: '0 12px 12px 0', cursor: 'pointer', textAlign: 'left' }}>
+                  <div style={{ fontSize: 20, fontWeight: 200, color: '#e8ecf0', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                     {c.tradeName || c.legalName}
                   </div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                    Seleccionar
+                  <div style={{ fontSize: 10, color: 'rgba(143,175,212,0.4)', marginTop: 6, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+                    Acceder →
                   </div>
                 </button>
               ))}
@@ -284,25 +299,26 @@ export default function CorteCajaLite() {
               <div style={shared.logo}>ESTIA ERP</div>
               <div style={shared.title}>{selectedCompany?.tradeName || selectedCompany?.legalName}</div>
             </div>
-            <div style={{ ...shared.content, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 36 }}>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.22)', marginBottom: 32, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Ingresa tu acceso</div>
-              <div style={{ display: 'flex', gap: 20, marginBottom: 44 }}>
+            <div style={{ ...shared.content, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 40 }}>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.18)', marginBottom: 36, letterSpacing: '0.2em', textTransform: 'uppercase' }}>Ingresa tu acceso</div>
+              <div style={{ display: 'flex', gap: 20, marginBottom: 48 }}>
                 {[0,1,2,3].map(i => (
                   <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: pin.length > i ? '#e8ecf0' : 'rgba(255,255,255,0.08)', transition: 'all 0.2s', boxShadow: pin.length > i ? '0 0 10px rgba(232,236,240,0.3)' : 'none' }} />
                 ))}
               </div>
-              {error && <div style={{ color: 'rgba(252,165,165,0.8)', fontSize: 13, marginBottom: 20, letterSpacing: '0.02em' }}>{error}</div>}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, width: '100%', maxWidth: 280 }}>
+              {error && <div style={{ color: 'rgba(252,165,165,0.7)', fontSize: 12, marginBottom: 20, letterSpacing: '0.04em' }}>{error}</div>}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4, width: '100%', maxWidth: 300 }}>
                 {PIN_KEYS.map((k, i) => (
-                  <button key={i} style={{ ...shared.numBtn, opacity: k === '' ? 0 : 1, pointerEvents: k === '' ? 'none' : 'auto' }}
+                  <button key={i}
+                    style={{ padding: '20px 8px', borderRadius: 12, border: 'none', background: 'transparent', color: '#c8d0d8', fontSize: 26, fontWeight: 200, cursor: 'pointer', letterSpacing: '-0.02em', opacity: k === '' ? 0 : 1, pointerEvents: k === '' ? 'none' : 'auto' }}
                     onClick={() => k !== '' && !loading && handlePin(k)}>
                     {k === 'del' ? '←' : k}
                   </button>
                 ))}
               </div>
-              {loading && <div style={{ color: 'rgba(255,255,255,0.22)', fontSize: 12, marginTop: 24, letterSpacing: '0.06em' }}>Verificando...</div>}
+              {loading && <div style={{ color: 'rgba(255,255,255,0.18)', fontSize: 11, marginTop: 24, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Verificando...</div>}
               <button onClick={() => { setScreen('empresa'); setPin(''); setError(''); }}
-                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.15)', fontSize: 12, cursor: 'pointer', marginTop: 36, letterSpacing: '0.05em' }}>
+                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.12)', fontSize: 11, cursor: 'pointer', marginTop: 40, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                 Cambiar sucursal
               </button>
             </div>
@@ -310,41 +326,39 @@ export default function CorteCajaLite() {
         </div>
       )}
 
-      {/* PANTALLA: Corte — teclado inline bajo campo activo */}
+      {/* PANTALLA: Corte */}
       {screen === 'corte' && (
         <div style={{ position: 'fixed', inset: 0, background: '#080a0f', display: 'flex', flexDirection: 'column' }}>
 
           {/* Header */}
-          <div style={{ padding: '20px 24px 14px', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
-            <div style={{ fontSize: 9, letterSpacing: '0.35em', color: 'rgba(255,255,255,0.18)', textTransform: 'uppercase', marginBottom: 4 }}>ESTIA ERP</div>
-            <div style={{ fontSize: 17, fontWeight: 300, color: '#e8ecf0' }}>{selectedCompany?.tradeName || selectedCompany?.legalName}</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)', marginTop: 2 }}>
+          <div style={{ padding: '20px 28px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', flexShrink: 0 }}>
+            <div style={{ fontSize: 9, letterSpacing: '0.35em', color: 'rgba(255,255,255,0.15)', textTransform: 'uppercase', marginBottom: 4 }}>ESTIA ERP</div>
+            <div style={{ fontSize: 17, fontWeight: 200, color: '#e8ecf0', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+              {selectedCompany?.tradeName || selectedCompany?.legalName}
+            </div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.15)', marginTop: 3 }}>
               {new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
             </div>
           </div>
 
           {/* Campos + teclado inline */}
-          <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '12px 20px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '8px 28px 0' }}>
             {FIELDS.map((f) => (
               <div key={f.key}>
                 {/* Fila del campo */}
                 <div onClick={() => { setActiveField(f.key); setInputValue(''); }}
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '13px 14px', marginBottom: activeField === f.key ? 0 : 6,
-                    borderRadius: activeField === f.key ? '10px 10px 0 0' : 10,
+                    padding: '18px 0', borderBottom: '1px solid rgba(255,255,255,0.05)',
                     cursor: 'pointer',
-                    background: activeField === f.key ? 'rgba(143,175,212,0.06)' : 'rgba(255,255,255,0.015)',
-                    border: `1px solid ${activeField === f.key ? 'rgba(143,175,212,0.2)' : 'rgba(255,255,255,0.05)'}`,
-                    borderBottom: activeField === f.key ? 'none' : undefined,
                   }}>
-                  <span style={{ fontSize: 14, fontWeight: 300, color: activeField === f.key ? '#c8d8e8' : 'rgba(255,255,255,0.4)', letterSpacing: '0.02em' }}>
+                  <span style={{ fontSize: 15, fontWeight: 200, color: activeField === f.key ? '#c8d8e8' : 'rgba(255,255,255,0.45)', letterSpacing: '0.04em' }}>
                     {f.label}
                   </span>
                   <span style={{
-                    fontSize: 17, fontWeight: 400, letterSpacing: '-0.02em',
+                    fontSize: 20, fontWeight: 300, letterSpacing: '-0.02em',
                     color: activeField === f.key ? '#8fafd4'
-                      : f.resta && totales[f.key] > 0 ? 'rgba(252,165,165,0.6)'
+                      : f.resta && totales[f.key] > 0 ? 'rgba(252,165,165,0.7)'
                       : totales[f.key] > 0 ? '#e8ecf0' : 'rgba(255,255,255,0.15)',
                   }}>
                     {activeField === f.key
@@ -353,26 +367,19 @@ export default function CorteCajaLite() {
                   </span>
                 </div>
 
-                {/* Teclado inline — aparece justo debajo del campo activo */}
+                {/* Teclado inline */}
                 {activeField === f.key && (
-                  <div style={{
-                    background: 'rgba(143,175,212,0.03)',
-                    border: '1px solid rgba(143,175,212,0.2)',
-                    borderTop: 'none',
-                    borderRadius: '0 0 10px 10px',
-                    padding: '12px 12px 10px',
-                    marginBottom: 6,
-                  }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 7, marginBottom: 8 }}>
+                  <div style={{ padding: '12px 0 8px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 8 }}>
                       {['1','2','3','4','5','6','7','8','9','.','0','←'].map((k, i) => (
                         <button key={i}
                           onClick={e => { e.stopPropagation(); k === '←' ? handleMonto('del') : handleMonto(k); }}
                           style={{
-                            padding: '13px 8px', borderRadius: 8,
-                            border: '1px solid rgba(255,255,255,0.06)',
-                            background: k === '←' ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.015)',
-                            color: k === '←' ? 'rgba(255,255,255,0.3)' : '#c8d0d8',
-                            fontSize: k === '←' ? 15 : 18, fontWeight: 300, cursor: 'pointer',
+                            padding: '14px 8px', borderRadius: 8,
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            background: 'rgba(255,255,255,0.02)',
+                            color: k === '←' ? 'rgba(255,255,255,0.25)' : '#c8d0d8',
+                            fontSize: k === '←' ? 15 : 20, fontWeight: 200, cursor: 'pointer',
                           }}>
                           {k}
                         </button>
@@ -380,8 +387,8 @@ export default function CorteCajaLite() {
                     </div>
                     <button onClick={confirmMonto} style={{
                       width: '100%', padding: '12px', borderRadius: 8, border: 'none',
-                      background: 'rgba(143,175,212,0.1)', color: '#8fafd4',
-                      fontSize: 12, cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' as const,
+                      background: 'rgba(143,175,212,0.07)', color: '#8fafd4',
+                      fontSize: 11, cursor: 'pointer', letterSpacing: '0.12em', textTransform: 'uppercase' as const,
                     }}>
                       {FIELD_ORDER.indexOf(f.key) < FIELD_ORDER.length - 1 ? 'Siguiente →' : '✓ Listo'}
                     </button>
@@ -391,27 +398,28 @@ export default function CorteCajaLite() {
             ))}
 
             {/* Total */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 14px', marginTop: 6, background: 'rgba(74,222,128,0.03)', border: '1px solid rgba(74,222,128,0.08)', borderRadius: 10 }}>
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Total del día</span>
-              <span style={{ fontSize: 22, fontWeight: 300, color: '#4ade80', letterSpacing: '-0.03em' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 0 16px' }}>
+              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>Total del día</span>
+              <span style={{ fontSize: 32, fontWeight: 200, color: '#4ade80', letterSpacing: '-0.04em' }}>
                 ${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
               </span>
             </div>
 
-            {/* Botón guardar — siempre visible */}
-            <div style={{ marginTop: 12, paddingBottom: 8 }}>
-              {error && <div style={{ color: 'rgba(252,165,165,0.6)', fontSize: 12, textAlign: 'center', marginBottom: 10, letterSpacing: '0.02em' }}>{error}</div>}
-              <button onClick={guardarCorte} disabled={loading} style={{
-                width: '100%', padding: '17px', borderRadius: 12, border: 'none',
-                background: 'linear-gradient(135deg, #1a3a2a, #1e4530)',
-                color: '#4ade80', fontSize: 13, fontWeight: 500, cursor: 'pointer',
-                letterSpacing: '0.1em', textTransform: 'uppercase' as const,
-                boxShadow: '0 4px 20px rgba(74,222,128,0.08)',
-              }}>
-                {loading ? 'Guardando...' : 'Guardar corte'}
-              </button>
-            </div>
+            {/* Error */}
+            {error && <div style={{ color: 'rgba(252,165,165,0.6)', fontSize: 12, textAlign: 'center', marginBottom: 12, letterSpacing: '0.02em' }}>{error}</div>}
           </div>
+
+          {/* Botón guardar — fijo abajo, siempre visible */}
+          <button onClick={guardarCorte} disabled={loading} style={{
+            width: '100%', padding: '18px', borderRadius: 0,
+            border: 'none', borderTop: '1px solid rgba(74,222,128,0.2)',
+            background: 'transparent', color: '#4ade80',
+            fontSize: 11, fontWeight: 400, cursor: 'pointer',
+            letterSpacing: '0.25em', textTransform: 'uppercase' as const,
+            flexShrink: 0,
+          }}>
+            {loading ? 'Guardando...' : 'Guardar corte'}
+          </button>
         </div>
       )}
 
@@ -422,26 +430,26 @@ export default function CorteCajaLite() {
             <div style={shared.header}>
               <div style={shared.logo}>ESTIA ERP</div>
               <div style={shared.title}>Corte registrado</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)', marginTop: 2, letterSpacing: '0.03em' }}>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.15)', marginTop: 4, letterSpacing: '0.04em' }}>
                 {new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
               </div>
             </div>
             <div style={shared.content}>
-              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 16, padding: '24px', marginBottom: 20 }}>
-                <div style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 20 }}>
+              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: 16, padding: '24px', marginBottom: 20 }}>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 20 }}>
                   {selectedCompany?.tradeName || selectedCompany?.legalName}
                 </div>
                 {FIELDS.map(f => (
                   <div key={f.key} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                    <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', letterSpacing: '-0.01em' }}>{f.label}</span>
-                    <span style={{ fontSize: 14, fontWeight: 400, color: f.resta ? 'rgba(252,165,165,0.7)' : '#c8d0d8' }}>
+                    <span style={{ fontSize: 14, fontWeight: 200, color: 'rgba(255,255,255,0.4)' }}>{f.label}</span>
+                    <span style={{ fontSize: 14, fontWeight: 300, color: f.resta ? 'rgba(252,165,165,0.7)' : '#c8d0d8' }}>
                       {f.resta && totales[f.key] > 0 ? '-' : ''}${totales[f.key].toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                 ))}
-                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 16, marginTop: 4 }}>
-                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Total</span>
-                  <span style={{ fontSize: 24, fontWeight: 300, color: '#4ade80', letterSpacing: '-0.03em' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 18, marginTop: 4 }}>
+                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>Total</span>
+                  <span style={{ fontSize: 28, fontWeight: 200, color: '#4ade80', letterSpacing: '-0.04em' }}>
                     ${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
@@ -452,7 +460,7 @@ export default function CorteCajaLite() {
               <button style={shared.btnSecondary} onClick={imprimir}>Imprimir ticket</button>
               <div style={{ height: 10 }} />
               <button onClick={() => { setScreen('empresa'); setPin(''); setTotales({ efectivo: 0, tarjeta: 0, transferencia: 0, cortesia: 0, descuento: 0 }); }}
-                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.15)', fontSize: 12, cursor: 'pointer', width: '100%', textAlign: 'center', padding: '16px 0', letterSpacing: '0.05em' }}>
+                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.12)', fontSize: 11, cursor: 'pointer', width: '100%', textAlign: 'center', padding: '16px 0', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
                 Nuevo corte
               </button>
             </div>
