@@ -195,7 +195,9 @@ export default function CorteCajaLite() {
     try {
       await axios.post(`${API}/pos/shifts/${shift.id}/precut`, {
         efectivoContado: totales.efectivo,
-        declaracion: totales,
+        debitoDeclarado: totales.tarjeta,
+        transferenciaDeclarada: totales.transferencia,
+        valesDeclarados: totales.cortesia,
       }, { headers: { Authorization: `Bearer ${token}` } });
       await axios.put(`${API}/pos/shifts/${shift.id}/close`, {
         efectivoContado: totales.efectivo,
