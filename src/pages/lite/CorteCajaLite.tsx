@@ -106,7 +106,6 @@ export default function CorteCajaLite() {
             }
           }
         } catch (e: any) {
-          console.log('[shifts] error status:', e?.response?.status, 'data:', JSON.stringify(e?.response?.data));
           if (!e?.response?.status || e.response.status === 404 || e.response.status === 400) {
             try {
               const openRes = await axios.post(`${API}/pos/shifts`, {
@@ -115,10 +114,8 @@ export default function CorteCajaLite() {
                 tenantId,
                 fondoInicial: 0,
               }, { headers: { Authorization: `Bearer ${res.data.access_token}` } });
-              console.log('[shifts] turno creado:', openRes.data?.id);
               currentShift = openRes.data;
             } catch (e2: any) {
-              console.log('[shifts] error creando turno:', e2?.response?.status, JSON.stringify(e2?.response?.data));
               setError(`Error al abrir turno: ${e2?.response?.data?.message || 'intenta de nuevo'}`);
               setPin('');
               setLoading(false);
@@ -158,9 +155,7 @@ export default function CorteCajaLite() {
   };
 
   const guardarCorte = async () => {
-    console.log('[guardar] shift:', JSON.stringify(shift), 'token:', !!token, 'loading:', loading);
     if (!shift || !token) {
-      console.log('[guardar] BLOQUEADO — shift:', !!shift, 'token:', !!token);
       setError('Error: sesión inválida. Vuelve a ingresar tu PIN.');
       return;
     }
@@ -403,21 +398,19 @@ export default function CorteCajaLite() {
               </span>
             </div>
 
-            {/* Botón guardar — solo visible cuando no hay campo activo */}
-            {!activeField && (
-              <div style={{ marginTop: 16, paddingBottom: 8 }}>
-                {error && <div style={{ color: 'rgba(252,165,165,0.6)', fontSize: 12, textAlign: 'center', marginBottom: 10, letterSpacing: '0.02em' }}>{error}</div>}
-                <button onClick={guardarCorte} disabled={loading} style={{
-                  width: '100%', padding: '17px', borderRadius: 12, border: 'none',
-                  background: 'linear-gradient(135deg, #1a3a2a, #1e4530)',
-                  color: '#4ade80', fontSize: 13, fontWeight: 500, cursor: 'pointer',
-                  letterSpacing: '0.1em', textTransform: 'uppercase' as const,
-                  boxShadow: '0 4px 20px rgba(74,222,128,0.08)',
-                }}>
-                  {loading ? 'Guardando...' : 'Guardar corte'}
-                </button>
-              </div>
-            )}
+            {/* Botón guardar — siempre visible */}
+            <div style={{ marginTop: 12, paddingBottom: 8 }}>
+              {error && <div style={{ color: 'rgba(252,165,165,0.6)', fontSize: 12, textAlign: 'center', marginBottom: 10, letterSpacing: '0.02em' }}>{error}</div>}
+              <button onClick={guardarCorte} disabled={loading} style={{
+                width: '100%', padding: '17px', borderRadius: 12, border: 'none',
+                background: 'linear-gradient(135deg, #1a3a2a, #1e4530)',
+                color: '#4ade80', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+                boxShadow: '0 4px 20px rgba(74,222,128,0.08)',
+              }}>
+                {loading ? 'Guardando...' : 'Guardar corte'}
+              </button>
+            </div>
           </div>
         </div>
       )}
