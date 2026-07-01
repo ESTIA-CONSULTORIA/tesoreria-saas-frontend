@@ -10,11 +10,12 @@ interface Totales {
   transferencia: number;
   cortesia: number;
   descuento: number;
+  gasto: number;
 }
 
 type Screen = 'empresa' | 'pin' | 'corte' | 'confirmacion';
 
-const FIELD_ORDER: (keyof Totales)[] = ['efectivo', 'tarjeta', 'transferencia', 'cortesia', 'descuento'];
+const FIELD_ORDER: (keyof Totales)[] = ['efectivo', 'tarjeta', 'transferencia', 'cortesia', 'descuento', 'gasto'];
 
 const FIELDS: { key: keyof Totales; label: string; resta?: boolean }[] = [
   { key: 'efectivo',      label: 'Efectivo' },
@@ -22,6 +23,7 @@ const FIELDS: { key: keyof Totales; label: string; resta?: boolean }[] = [
   { key: 'transferencia', label: 'Transferencia' },
   { key: 'cortesia',      label: 'Cortesías',  resta: true },
   { key: 'descuento',     label: 'Descuentos', resta: true },
+  { key: 'gasto',         label: 'Gastos',     resta: true },
 ];
 
 export default function CorteCajaLite() {
@@ -63,7 +65,7 @@ export default function CorteCajaLite() {
 
   const [companies, setCompanies] = useState<any[]>([]);
   const [pin, setPin] = useState('');
-  const [totales, setTotales] = useState<Totales>({ efectivo: 0, tarjeta: 0, transferencia: 0, cortesia: 0, descuento: 0 });
+  const [totales, setTotales] = useState<Totales>({ efectivo: 0, tarjeta: 0, transferencia: 0, cortesia: 0, descuento: 0, gasto: 0 });
   const [activeField, setActiveField] = useState<keyof Totales | null>(null);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
@@ -201,7 +203,7 @@ export default function CorteCajaLite() {
       }, { headers: { Authorization: `Bearer ${token}` } });
       await axios.put(`${API}/pos/shifts/${shift.id}/close`, {
         efectivoContado: totales.efectivo,
-        notas: `Tarjeta: $${totales.tarjeta} / Transferencia: $${totales.transferencia} / Cortesías: $${totales.cortesia} / Descuentos: $${totales.descuento}`,
+        notas: `Tarjeta: $${totales.tarjeta} / Transferencia: $${totales.transferencia} / Cortesías: $${totales.cortesia} / Descuentos: $${totales.descuento} / Gastos: $${totales.gasto}`,
       }, { headers: { Authorization: `Bearer ${token}` } });
       sessionStorage.removeItem('lite_token');
       sessionStorage.removeItem('lite_shift');
@@ -223,7 +225,8 @@ export default function CorteCajaLite() {
       `Tarjeta         $${totales.tarjeta.toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n` +
       `Transferencia   $${totales.transferencia.toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n` +
       `Cortesías      -$${totales.cortesia.toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n` +
-      `Descuentos     -$${totales.descuento.toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n\n` +
+      `Descuentos     -$${totales.descuento.toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n` +
+      `Gastos         -$${totales.gasto.toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n\n` +
       `TOTAL           $${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n\n` +
       `ESTIA ERP`
     );
@@ -479,7 +482,7 @@ export default function CorteCajaLite() {
               <div style={{ height: 10 }} />
               <button style={shared.btnSecondary} onClick={imprimir}>Imprimir ticket</button>
               <div style={{ height: 10 }} />
-              <button onClick={() => { setScreen('empresa'); setPin(''); setTotales({ efectivo: 0, tarjeta: 0, transferencia: 0, cortesia: 0, descuento: 0 }); }}
+              <button onClick={() => { setScreen('empresa'); setPin(''); setTotales({ efectivo: 0, tarjeta: 0, transferencia: 0, cortesia: 0, descuento: 0, gasto: 0 }); }}
                 style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.12)', fontSize: 11, cursor: 'pointer', width: '100%', textAlign: 'center', padding: '16px 0', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
                 Nuevo corte
               </button>
