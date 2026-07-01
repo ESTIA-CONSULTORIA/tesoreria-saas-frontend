@@ -16,7 +16,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
   const [brandLogo, setBrandLogo] = useState("");
   const [brandName, setBrandName] = useState("Vista Ejecutiva");
 
-  const [tenantId] = useState(() => {
+  const [tenantId, setTenantId] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     const urlTenant = params.get("tenant");
     if (urlTenant) {
@@ -25,12 +25,21 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
     }
     const envTenant = import.meta.env.VITE_EXECUTIVE_TENANT_ID as string;
     if (envTenant) return envTenant;
-    return (
-      localStorage.getItem(STORAGE_KEY) ||
-      localStorage.getItem("tenant_id") ||
-      ""
-    );
+    return localStorage.getItem(STORAGE_KEY) || localStorage.getItem("tenant_id") || "";
   });
+
+  useEffect(() => {
+    const isUUID = /^[0-9a-f-]{36}$/.test(tenantId);
+    if (!isUUID && tenantId) {
+      execPublicApi.get(`/tenants/resolve/${encodeURIComponent(tenantId)}`)
+        .then(r => {
+          if (r.data?.id) {
+            setTenantId(r.data.id);
+            localStorage.setItem(STORAGE_KEY, r.data.id);
+          }
+        }).catch(() => {});
+    }
+  }, []);
 
   useEffect(() => {
     if (!tenantId) return;

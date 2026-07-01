@@ -25,15 +25,27 @@ const FIELDS: { key: keyof Totales; label: string; resta?: boolean }[] = [
 ];
 
 export default function CorteCajaLite() {
-  const [tenantId] = useState<string>(() => {
+  const [tenantId, setTenantId] = useState<string>(() => {
     const qp = new URLSearchParams(window.location.search).get('tenant');
     const resolved = qp ||
       (import.meta.env.VITE_EXECUTIVE_TENANT_ID as string) ||
-      localStorage.getItem('exec_tenant_id') ||
-      localStorage.getItem('tenant_id') || '';
+      localStorage.getItem('exec_tenant_id') || '';
     if (resolved) localStorage.setItem('exec_tenant_id', resolved);
     return resolved;
   });
+
+  useEffect(() => {
+    const isUUID = /^[0-9a-f-]{36}$/.test(tenantId);
+    if (!isUUID && tenantId) {
+      axios.get(`${API}/tenants/resolve/${encodeURIComponent(tenantId)}`)
+        .then(r => {
+          if (r.data?.id) {
+            setTenantId(r.data.id);
+            localStorage.setItem('exec_tenant_id', r.data.id);
+          }
+        }).catch(() => {});
+    }
+  }, []);
 
   const [token, setToken] = useState<string>(() => sessionStorage.getItem('lite_token') || '');
   const [shift, setShift] = useState<any>(() => {

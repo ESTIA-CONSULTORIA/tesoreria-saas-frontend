@@ -50,6 +50,20 @@ export default function ExecutiveDashboard({
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(new Date());
   const [pressedCompany, setPressedCompany] = useState<string | null>(null);
+  const [isLite, setIsLite] = useState(false);
+
+  useEffect(() => {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const tid: string = payload.tenantId || '';
+      if (!tid) return;
+      execApi(token).get(`/tenants/${tid}`)
+        .then(r => {
+          const plan: string = r.data?.plan || '';
+          setIsLite(plan === 'LITE_CORTE' || plan === 'LITE_POS');
+        }).catch(() => {});
+    } catch { /* no-op */ }
+  }, [token]);
 
   const userName = sessionStorage.getItem("exec_user_name") || "";
 
@@ -115,7 +129,7 @@ export default function ExecutiveDashboard({
       .finally(() => setLoading(false));
   }, [token]);
 
-  const cardKeys = ["venta", "costo", "gasto", "flujo"] as const;
+  const cardKeys = (isLite ? ["venta", "flujo"] : ["venta", "costo", "gasto", "flujo"]) as readonly ("venta" | "costo" | "gasto" | "flujo")[];
   const cardLabels: Record<string, string> = {
     venta: "VENTA",
     costo: costoLabel,
@@ -177,11 +191,11 @@ export default function ExecutiveDashboard({
       <div
         style={{
           flexShrink: 0,
-          height: "50vh",
+          height: isLite ? "28vh" : "50vh",
           width: "100%",
           display: "grid",
           gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-          gridTemplateRows: "1fr 1fr",
+          gridTemplateRows: isLite ? "1fr" : "1fr 1fr",
           gap: 10,
           padding: "0 12px",
           boxSizing: "border-box",
