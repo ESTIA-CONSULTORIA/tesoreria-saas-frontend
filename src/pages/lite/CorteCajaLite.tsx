@@ -119,10 +119,14 @@ export default function CorteCajaLite() {
             params: { cajero: res.data.user?.id, sucursalId: selectedCompany.branchId || selectedCompany.id },
             headers: { Authorization: `Bearer ${res.data.access_token}` },
           });
-          if (shiftRes.data) {
-            currentShift = shiftRes.data;
-            if (shiftRes.data.precorteDeclaracion) {
-              const d = shiftRes.data.precorteDeclaracion;
+          const shiftData = shiftRes.data?.id ? shiftRes.data : shiftRes.data?.data || shiftRes.data;
+          console.log('[shift] data recibida:', JSON.stringify(shiftData)?.substring(0, 100));
+          if (shiftData?.id) {
+            currentShift = shiftData;
+            sessionStorage.setItem('lite_shift', JSON.stringify(shiftData));
+            sessionStorage.setItem('lite_token', res.data.access_token);
+            if (shiftData.precorteDeclaracion) {
+              const d = shiftData.precorteDeclaracion;
               setTotales({ efectivo: d.efectivo || 0, tarjeta: d.tarjeta || 0, transferencia: d.transferencia || 0, cortesia: d.cortesia || 0, descuento: d.descuento || 0 });
             }
           }
