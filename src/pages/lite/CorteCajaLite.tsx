@@ -56,6 +56,28 @@ export default function CorteCajaLite() {
       .catch(() => {});
   }, [tenantId]);
 
+  useEffect(() => {
+    if (screen !== 'corte') return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key >= '0' && e.key <= '9') {
+        if (!activeField) setActiveField(FIELD_ORDER[0]);
+        handleMonto(e.key);
+      } else if (e.key === '.') {
+        handleMonto('.');
+      } else if (e.key === 'Backspace') {
+        handleMonto('del');
+      } else if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault();
+        if (activeField) confirmMonto();
+      } else if (e.key === 'Escape') {
+        setActiveField(null);
+        setInputValue('');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [screen, activeField, inputValue]);
+
   const handlePin = async (digit: string) => {
     if (digit === 'del') { setPin(p => p.slice(0, -1)); return; }
     const newPin = pin + digit;
@@ -201,152 +223,197 @@ export default function CorteCajaLite() {
   );
 
   const PIN_KEYS = ['1','2','3','4','5','6','7','8','9','','0','del'];
-  const NUM_KEYS = ['1','2','3','4','5','6','7','8','9','.','0','del'];
 
-  const base = {
+  const shared = {
     outer: { position: 'fixed' as const, inset: 0, background: '#050709', display: 'flex', alignItems: 'center', justifyContent: 'center' },
     wrap: { width: '100%', maxWidth: 420, height: '100%', maxHeight: 860, background: '#080a0f', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', borderRadius: window.innerWidth > 500 ? 20 : 0 },
     header: { padding: '28px 28px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 },
-    logo: { fontSize: 10, letterSpacing: '0.3em', color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase' as const, marginBottom: 8 },
-    title: { fontSize: 22, fontWeight: 300, color: '#e8ecf0', letterSpacing: '-0.01em' },
+    logo: { fontSize: 9, letterSpacing: '0.35em', color: 'rgba(255,255,255,0.18)', textTransform: 'uppercase' as const, marginBottom: 6 },
+    title: { fontSize: 20, fontWeight: 300, color: '#e8ecf0', letterSpacing: '-0.02em' },
     content: { flex: 1, overflowY: 'auto' as const, overflowX: 'hidden' as const, padding: '24px 28px' },
-    empBtn: { width: '100%', padding: '20px 24px', borderRadius: 12, marginBottom: 10, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)', color: '#c8d0d8', fontSize: 16, fontWeight: 400, cursor: 'pointer', textAlign: 'left' as const, letterSpacing: '-0.01em' },
     numBtn: { padding: '16px 8px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)', color: '#c8d0d8', fontSize: 20, fontWeight: 300, cursor: 'pointer', textAlign: 'center' as const },
-    fieldRow: { display: 'flex', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' },
-    btnPrimary: { width: '100%', padding: '17px', borderRadius: 12, border: 'none', background: '#1a3a2a', color: '#4ade80', fontSize: 15, fontWeight: 500, cursor: 'pointer', letterSpacing: '0.05em' },
     btnWhatsApp: { width: '100%', padding: 16, borderRadius: 12, border: 'none', background: '#128C7E', color: '#fff', fontSize: 15, fontWeight: 400, cursor: 'pointer', letterSpacing: '0.02em' },
     btnSecondary: { width: '100%', padding: 15, borderRadius: 12, border: '1px solid rgba(255,255,255,0.07)', background: 'transparent', color: 'rgba(255,255,255,0.4)', fontSize: 14, cursor: 'pointer' },
   };
 
   return (
-    <div style={base.outer}>
-      <div style={base.wrap}>
-
-        {/* PANTALLA: Empresa */}
-        {screen === 'empresa' && (
-          <>
-            <div style={base.header}>
-              <div style={base.logo}>ESTIA ERP</div>
-              <div style={base.title}>¿Cuál es tu sucursal?</div>
+    <>
+      {/* PANTALLA: Empresa */}
+      {screen === 'empresa' && (
+        <div style={shared.outer}>
+          <div style={shared.wrap}>
+            <div style={shared.header}>
+              <div style={shared.logo}>ESTIA ERP</div>
+              <div style={shared.title}>¿Cuál es tu sucursal?</div>
             </div>
-            <div style={base.content}>
+            <div style={shared.content}>
               {companies.length === 0 ? (
                 <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 13, textAlign: 'center', marginTop: 60, letterSpacing: '0.05em' }}>Cargando...</div>
               ) : companies.map((c: any) => (
-                <button key={c.id} style={base.empBtn} onClick={() => { setSelectedCompany(c); setPin(''); setError(''); setScreen('pin'); }}>
-                  <div style={{ fontWeight: 500, marginBottom: 3 }}>{c.tradeName || c.legalName}</div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.02em' }}>Toca para continuar</div>
+                <button key={c.id}
+                  onClick={() => { setSelectedCompany(c); setPin(''); setError(''); setScreen('pin'); }}
+                  style={{ width: '100%', padding: '22px 28px', marginBottom: 12, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.015)', borderRadius: 14, cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s' }}>
+                  <div style={{ fontSize: 17, fontWeight: 300, color: '#e8ecf0', marginBottom: 4, letterSpacing: '-0.01em' }}>
+                    {c.tradeName || c.legalName}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                    Seleccionar
+                  </div>
                 </button>
               ))}
             </div>
-          </>
-        )}
+          </div>
+        </div>
+      )}
 
-        {/* PANTALLA: PIN */}
-        {screen === 'pin' && (
-          <>
-            <div style={base.header}>
-              <div style={base.logo}>ESTIA ERP</div>
-              <div style={base.title}>{selectedCompany?.tradeName || selectedCompany?.legalName}</div>
+      {/* PANTALLA: PIN */}
+      {screen === 'pin' && (
+        <div style={shared.outer}>
+          <div style={shared.wrap}>
+            <div style={shared.header}>
+              <div style={shared.logo}>ESTIA ERP</div>
+              <div style={shared.title}>{selectedCompany?.tradeName || selectedCompany?.legalName}</div>
             </div>
-            <div style={{ ...base.content, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 32 }}>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', marginBottom: 28, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Ingresa tu acceso</div>
-              <div style={{ display: 'flex', gap: 16, marginBottom: 40 }}>
+            <div style={{ ...shared.content, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 36 }}>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.22)', marginBottom: 32, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Ingresa tu acceso</div>
+              <div style={{ display: 'flex', gap: 20, marginBottom: 44 }}>
                 {[0,1,2,3].map(i => (
-                  <div key={i} style={{ width: 12, height: 12, borderRadius: '50%', background: pin.length > i ? '#e8ecf0' : 'rgba(255,255,255,0.1)', transition: 'all 0.15s' }} />
+                  <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: pin.length > i ? '#e8ecf0' : 'rgba(255,255,255,0.08)', transition: 'all 0.2s', boxShadow: pin.length > i ? '0 0 10px rgba(232,236,240,0.3)' : 'none' }} />
                 ))}
               </div>
               {error && <div style={{ color: 'rgba(252,165,165,0.8)', fontSize: 13, marginBottom: 20, letterSpacing: '0.02em' }}>{error}</div>}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, width: '100%', maxWidth: 280 }}>
                 {PIN_KEYS.map((k, i) => (
-                  <button key={i} style={{ ...base.numBtn, opacity: k === '' ? 0 : 1, pointerEvents: k === '' ? 'none' : 'auto' }}
+                  <button key={i} style={{ ...shared.numBtn, opacity: k === '' ? 0 : 1, pointerEvents: k === '' ? 'none' : 'auto' }}
                     onClick={() => k !== '' && !loading && handlePin(k)}>
                     {k === 'del' ? '←' : k}
                   </button>
                 ))}
               </div>
-              {loading && <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12, marginTop: 24, letterSpacing: '0.05em' }}>Verificando...</div>}
+              {loading && <div style={{ color: 'rgba(255,255,255,0.22)', fontSize: 12, marginTop: 24, letterSpacing: '0.06em' }}>Verificando...</div>}
               <button onClick={() => { setScreen('empresa'); setPin(''); setError(''); }}
-                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.15)', fontSize: 12, cursor: 'pointer', marginTop: 32, letterSpacing: '0.05em' }}>
+                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.15)', fontSize: 12, cursor: 'pointer', marginTop: 36, letterSpacing: '0.05em' }}>
                 Cambiar sucursal
               </button>
             </div>
-          </>
-        )}
+          </div>
+        </div>
+      )}
 
-        {/* PANTALLA: Corte */}
-        {screen === 'corte' && (
-          <>
-            <div style={base.header}>
-              <div style={base.logo}>ESTIA ERP</div>
-              <div style={base.title}>{selectedCompany?.tradeName || selectedCompany?.legalName}</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', marginTop: 4, letterSpacing: '0.05em' }}>
-                {new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-              </div>
+      {/* PANTALLA: Corte — layout fijo sin scroll */}
+      {screen === 'corte' && (
+        <div style={{ position: 'fixed', inset: 0, background: '#080a0f', display: 'flex', flexDirection: 'column' }}>
+
+          {/* Header */}
+          <div style={{ padding: '20px 28px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
+            <div style={{ fontSize: 9, letterSpacing: '0.35em', color: 'rgba(255,255,255,0.18)', textTransform: 'uppercase', marginBottom: 4 }}>ESTIA ERP</div>
+            <div style={{ fontSize: 18, fontWeight: 300, color: '#e8ecf0', letterSpacing: '-0.02em' }}>
+              {selectedCompany?.tradeName || selectedCompany?.legalName}
             </div>
-            <div style={base.content}>
-              {FIELDS.map(f => (
-                <div key={f.key}
-                  style={{ ...base.fieldRow, background: activeField === f.key ? 'rgba(255,255,255,0.02)' : 'transparent', borderRadius: activeField === f.key ? 10 : 0, padding: activeField === f.key ? '16px 12px' : '16px 0' }}
-                  onClick={() => { setActiveField(f.key); setInputValue(''); }}>
-                  <div style={{ flex: 1, fontSize: 15, color: activeField === f.key ? '#e8ecf0' : 'rgba(255,255,255,0.5)', fontWeight: activeField === f.key ? 400 : 300, letterSpacing: '-0.01em' }}>
-                    {f.label}
-                  </div>
-                  <div style={{ fontSize: 18, fontWeight: 400, color: activeField === f.key ? '#8fafd4' : (f.resta ? 'rgba(252,165,165,0.7)' : '#e8ecf0'), letterSpacing: '-0.02em' }}>
-                    {activeField === f.key
-                      ? (inputValue ? `$${inputValue}` : '$')
-                      : `${f.resta && totales[f.key] > 0 ? '-' : ''}$${totales[f.key].toLocaleString('es-MX', { minimumFractionDigits: 2 })}`
-                    }
-                  </div>
-                </div>
-              ))}
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)', marginTop: 2, letterSpacing: '0.03em' }}>
+              {new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </div>
+          </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 0 4px', borderTop: '1px solid rgba(255,255,255,0.07)', marginTop: 4 }}>
-                <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Total del día</span>
-                <span style={{ fontSize: 26, fontWeight: 400, color: '#4ade80', letterSpacing: '-0.02em' }}>
-                  ${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+          {/* Campos — siempre visibles */}
+          <div style={{ flex: 1, padding: '8px 28px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            {FIELDS.map(f => (
+              <div key={f.key}
+                onClick={() => { setActiveField(f.key); setInputValue(''); }}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '12px 16px', marginBottom: 6, borderRadius: 10, cursor: 'pointer',
+                  background: activeField === f.key ? 'rgba(143,175,212,0.06)' : 'transparent',
+                  border: `1px solid ${activeField === f.key ? 'rgba(143,175,212,0.2)' : 'rgba(255,255,255,0.04)'}`,
+                  transition: 'all 0.15s',
+                }}>
+                <span style={{ fontSize: 14, fontWeight: 300, color: activeField === f.key ? '#c8d8e8' : 'rgba(255,255,255,0.35)', letterSpacing: '0.02em' }}>
+                  {f.label}
+                </span>
+                <span style={{
+                  fontSize: 18, fontWeight: 400, letterSpacing: '-0.02em',
+                  color: activeField === f.key
+                    ? '#8fafd4'
+                    : f.resta && totales[f.key] > 0
+                    ? 'rgba(252,165,165,0.6)'
+                    : totales[f.key] > 0 ? '#e8ecf0' : 'rgba(255,255,255,0.15)',
+                }}>
+                  {activeField === f.key
+                    ? (inputValue ? `$${inputValue}` : '$·')
+                    : `${f.resta && totales[f.key] > 0 ? '-' : ''}$${totales[f.key].toLocaleString('es-MX', { minimumFractionDigits: 2 })}`
+                  }
                 </span>
               </div>
+            ))}
 
-              {activeField && (
-                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 14, padding: '16px 16px 12px', marginTop: 16 }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-                    {NUM_KEYS.map((k, i) => (
-                      <button key={i} style={{ ...base.numBtn, fontSize: 18, padding: '14px 8px' }} onClick={() => handleMonto(k)}>
-                        {k === 'del' ? '←' : k}
-                      </button>
-                    ))}
-                  </div>
-                  <button onClick={confirmMonto} style={{ width: '100%', marginTop: 10, padding: '13px', borderRadius: 10, border: 'none', background: 'rgba(143,175,212,0.1)', color: '#8fafd4', fontSize: 14, cursor: 'pointer', letterSpacing: '0.05em' }}>
-                    {FIELD_ORDER.indexOf(activeField) < FIELD_ORDER.length - 1 ? 'Siguiente →' : '✓ Listo'}
-                  </button>
+            {/* Total */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px 0', marginTop: 4, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Total del día</span>
+              <span style={{ fontSize: 24, fontWeight: 300, color: '#4ade80', letterSpacing: '-0.03em' }}>
+                ${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+          </div>
+
+          {/* Zona inferior — teclado o botón guardar */}
+          <div style={{ flexShrink: 0, padding: '12px 20px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+            {activeField ? (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
+                  {['1','2','3','4','5','6','7','8','9','.','0','←'].map((k, i) => (
+                    <button key={i}
+                      onClick={() => k === '←' ? handleMonto('del') : handleMonto(k)}
+                      style={{
+                        padding: '15px 8px', borderRadius: 10,
+                        border: '1px solid rgba(255,255,255,0.06)',
+                        background: k === '←' ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.02)',
+                        color: k === '←' ? 'rgba(255,255,255,0.3)' : '#c8d0d8',
+                        fontSize: k === '←' ? 16 : 20, fontWeight: 300, cursor: 'pointer',
+                      }}>
+                      {k}
+                    </button>
+                  ))}
                 </div>
-              )}
-
-              {error && <div style={{ color: 'rgba(252,165,165,0.7)', fontSize: 13, textAlign: 'center', margin: '12px 0', letterSpacing: '0.02em' }}>{error}</div>}
-
-              <div style={{ marginTop: 20 }}>
-                <button style={base.btnPrimary} onClick={guardarCorte} disabled={loading}>
+                <button onClick={confirmMonto} style={{
+                  width: '100%', padding: '14px', borderRadius: 10, border: 'none',
+                  background: 'rgba(143,175,212,0.08)', color: '#8fafd4',
+                  fontSize: 13, cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' as const,
+                }}>
+                  {FIELD_ORDER.indexOf(activeField) < FIELD_ORDER.length - 1 ? 'Siguiente' : 'Listo'}
+                </button>
+              </>
+            ) : (
+              <>
+                {error && <div style={{ color: 'rgba(252,165,165,0.6)', fontSize: 12, textAlign: 'center', marginBottom: 10, letterSpacing: '0.02em' }}>{error}</div>}
+                <button onClick={guardarCorte} disabled={loading} style={{
+                  width: '100%', padding: '17px', borderRadius: 12, border: 'none',
+                  background: 'linear-gradient(135deg, #1a3a2a, #1e4530)',
+                  color: '#4ade80', fontSize: 14, fontWeight: 500, cursor: 'pointer',
+                  letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+                  boxShadow: '0 4px 20px rgba(74,222,128,0.08)',
+                }}>
                   {loading ? 'Guardando...' : 'Guardar corte'}
                 </button>
-              </div>
-            </div>
-          </>
-        )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
-        {/* PANTALLA: Confirmación */}
-        {screen === 'confirmacion' && (
-          <>
-            <div style={base.header}>
-              <div style={base.logo}>ESTIA ERP</div>
-              <div style={base.title}>Corte registrado</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', marginTop: 4, letterSpacing: '0.05em' }}>
+      {/* PANTALLA: Confirmación */}
+      {screen === 'confirmacion' && (
+        <div style={shared.outer}>
+          <div style={shared.wrap}>
+            <div style={shared.header}>
+              <div style={shared.logo}>ESTIA ERP</div>
+              <div style={shared.title}>Corte registrado</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)', marginTop: 2, letterSpacing: '0.03em' }}>
                 {new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
               </div>
             </div>
-            <div style={base.content}>
+            <div style={shared.content}>
               <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 16, padding: '24px', marginBottom: 20 }}>
-                <div style={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 20 }}>
+                <div style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 20 }}>
                   {selectedCompany?.tradeName || selectedCompany?.legalName}
                 </div>
                 {FIELDS.map(f => (
@@ -358,26 +425,25 @@ export default function CorteCajaLite() {
                   </div>
                 ))}
                 <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 16, marginTop: 4 }}>
-                  <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Total</span>
-                  <span style={{ fontSize: 24, fontWeight: 400, color: '#4ade80', letterSpacing: '-0.02em' }}>
+                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Total</span>
+                  <span style={{ fontSize: 24, fontWeight: 300, color: '#4ade80', letterSpacing: '-0.03em' }}>
                     ${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
               </div>
 
-              <button style={base.btnWhatsApp} onClick={sendWhatsApp}>Enviar por WhatsApp</button>
+              <button style={shared.btnWhatsApp} onClick={sendWhatsApp}>Enviar por WhatsApp</button>
               <div style={{ height: 10 }} />
-              <button style={base.btnSecondary} onClick={imprimir}>Imprimir ticket</button>
+              <button style={shared.btnSecondary} onClick={imprimir}>Imprimir ticket</button>
               <div style={{ height: 10 }} />
               <button onClick={() => { setScreen('empresa'); setPin(''); setTotales({ efectivo: 0, tarjeta: 0, transferencia: 0, cortesia: 0, descuento: 0 }); }}
                 style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.15)', fontSize: 12, cursor: 'pointer', width: '100%', textAlign: 'center', padding: '16px 0', letterSpacing: '0.05em' }}>
                 Nuevo corte
               </button>
             </div>
-          </>
-        )}
-
-      </div>
-    </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
