@@ -62,11 +62,12 @@ export default function CorteCajaLite() {
         let currentShift = null;
 
         try {
-          const shiftRes = await axios.get(`${API}/shifts/open`, {
-            headers: {
-              Authorization: `Bearer ${res.data.access_token}`,
-              'x-company-id': selectedCompany.id,
+          const shiftRes = await axios.get(`${API}/pos/shifts/open`, {
+            params: {
+              cajero: res.data.user?.id,
+              sucursalId: selectedCompany.branchId || selectedCompany.id,
             },
+            headers: { Authorization: `Bearer ${res.data.access_token}` },
           });
           if (shiftRes.data) {
             currentShift = shiftRes.data;
@@ -90,7 +91,7 @@ export default function CorteCajaLite() {
         }
 
         if (!currentShift) {
-          const openRes = await axios.post(`${API}/shifts`, {
+          const openRes = await axios.post(`${API}/pos/shifts`, {
             cajero: res.data.user?.id,
             sucursalId: selectedCompany.branchId || selectedCompany.id,
             tenantId,
@@ -132,11 +133,11 @@ export default function CorteCajaLite() {
     setLoading(true);
     setError('');
     try {
-      await axios.post(`${API}/shifts/${shift.id}/precut`, {
+      await axios.post(`${API}/pos/shifts/${shift.id}/precut`, {
         efectivoContado: totales.efectivo,
         declaracion: totales,
       }, { headers: { Authorization: `Bearer ${token}` } });
-      const closeRes = await axios.put(`${API}/shifts/${shift.id}/close`, {
+      const closeRes = await axios.put(`${API}/pos/shifts/${shift.id}/close`, {
         efectivoContado: totales.efectivo,
         notas: `Corte manual: Tarjeta $${totales.tarjeta}, Transferencia $${totales.transferencia}, Cortesías $${totales.cortesia}, Descuentos $${totales.descuento}`,
       }, { headers: { Authorization: `Bearer ${token}` } });
