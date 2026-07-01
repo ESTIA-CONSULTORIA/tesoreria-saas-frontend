@@ -137,7 +137,9 @@ export default function CorteCajaLite() {
               }, { headers: { Authorization: `Bearer ${res.data.access_token}` } });
               currentShift = openRes.data;
             } catch (e2: any) {
-              setError(`Error al abrir turno: ${e2?.response?.data?.message || 'intenta de nuevo'}`);
+              const msg = e2?.response?.data?.message || e2?.message || 'Error desconocido';
+              const status = e2?.response?.status;
+              setError(`Error ${status}: ${msg}`);
               setPin('');
               setLoading(false);
               return;
