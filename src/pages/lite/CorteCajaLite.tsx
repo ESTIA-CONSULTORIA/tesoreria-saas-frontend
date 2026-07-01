@@ -148,7 +148,11 @@ export default function CorteCajaLite() {
   };
 
   const guardarCorte = async () => {
-    if (!shift || !token) return;
+    console.log('[guardar] shift:', shift, 'token:', !!token);
+    if (!shift || !token) {
+      console.log('[guardar] bloqueado — shift o token vacío');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -300,90 +304,104 @@ export default function CorteCajaLite() {
         </div>
       )}
 
-      {/* PANTALLA: Corte — layout fijo sin scroll */}
+      {/* PANTALLA: Corte — teclado inline bajo campo activo */}
       {screen === 'corte' && (
         <div style={{ position: 'fixed', inset: 0, background: '#080a0f', display: 'flex', flexDirection: 'column' }}>
 
           {/* Header */}
-          <div style={{ padding: '20px 28px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
+          <div style={{ padding: '20px 24px 14px', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
             <div style={{ fontSize: 9, letterSpacing: '0.35em', color: 'rgba(255,255,255,0.18)', textTransform: 'uppercase', marginBottom: 4 }}>ESTIA ERP</div>
-            <div style={{ fontSize: 18, fontWeight: 300, color: '#e8ecf0', letterSpacing: '-0.02em' }}>
+            <div style={{ fontSize: 17, fontWeight: 300, color: '#e8ecf0' }}>
               {selectedCompany?.tradeName || selectedCompany?.legalName}
             </div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)', marginTop: 2, letterSpacing: '0.03em' }}>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)', marginTop: 2 }}>
               {new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
             </div>
           </div>
 
-          {/* Campos — siempre visibles */}
-          <div style={{ flex: 1, padding: '8px 28px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          {/* Campos + teclado inline — scrollable */}
+          <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '12px 20px 24px' }}>
             {FIELDS.map(f => (
-              <div key={f.key}
-                onClick={() => { setActiveField(f.key); setInputValue(''); }}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '12px 16px', marginBottom: 6, borderRadius: 10, cursor: 'pointer',
-                  background: activeField === f.key ? 'rgba(143,175,212,0.06)' : 'transparent',
-                  border: `1px solid ${activeField === f.key ? 'rgba(143,175,212,0.2)' : 'rgba(255,255,255,0.04)'}`,
-                  transition: 'all 0.15s',
-                }}>
-                <span style={{ fontSize: 14, fontWeight: 300, color: activeField === f.key ? '#c8d8e8' : 'rgba(255,255,255,0.35)', letterSpacing: '0.02em' }}>
-                  {f.label}
-                </span>
-                <span style={{
-                  fontSize: 18, fontWeight: 400, letterSpacing: '-0.02em',
-                  color: activeField === f.key
-                    ? '#8fafd4'
-                    : f.resta && totales[f.key] > 0
-                    ? 'rgba(252,165,165,0.6)'
-                    : totales[f.key] > 0 ? '#e8ecf0' : 'rgba(255,255,255,0.15)',
-                }}>
-                  {activeField === f.key
-                    ? (inputValue ? `$${inputValue}` : '$·')
-                    : `${f.resta && totales[f.key] > 0 ? '-' : ''}$${totales[f.key].toLocaleString('es-MX', { minimumFractionDigits: 2 })}`
-                  }
-                </span>
+              <div key={f.key}>
+                {/* Fila del campo */}
+                <div onClick={() => { setActiveField(f.key); setInputValue(''); }}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '13px 14px',
+                    marginBottom: activeField === f.key ? 0 : 6,
+                    borderRadius: activeField === f.key ? '10px 10px 0 0' : 10,
+                    cursor: 'pointer',
+                    background: activeField === f.key ? 'rgba(143,175,212,0.06)' : 'rgba(255,255,255,0.015)',
+                    border: `1px solid ${activeField === f.key ? 'rgba(143,175,212,0.2)' : 'rgba(255,255,255,0.05)'}`,
+                    borderBottom: activeField === f.key ? 'none' : undefined,
+                    transition: 'all 0.15s',
+                  }}>
+                  <span style={{ fontSize: 14, fontWeight: 300, color: activeField === f.key ? '#c8d8e8' : 'rgba(255,255,255,0.35)', letterSpacing: '0.02em' }}>
+                    {f.label}
+                  </span>
+                  <span style={{
+                    fontSize: 18, fontWeight: 400, letterSpacing: '-0.02em',
+                    color: activeField === f.key
+                      ? '#8fafd4'
+                      : f.resta && totales[f.key] > 0
+                      ? 'rgba(252,165,165,0.6)'
+                      : totales[f.key] > 0 ? '#e8ecf0' : 'rgba(255,255,255,0.15)',
+                  }}>
+                    {activeField === f.key
+                      ? (inputValue ? `$${inputValue}` : '$·')
+                      : `${f.resta && totales[f.key] > 0 ? '-' : ''}$${totales[f.key].toLocaleString('es-MX', { minimumFractionDigits: 2 })}`
+                    }
+                  </span>
+                </div>
+
+                {/* Teclado inline — aparece justo debajo del campo activo */}
+                {activeField === f.key && (
+                  <div style={{
+                    background: 'rgba(143,175,212,0.03)',
+                    border: '1px solid rgba(143,175,212,0.2)',
+                    borderTop: 'none',
+                    borderRadius: '0 0 10px 10px',
+                    padding: '10px 10px 12px',
+                    marginBottom: 6,
+                  }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 8 }}>
+                      {['1','2','3','4','5','6','7','8','9','.','0','←'].map((k, i) => (
+                        <button key={i}
+                          onClick={() => k === '←' ? handleMonto('del') : handleMonto(k)}
+                          style={{
+                            padding: '13px 6px', borderRadius: 8,
+                            border: '1px solid rgba(255,255,255,0.06)',
+                            background: k === '←' ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.02)',
+                            color: k === '←' ? 'rgba(255,255,255,0.3)' : '#c8d0d8',
+                            fontSize: k === '←' ? 15 : 18, fontWeight: 300, cursor: 'pointer',
+                          }}>
+                          {k}
+                        </button>
+                      ))}
+                    </div>
+                    <button onClick={confirmMonto} style={{
+                      width: '100%', padding: '12px', borderRadius: 8, border: 'none',
+                      background: 'rgba(143,175,212,0.08)', color: '#8fafd4',
+                      fontSize: 13, cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' as const,
+                    }}>
+                      {FIELD_ORDER.indexOf(f.key) < FIELD_ORDER.length - 1 ? 'Siguiente' : 'Listo'}
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
 
             {/* Total */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px 0', marginTop: 4, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 14px 0', marginTop: 4, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
               <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Total del día</span>
               <span style={{ fontSize: 24, fontWeight: 300, color: '#4ade80', letterSpacing: '-0.03em' }}>
                 ${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
               </span>
             </div>
-          </div>
 
-          {/* Zona inferior — teclado o botón guardar */}
-          <div style={{ flexShrink: 0, padding: '12px 20px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-            {activeField ? (
-              <>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
-                  {['1','2','3','4','5','6','7','8','9','.','0','←'].map((k, i) => (
-                    <button key={i}
-                      onClick={() => k === '←' ? handleMonto('del') : handleMonto(k)}
-                      style={{
-                        padding: '15px 8px', borderRadius: 10,
-                        border: '1px solid rgba(255,255,255,0.06)',
-                        background: k === '←' ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.02)',
-                        color: k === '←' ? 'rgba(255,255,255,0.3)' : '#c8d0d8',
-                        fontSize: k === '←' ? 16 : 20, fontWeight: 300, cursor: 'pointer',
-                      }}>
-                      {k}
-                    </button>
-                  ))}
-                </div>
-                <button onClick={confirmMonto} style={{
-                  width: '100%', padding: '14px', borderRadius: 10, border: 'none',
-                  background: 'rgba(143,175,212,0.08)', color: '#8fafd4',
-                  fontSize: 13, cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' as const,
-                }}>
-                  {FIELD_ORDER.indexOf(activeField) < FIELD_ORDER.length - 1 ? 'Siguiente' : 'Listo'}
-                </button>
-              </>
-            ) : (
-              <>
+            {/* Guardar corte — aparece al terminar todos los campos */}
+            {!activeField && (
+              <div style={{ paddingTop: 16 }}>
                 {error && <div style={{ color: 'rgba(252,165,165,0.6)', fontSize: 12, textAlign: 'center', marginBottom: 10, letterSpacing: '0.02em' }}>{error}</div>}
                 <button onClick={guardarCorte} disabled={loading} style={{
                   width: '100%', padding: '17px', borderRadius: 12, border: 'none',
@@ -394,7 +412,7 @@ export default function CorteCajaLite() {
                 }}>
                   {loading ? 'Guardando...' : 'Guardar corte'}
                 </button>
-              </>
+              </div>
             )}
           </div>
         </div>
