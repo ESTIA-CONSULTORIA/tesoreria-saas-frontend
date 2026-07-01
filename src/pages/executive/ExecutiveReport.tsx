@@ -26,7 +26,7 @@ interface SubItem {
   value: string;
 }
 
-type Period = "Semana" | "Quincena" | "Mes";
+type Period = "Semana" | "Quincena" | "Mes" | "Personalizado";
 
 const PERIOD_PARAM: Record<Period, string> = { Semana: "week", Quincena: "fortnight", Mes: "month" };
 const CHART_WEIGHTS = [0.85, 1.10, 0.95, 1.20, 1.05, 0.70, 0.90];
@@ -48,6 +48,8 @@ export default function ExecutiveReport({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [period, setPeriod] = useState<Period>("Semana");
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
   const [giroDetected, setGiroDetected] = useState<"restaurant" | "retail" | "default">("default");
   const [isLite, setIsLite] = useState(false);
 
@@ -99,18 +101,24 @@ export default function ExecutiveReport({
 
         if (module === "VENTA" && lite) {
           const now = new Date();
-          const dateFrom = period === "Quincena"
+          const dateFrom = period === "Personalizado" && customFrom
+            ? new Date(customFrom).toISOString()
+            : period === "Quincena"
             ? new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000).toISOString()
             : period === "Semana"
             ? new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
             : new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
+          const dateTo = period === "Personalizado" && customTo
+            ? new Date(customTo + 'T23:59:59').toISOString()
+            : now.toISOString();
+
           const res = await eApi.get('/pos/shifts', { params: { limit: 100, from: dateFrom } });
           const rawData = res.data;
           const allShifts = Array.isArray(rawData) ? rawData : Array.isArray(rawData?.value) ? rawData.value : [];
           const shifts = allShifts.filter((s: any) => {
-            const d = new Date(s.createdAt || s.fecha || 0);
-            return d >= new Date(dateFrom);
+            const fecha = new Date(s.createdAt || s.fecha || 0);
+            return fecha >= new Date(dateFrom) && fecha <= new Date(dateTo);
           });
 
           val = shifts.reduce((sum: number, s: any) => sum + shiftTotal(s), 0);
@@ -585,6 +593,39 @@ export default function ExecutiveReport({
                   {p}
                 </button>
               ))}
+              <button
+                onClick={() => setPeriod("Personalizado")}
+                style={{
+                  padding: '6px 16px', borderRadius: 99,
+                  border: `1px solid ${period === "Personalizado" ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.1)'}`,
+                  background: period === "Personalizado" ? 'rgba(255,255,255,0.1)' : 'transparent',
+                  color: period === "Personalizado" ? '#e8ecf0' : 'rgba(255,255,255,0.35)',
+                  fontSize: 11, letterSpacing: '0.1em', cursor: 'pointer',
+                  fontFamily: "'Inter', sans-serif",
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                RANGO
+              </button>
+            </div>
+          )}
+
+          {/* Date range inputs — Personalizado only */}
+          {showPeriodSelector && period === "Personalizado" && (
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center', padding: '12px 24px 0', flexWrap: 'wrap' }}>
+              <input
+                type="date"
+                value={customFrom}
+                onChange={e => setCustomFrom(e.target.value)}
+                style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: '#c8cdd8', fontSize: 12 }}
+              />
+              <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12 }}>al</span>
+              <input
+                type="date"
+                value={customTo}
+                onChange={e => setCustomTo(e.target.value)}
+                style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: '#c8cdd8', fontSize: 12 }}
+              />
             </div>
           )}
 
