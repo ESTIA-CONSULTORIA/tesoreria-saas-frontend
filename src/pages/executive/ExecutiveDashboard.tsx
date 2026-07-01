@@ -53,19 +53,61 @@ export default function ExecutiveDashboard({
   const [isLite, setIsLite] = useState(false);
 
   useEffect(() => {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const tid: string = payload.tenantId || '';
-      if (!tid) return;
-      execApi(token).get(`/tenants/${tid}`)
-        .then(r => {
+    let cancelled = false;
+    async function load() {
+      let lite = false;
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const tid: string = payload.tenantId || '';
+        if (tid) {
+          const r = await execApi(token).get(`/tenants/${tid}`);
           const plan: string = r.data?.plan || '';
-          setIsLite(plan === 'LITE_CORTE' || plan === 'LITE_POS');
-        }).catch(() => {});
-    } catch { /* no-op */ }
+          lite = plan === 'LITE_CORTE' || plan === 'LITE_POS';
+          if (!cancelled) setIsLite(lite);
+        }
+      } catch { /* no-op */ }
+
+      if (cancelled) return;
+      setLoading(true);
+
+      try {
+        if (lite) {
+          const shiftsRes = await execApi(token).get('/pos/shifts', { params: { limit: 30 } });
+          const shifts = Array.isArray(shiftsRes.data) ? shiftsRes.data : [];
+          const totalVenta = shifts.reduce((sum: number, s: any) => sum + Number(s.totalVentas || 0), 0);
+          if (!cancelled) setKpis({ venta: totalVenta, costo: 0, gasto: 0, flujo: totalVenta });
+        } else {
+          const eApi = execApi(token);
+          const [kpisData, costData] = await Promise.all([
+            eApi.get("/dashboard/kpis").then((r) => r.data).catch(() => ({})),
+            eApi.get("/costs/cost-of-sales").then((r) => r.data).catch(() => null),
+          ]);
+          const income = Number(kpisData.income || 0);
+          const expense = Number(kpisData.expense || 0);
+          let costo: number;
+          if (costData) {
+            const raw = Number(costData.costoVentas || costData.total || costData.value || 0);
+            if (raw > 0) { costo = raw; if (!cancelled) setCostoLabel("COSTO"); }
+            else { costo = Math.round(income * 0.30); if (!cancelled) setCostoLabel("COSTO EST."); }
+          } else {
+            costo = Math.round(income * 0.30);
+            if (!cancelled) setCostoLabel("COSTO EST.");
+          }
+          const next: KPIs = { venta: income, costo, gasto: expense, flujo: income - expense };
+          setPrevKpis((prev) => { localStorage.setItem("exec_kpis_prev", JSON.stringify(prev ?? next)); return prev; });
+          if (!cancelled) setKpis(next);
+        }
+      } catch (err: any) {
+        if (err.response?.status === 401) onAuthError();
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
   }, [token]);
 
-  const userName = sessionStorage.getItem("exec_user_name") || "";
+  const userName = (sessionStorage.getItem("exec_user_name") || "").replace(/\.\s*$/, '').trim();
 
   // Real-time clock — refresh every 60 s
   useEffect(() => {
@@ -88,46 +130,6 @@ export default function ExecutiveDashboard({
       })
       .catch(() => {});
   }, []);
-
-  // Load KPIs — always consolidated (no company filter)
-  useEffect(() => {
-    const eApi = execApi(token);
-    setLoading(true);
-    Promise.all([
-      eApi.get("/dashboard/kpis").then((r) => r.data).catch(() => ({})),
-      eApi.get("/costs/cost-of-sales").then((r) => r.data).catch(() => null),
-    ])
-      .then(([kpisData, costData]) => {
-        const income = Number(kpisData.income || 0);
-        const expense = Number(kpisData.expense || 0);
-
-        let costo: number;
-        if (costData) {
-          const raw = Number(costData.costoVentas || costData.total || costData.value || 0);
-          if (raw > 0) {
-            costo = raw;
-            setCostoLabel("COSTO");
-          } else {
-            costo = Math.round(income * 0.30);
-            setCostoLabel("COSTO EST.");
-          }
-        } else {
-          costo = Math.round(income * 0.30);
-          setCostoLabel("COSTO EST.");
-        }
-
-        const next: KPIs = { venta: income, costo, gasto: expense, flujo: income - expense };
-        setPrevKpis((prev) => {
-          localStorage.setItem("exec_kpis_prev", JSON.stringify(prev ?? next));
-          return prev;
-        });
-        setKpis(next);
-      })
-      .catch((err) => {
-        if (err.response?.status === 401) onAuthError();
-      })
-      .finally(() => setLoading(false));
-  }, [token]);
 
   const cardKeys = (isLite ? ["venta", "flujo"] : ["venta", "costo", "gasto", "flujo"]) as readonly ("venta" | "costo" | "gasto" | "flujo")[];
   const cardLabels: Record<string, string> = {

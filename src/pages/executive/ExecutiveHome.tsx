@@ -39,9 +39,14 @@ export default function ExecutiveHome({
 
   const headerName = companyLabel(companies, selectedCompanyId, systemName || "Vista Ejecutiva");
 
-  const visibleKeys = GRID_ORDER.filter(
-    (key) => config.modules[key] !== false && MODULES.some((m) => m.key === key),
-  );
+  const isLite = (config?.modules && Object.keys(config.modules).length === 0) ||
+                 !config?.modules?.["COSTO"];
+
+  const visibleKeys = isLite
+    ? GRID_ORDER.filter((key) => key === "VENTA" && MODULES.some((m) => m.key === key))
+    : GRID_ORDER.filter(
+        (key) => config.modules[key] !== false && MODULES.some((m) => m.key === key),
+      );
   const rows = Math.ceil(visibleKeys.length / 3);
 
   return (
