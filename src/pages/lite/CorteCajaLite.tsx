@@ -59,34 +59,48 @@ export default function CorteCajaLite() {
           companyId: selectedCompany.id,
           tenantId,
         });
-        setToken(res.data.access_token);
-        const shiftRes = await axios.get(`${API}/shifts/open`, {
-          headers: {
-            Authorization: `Bearer ${res.data.access_token}`,
-            'x-company-id': selectedCompany.id,
-          },
-        });
-        if (shiftRes.data) {
-          setShift(shiftRes.data);
-          if (shiftRes.data.precorteDeclaracion) {
-            const d = shiftRes.data.precorteDeclaracion;
-            setTotales({
-              efectivo: d.efectivo || 0,
-              tarjeta: d.tarjeta || 0,
-              transferencia: d.transferencia || 0,
-              cortesia: d.cortesia || 0,
-              descuento: d.descuento || 0,
-            });
+        let currentShift = null;
+
+        try {
+          const shiftRes = await axios.get(`${API}/shifts/open`, {
+            headers: {
+              Authorization: `Bearer ${res.data.access_token}`,
+              'x-company-id': selectedCompany.id,
+            },
+          });
+          if (shiftRes.data) {
+            currentShift = shiftRes.data;
+            if (shiftRes.data.precorteDeclaracion) {
+              const d = shiftRes.data.precorteDeclaracion;
+              setTotales({
+                efectivo: d.efectivo || 0,
+                tarjeta: d.tarjeta || 0,
+                transferencia: d.transferencia || 0,
+                cortesia: d.cortesia || 0,
+                descuento: d.descuento || 0,
+              });
+            }
           }
-        } else {
+        } catch (shiftErr: any) {
+          if (shiftErr?.response?.status === 404 || shiftErr?.response?.status === 400) {
+            // no hay turno abierto — se crea abajo
+          } else {
+            throw shiftErr;
+          }
+        }
+
+        if (!currentShift) {
           const openRes = await axios.post(`${API}/shifts`, {
             cajero: res.data.user?.id,
             sucursalId: selectedCompany.branchId || selectedCompany.id,
             tenantId,
             fondoInicial: 0,
           }, { headers: { Authorization: `Bearer ${res.data.access_token}` } });
-          setShift(openRes.data);
+          currentShift = openRes.data;
         }
+
+        setShift(currentShift);
+        setToken(res.data.access_token);
         setScreen('corte');
       } catch {
         setError('PIN incorrecto');
