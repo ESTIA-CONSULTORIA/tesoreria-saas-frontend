@@ -128,7 +128,7 @@ export default function CorteCajaLite() {
             sessionStorage.setItem('lite_token', res.data.access_token);
             if (shiftData.precorteDeclaracion) {
               const d = shiftData.precorteDeclaracion;
-              setTotales({ efectivo: d.efectivo || 0, tarjeta: d.tarjeta || 0, transferencia: d.transferencia || 0, cortesia: d.cortesia || 0, descuento: d.descuento || 0 });
+              setTotales({ efectivo: d.efectivo || 0, tarjeta: d.tarjeta || 0, transferencia: d.transferencia || 0, cortesia: d.cortesia || 0, descuento: d.descuento || 0, gasto: d.gasto || 0 });
             }
           } else {
             throw new Error('no_shift');
