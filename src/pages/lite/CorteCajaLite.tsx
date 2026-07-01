@@ -119,9 +119,8 @@ export default function CorteCajaLite() {
             params: { cajero: res.data.user?.id, sucursalId: selectedCompany.branchId || selectedCompany.id },
             headers: { Authorization: `Bearer ${res.data.access_token}` },
           });
-          const shiftData = shiftRes.data?.id ? shiftRes.data : shiftRes.data?.data || shiftRes.data;
-          console.log('[shift] data recibida:', JSON.stringify(shiftData)?.substring(0, 100));
-          if (shiftData?.id) {
+          const shiftData = shiftRes.data;
+          if (shiftData && typeof shiftData === 'object' && shiftData.id) {
             currentShift = shiftData;
             sessionStorage.setItem('lite_shift', JSON.stringify(shiftData));
             sessionStorage.setItem('lite_token', res.data.access_token);
@@ -129,26 +128,27 @@ export default function CorteCajaLite() {
               const d = shiftData.precorteDeclaracion;
               setTotales({ efectivo: d.efectivo || 0, tarjeta: d.tarjeta || 0, transferencia: d.transferencia || 0, cortesia: d.cortesia || 0, descuento: d.descuento || 0 });
             }
+          } else {
+            throw new Error('no_shift');
           }
-        } catch (e: any) {
-          if (!e?.response?.status || e.response.status === 404 || e.response.status === 400) {
-            try {
-              const openRes = await axios.post(`${API}/pos/shifts`, {
-                cajero: res.data.user?.id,
-                sucursalId: selectedCompany.branchId || selectedCompany.id,
-                tenantId,
-                fondoInicial: 0,
-              }, { headers: { Authorization: `Bearer ${res.data.access_token}` } });
-              currentShift = openRes.data;
-            } catch (e2: any) {
-              const msg = e2?.response?.data?.message || e2?.message || 'Error desconocido';
-              const status = e2?.response?.status;
-              setError(`Error ${status}: ${msg}`);
-              setPin('');
-              setLoading(false);
-              return;
-            }
-          } else throw e;
+        } catch {
+          try {
+            const openRes = await axios.post(`${API}/pos/shifts`, {
+              cajero: res.data.user?.id,
+              sucursalId: selectedCompany.branchId || selectedCompany.id,
+              tenantId,
+              fondoInicial: 0,
+            }, { headers: { Authorization: `Bearer ${res.data.access_token}` } });
+            currentShift = openRes.data;
+            sessionStorage.setItem('lite_shift', JSON.stringify(openRes.data));
+            sessionStorage.setItem('lite_token', res.data.access_token);
+          } catch (e2: any) {
+            const msg = e2?.response?.data?.message || e2?.message || 'Error desconocido';
+            setError(`Error al abrir turno: ${msg}`);
+            setPin('');
+            setLoading(false);
+            return;
+          }
         }
         setShift(currentShift);
         setToken(res.data.access_token);
