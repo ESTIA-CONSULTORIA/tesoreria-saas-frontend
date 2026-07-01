@@ -72,23 +72,25 @@ export default function ExecutiveDashboard({
 
       try {
         if (lite) {
-          const shiftsRes = await execApi(token).get('/pos/shifts', { params: { limit: 30 } });
-          const shifts = Array.isArray(shiftsRes.data?.value ?? shiftsRes.data)
-            ? (shiftsRes.data?.value ?? shiftsRes.data)
-            : [];
+          const shiftsRes = await execApi(token).get('/pos/shifts', { params: { limit: 100 } });
+          const rawData = shiftsRes.data;
+          const shifts = Array.isArray(rawData) ? rawData : Array.isArray(rawData?.value) ? rawData.value : [];
           const totalVenta = shifts.reduce((sum: number, s: any) => {
-            const efectivo = Number(s.efectivoContado || 0);
+            let total = Number(s.efectivoContado || 0);
             const decl = s.precorteDeclaracion || {};
             const debito = Number(decl.debitoDeclarado || 0);
             const credito = Number(decl.creditoDeclarado || 0);
             const transf = Number(decl.transferenciaDeclarada || 0);
-            if (debito + credito + transf > 0) return sum + efectivo + debito + credito + transf;
-            const notas: string = s.notas || '';
-            const mTarjeta = notas.match(/Tarjeta[:\s]+\$?([\d.]+)/i);
-            const mTransf = notas.match(/Transferencia[:\s]+\$?([\d.]+)/i);
-            const tarjeta = mTarjeta ? Number(mTarjeta[1]) : 0;
-            const transferencia = mTransf ? Number(mTransf[1]) : 0;
-            return sum + efectivo + tarjeta + transferencia;
+            if (debito + credito + transf > 0) {
+              return sum + total + debito + credito + transf;
+            }
+            if (s.notas) {
+              const mTarjeta = s.notas.match(/Tarjeta[:\s]+\$?([\d,]+\.?\d*)/i);
+              const mTransf = s.notas.match(/Transferencia[:\s]+\$?([\d,]+\.?\d*)/i);
+              if (mTarjeta) total += parseFloat(mTarjeta[1].replace(/,/g, ''));
+              if (mTransf) total += parseFloat(mTransf[1].replace(/,/g, ''));
+            }
+            return sum + total;
           }, 0);
           if (!cancelled) setKpis({ venta: totalVenta, costo: 0, gasto: 0, flujo: totalVenta });
         } else {
