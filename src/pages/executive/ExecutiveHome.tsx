@@ -81,71 +81,110 @@ export default function ExecutiveHome({
         </p>
       </div>
 
-      {/* 3×3 Grid — 65% height, square buttons */}
-      <div
-        style={{
-          flexShrink: 0,
-          height: "65%",
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gridTemplateRows: `repeat(${rows}, 1fr)`,
-          gap: 10,
-          padding: "0 16px",
-          boxSizing: "border-box" as const,
-          alignItems: "center",
-        }}
-      >
-        {visibleKeys.map((key) => {
-          const mod = MODULES.find((m) => m.key === key)!;
-          const isPressed = pressedModule === key;
-          return (
-            <button
-              key={key}
-              onClick={() => onReport(key)}
-              onPointerDown={() => setPressedModule(key)}
-              onPointerUp={() => setPressedModule(null)}
-              onPointerLeave={() => setPressedModule(null)}
-              style={{
-                aspectRatio: "1",
-                width: "100%",
-                background: t.card,
-                border: t.cardBorder,
-                boxShadow: t.cardShadow,
-                borderRadius: 10,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                fontFamily: "'Inter', sans-serif",
-                WebkitTapHighlightColor: "transparent",
-                outline: "none",
-                opacity: isPressed ? 0.5 : 1,
-                transform: isPressed ? "scale(0.97)" : "scale(1)",
-                transition: "opacity 0.1s, transform 0.1s",
-                padding: "6px",
-              }}
-            >
-              <span
+      {/* Module grid / LITE single button */}
+      {isLite ? (
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "0 32px",
+          }}
+        >
+          <button
+            onClick={() => onReport("VENTA")}
+            onPointerDown={() => setPressedModule("VENTA")}
+            onPointerUp={() => setPressedModule(null)}
+            onPointerLeave={() => setPressedModule(null)}
+            style={{
+              padding: "40px 60px",
+              borderRadius: 20,
+              border: "1px solid rgba(255,255,255,0.1)",
+              background: "rgba(255,255,255,0.03)",
+              color: t.text,
+              fontSize: 14,
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              cursor: "pointer",
+              fontWeight: 200,
+              fontFamily: "'Inter', sans-serif",
+              WebkitTapHighlightColor: "transparent",
+              outline: "none",
+              opacity: pressedModule === "VENTA" ? 0.5 : 1,
+              transform: pressedModule === "VENTA" ? "scale(0.97)" : "scale(1)",
+              transition: "opacity 0.1s, transform 0.1s",
+            }}
+          >
+            VENTA
+          </button>
+        </div>
+      ) : (
+        <div
+          style={{
+            flexShrink: 0,
+            height: "65%",
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gridTemplateRows: `repeat(${rows}, 1fr)`,
+            gap: 10,
+            padding: "0 16px",
+            boxSizing: "border-box" as const,
+            alignItems: "center",
+          }}
+        >
+          {visibleKeys.map((key) => {
+            const mod = MODULES.find((m) => m.key === key)!;
+            const isPressed = pressedModule === key;
+            return (
+              <button
+                key={key}
+                onClick={() => onReport(key)}
+                onPointerDown={() => setPressedModule(key)}
+                onPointerUp={() => setPressedModule(null)}
+                onPointerLeave={() => setPressedModule(null)}
                 style={{
-                  color: t.accent,
-                  fontSize: "0.55rem",
-                  fontWeight: 400,
-                  letterSpacing: "0.2em",
-                  textTransform: "uppercase",
-                  textAlign: "center",
-                  lineHeight: 1.2,
-                  wordBreak: "break-word",
+                  aspectRatio: "1",
+                  width: "100%",
+                  background: t.card,
+                  border: t.cardBorder,
+                  boxShadow: t.cardShadow,
+                  borderRadius: 10,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  fontFamily: "'Inter', sans-serif",
+                  WebkitTapHighlightColor: "transparent",
+                  outline: "none",
+                  opacity: isPressed ? 0.5 : 1,
+                  transform: isPressed ? "scale(0.97)" : "scale(1)",
+                  transition: "opacity 0.1s, transform 0.1s",
+                  padding: "6px",
                 }}
               >
-                {mod.label}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+                <span
+                  style={{
+                    color: t.accent,
+                    fontSize: "0.55rem",
+                    fontWeight: 400,
+                    letterSpacing: "0.2em",
+                    textTransform: "uppercase",
+                    textAlign: "center",
+                    lineHeight: 1.2,
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {mod.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
-      {/* Spacer */}
-      <div style={{ flex: 1 }} />
+      {/* Spacer — solo para plan completo */}
+      {!isLite && <div style={{ flex: 1 }} />}
 
       {/* Footer */}
       <div

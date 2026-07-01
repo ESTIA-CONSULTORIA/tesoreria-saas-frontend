@@ -148,7 +148,7 @@ export default function ExecutiveDashboard({
       .catch(() => {});
   }, []);
 
-  const cardKeys = (isLite ? ["venta", "flujo"] : ["venta", "costo", "gasto", "flujo"]) as readonly ("venta" | "costo" | "gasto" | "flujo")[];
+  const cardKeys = (isLite ? ["venta"] : ["venta", "costo", "gasto", "flujo"]) as readonly ("venta" | "costo" | "gasto" | "flujo")[];
   const cardLabels: Record<string, string> = {
     venta: "VENTA",
     costo: costoLabel,
@@ -210,10 +210,10 @@ export default function ExecutiveDashboard({
       <div
         style={{
           flexShrink: 0,
-          height: isLite ? "28vh" : "50vh",
+          height: isLite ? "22vh" : "50vh",
           width: "100%",
           display: "grid",
-          gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+          gridTemplateColumns: isLite ? "1fr" : "repeat(2, minmax(0, 1fr))",
           gridTemplateRows: isLite ? "1fr" : "1fr 1fr",
           gap: 10,
           padding: "0 12px",

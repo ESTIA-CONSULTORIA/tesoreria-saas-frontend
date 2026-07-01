@@ -49,8 +49,9 @@ export default function ExecutiveReport({
   const [error, setError] = useState("");
   const [period, setPeriod] = useState<Period>("Semana");
   const [giroDetected, setGiroDetected] = useState<"restaurant" | "retail" | "default">("default");
+  const [isLite, setIsLite] = useState(false);
 
-  const showPeriodSelector = module === "VENTA" && giroDetected === "default";
+  const showPeriodSelector = module === "VENTA";
   const showChart = module === "FLUJO" && chartDays !== null;
 
   useEffect(() => {
@@ -66,7 +67,71 @@ export default function ExecutiveReport({
         let items: SubItem[] = [];
         let chart: { day: string; value: number }[] | null = null;
 
-        if (module === "VENTA") {
+        // Detect LITE plan
+        let lite = false;
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const tid: string = payload.tenantId || '';
+          if (tid) {
+            const r = await eApi.get(`/tenants/${tid}`);
+            const plan: string = r.data?.plan || '';
+            lite = plan === 'LITE_CORTE' || plan === 'LITE_POS';
+            setIsLite(lite);
+          }
+        } catch { /* no-op */ }
+
+        const shiftTotal = (s: any): number => {
+          const efectivo = Number(s.efectivoContado || 0);
+          const decl = s.precorteDeclaracion || {};
+          const debito = Number(decl.debitoDeclarado || 0);
+          const credito = Number(decl.creditoDeclarado || 0);
+          const transf = Number(decl.transferenciaDeclarada || 0);
+          if (debito + credito + transf > 0) return efectivo + debito + credito + transf;
+          let t = efectivo;
+          if (s.notas) {
+            const tar = s.notas.match(/Tarjeta[:\s]+\$?([\d,]+\.?\d*)/i);
+            const trf = s.notas.match(/Transferencia[:\s]+\$?([\d,]+\.?\d*)/i);
+            if (tar) t += parseFloat(tar[1].replace(/,/g, ''));
+            if (trf) t += parseFloat(trf[1].replace(/,/g, ''));
+          }
+          return t;
+        };
+
+        if (module === "VENTA" && lite) {
+          const now = new Date();
+          const dateFrom = period === "Quincena"
+            ? new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000).toISOString()
+            : period === "Semana"
+            ? new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+            : new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+          const res = await eApi.get('/pos/shifts', { params: { limit: 100, from: dateFrom } });
+          const rawData = res.data;
+          const allShifts = Array.isArray(rawData) ? rawData : Array.isArray(rawData?.value) ? rawData.value : [];
+          const shifts = allShifts.filter((s: any) => {
+            const d = new Date(s.createdAt || s.fecha || 0);
+            return d >= new Date(dateFrom);
+          });
+
+          val = shifts.reduce((sum: number, s: any) => sum + shiftTotal(s), 0);
+
+          const byDay: Record<string, number> = {};
+          shifts.forEach((s: any) => {
+            const day = new Date(s.createdAt || s.fecha).toLocaleDateString('es-MX', {
+              weekday: 'short', day: 'numeric', month: 'short',
+            });
+            byDay[day] = (byDay[day] || 0) + shiftTotal(s);
+          });
+
+          setMainDesc(`${shifts.length} corte${shifts.length !== 1 ? 's' : ''} — ${period}`);
+          items = Object.entries(byDay)
+            .sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime())
+            .slice(0, 6)
+            .map(([day, amt]) => ({ label: day.toUpperCase(), value: fmt(amt) }));
+          if (items.length === 0) items = [{ label: 'SIN CORTES', value: '—' }];
+        }
+
+        else if (module === "VENTA") {
           const RESTAURANT_KEYS = ["restaurante","restaurant","food","alimento","cocina","bar","café","cafeteria"];
           const RETAIL_KEYS = ["retail","comercio","tienda"];
 
