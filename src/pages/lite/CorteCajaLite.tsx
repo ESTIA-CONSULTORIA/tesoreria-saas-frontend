@@ -148,9 +148,10 @@ export default function CorteCajaLite() {
   };
 
   const guardarCorte = async () => {
-    console.log('[guardar] shift:', shift, 'token:', !!token);
+    console.log('[guardar] shift:', JSON.stringify(shift), 'token:', !!token, 'loading:', loading);
     if (!shift || !token) {
-      console.log('[guardar] bloqueado — shift o token vacío');
+      console.log('[guardar] BLOQUEADO — shift:', !!shift, 'token:', !!token);
+      setError('Error: sesión inválida. Vuelve a ingresar tu PIN.');
       return;
     }
     setLoading(true);
