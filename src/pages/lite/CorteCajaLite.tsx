@@ -106,14 +106,24 @@ export default function CorteCajaLite() {
             }
           }
         } catch (e: any) {
+          console.log('[shifts] error status:', e?.response?.status, 'data:', JSON.stringify(e?.response?.data));
           if (!e?.response?.status || e.response.status === 404 || e.response.status === 400) {
-            const openRes = await axios.post(`${API}/pos/shifts`, {
-              cajero: res.data.user?.id,
-              sucursalId: selectedCompany.branchId || selectedCompany.id,
-              tenantId,
-              fondoInicial: 0,
-            }, { headers: { Authorization: `Bearer ${res.data.access_token}` } });
-            currentShift = openRes.data;
+            try {
+              const openRes = await axios.post(`${API}/pos/shifts`, {
+                cajero: res.data.user?.id,
+                sucursalId: selectedCompany.branchId || selectedCompany.id,
+                tenantId,
+                fondoInicial: 0,
+              }, { headers: { Authorization: `Bearer ${res.data.access_token}` } });
+              console.log('[shifts] turno creado:', openRes.data?.id);
+              currentShift = openRes.data;
+            } catch (e2: any) {
+              console.log('[shifts] error creando turno:', e2?.response?.status, JSON.stringify(e2?.response?.data));
+              setError(`Error al abrir turno: ${e2?.response?.data?.message || 'intenta de nuevo'}`);
+              setPin('');
+              setLoading(false);
+              return;
+            }
           } else throw e;
         }
         setShift(currentShift);
