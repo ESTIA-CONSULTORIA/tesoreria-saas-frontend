@@ -106,7 +106,13 @@ export default function LoginPage() {
         tenantId: user.tenantId,
       }, modulosActivos);
 
-      navigate("/pos");
+      const planCode: string = response.data.planCode || '';
+      const isLiteCorte = planCode === 'LITE_CORTE' || planCode === 'LITE_POS';
+      if (isLiteCorte && user.tenantId) {
+        navigate(`/corte?tenant=${user.tenantId}`);
+      } else {
+        navigate("/pos");
+      }
     } catch (error: any) {
       console.error(error);
       setError(error.response?.data?.message || "NIP incorrecto");
