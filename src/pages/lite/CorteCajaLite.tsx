@@ -8,6 +8,8 @@ interface Totales {
   efectivo: number;
   tarjeta: number;
   transferencia: number;
+  plataformas: number;
+  promociones: number;
   cortesia: number;
   descuento: number;
   gasto: number;
@@ -15,12 +17,14 @@ interface Totales {
 
 type Screen = 'empresa' | 'pin' | 'corte' | 'confirmacion';
 
-const FIELD_ORDER: (keyof Totales)[] = ['efectivo', 'tarjeta', 'transferencia', 'cortesia', 'descuento', 'gasto'];
+const FIELD_ORDER: (keyof Totales)[] = ['efectivo', 'tarjeta', 'transferencia', 'plataformas', 'promociones', 'cortesia', 'descuento', 'gasto'];
 
 const FIELDS: { key: keyof Totales; label: string; resta?: boolean }[] = [
   { key: 'efectivo',      label: 'Efectivo' },
   { key: 'tarjeta',       label: 'Tarjeta' },
   { key: 'transferencia', label: 'Transferencia' },
+  { key: 'plataformas',   label: 'Plataformas' },
+  { key: 'promociones',   label: 'Promociones' },
   { key: 'cortesia',      label: 'Cortesías',  resta: true },
   { key: 'descuento',     label: 'Descuentos', resta: true },
   { key: 'gasto',         label: 'Gastos',     resta: true },
@@ -65,7 +69,7 @@ export default function CorteCajaLite() {
 
   const [companies, setCompanies] = useState<any[]>([]);
   const [pin, setPin] = useState('');
-  const [totales, setTotales] = useState<Totales>({ efectivo: 0, tarjeta: 0, transferencia: 0, cortesia: 0, descuento: 0, gasto: 0 });
+  const [totales, setTotales] = useState<Totales>({ efectivo: 0, tarjeta: 0, transferencia: 0, plataformas: 0, promociones: 0, cortesia: 0, descuento: 0, gasto: 0 });
   const [activeField, setActiveField] = useState<keyof Totales | null>(null);
   const [dynamicFields, setDynamicFields] = useState<{ key: keyof Totales; label: string; resta?: boolean }[]>(FIELDS);
   const [inputValue, setInputValue] = useState('');
@@ -137,7 +141,7 @@ export default function CorteCajaLite() {
             sessionStorage.setItem('lite_token', res.data.access_token);
             if (shiftData.precorteDeclaracion) {
               const d = shiftData.precorteDeclaracion;
-              setTotales({ efectivo: d.efectivo || 0, tarjeta: d.tarjeta || 0, transferencia: d.transferencia || 0, cortesia: d.cortesia || 0, descuento: d.descuento || 0, gasto: d.gasto || 0 });
+              setTotales({ efectivo: d.efectivo || 0, tarjeta: d.tarjeta || 0, transferencia: d.transferencia || 0, plataformas: d.plataformas || 0, promociones: d.promociones || 0, cortesia: d.cortesia || 0, descuento: d.descuento || 0, gasto: d.gasto || 0 });
             }
           } else {
             throw new Error('no_shift');
@@ -256,7 +260,7 @@ export default function CorteCajaLite() {
       }, { headers: { Authorization: `Bearer ${token}` } });
       await axios.put(`${API}/pos/shifts/${shift.id}/close`, {
         efectivoContado: totales.efectivo,
-        notas: `Tarjeta: $${totales.tarjeta} / Transferencia: $${totales.transferencia} / Cortesías: $${totales.cortesia} / Descuentos: $${totales.descuento} / Gastos: $${totales.gasto}`,
+        notas: `Tarjeta: $${totales.tarjeta} / Transferencia: $${totales.transferencia} / Plataformas: $${totales.plataformas} / Promociones: $${totales.promociones} / Cortesías: $${totales.cortesia} / Descuentos: $${totales.descuento} / Gastos: $${totales.gasto}`,
       }, { headers: { Authorization: `Bearer ${token}` } });
       sessionStorage.removeItem('lite_token');
       sessionStorage.removeItem('lite_shift');
@@ -277,6 +281,8 @@ export default function CorteCajaLite() {
       `Efectivo        $${totales.efectivo.toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n` +
       `Tarjeta         $${totales.tarjeta.toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n` +
       `Transferencia   $${totales.transferencia.toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n` +
+      `Plataformas     $${totales.plataformas.toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n` +
+      `Promociones     $${totales.promociones.toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n` +
       `Cortesías      -$${totales.cortesia.toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n` +
       `Descuentos     -$${totales.descuento.toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n` +
       `Gastos         -$${totales.gasto.toLocaleString('es-MX', { minimumFractionDigits: 2 })}\n\n` +
@@ -308,6 +314,8 @@ export default function CorteCajaLite() {
     <div class="row"><span>Efectivo</span><span>$${totales.efectivo.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span></div>
     <div class="row"><span>Tarjeta</span><span>$${totales.tarjeta.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span></div>
     <div class="row"><span>Transferencia</span><span>$${totales.transferencia.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span></div>
+    <div class="row"><span>Plataformas</span><span>$${totales.plataformas.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span></div>
+    <div class="row"><span>Promociones</span><span>$${totales.promociones.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span></div>
     <div class="row"><span>Cortesías</span><span>-$${totales.cortesia.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span></div>
     <div class="row"><span>Descuentos</span><span>-$${totales.descuento.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span></div>
     <hr class="sep">
@@ -641,7 +649,7 @@ export default function CorteCajaLite() {
               <div style={{ height: 10 }} />
               <button style={shared.btnSecondary} onClick={imprimir}>Imprimir ticket</button>
               <div style={{ height: 10 }} />
-              <button onClick={() => { setScreen('empresa'); setPin(''); setTotales({ efectivo: 0, tarjeta: 0, transferencia: 0, cortesia: 0, descuento: 0, gasto: 0 }); }}
+              <button onClick={() => { setScreen('empresa'); setPin(''); setTotales({ efectivo: 0, tarjeta: 0, transferencia: 0, plataformas: 0, promociones: 0, cortesia: 0, descuento: 0, gasto: 0 }); }}
                 style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.12)', fontSize: 11, cursor: 'pointer', width: '100%', textAlign: 'center', padding: '16px 0', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
                 Nuevo corte
               </button>
