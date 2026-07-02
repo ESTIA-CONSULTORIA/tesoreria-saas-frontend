@@ -83,20 +83,24 @@ export default function ExecutiveReport({
         } catch { /* no-op */ }
 
         const shiftTotal = (s: any): number => {
-          const efectivo = Number(s.efectivoContado || 0);
-          const decl = s.precorteDeclaracion || {};
-          const debito = Number(decl.debitoDeclarado || 0);
-          const credito = Number(decl.creditoDeclarado || 0);
-          const transf = Number(decl.transferenciaDeclarada || 0);
-          if (debito + credito + transf > 0) return efectivo + debito + credito + transf;
-          let t = efectivo;
+          let total = Number(s.efectivoContado || 0);
           if (s.notas) {
-            const tar = s.notas.match(/Tarjeta[:\s]+\$?([\d,]+\.?\d*)/i);
-            const trf = s.notas.match(/Transferencia[:\s]+\$?([\d,]+\.?\d*)/i);
-            if (tar) t += parseFloat(tar[1].replace(/,/g, ''));
-            if (trf) t += parseFloat(trf[1].replace(/,/g, ''));
+            const tarjeta   = s.notas.match(/Tarjeta[:\s]+\$?([\d,]+\.?\d*)/i);
+            const transf    = s.notas.match(/Transferencia[:\s]+\$?([\d,]+\.?\d*)/i);
+            const plat      = s.notas.match(/Plataformas[:\s]+\$?([\d,]+\.?\d*)/i);
+            const prom      = s.notas.match(/Promociones[:\s]+\$?([\d,]+\.?\d*)/i);
+            const cortesia  = s.notas.match(/Cortesías[:\s]+\$?([\d,]+\.?\d*)/i);
+            const descuento = s.notas.match(/Descuentos[:\s]+\$?([\d,]+\.?\d*)/i);
+            const gasto     = s.notas.match(/Gastos[:\s]+\$?([\d,]+\.?\d*)/i);
+            if (tarjeta)   total += parseFloat(tarjeta[1].replace(/,/g, ''));
+            if (transf)    total += parseFloat(transf[1].replace(/,/g, ''));
+            if (plat)      total += parseFloat(plat[1].replace(/,/g, ''));
+            if (prom)      total += parseFloat(prom[1].replace(/,/g, ''));
+            if (cortesia)  total -= parseFloat(cortesia[1].replace(/,/g, ''));
+            if (descuento) total -= parseFloat(descuento[1].replace(/,/g, ''));
+            if (gasto)     total -= parseFloat(gasto[1].replace(/,/g, ''));
           }
-          return t;
+          return total;
         };
 
         if (module === "VENTA" && lite) {
