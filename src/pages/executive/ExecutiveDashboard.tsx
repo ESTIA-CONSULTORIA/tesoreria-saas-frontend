@@ -76,23 +76,27 @@ export default function ExecutiveDashboard({
           const shiftsRes = await execApi(token).get('/pos/shifts', { params: { limit: 100 } });
           const rawData = shiftsRes.data;
           const shifts = Array.isArray(rawData) ? rawData : Array.isArray(rawData?.value) ? rawData.value : [];
-          const totalVenta = shifts.reduce((sum: number, s: any) => {
+          const shiftTotal = (s: any): number => {
             let total = Number(s.efectivoContado || 0);
-            const decl = s.precorteDeclaracion || {};
-            const debito = Number(decl.debitoDeclarado || 0);
-            const credito = Number(decl.creditoDeclarado || 0);
-            const transf = Number(decl.transferenciaDeclarada || 0);
-            if (debito + credito + transf > 0) {
-              return sum + total + debito + credito + transf;
-            }
             if (s.notas) {
-              const mTarjeta = s.notas.match(/Tarjeta[:\s]+\$?([\d,]+\.?\d*)/i);
-              const mTransf = s.notas.match(/Transferencia[:\s]+\$?([\d,]+\.?\d*)/i);
-              if (mTarjeta) total += parseFloat(mTarjeta[1].replace(/,/g, ''));
-              if (mTransf) total += parseFloat(mTransf[1].replace(/,/g, ''));
+              const tarjeta = s.notas.match(/Tarjeta[:\s]+\$?([\d,]+\.?\d*)/i);
+              const transf = s.notas.match(/Transferencia[:\s]+\$?([\d,]+\.?\d*)/i);
+              const plat = s.notas.match(/Plataformas[:\s]+\$?([\d,]+\.?\d*)/i);
+              const prom = s.notas.match(/Promociones[:\s]+\$?([\d,]+\.?\d*)/i);
+              const cortesia = s.notas.match(/Cortesías[:\s]+\$?([\d,]+\.?\d*)/i);
+              const descuento = s.notas.match(/Descuentos[:\s]+\$?([\d,]+\.?\d*)/i);
+              const gasto = s.notas.match(/Gastos[:\s]+\$?([\d,]+\.?\d*)/i);
+              if (tarjeta) total += parseFloat(tarjeta[1].replace(/,/g, ''));
+              if (transf) total += parseFloat(transf[1].replace(/,/g, ''));
+              if (plat) total += parseFloat(plat[1].replace(/,/g, ''));
+              if (prom) total += parseFloat(prom[1].replace(/,/g, ''));
+              if (cortesia) total -= parseFloat(cortesia[1].replace(/,/g, ''));
+              if (descuento) total -= parseFloat(descuento[1].replace(/,/g, ''));
+              if (gasto) total -= parseFloat(gasto[1].replace(/,/g, ''));
             }
-            return sum + total;
-          }, 0);
+            return total;
+          };
+          const totalVenta = shifts.reduce((sum: number, s: any) => sum + shiftTotal(s), 0);
           if (!cancelled) setKpis({ venta: totalVenta, costo: 0, gasto: 0, flujo: totalVenta });
         } else {
           const eApi = execApi(token);
