@@ -71,6 +71,10 @@ export default function CorteCajaLite() {
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showInsumos, setShowInsumos] = useState(false);
+  const [insumos, setInsumos] = useState<any[]>([]);
+  const [newInsumo, setNewInsumo] = useState({ nombre: '', tipo: 'insumo', estado: 'proximo', notas: '' });
+  const [savingInsumo, setSavingInsumo] = useState(false);
 
   const activeFieldOrder = dynamicFields.map(f => f.key);
   const total = dynamicFields.reduce((sum, f) => {
@@ -202,6 +206,38 @@ export default function CorteCajaLite() {
       setActiveField(null);
       setInputValue('');
     }
+  };
+
+  const loadInsumos = async () => {
+    try {
+      const res = await axios.get(`${API}/pos/insumo-alerts/all`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setInsumos(Array.isArray(res.data) ? res.data : []);
+    } catch {}
+  };
+
+  const saveInsumo = async () => {
+    if (!newInsumo.nombre.trim()) return;
+    setSavingInsumo(true);
+    try {
+      await axios.post(`${API}/pos/insumo-alerts`, {
+        ...newInsumo,
+        companyId: selectedCompany?.id,
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      setNewInsumo({ nombre: '', tipo: 'insumo', estado: 'proximo', notas: '' });
+      await loadInsumos();
+    } catch {}
+    setSavingInsumo(false);
+  };
+
+  const updateInsumoEstado = async (id: string, estado: string) => {
+    try {
+      await axios.put(`${API}/pos/insumo-alerts/${id}`, { estado }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      await loadInsumos();
+    } catch {}
   };
 
   const guardarCorte = async () => {
@@ -372,12 +408,24 @@ export default function CorteCajaLite() {
 
           {/* Header */}
           <div style={{ padding: '20px 28px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', flexShrink: 0 }}>
-            <div style={{ fontSize: 9, letterSpacing: '0.35em', color: 'rgba(255,255,255,0.15)', textTransform: 'uppercase', marginBottom: 4 }}>ESTIA ERP</div>
-            <div style={{ fontSize: 17, fontWeight: 200, color: '#e8ecf0', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-              {selectedCompany?.tradeName || selectedCompany?.legalName}
-            </div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.15)', marginTop: 3 }}>
-              {new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <div style={{ fontSize: 9, letterSpacing: '0.35em', color: 'rgba(255,255,255,0.15)', textTransform: 'uppercase', marginBottom: 4 }}>ESTIA ERP</div>
+                <div style={{ fontSize: 17, fontWeight: 200, color: '#e8ecf0', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                  {selectedCompany?.tradeName || selectedCompany?.legalName}
+                </div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.15)', marginTop: 3 }}>
+                  {new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </div>
+              </div>
+              <button onClick={() => { setShowInsumos(true); loadInsumos(); }} style={{
+                background: 'none', border: '1px solid rgba(255,255,255,0.1)',
+                color: 'rgba(255,255,255,0.4)', fontSize: 11, padding: '4px 12px',
+                borderRadius: 8, cursor: 'pointer', letterSpacing: '0.08em',
+                fontFamily: 'inherit',
+              }}>
+                INSUMOS
+              </button>
             </div>
           </div>
 
@@ -460,6 +508,100 @@ export default function CorteCajaLite() {
           }}>
             {loading ? 'Guardando...' : 'Guardar corte'}
           </button>
+
+          {/* Modal de insumos */}
+          {showInsumos && (
+            <div style={{
+              position: 'fixed', inset: 0, background: '#080a0f',
+              display: 'flex', flexDirection: 'column', zIndex: 50,
+            }}>
+              <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ fontSize: 16, fontWeight: 300, color: '#e8ecf0' }}>Avisos de Insumos</div>
+                <button onClick={() => setShowInsumos(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 18, cursor: 'pointer' }}>✕</button>
+              </div>
+
+              <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px' }}>
+                {/* Formulario nuevo aviso */}
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 16, marginBottom: 20 }}>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', marginBottom: 12 }}>NUEVO AVISO</div>
+                  <input
+                    placeholder="Nombre del insumo o producto"
+                    value={newInsumo.nombre}
+                    onChange={e => setNewInsumo(p => ({ ...p, nombre: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)', color: '#e8ecf0', fontSize: 14, marginBottom: 8, boxSizing: 'border-box' }}
+                  />
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+                    {['insumo', 'producto'].map(tp => (
+                      <button key={tp} onClick={() => setNewInsumo(p => ({ ...p, tipo: tp }))} style={{
+                        padding: '6px 14px', borderRadius: 8, border: `1px solid ${newInsumo.tipo === tp ? 'rgba(143,175,212,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                        background: newInsumo.tipo === tp ? 'rgba(143,175,212,0.08)' : 'transparent',
+                        color: newInsumo.tipo === tp ? '#8fafd4' : 'rgba(255,255,255,0.3)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
+                      }}>{tp === 'insumo' ? 'Insumo' : 'Producto'}</button>
+                    ))}
+                    {['proximo', 'agotado'].map(est => (
+                      <button key={est} onClick={() => setNewInsumo(p => ({ ...p, estado: est }))} style={{
+                        padding: '6px 14px', borderRadius: 8,
+                        border: `1px solid ${newInsumo.estado === est ? (est === 'agotado' ? 'rgba(252,165,165,0.4)' : 'rgba(251,191,36,0.4)') : 'rgba(255,255,255,0.08)'}`,
+                        background: newInsumo.estado === est ? (est === 'agotado' ? 'rgba(252,165,165,0.08)' : 'rgba(251,191,36,0.08)') : 'transparent',
+                        color: newInsumo.estado === est ? (est === 'agotado' ? 'rgba(252,165,165,0.8)' : 'rgba(251,191,36,0.8)') : 'rgba(255,255,255,0.3)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
+                      }}>{est === 'proximo' ? 'Próximo a agotarse' : 'Agotado'}</button>
+                    ))}
+                  </div>
+                  <input
+                    placeholder="Notas (cantidad aproximada, etc.)"
+                    value={newInsumo.notas}
+                    onChange={e => setNewInsumo(p => ({ ...p, notas: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)', color: '#e8ecf0', fontSize: 13, marginBottom: 12, boxSizing: 'border-box' }}
+                  />
+                  <button onClick={saveInsumo} disabled={savingInsumo || !newInsumo.nombre.trim()} style={{
+                    width: '100%', padding: 12, borderRadius: 8, border: 'none',
+                    background: 'rgba(143,175,212,0.1)', color: '#8fafd4', fontSize: 13, cursor: 'pointer', letterSpacing: '0.08em', fontFamily: 'inherit',
+                  }}>
+                    {savingInsumo ? 'Guardando...' : 'Guardar aviso'}
+                  </button>
+                </div>
+
+                {/* Lista de insumos */}
+                {insumos.length === 0 ? (
+                  <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 13, padding: 24 }}>Sin avisos registrados</div>
+                ) : insumos.map(ins => (
+                  <div key={ins.id} style={{
+                    padding: '12px 16px', marginBottom: 8, borderRadius: 10,
+                    border: `1px solid ${ins.estado === 'agotado' ? 'rgba(252,165,165,0.15)' : ins.estado === 'proximo' ? 'rgba(251,191,36,0.15)' : 'rgba(255,255,255,0.05)'}`,
+                    background: 'rgba(255,255,255,0.015)',
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div>
+                        <div style={{ fontSize: 14, color: '#c8cdd8', fontWeight: 400 }}>{ins.nombre}</div>
+                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', marginTop: 2 }}>{ins.tipo} · {new Date(ins.updatedAt).toLocaleDateString('es-MX')}</div>
+                        {ins.notas && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>{ins.notas}</div>}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
+                        <span style={{
+                          fontSize: 10, padding: '3px 8px', borderRadius: 99, letterSpacing: '0.08em',
+                          background: ins.estado === 'agotado' ? 'rgba(252,165,165,0.12)' : ins.estado === 'proximo' ? 'rgba(251,191,36,0.12)' : 'rgba(74,222,128,0.12)',
+                          color: ins.estado === 'agotado' ? 'rgba(252,165,165,0.8)' : ins.estado === 'proximo' ? 'rgba(251,191,36,0.8)' : '#4ade80',
+                        }}>
+                          {ins.estado === 'agotado' ? 'AGOTADO' : ins.estado === 'proximo' ? 'PRÓXIMO' : 'DISPONIBLE'}
+                        </span>
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          {ins.estado !== 'proximo' && (
+                            <button onClick={() => updateInsumoEstado(ins.id, 'proximo')} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, border: '1px solid rgba(251,191,36,0.2)', background: 'transparent', color: 'rgba(251,191,36,0.6)', cursor: 'pointer', fontFamily: 'inherit' }}>Próximo</button>
+                          )}
+                          {ins.estado !== 'agotado' && (
+                            <button onClick={() => updateInsumoEstado(ins.id, 'agotado')} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, border: '1px solid rgba(252,165,165,0.2)', background: 'transparent', color: 'rgba(252,165,165,0.6)', cursor: 'pointer', fontFamily: 'inherit' }}>Agotado</button>
+                          )}
+                          {ins.estado !== 'disponible' && (
+                            <button onClick={() => updateInsumoEstado(ins.id, 'disponible')} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, border: '1px solid rgba(74,222,128,0.2)', background: 'transparent', color: 'rgba(74,222,128,0.6)', cursor: 'pointer', fontFamily: 'inherit' }}>Disponible</button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -51,6 +51,7 @@ export default function ExecutiveDashboard({
   const [now, setNow] = useState(new Date());
   const [pressedCompany, setPressedCompany] = useState<string | null>(null);
   const [isLite, setIsLite] = useState(false);
+  const [insumoAlerts, setInsumoAlerts] = useState<any[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -135,6 +136,13 @@ export default function ExecutiveDashboard({
   const timeStr = now.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false });
   const dateStr = now.toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "short" });
   const clockLabel = `${timeStr} · ${dateStr}`;
+
+  useEffect(() => {
+    if (!token) return;
+    execApi(token).get('/pos/insumo-alerts')
+      .then(r => setInsumoAlerts(Array.isArray(r.data) ? r.data : []))
+      .catch(() => {});
+  }, [token]);
 
   // Load companies once
   useEffect(() => {
@@ -277,6 +285,36 @@ export default function ExecutiveDashboard({
           </div>
         ))}
       </div>
+
+      {/* Avisos de insumos */}
+      {insumoAlerts.length > 0 && (
+        <div style={{ padding: '0 20px', marginTop: 16, flexShrink: 0 }}>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 10 }}>
+            Avisos de insumos
+          </div>
+          {insumoAlerts.map(ins => (
+            <div key={ins.id} style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: '10px 14px', marginBottom: 6, borderRadius: 10,
+              border: `1px solid ${ins.estado === 'agotado' ? 'rgba(252,165,165,0.15)' : 'rgba(251,191,36,0.15)'}`,
+              background: 'rgba(255,255,255,0.015)',
+            }}>
+              <div>
+                <div style={{ fontSize: 13, color: '#c8cdd8' }}>{ins.nombre}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>{ins.tipo}</div>
+              </div>
+              <span style={{
+                fontSize: 10, padding: '3px 8px', borderRadius: 99,
+                background: ins.estado === 'agotado' ? 'rgba(252,165,165,0.12)' : 'rgba(251,191,36,0.12)',
+                color: ins.estado === 'agotado' ? 'rgba(252,165,165,0.8)' : 'rgba(251,191,36,0.8)',
+                letterSpacing: '0.08em',
+              }}>
+                {ins.estado === 'agotado' ? 'AGOTADO' : 'PRÓXIMO'}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Company selector — scrollable if list is long */}
       <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "16px 20px 0", textAlign: "center" }}>
