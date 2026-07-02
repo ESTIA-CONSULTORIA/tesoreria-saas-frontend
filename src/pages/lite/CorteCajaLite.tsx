@@ -217,7 +217,8 @@ export default function CorteCajaLite() {
       const res = await axios.get(`${API}/pos/insumo-alerts/all`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setInsumos(Array.isArray(res.data) ? res.data : []);
+      const all = Array.isArray(res.data) ? res.data : [];
+      setInsumos(all.filter((i: any) => i.estado !== 'disponible'));
     } catch {}
   };
 
