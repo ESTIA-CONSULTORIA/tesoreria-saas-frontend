@@ -52,6 +52,8 @@ export default function ExecutiveReport({
   const [customTo, setCustomTo] = useState('');
   const [giroDetected, setGiroDetected] = useState<"restaurant" | "retail" | "default">("default");
   const [isLite, setIsLite] = useState(false);
+  const [byDayData, setByDayData] = useState<{ label: string; total: number; canales: any[] }[]>([]);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
   const showPeriodSelector = module === "VENTA";
   const showChart = module === "FLUJO" && chartDays !== null;
@@ -127,20 +129,50 @@ export default function ExecutiveReport({
 
           val = shifts.reduce((sum: number, s: any) => sum + shiftTotal(s), 0);
 
-          const byDay: Record<string, number> = {};
+          const byDayMap: Record<string, { total: number; canales: any[] }> = {};
           shifts.forEach((s: any) => {
-            const day = new Date(s.createdAt || s.fecha).toLocaleDateString('es-MX', {
-              weekday: 'short', day: 'numeric', month: 'short',
-            });
-            byDay[day] = (byDay[day] || 0) + shiftTotal(s);
+            const fecha = new Date(s.createdAt || s.fecha || 0);
+            const label = fecha.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
+            if (!byDayMap[label]) byDayMap[label] = { total: 0, canales: [] };
+
+            const efectivo = Number(s.efectivoContado || 0);
+            let tarjeta = 0, transf = 0, plat = 0, prom = 0, cortesia = 0, descuento = 0, gasto = 0;
+            if (s.notas) {
+              const mTar = s.notas.match(/Tarjeta[:\s]+\$?([\d,]+\.?\d*)/i);
+              const mTrf = s.notas.match(/Transferencia[:\s]+\$?([\d,]+\.?\d*)/i);
+              const mPlt = s.notas.match(/Plataformas[:\s]+\$?([\d,]+\.?\d*)/i);
+              const mPrm = s.notas.match(/Promociones[:\s]+\$?([\d,]+\.?\d*)/i);
+              const mCor = s.notas.match(/Cortesías[:\s]+\$?([\d,]+\.?\d*)/i);
+              const mDes = s.notas.match(/Descuentos[:\s]+\$?([\d,]+\.?\d*)/i);
+              const mGas = s.notas.match(/Gastos[:\s]+\$?([\d,]+\.?\d*)/i);
+              if (mTar) tarjeta  = parseFloat(mTar[1].replace(/,/g, ''));
+              if (mTrf) transf   = parseFloat(mTrf[1].replace(/,/g, ''));
+              if (mPlt) plat     = parseFloat(mPlt[1].replace(/,/g, ''));
+              if (mPrm) prom     = parseFloat(mPrm[1].replace(/,/g, ''));
+              if (mCor) cortesia = parseFloat(mCor[1].replace(/,/g, ''));
+              if (mDes) descuento= parseFloat(mDes[1].replace(/,/g, ''));
+              if (mGas) gasto    = parseFloat(mGas[1].replace(/,/g, ''));
+            }
+            byDayMap[label].total += efectivo + tarjeta + transf + plat + prom - cortesia - descuento - gasto;
+            byDayMap[label].canales = [
+              { label: 'Efectivo',      valor: efectivo,  resta: false },
+              { label: 'Tarjeta',       valor: tarjeta,   resta: false },
+              { label: 'Transferencia', valor: transf,    resta: false },
+              { label: 'Plataformas',   valor: plat,      resta: false },
+              { label: 'Promociones',   valor: prom,      resta: false },
+              { label: 'Cortesías',     valor: cortesia,  resta: true  },
+              { label: 'Descuentos',    valor: descuento, resta: true  },
+              { label: 'Gastos',        valor: gasto,     resta: true  },
+            ].filter(c => c.valor > 0);
           });
 
+          const byDayArr = Object.entries(byDayMap)
+            .map(([label, data]) => ({ label, ...data }))
+            .sort((a, b) => new Date(b.label).getTime() - new Date(a.label).getTime());
+
+          setByDayData(byDayArr);
           setMainDesc(`${shifts.length} corte${shifts.length !== 1 ? 's' : ''} — ${period}`);
-          items = Object.entries(byDay)
-            .sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime())
-            .slice(0, 6)
-            .map(([day, amt]) => ({ label: day.toUpperCase(), value: fmt(amt) }));
-          if (items.length === 0) items = [{ label: 'SIN CORTES', value: '—' }];
+          items = byDayArr.length === 0 ? [{ label: 'SIN CORTES', value: '—' }] : [];
         }
 
         else if (module === "VENTA") {
@@ -653,33 +685,70 @@ export default function ExecutiveReport({
                 flexShrink: 0,
               }}
             >
-              {subItems.map((item, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "12px 16px",
-                    borderBottom: i < subItems.length - 1 ? `1px solid ${t.separator}` : "none",
-                  }}
-                >
-                  <span
+              {isLite && module === "VENTA" && byDayData.length > 0 ? (
+                byDayData.map((day) => (
+                  <div key={day.label}>
+                    <div
+                      onClick={() => setSelectedDay(selectedDay === day.label ? null : day.label)}
+                      style={{
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        padding: '12px 16px', cursor: 'pointer',
+                        background: selectedDay === day.label ? 'rgba(143,175,212,0.05)' : 'transparent',
+                        borderBottom: `1px solid ${t.separator}`,
+                      }}
+                    >
+                      <span style={{ fontSize: 13, color: selectedDay === day.label ? '#8fafd4' : t.secondary, textTransform: 'capitalize' }}>
+                        {day.label}
+                      </span>
+                      <span style={{ fontSize: 15, fontWeight: 400, color: t.text }}>
+                        ${day.total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    {selectedDay === day.label && (
+                      <div style={{ background: 'rgba(255,255,255,0.02)', padding: '8px 24px 12px' }}>
+                        {day.canales.map((c: any) => (
+                          <div key={c.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${t.separator}` }}>
+                            <span style={{ fontSize: 12, color: c.resta ? 'rgba(252,165,165,0.6)' : t.secondary }}>
+                              {c.label}
+                            </span>
+                            <span style={{ fontSize: 12, color: c.resta ? 'rgba(252,165,165,0.7)' : t.text }}>
+                              {c.resta ? '-' : ''}${Math.abs(c.valor).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                subItems.map((item, i) => (
+                  <div
+                    key={i}
                     style={{
-                      color: t.secondary,
-                      fontSize: "0.6rem",
-                      fontWeight: 400,
-                      letterSpacing: "0.15em",
-                      textTransform: "uppercase",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "12px 16px",
+                      borderBottom: i < subItems.length - 1 ? `1px solid ${t.separator}` : "none",
                     }}
                   >
-                    {item.label}
-                  </span>
-                  <span style={{ color: t.text, fontSize: "0.85rem", fontWeight: 300 }}>
-                    {item.value}
-                  </span>
-                </div>
-              ))}
+                    <span
+                      style={{
+                        color: t.secondary,
+                        fontSize: "0.6rem",
+                        fontWeight: 400,
+                        letterSpacing: "0.15em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {item.label}
+                    </span>
+                    <span style={{ color: t.text, fontSize: "0.85rem", fontWeight: 300 }}>
+                      {item.value}
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
 
             {/* Chart — FLUJO only */}

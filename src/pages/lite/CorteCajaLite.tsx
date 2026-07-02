@@ -212,6 +212,17 @@ export default function CorteCajaLite() {
     }
   };
 
+  const handleBloquear = () => {
+    sessionStorage.removeItem('lite_token');
+    sessionStorage.removeItem('lite_shift');
+    sessionStorage.removeItem('lite_company');
+    setToken('');
+    setShift(null);
+    setPin('');
+    setError('');
+    setScreen('pin');
+  };
+
   const loadInsumos = async () => {
     try {
       const res = await axios.get(`${API}/pos/insumo-alerts/all`, {
@@ -427,14 +438,24 @@ export default function CorteCajaLite() {
                   {new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
                 </div>
               </div>
-              <button onClick={() => { setShowInsumos(true); loadInsumos(); }} style={{
-                background: '#f1f5f9', border: '1px solid #e2e8f0',
-                color: '#475569', fontSize: 12, padding: '6px 14px',
-                borderRadius: 8, cursor: 'pointer', letterSpacing: '0.05em',
-                fontFamily: 'inherit', fontWeight: 500,
-              }}>
-                INSUMOS
-              </button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={handleBloquear} style={{
+                  background: 'none', border: '1px solid rgba(0,0,0,0.15)',
+                  color: 'rgba(0,0,0,0.35)', fontSize: 10, padding: '4px 10px',
+                  borderRadius: 8, cursor: 'pointer', letterSpacing: '0.08em',
+                  fontFamily: 'inherit',
+                }}>
+                  BLOQUEAR
+                </button>
+                <button onClick={() => { setShowInsumos(true); loadInsumos(); }} style={{
+                  background: '#f1f5f9', border: '1px solid #e2e8f0',
+                  color: '#475569', fontSize: 12, padding: '6px 14px',
+                  borderRadius: 8, cursor: 'pointer', letterSpacing: '0.05em',
+                  fontFamily: 'inherit', fontWeight: 500,
+                }}>
+                  INSUMOS
+                </button>
+              </div>
             </div>
           </div>
 
