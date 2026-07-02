@@ -28,7 +28,7 @@ interface SubItem {
 
 type Period = "Semana" | "Quincena" | "Mes" | "Personalizado";
 
-const PERIOD_PARAM: Record<Period, string> = { Semana: "week", Quincena: "fortnight", Mes: "month" };
+const PERIOD_PARAM: Record<Period, string> = { Semana: "week", Quincena: "fortnight", Mes: "month", Personalizado: "custom" };
 const CHART_WEIGHTS = [0.85, 1.10, 0.95, 1.20, 1.05, 0.70, 0.90];
 const CHART_DAYS = ["L", "M", "X", "J", "V", "S", "D"];
 
