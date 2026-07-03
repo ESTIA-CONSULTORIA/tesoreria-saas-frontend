@@ -250,7 +250,7 @@ export default function LoginPage() {
                 BIENVENIDO A
               </p>
               <h1 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 200, color: '#F5F5F5', letterSpacing: '0.12em', marginBottom: '8px' }}>
-                {config.companyName || 'Sistema de Gestión'}
+                {config.companyName || 'ESTIA ERP'}
               </h1>
             </>
           )}
@@ -648,7 +648,7 @@ export default function LoginPage() {
             Alta seguridad · Respaldo en la nube · Soporte especializado
           </p>
           <p style={{ fontSize: '11px', color: '#7E7E7E', marginTop: '8px' }}>
-            © {new Date().getFullYear()} {config.companyName || 'Sistema de Gestión'}. Todos los derechos reservados.
+            © {new Date().getFullYear()} ESTIA Consultoría. Todos los derechos reservados.
           </p>
         </div>
       </div>
