@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const API = (import.meta.env.VITE_API_URL as string) ||
-  'https://tesoreria-saas-backend-production.up.railway.app';
+const API = ((import.meta.env.VITE_API_URL as string) ||
+  'https://api.estiaconsultoria.com') + '/api/v1';
 
 interface Totales {
   efectivo: number;

@@ -2,10 +2,10 @@ import axios from "axios";
 import { useCompanyStore } from "../store/useCompanyStore";
 import { useAuthStore } from "../store/useAuthStore";
 
-const baseURL = import.meta.env.VITE_API_URL ||
+const baseURL = (import.meta.env.VITE_API_URL ||
   (window.location.hostname === 'localhost'
     ? 'http://localhost:3000'
-    : `http://${window.location.hostname}:3000`);
+    : 'https://api.estiaconsultoria.com')) + '/api/v1';
 
 export const api = axios.create({
   baseURL,

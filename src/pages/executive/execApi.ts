@@ -1,10 +1,9 @@
 import axios from "axios";
 
-const BASE =
-  (import.meta.env.VITE_API_URL as string) ||
-  (window.location.hostname === "localhost"
-    ? "http://localhost:3000"
-    : "https://tesoreria-saas-backend-production.up.railway.app");
+const BASE = ((import.meta.env.VITE_API_URL as string) ||
+  (window.location.hostname === 'localhost'
+    ? 'http://localhost:3000'
+    : 'https://api.estiaconsultoria.com')) + '/api/v1';
 
 // For executive-login (unauthenticated) — no interceptors that redirect on 401
 export const execPublicApi = axios.create({ baseURL: BASE, timeout: 30000 });
