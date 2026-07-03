@@ -1,5 +1,5 @@
 export const theme = {
-  appName: "Tesorería SaaS",
+  appName: "ESTIA ERP",
 
   colors: {
     background: "bg-slate-950",

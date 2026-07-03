@@ -166,273 +166,111 @@ export default function LoginPage() {
     <div style={{
       minHeight: '100vh',
       display: 'flex',
-      backgroundColor: '#0A0A0A',
-      ...(brandingBg ? {
-        backgroundImage: `url(${brandingBg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      } : {}),
+      background: '#050709',
+      fontFamily: "'Inter', -apple-system, sans-serif",
     }}>
-      {/* Columna Izquierda - 45% */}
+      {/* Panel izquierdo — branding */}
       <div style={{
-        width: '45%',
-        position: 'relative',
-        overflow: 'hidden',
-        backgroundImage: config.backgroundImage ? `url(${config.backgroundImage})` : undefined,
-        background: config.backgroundImage ? undefined : '#0A0A0A',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        flex: 1,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        padding: '48px',
+        padding: '48px 64px',
+        borderRight: '1px solid rgba(255,255,255,0.05)',
       }}>
-        {/* SVG Background Pattern (solo si no hay imagen personalizada) */}
-        {!config.backgroundImage && (
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 0,
-            opacity: 0.03,
-          }}>
-            <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <line x1="0" y1="20" x2="100" y2="20" stroke="#BDBDBD" strokeWidth="0.5" />
-              <line x1="0" y1="40" x2="100" y2="40" stroke="#BDBDBD" strokeWidth="0.5" />
-              <line x1="0" y1="60" x2="100" y2="60" stroke="#BDBDBD" strokeWidth="0.5" />
-              <line x1="0" y1="80" x2="100" y2="80" stroke="#BDBDBD" strokeWidth="0.5" />
-              <line x1="20" y1="0" x2="20" y2="100" stroke="#BDBDBD" strokeWidth="0.5" />
-              <line x1="40" y1="0" x2="40" y2="100" stroke="#BDBDBD" strokeWidth="0.5" />
-              <line x1="60" y1="0" x2="60" y2="100" stroke="#BDBDBD" strokeWidth="0.5" />
-              <line x1="80" y1="0" x2="80" y2="100" stroke="#BDBDBD" strokeWidth="0.5" />
-              <rect x="25" y="25" width="10" height="10" stroke="#BDBDBD" strokeWidth="0.5" fill="none" />
-              <rect x="65" y="65" width="10" height="10" stroke="#BDBDBD" strokeWidth="0.5" fill="none" />
-            </svg>
+        {/* Logo / marca */}
+        <div>
+          <div style={{ fontSize: 11, letterSpacing: '0.3em', color: 'rgba(143,175,212,0.6)', textTransform: 'uppercase', marginBottom: 8 }}>
+            ESTIA
           </div>
-        )}
-
-        {/* Overlay (solo si hay imagen personalizada) */}
-        {config.backgroundImage && (
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%)',
-            zIndex: 0,
-          }} />
-        )}
-
-        {/* Logo del cliente */}
-        {(brandingLogo || config.logoUrl) && (
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <img src={brandingLogo || config.logoUrl} alt="Logo" style={{ maxHeight: '60px' }} />
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em' }}>
+            Consultoría Empresarial
           </div>
-        )}
-
-        {/* ESTIA logo */}
-        <div style={{ position: 'absolute', top: '48px', right: '48px', zIndex: 1 }}>
-          <span style={{ fontSize: '12px', color: '#BDBDBD', letterSpacing: '0.1em' }}>ESTIA</span>
         </div>
 
-        {/* Contenido central */}
-        <div style={{ position: 'relative', zIndex: 1, marginTop: 'auto', marginBottom: 'auto' }}>
-          {brandingLogo ? (
-            <div style={{ marginBottom: '24px' }}>
-              <img src={brandingLogo} alt="Logo" style={{ maxHeight: '80px', maxWidth: '200px', objectFit: 'contain' }} />
-            </div>
-          ) : (
-            <>
-              <p style={{ fontSize: '10px', color: '#BDBDBD', letterSpacing: '0.15em', marginBottom: '16px' }}>
-                BIENVENIDO A
-              </p>
-              <h1 style={{ fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 200, color: '#F5F5F5', letterSpacing: '0.12em', marginBottom: '8px' }}>
-                {config.companyName || 'ESTIA ERP'}
-              </h1>
-            </>
-          )}
-          <div style={{ width: '40px', height: '1px', backgroundColor: '#BDBDBD', margin: '16px 0' }} />
-          <p style={{ fontSize: '13px', color: '#9A9A9A' }}>
-            {config.tagline || 'Solución integral para tu negocio'}
-          </p>
+        {/* Tagline central */}
+        <div>
+          <div style={{ fontSize: 48, fontWeight: 200, color: '#e8ecf0', lineHeight: 1.2, marginBottom: 24, letterSpacing: '-0.02em' }}>
+            Control, orden<br />y decisión<br />para tu <span style={{ color: '#8fafd4' }}>empresa</span>
+          </div>
+          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.25)', fontWeight: 300, lineHeight: 1.8, maxWidth: 380 }}>
+            Plataforma empresarial modular — multi-empresa, multi-sucursal, multi-usuario.
+          </div>
         </div>
 
-        {/* Íconos */}
-        <div style={{ position: 'relative', zIndex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-            <div style={{ fontSize: '24px', marginBottom: '8px' }}>📊</div>
-            <p style={{ fontSize: '11px', color: '#BDBDBD' }}>Información en tiempo real</p>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-            <div style={{ fontSize: '24px', marginBottom: '8px' }}>🔒</div>
-            <p style={{ fontSize: '11px', color: '#BDBDBD' }}>Seguridad avanzada</p>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-            <div style={{ fontSize: '24px', marginBottom: '8px' }}>📈</div>
-            <p style={{ fontSize: '11px', color: '#BDBDBD' }}>Indicadores clave</p>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-            <div style={{ fontSize: '24px', marginBottom: '8px' }}>👥</div>
-            <p style={{ fontSize: '11px', color: '#BDBDBD' }}>Multiusuario y permisos</p>
-          </div>
+        {/* Footer */}
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.15)', letterSpacing: '0.05em' }}>
+          © {new Date().getFullYear()} ESTIA Consultoría · Todos los derechos reservados
         </div>
       </div>
 
-      {/* Columna Derecha - 55% */}
-      <div style={{ width: '55%', backgroundColor: '#0A0A0A', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '48px' }}>
-        {/* Header */}
-        <div style={{ marginBottom: '48px' }}>
-          <h1 style={{ fontSize: '28px', fontWeight: 300, color: '#F5F5F5', marginBottom: '8px' }}>
-            ¿Cómo deseas ingresar?
-          </h1>
-          <p style={{ fontSize: '14px', color: '#9A9A9A' }}>
-            Selecciona el acceso que necesitas
-          </p>
-        </div>
-
-        {/* Tarjetas */}
+      {/* Panel derecho — acceso */}
+      <div style={{
+        width: 480,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        padding: '48px 56px',
+      }}>
         {!expandedCard ? (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-            {/* Tarjeta Sistema Principal */}
-            <div
-              style={{
-                backgroundColor: 'rgba(22,22,22,0.95)',
-                border: '1px solid #2D2D2D',
-                borderRadius: '12px',
-                padding: '32px 24px',
-                cursor: 'pointer',
-                transition: 'border-color 0.2s',
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.borderColor = '#BDBDBD'}
-              onMouseLeave={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
-              onClick={() => setExpandedCard('main')}
-            >
-              {/* Doodle SVG */}
-              <div style={{ marginBottom: '24px', opacity: 0.15 }}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9A9A9A" strokeWidth="1">
-                  <rect x="2" y="3" width="20" height="14" rx="2" />
-                  <line x1="8" y1="21" x2="16" y2="21" />
-                  <line x1="12" y1="17" x2="12" y2="21" />
-                </svg>
-              </div>
-              <h2 style={{ fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.15em', color: '#F5F5F5', marginBottom: '12px' }}>
-                SISTEMA PRINCIPAL
-              </h2>
-              <div style={{ width: '40px', height: '1px', backgroundColor: '#2D2D2D', marginBottom: '12px' }} />
-              <p style={{ fontSize: '13px', color: '#9A9A9A', marginBottom: '16px' }}>
-                Administra todas las áreas de tu negocio desde una sola plataforma.
-              </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
-                <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Ventas</span>
-                <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Inventarios</span>
-                <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Compras</span>
-                <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Finanzas</span>
-                <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Tesorería</span>
-              </div>
-              <button
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  fontSize: '12px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.1em',
-                  color: '#BDBDBD',
-                  backgroundColor: '#1B1B1B',
-                  border: '1px solid #3D3D3D',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#BDBDBD';
-                  e.currentTarget.style.color = '#F5F5F5';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = '#3D3D3D';
-                  e.currentTarget.style.color = '#BDBDBD';
-                }}
-              >
-                INGRESAR
-              </button>
+          <>
+            <div style={{ fontSize: 10, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', marginBottom: 32 }}>
+              Selecciona tu acceso
             </div>
 
-            {/* Tarjeta POS */}
-            <div
+            {/* Botón Sistema Principal */}
+            <button
+              onClick={() => setExpandedCard('main')}
               style={{
-                backgroundColor: 'rgba(22,22,22,0.95)',
-                border: '1px solid #2D2D2D',
-                borderRadius: '12px',
-                padding: '32px 24px',
-                cursor: 'pointer',
-                transition: 'border-color 0.2s',
+                width: '100%', padding: '24px 28px', marginBottom: 12,
+                border: '1px solid rgba(255,255,255,0.08)',
+                background: 'rgba(255,255,255,0.02)',
+                borderRadius: 14, cursor: 'pointer', textAlign: 'left',
+                transition: 'all 0.2s',
               }}
-              onMouseEnter={(e) => e.currentTarget.style.borderColor = '#BDBDBD'}
-              onMouseLeave={(e) => e.currentTarget.style.borderColor = '#2D2D2D'}
-              onClick={() => setExpandedCard('pos')}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(143,175,212,0.3)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
             >
-              {/* Doodle SVG */}
-              <div style={{ marginBottom: '24px', opacity: 0.15 }}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9A9A9A" strokeWidth="1">
-                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <path d="M16 10a4 4 0 0 1-8 0" />
-                </svg>
+              <div style={{ fontSize: 15, fontWeight: 400, color: '#c8cdd8', marginBottom: 6 }}>
+                Sistema Principal
               </div>
-              <h2 style={{ fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.15em', color: '#F5F5F5', marginBottom: '12px' }}>
-                PUNTO DE VENTA
-              </h2>
-              <div style={{ width: '40px', height: '1px', backgroundColor: '#2D2D2D', marginBottom: '12px' }} />
-              <p style={{ fontSize: '13px', color: '#9A9A9A', marginBottom: '16px' }}>
-                Accede al sistema de ventas rápido y seguro para tu punto de venta.
-              </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
-                <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Ventas</span>
-                <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Cobros</span>
-                <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Cortes de caja</span>
-                <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Tickets</span>
-                <span style={{ fontSize: '11px', color: '#7E7E7E' }}>Clientes</span>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', lineHeight: 1.6 }}>
+                Administración, finanzas, RH, reportes y configuración
               </div>
-              <button
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  fontSize: '12px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.1em',
-                  color: '#BDBDBD',
-                  backgroundColor: '#1B1B1B',
-                  border: '1px solid #3D3D3D',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#BDBDBD';
-                  e.currentTarget.style.color = '#F5F5F5';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = '#3D3D3D';
-                  e.currentTarget.style.color = '#BDBDBD';
-                }}
-              >
-                INGRESAR
-              </button>
-            </div>
-          </div>
+            </button>
+
+            {/* Botón Punto de Venta */}
+            <button
+              onClick={() => setExpandedCard('pos')}
+              style={{
+                width: '100%', padding: '24px 28px',
+                border: '1px solid rgba(255,255,255,0.08)',
+                background: 'rgba(255,255,255,0.02)',
+                borderRadius: 14, cursor: 'pointer', textAlign: 'left',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(74,222,128,0.3)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+            >
+              <div style={{ fontSize: 15, fontWeight: 400, color: '#c8cdd8', marginBottom: 6 }}>
+                Punto de Venta
+              </div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', lineHeight: 1.6 }}>
+                Cortes de caja, ventas, cobros y tickets
+              </div>
+            </button>
+          </>
         ) : (
-          /* Formulario expandido */
-          <div style={{ maxWidth: '448px', margin: '0 auto' }}>
+          /* Formulario expandido — sin cambios de lógica */
+          <div style={{ maxWidth: '448px', margin: '0 auto', width: '100%' }}>
             <button
               onClick={() => setExpandedCard(null)}
-              style={{ marginBottom: '24px', fontSize: '14px', color: '#9A9A9A', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+              style={{ marginBottom: '24px', fontSize: '14px', color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
             >
               ← Volver
             </button>
 
-            <h2 style={{ fontSize: '24px', fontWeight: 300, color: '#F5F5F5', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 300, color: '#e8ecf0', marginBottom: '24px' }}>
               {expandedCard === 'main' ? 'Sistema Principal' : 'Punto de Venta'}
             </h2>
 
@@ -449,7 +287,7 @@ export default function LoginPage() {
                   placeholder="Correo electrónico"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  style={{ marginBottom: '16px', width: '100%', padding: '12px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#1B1B1B', border: '1px solid #2D2D2D', color: '#F5F5F5' }}
+                  style={{ marginBottom: '16px', width: '100%', padding: '12px', borderRadius: '6px', fontSize: '14px', backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#e8ecf0', boxSizing: 'border-box' }}
                 />
                 <input
                   type="password"
@@ -457,38 +295,23 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleMainLogin()}
-                  style={{ marginBottom: '24px', width: '100%', padding: '12px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#1B1B1B', border: '1px solid #2D2D2D', color: '#F5F5F5' }}
+                  style={{ marginBottom: '24px', width: '100%', padding: '12px', borderRadius: '6px', fontSize: '14px', backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#e8ecf0', boxSizing: 'border-box' }}
                 />
                 <button
                   onClick={handleMainLogin}
                   disabled={loading}
                   style={{
-                    width: '100%',
-                    padding: '12px',
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.1em',
-                    color: loading ? '#9A9A9A' : '#BDBDBD',
-                    backgroundColor: loading ? '#2D2D2D' : '#1B1B1B',
-                    border: '1px solid #3D3D3D',
-                    borderRadius: '6px',
-                    cursor: loading ? 'not-allowed' : 'pointer',
+                    width: '100%', padding: '13px', fontSize: '13px', fontWeight: 400,
+                    letterSpacing: '0.08em', color: loading ? 'rgba(255,255,255,0.2)' : '#c8cdd8',
+                    backgroundColor: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '8px', cursor: loading ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
                   }}
-                  onMouseEnter={(e) => {
-                    if (!loading) {
-                      e.currentTarget.style.borderColor = '#BDBDBD';
-                      e.currentTarget.style.color = '#F5F5F5';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!loading) {
-                      e.currentTarget.style.borderColor = '#3D3D3D';
-                      e.currentTarget.style.color = '#BDBDBD';
-                    }
-                  }}
+                  onMouseEnter={(e) => { if (!loading) e.currentTarget.style.borderColor = 'rgba(143,175,212,0.4)'; }}
+                  onMouseLeave={(e) => { if (!loading) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}
                 >
-                  {loading ? "Entrando..." : "INGRESAR"}
+                  {loading ? "Entrando..." : "Ingresar"}
                 </button>
               </>
             ) : (
@@ -500,23 +323,17 @@ export default function LoginPage() {
                       <div
                         key={index}
                         style={{
-                          width: '48px',
-                          height: '48px',
-                          borderRadius: '50%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '24px',
-                          backgroundColor: '#1B1B1B',
-                          border: '1px solid #2D2D2D',
-                          color: '#BDBDBD',
+                          width: '48px', height: '48px', borderRadius: '50%',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '24px', backgroundColor: 'rgba(255,255,255,0.04)',
+                          border: '1px solid rgba(255,255,255,0.08)', color: '#8fafd4',
                         }}
                       >
                         {index < nip.length ? '●' : '○'}
                       </div>
                     ))}
                   </div>
-                  <p style={{ fontSize: '14px', color: '#9A9A9A' }}>
+                  <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.25)' }}>
                     Ingresa tu NIP de 4 dígitos
                   </p>
                 </div>
@@ -528,25 +345,14 @@ export default function LoginPage() {
                       key={num}
                       onClick={() => handleNipInput(num)}
                       style={{
-                        width: '64px',
-                        height: '64px',
-                        borderRadius: '8px',
-                        fontSize: '24px',
-                        fontWeight: 500,
-                        backgroundColor: '#1B1B1B',
-                        border: '1px solid #2D2D2D',
-                        color: '#F5F5F5',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
+                        width: '64px', height: '64px', borderRadius: '8px',
+                        fontSize: '24px', fontWeight: 400,
+                        backgroundColor: 'rgba(255,255,255,0.04)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        color: '#e8ecf0', cursor: 'pointer', transition: 'all 0.15s',
                       }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#222222';
-                        e.currentTarget.style.borderColor = '#3D3D3D';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#1B1B1B';
-                        e.currentTarget.style.borderColor = '#2D2D2D';
-                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
                     >
                       {num}
                     </button>
@@ -554,71 +360,42 @@ export default function LoginPage() {
                   <button
                     onClick={handleNipDelete}
                     style={{
-                      width: '64px',
-                      height: '64px',
-                      borderRadius: '8px',
-                      fontSize: '24px',
-                      fontWeight: 500,
-                      backgroundColor: 'rgba(155, 58, 58, 0.1)',
-                      border: '1px solid #9B3A3A',
-                      color: '#9B3A3A',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
+                      width: '64px', height: '64px', borderRadius: '8px',
+                      fontSize: '20px', fontWeight: 400,
+                      backgroundColor: 'rgba(252,165,165,0.05)',
+                      border: '1px solid rgba(252,165,165,0.15)',
+                      color: 'rgba(252,165,165,0.6)', cursor: 'pointer', transition: 'all 0.15s',
                     }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(155, 58, 58, 0.2)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(155, 58, 58, 0.1)';
-                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(252,165,165,0.3)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(252,165,165,0.15)'; }}
                   >
                     ⌫
                   </button>
                   <button
                     onClick={() => handleNipInput('0')}
                     style={{
-                      width: '64px',
-                      height: '64px',
-                      borderRadius: '8px',
-                      fontSize: '24px',
-                      fontWeight: 500,
-                      backgroundColor: '#1B1B1B',
-                      border: '1px solid #2D2D2D',
-                      color: '#F5F5F5',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
+                      width: '64px', height: '64px', borderRadius: '8px',
+                      fontSize: '24px', fontWeight: 400,
+                      backgroundColor: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      color: '#e8ecf0', cursor: 'pointer', transition: 'all 0.15s',
                     }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#222222';
-                      e.currentTarget.style.borderColor = '#3D3D3D';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#1B1B1B';
-                      e.currentTarget.style.borderColor = '#2D2D2D';
-                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
                   >
                     0
                   </button>
                   <button
                     onClick={handleNipClear}
                     style={{
-                      width: '64px',
-                      height: '64px',
-                      borderRadius: '8px',
-                      fontSize: '24px',
-                      fontWeight: 500,
-                      backgroundColor: '#1B1B1B',
-                      border: '1px solid #2D2D2D',
-                      color: '#9A9A9A',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
+                      width: '64px', height: '64px', borderRadius: '8px',
+                      fontSize: '16px', fontWeight: 400,
+                      backgroundColor: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      color: 'rgba(255,255,255,0.25)', cursor: 'pointer', transition: 'all 0.15s',
                     }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#222222';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#1B1B1B';
-                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
                   >
                     C
                   </button>
@@ -641,16 +418,6 @@ export default function LoginPage() {
             )}
           </div>
         )}
-
-        {/* Footer */}
-        <div style={{ marginTop: 'auto', paddingTop: '32px', textAlign: 'center' }}>
-          <p style={{ fontSize: '11px', color: '#7E7E7E' }}>
-            Alta seguridad · Respaldo en la nube · Soporte especializado
-          </p>
-          <p style={{ fontSize: '11px', color: '#7E7E7E', marginTop: '8px' }}>
-            © {new Date().getFullYear()} ESTIA Consultoría. Todos los derechos reservados.
-          </p>
-        </div>
       </div>
     </div>
   );

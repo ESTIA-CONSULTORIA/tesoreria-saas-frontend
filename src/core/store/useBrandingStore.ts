@@ -26,7 +26,7 @@ interface BrandingState {
 }
 
 const defaults = {
-  systemName: lsGet("system_name", "Tesorería SaaS"),
+  systemName: lsGet("system_name", "ESTIA ERP"),
   logoUrl: lsGet("system_logo"),
   accentColor: lsGet("system_accent", "#8fafd4"),
   backgroundImage: lsGet("system_bg"),
@@ -46,7 +46,7 @@ export const useBrandingStore = create<BrandingState>((set) => ({
       if (!tenantId) return;
       const res = await api.get(`/tenant-settings/${tenantId}`);
       if (res.data) {
-        const systemName = res.data.name || "Tesorería SaaS";
+        const systemName = res.data.name || "ESTIA ERP";
         const logoUrl = res.data.logoUrl || "";
         const accentColor = res.data.accentColor || "#8fafd4";
         const backgroundImage = res.data.backgroundImage || "";
