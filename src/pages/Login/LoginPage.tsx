@@ -73,7 +73,7 @@ export default function LoginPage() {
         name: user.name || "Administrador",
         roleCode: user.roleCode,
         tenantId: user.tenantId,
-      }, finalModulosActivos);
+      }, finalModulosActivos, response.data.refresh_token);
 
       navigate("/");
     } catch (error: any) {

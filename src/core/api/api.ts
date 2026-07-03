@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useCompanyStore } from "../store/useCompanyStore";
+import { useAuthStore } from "../store/useAuthStore";
 
 const baseURL = import.meta.env.VITE_API_URL ||
   (window.location.hostname === 'localhost'
@@ -38,12 +39,39 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('tenant_id');
-      window.location.href = '/';
-    } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      const refreshToken = localStorage.getItem('refresh_token');
+      if (!refreshToken) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('tenant_id');
+        window.location.href = '/login';
+        return Promise.reject(error);
+      }
+
+      try {
+        const res = await axios.post(`${baseURL}/auth/refresh`, { refreshToken });
+        const { access_token, refresh_token } = res.data;
+
+        localStorage.setItem('refresh_token', refresh_token);
+        useAuthStore.getState().updateToken(access_token);
+
+        originalRequest.headers.Authorization = `Bearer ${access_token}`;
+        return api(originalRequest);
+      } catch {
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('tenant_id');
+        window.location.href = '/login';
+        return Promise.reject(error);
+      }
+    }
+
+    if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
       error.message = 'Tiempo de espera agotado. El servidor tardó demasiado en responder.';
     } else if (!error.response) {
       error.message = `No se puede conectar al servidor. Verifica que el backend esté corriendo en ${baseURL}`;

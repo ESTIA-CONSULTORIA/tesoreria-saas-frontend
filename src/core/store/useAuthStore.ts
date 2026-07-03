@@ -26,9 +26,11 @@ interface AuthState {
     token: string,
     tenantId: string,
     user: User,
-    modulosActivos?: string[]
+    modulosActivos?: string[],
+    refreshToken?: string,
   ) => void;
 
+  updateToken: (accessToken: string) => void;
   logout: () => void;
   triggerLogout: () => void;
   clearLogoutTrigger: () => void;
@@ -43,7 +45,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   branchId: localStorage.getItem("user_branch_id"),
   logoutTrigger: false,
 
-  login: (token, tenantId, user, modulosActivos = []) => {
+  login: (token, tenantId, user, modulosActivos = [], refreshToken?) => {
     // Decode JWT to extract companyId/branchId
     let companyId = null;
     let branchId = null;
@@ -63,6 +65,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     };
 
     localStorage.setItem("access_token", token);
+    if (refreshToken) {
+      localStorage.setItem("refresh_token", refreshToken);
+    }
     if (tenantId) {
       localStorage.setItem("tenant_id", tenantId);
     } else {
@@ -93,8 +98,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
   },
 
+  updateToken: (accessToken: string) => {
+    set({ token: accessToken });
+    localStorage.setItem('access_token', accessToken);
+  },
+
   logout: () => {
     localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     localStorage.removeItem("tenant_id");
     localStorage.removeItem("user");
     localStorage.removeItem("modulos_activos");
