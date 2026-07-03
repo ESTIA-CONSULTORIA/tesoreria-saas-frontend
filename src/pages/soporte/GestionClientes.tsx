@@ -44,6 +44,34 @@ const MODULE_LABELS: Record<string, string> = {
   'apariencia-logo-only': 'Apariencia (logo)',
 };
 
+// Keep MODULE_LABELS available for future use
+void MODULE_LABELS;
+// Keep PLAN_MODULES available for future use
+void PLAN_MODULES;
+
+const STEPS = [
+  { num: 1, label: 'Negocio' },
+  { num: 2, label: 'Contacto' },
+  { num: 3, label: 'Plan' },
+  { num: 4, label: 'Confirmar' },
+];
+
+const WIZARD_INITIAL = {
+  legalName: '',
+  tradeName: '',
+  rfc: '',
+  industry: '',
+  ownerName: '',
+  email: '',
+  phone: '',
+  city: '',
+  state: '',
+  plan: 'LITE_CORTE',
+  slug: '',
+  password: '',
+  billingCycle: 'monthly',
+};
+
 export default function GestionClientes() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,15 +91,14 @@ export default function GestionClientes() {
   const [newUserLoading, setNewUserLoading] = useState(false);
   const [newUserError, setNewUserError] = useState('');
   const [newUserSuccess, setNewUserSuccess] = useState('');
-  const [newClientOpen, setNewClientOpen] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newOwnerName, setNewOwnerName] = useState('');
-  const [newEmail, setNewEmail] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [newPlan, setNewPlan] = useState('BASIC');
-  const [selectedModules, setSelectedModules] = useState<string[]>([...PLAN_MODULES['BASIC']]);
-  const [newLoading, setNewLoading] = useState(false);
-  const [newError, setNewError] = useState('');
+
+  // Wizard
+  const [showWizard, setShowWizard] = useState(false);
+  const [wizardStep, setWizardStep] = useState(1);
+  const [wizardData, setWizardData] = useState({ ...WIZARD_INITIAL });
+  const [creating, setCreating] = useState(false);
+  const [createSuccess, setCreateSuccess] = useState(false);
+  const [wizardError, setWizardError] = useState('');
 
   useEffect(() => {
     loadTenants();
@@ -169,40 +196,47 @@ export default function GestionClientes() {
     }
   }
 
-  function handlePlanChange(plan: string) {
-    setNewPlan(plan);
-    setSelectedModules([...(PLAN_MODULES[plan] || [])]);
-  }
-
-  function toggleModule(mod: string) {
-    setSelectedModules(prev =>
-      prev.includes(mod) ? prev.filter(m => m !== mod) : [...prev, mod]
-    );
-  }
-
-  async function handleCreateTenant(e: React.FormEvent) {
-    e.preventDefault();
-    setNewLoading(true);
-    setNewError('');
+  async function handleCreateWizard() {
+    setCreating(true);
+    setWizardError('');
     try {
       await api.post('/tenants', {
-        legalName: newName,
-        tradeName: newName,
-        ownerName: newOwnerName,
-        email: newEmail,
-        password: newPassword,
-        plan: newPlan,
-        modules: selectedModules,
+        legalName: wizardData.legalName,
+        tradeName: wizardData.tradeName || wizardData.legalName,
+        rfc: wizardData.rfc,
+        taxId: wizardData.rfc,
+        industry: wizardData.industry,
+        ownerName: wizardData.ownerName,
+        email: wizardData.email,
+        phone: wizardData.phone,
+        city: wizardData.city,
+        state: wizardData.state,
+        plan: wizardData.plan,
+        slug: wizardData.slug,
+        password: wizardData.password,
+        billingCycle: wizardData.billingCycle,
       });
-      setNewClientOpen(false);
-      setNewName(''); setNewOwnerName(''); setNewEmail(''); setNewPassword('');
-      setNewPlan('BASIC'); setSelectedModules([...PLAN_MODULES['BASIC']]);
+      setCreateSuccess(true);
       loadTenants();
     } catch (err: any) {
-      setNewError(err.response?.data?.message || 'Error al crear el cliente');
+      setWizardError(err.response?.data?.message || 'Error al crear el cliente');
     } finally {
-      setNewLoading(false);
+      setCreating(false);
     }
+  }
+
+  function openWizard() {
+    setWizardData({ ...WIZARD_INITIAL });
+    setWizardStep(1);
+    setCreateSuccess(false);
+    setWizardError('');
+    setShowWizard(true);
+  }
+
+  function closeWizard() {
+    setShowWizard(false);
+    setCreateSuccess(false);
+    setWizardError('');
   }
 
   function getModulesForPlan(plan: string): string[] {
@@ -232,7 +266,7 @@ export default function GestionClientes() {
             <p className="text-slate-400">Administra todos los tenants del sistema</p>
           </div>
           <button
-            onClick={() => setNewClientOpen(true)}
+            onClick={openWizard}
             className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
           >
             + Nuevo Cliente
@@ -379,7 +413,6 @@ export default function GestionClientes() {
                   </button>
                 </form>
 
-                {/* Sección crear usuario */}
                 <div className="border-t border-slate-700 pt-4 mt-2 space-y-3">
                   <div className="text-xs text-slate-400">Crear usuario para este tenant</div>
                   {newUserError && (
@@ -422,95 +455,341 @@ export default function GestionClientes() {
           </div>
         )}
 
-        {/* Modal nuevo cliente */}
-        {newClientOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-md max-h-[90vh] flex flex-col rounded-xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden">
-              <div className="flex-shrink-0 flex items-center justify-between p-6 border-b border-slate-800">
-                <div>
-                  <h3 className="text-xl font-bold text-white">Nuevo Cliente</h3>
-                  <p className="text-sm text-slate-400">Crea un nuevo tenant en el sistema</p>
-                </div>
-                <button onClick={() => { setNewClientOpen(false); setNewError(''); }}
-                  className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700">
-                  Cerrar
-                </button>
-              </div>
-              <form onSubmit={handleCreateTenant} className="flex-1 overflow-y-auto p-6 space-y-4">
-                {newError && (
-                  <div className="rounded-lg border border-red-700 bg-red-900/30 p-3 text-sm text-red-300">{newError}</div>
-                )}
-                <div>
-                  <label className="block text-xs text-slate-400 mb-1">Nombre del tenant</label>
-                  <input
-                    value={newName} onChange={e => setNewName(e.target.value)}
-                    placeholder="Ej: Restaurante El Sazón"
-                    required
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-slate-400 mb-1">Nombre del dueño / administrador</label>
-                  <input
-                    value={newOwnerName} onChange={e => setNewOwnerName(e.target.value)}
-                    placeholder="Ej: Juan García"
-                    required
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-slate-400 mb-1">Email del administrador</label>
-                  <input
-                    type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)}
-                    placeholder="admin@empresa.com"
-                    required
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-slate-400 mb-1">Password del administrador</label>
-                  <input
-                    type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
-                    placeholder="Mínimo 8 caracteres"
-                    required
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-slate-400 mb-1">Plan</label>
-                  <select value={newPlan} onChange={e => handlePlanChange(e.target.value)}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500">
-                    <option value="LITE_CORTE">LITE — Corte de Caja (manual)</option>
-                    <option value="LITE_POS">LITE — POS sin inventario</option>
-                    <option value="BASIC">BASIC</option>
-                    <option value="PRO">PRO</option>
-                    <option value="BUSINESS">BUSINESS</option>
-                    <option value="ENTERPRISE">ENTERPRISE</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs text-slate-400 mb-2">Módulos incluidos</label>
-                  <div className="rounded-lg border border-slate-700 bg-slate-800 p-3 grid grid-cols-2 gap-2">
-                    {Object.keys(MODULE_LABELS).map(mod => (
-                      <label key={mod} className="flex items-center gap-2 cursor-pointer select-none">
-                        <input
-                          type="checkbox"
-                          checked={selectedModules.includes(mod)}
-                          onChange={() => toggleModule(mod)}
-                          className="rounded accent-blue-500"
-                        />
-                        <span className="text-sm text-slate-300">{MODULE_LABELS[mod]}</span>
-                      </label>
-                    ))}
+        {/* Wizard nuevo cliente */}
+        {showWizard && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+            <div style={{
+              width: '100%', maxWidth: 460,
+              maxHeight: '90vh',
+              display: 'flex', flexDirection: 'column',
+              borderRadius: 16,
+              border: '1px solid rgba(255,255,255,0.07)',
+              background: '#0d1117',
+              boxShadow: '0 24px 80px rgba(0,0,0,0.7)',
+              overflow: 'hidden',
+            }}>
+              {/* Header */}
+              <div style={{ flexShrink: 0, padding: '24px 24px 0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                  <div>
+                    <div style={{ fontSize: 16, fontWeight: 600, color: '#e8edf5' }}>Nuevo Cliente</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', marginTop: 2 }}>
+                      Paso {wizardStep} de {STEPS.length}
+                    </div>
                   </div>
+                  <button
+                    onClick={closeWizard}
+                    style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: 8, padding: '6px 12px', color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer' }}
+                  >
+                    Cerrar
+                  </button>
                 </div>
 
-                <button disabled={newLoading}
-                  className="w-full rounded-lg bg-blue-600 p-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-60">
-                  {newLoading ? 'Creando...' : 'Crear Cliente'}
-                </button>
-              </form>
+                {/* Step indicator */}
+                <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+                  {STEPS.map(s => (
+                    <div key={s.num} style={{ flex: 1, textAlign: 'center' }}>
+                      <div style={{
+                        width: 28, height: 28, borderRadius: '50%', margin: '0 auto 4px',
+                        background: wizardStep >= s.num ? '#8fafd4' : 'rgba(255,255,255,0.08)',
+                        color: wizardStep >= s.num ? '#080a0f' : 'rgba(255,255,255,0.25)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 12, fontWeight: 600,
+                        transition: 'all 0.2s',
+                      }}>{s.num}</div>
+                      <div style={{
+                        fontSize: 10, letterSpacing: '0.06em',
+                        color: wizardStep >= s.num ? '#8fafd4' : 'rgba(255,255,255,0.2)',
+                        transition: 'all 0.2s',
+                      }}>
+                        {s.label.toUpperCase()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Body */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '0 24px' }}>
+
+                {/* PASO 1 — Negocio */}
+                {wizardStep === 1 && (
+                  <div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Datos del negocio</div>
+                    <input
+                      placeholder="Nombre legal (ante SAT)"
+                      value={wizardData.legalName}
+                      onChange={e => setWizardData(p => ({ ...p, legalName: e.target.value }))}
+                      style={{ width: '100%', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', padding: '10px 12px', color: '#e8edf5', fontSize: 13, marginBottom: 10, outline: 'none', boxSizing: 'border-box' }}
+                    />
+                    <input
+                      placeholder="Nombre comercial (opcional)"
+                      value={wizardData.tradeName}
+                      onChange={e => setWizardData(p => ({ ...p, tradeName: e.target.value }))}
+                      style={{ width: '100%', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', padding: '10px 12px', color: '#e8edf5', fontSize: 13, marginBottom: 10, outline: 'none', boxSizing: 'border-box' }}
+                    />
+                    <input
+                      placeholder="RFC"
+                      value={wizardData.rfc}
+                      onChange={e => setWizardData(p => ({ ...p, rfc: e.target.value.toUpperCase() }))}
+                      style={{ width: '100%', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', padding: '10px 12px', color: '#e8edf5', fontSize: 13, marginBottom: 10, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace' }}
+                    />
+                    <select
+                      value={wizardData.industry}
+                      onChange={e => setWizardData(p => ({ ...p, industry: e.target.value }))}
+                      style={{ width: '100%', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: '#0d1117', padding: '10px 12px', color: wizardData.industry ? '#e8edf5' : 'rgba(255,255,255,0.3)', fontSize: 13, marginBottom: 10, outline: 'none', boxSizing: 'border-box' }}
+                    >
+                      <option value="">Selecciona el giro</option>
+                      <option value="restaurante">Restaurante / Alimentos</option>
+                      <option value="comercio">Comercio / Retail</option>
+                      <option value="servicios">Servicios</option>
+                      <option value="manufactura">Manufactura</option>
+                      <option value="salud">Salud / Médico</option>
+                      <option value="educacion">Educación</option>
+                      <option value="otro">Otro</option>
+                    </select>
+                  </div>
+                )}
+
+                {/* PASO 2 — Contacto */}
+                {wizardStep === 2 && (
+                  <div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Datos del administrador</div>
+                    <input
+                      placeholder="Nombre completo del dueño"
+                      value={wizardData.ownerName}
+                      onChange={e => setWizardData(p => ({ ...p, ownerName: e.target.value }))}
+                      style={{ width: '100%', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', padding: '10px 12px', color: '#e8edf5', fontSize: 13, marginBottom: 10, outline: 'none', boxSizing: 'border-box' }}
+                    />
+                    <input
+                      type="email"
+                      placeholder="Email"
+                      value={wizardData.email}
+                      onChange={e => setWizardData(p => ({ ...p, email: e.target.value }))}
+                      style={{ width: '100%', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', padding: '10px 12px', color: '#e8edf5', fontSize: 13, marginBottom: 10, outline: 'none', boxSizing: 'border-box' }}
+                    />
+                    <input
+                      placeholder="Teléfono"
+                      value={wizardData.phone}
+                      onChange={e => setWizardData(p => ({ ...p, phone: e.target.value }))}
+                      style={{ width: '100%', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', padding: '10px 12px', color: '#e8edf5', fontSize: 13, marginBottom: 10, outline: 'none', boxSizing: 'border-box' }}
+                    />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      <input
+                        placeholder="Ciudad"
+                        value={wizardData.city}
+                        onChange={e => setWizardData(p => ({ ...p, city: e.target.value }))}
+                        style={{ width: '100%', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', padding: '10px 12px', color: '#e8edf5', fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
+                      />
+                      <select
+                        value={wizardData.state}
+                        onChange={e => setWizardData(p => ({ ...p, state: e.target.value }))}
+                        style={{ width: '100%', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: '#0d1117', padding: '10px 12px', color: wizardData.state ? '#e8edf5' : 'rgba(255,255,255,0.3)', fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
+                      >
+                        <option value="">Estado</option>
+                        <option value="AGS">Aguascalientes</option>
+                        <option value="BC">Baja California</option>
+                        <option value="BCS">Baja California Sur</option>
+                        <option value="CAM">Campeche</option>
+                        <option value="CHIS">Chiapas</option>
+                        <option value="CHIH">Chihuahua</option>
+                        <option value="CDMX">Ciudad de México</option>
+                        <option value="COAH">Coahuila</option>
+                        <option value="COL">Colima</option>
+                        <option value="DGO">Durango</option>
+                        <option value="GTO">Guanajuato</option>
+                        <option value="GRO">Guerrero</option>
+                        <option value="HGO">Hidalgo</option>
+                        <option value="JAL">Jalisco</option>
+                        <option value="MEX">Estado de México</option>
+                        <option value="MICH">Michoacán</option>
+                        <option value="MOR">Morelos</option>
+                        <option value="NAY">Nayarit</option>
+                        <option value="NL">Nuevo León</option>
+                        <option value="OAX">Oaxaca</option>
+                        <option value="PUE">Puebla</option>
+                        <option value="QRO">Querétaro</option>
+                        <option value="QROO">Quintana Roo</option>
+                        <option value="SLP">San Luis Potosí</option>
+                        <option value="SIN">Sinaloa</option>
+                        <option value="SON">Sonora</option>
+                        <option value="TAB">Tabasco</option>
+                        <option value="TAMPS">Tamaulipas</option>
+                        <option value="TLAX">Tlaxcala</option>
+                        <option value="VER">Veracruz</option>
+                        <option value="YUC">Yucatán</option>
+                        <option value="ZAC">Zacatecas</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                {/* PASO 3 — Plan */}
+                {wizardStep === 3 && (
+                  <div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Plan y configuración</div>
+                    <select
+                      value={wizardData.plan}
+                      onChange={e => setWizardData(p => ({ ...p, plan: e.target.value }))}
+                      style={{ width: '100%', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: '#0d1117', padding: '10px 12px', color: '#e8edf5', fontSize: 13, marginBottom: 12, outline: 'none', boxSizing: 'border-box' }}
+                    >
+                      <option value="LITE_CORTE">LITE — Corte de Caja Manual ($650/mes)</option>
+                      <option value="LITE_POS">LITE — POS Sin Inventario ($650/mes)</option>
+                      <option value="BASIC">BASIC ($890/mes)</option>
+                      <option value="PRO">PRO ($1,490/mes)</option>
+                      <option value="BUSINESS">BUSINESS ($1,980/mes)</option>
+                      <option value="ENTERPRISE">ENTERPRISE (cotización)</option>
+                    </select>
+
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Ciclo de facturación</div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        {[
+                          { value: 'monthly', label: 'Mensual', desc: 'Precio normal' },
+                          { value: 'annual', label: 'Anual', desc: '1 mes gratis' },
+                        ].map(opt => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => setWizardData(p => ({ ...p, billingCycle: opt.value }))}
+                            style={{
+                              flex: 1, padding: '10px 12px', borderRadius: 8, cursor: 'pointer', textAlign: 'left',
+                              border: `1px solid ${wizardData.billingCycle === opt.value ? 'rgba(143,175,212,0.4)' : 'rgba(255,255,255,0.07)'}`,
+                              background: wizardData.billingCycle === opt.value ? 'rgba(143,175,212,0.08)' : 'transparent',
+                            }}
+                          >
+                            <div style={{ fontSize: 13, color: '#c8cdd8', fontWeight: 500 }}>{opt.label}</div>
+                            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{opt.desc}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <input
+                      placeholder="Slug amigable (ej: bocatta)"
+                      value={wizardData.slug}
+                      onChange={e => setWizardData(p => ({ ...p, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') }))}
+                      style={{ width: '100%', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', padding: '10px 12px', color: '#e8edf5', fontSize: 13, marginBottom: 4, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace' }}
+                    />
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', marginBottom: 12 }}>
+                      Ej: /corte?tenant={wizardData.slug || 'nombre'}
+                    </div>
+
+                    <input
+                      type="password"
+                      placeholder="Password temporal del administrador"
+                      value={wizardData.password}
+                      onChange={e => setWizardData(p => ({ ...p, password: e.target.value }))}
+                      style={{ width: '100%', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', padding: '10px 12px', color: '#e8edf5', fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                )}
+
+                {/* PASO 4 — Confirmación */}
+                {wizardStep === 4 && (
+                  <div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Confirmar y crear</div>
+                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 10, padding: '12px 14px', marginBottom: 14 }}>
+                      {[
+                        { label: 'Nombre legal', value: wizardData.legalName },
+                        { label: 'Nombre comercial', value: wizardData.tradeName },
+                        { label: 'RFC', value: wizardData.rfc },
+                        { label: 'Giro', value: wizardData.industry },
+                        { label: 'Administrador', value: wizardData.ownerName },
+                        { label: 'Email', value: wizardData.email },
+                        { label: 'Teléfono', value: wizardData.phone },
+                        { label: 'Ubicación', value: [wizardData.city, wizardData.state].filter(Boolean).join(', ') },
+                        { label: 'Plan', value: wizardData.plan },
+                        { label: 'Facturación', value: wizardData.billingCycle === 'annual' ? 'Anual (1 mes gratis)' : 'Mensual' },
+                        { label: 'Slug', value: wizardData.slug },
+                      ].map(item => (
+                        <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>{item.label}</span>
+                          <span style={{ fontSize: 12, color: '#c8cdd8', fontWeight: 500, maxWidth: '60%', textAlign: 'right' }}>{item.value || '—'}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {wizardError && (
+                      <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: '10px 12px', marginBottom: 12, fontSize: 12, color: '#f87171' }}>
+                        {wizardError}
+                      </div>
+                    )}
+
+                    {createSuccess && (
+                      <div style={{ background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.18)', borderRadius: 10, padding: '14px 16px', marginBottom: 12 }}>
+                        <div style={{ fontSize: 13, color: '#4ade80', marginBottom: 10, fontWeight: 600 }}>✓ Cliente creado exitosamente</div>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', lineHeight: 1.9 }}>
+                          <div>Email: <span style={{ color: '#c8cdd8' }}>{wizardData.email}</span></div>
+                          <div>Password: <span style={{ color: '#c8cdd8', fontFamily: 'monospace' }}>{wizardData.password}</span></div>
+                          <div>Sistema: <span style={{ color: '#8fafd4' }}>https://app.estiaconsultoria.com</span></div>
+                          {(wizardData.plan === 'LITE_CORTE' || wizardData.plan === 'LITE_POS') && wizardData.slug && (
+                            <div>Corte: <span style={{ color: '#8fafd4' }}>https://app.estiaconsultoria.com/corte?tenant={wizardData.slug}</span></div>
+                          )}
+                          {wizardData.slug && (
+                            <div>Ejecutivo: <span style={{ color: '#8fafd4' }}>https://app.estiaconsultoria.com/executive?tenant={wizardData.slug}</span></div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer — navegación */}
+              <div style={{ flexShrink: 0, padding: '16px 24px 24px', display: 'flex', gap: 8 }}>
+                {wizardStep > 1 && !createSuccess && (
+                  <button
+                    type="button"
+                    onClick={() => setWizardStep(s => s - 1)}
+                    style={{
+                      flex: 1, padding: '10px', borderRadius: 8,
+                      border: '1px solid rgba(255,255,255,0.08)', background: 'transparent',
+                      color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer',
+                    }}
+                  >
+                    ← Anterior
+                  </button>
+                )}
+                {wizardStep < 4 && (
+                  <button
+                    type="button"
+                    onClick={() => setWizardStep(s => s + 1)}
+                    style={{
+                      flex: 1, padding: '10px', borderRadius: 8, border: 'none',
+                      background: 'rgba(143,175,212,0.12)', color: '#8fafd4', fontSize: 13, cursor: 'pointer', fontWeight: 500,
+                    }}
+                  >
+                    Siguiente →
+                  </button>
+                )}
+                {wizardStep === 4 && !createSuccess && (
+                  <button
+                    type="button"
+                    onClick={handleCreateWizard}
+                    disabled={creating}
+                    style={{
+                      flex: 1, padding: '10px', borderRadius: 8, border: 'none',
+                      background: 'rgba(74,222,128,0.12)', color: '#4ade80', fontSize: 13, cursor: 'pointer', fontWeight: 600,
+                      opacity: creating ? 0.6 : 1,
+                    }}
+                  >
+                    {creating ? 'Creando...' : '✓ Crear Cliente'}
+                  </button>
+                )}
+                {createSuccess && (
+                  <button
+                    type="button"
+                    onClick={closeWizard}
+                    style={{
+                      flex: 1, padding: '10px', borderRadius: 8, border: '1px solid rgba(74,222,128,0.2)',
+                      background: 'rgba(74,222,128,0.06)', color: '#4ade80', fontSize: 13, cursor: 'pointer',
+                    }}
+                  >
+                    Cerrar
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
