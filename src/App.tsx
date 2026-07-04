@@ -27,6 +27,7 @@ import EmployeeRequests from "./pages/employee/EmployeeRequests";
 import EmployeeDocuments from "./pages/employee/EmployeeDocuments";
 import EmployeeProfile from "./pages/employee/EmployeeProfile";
 import OnboardingWizard from "./components/OnboardingWizard";
+import PatientsPage from "./pages/patients/PatientsPage";
 
 import LoginPage from "./pages/Login/LoginPage";
 import ExecutivePage from "./pages/executive/ExecutivePage";
@@ -512,6 +513,15 @@ function App() {
         element={
           <ProtectedRoute>
             <ConfiguracionGlobal />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/patients"
+        element={
+          <ProtectedRoute>
+            <PatientsPage />
           </ProtectedRoute>
         }
       />

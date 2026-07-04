@@ -19,9 +19,10 @@ const IC: Record<string, React.ReactNode> = {
   integraciones: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M4.22 4.22l2.12 2.12m11.32 11.32 2.12 2.12M2 12h3m14 0h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>,
   auditoria: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
   soporte:   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>,
+  pacientes: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
 };
 
-type ModKey = "dashboard" | "rh" | "tesoreria" | "pos" | "compras" | "reportes" | "integraciones" | "auditoria" | "soporte";
+type ModKey = "dashboard" | "rh" | "tesoreria" | "pos" | "compras" | "reportes" | "integraciones" | "auditoria" | "soporte" | "pacientes";
 
 const NAV: { label: string; key: ModKey; path: string; modulo: string }[] = [
   { label: "Dashboard",     key: "dashboard",     path: "/dashboard",    modulo: "dashboard" },
@@ -31,6 +32,7 @@ const NAV: { label: string; key: ModKey; path: string; modulo: string }[] = [
   { label: "Compras",       key: "compras",       path: "/purchases",    modulo: "compras" },
   { label: "Reportes",      key: "reportes",      path: "/reports",      modulo: "reportes" },
   { label: "Integraciones", key: "integraciones", path: "/integrations", modulo: "integraciones" },
+  { label: "Pacientes",     key: "pacientes",     path: "/patients",          modulo: "pacientes" },
   { label: "Auditoría",     key: "auditoria",     path: "/settings",          modulo: "configuracion" },
   { label: "Soporte",       key: "soporte",       path: "/soporte/clientes",  modulo: "soporte" },
 ];
@@ -68,6 +70,7 @@ const SUBNAV: Record<ModKey, { label: string; path: string }[]> = {
     { label: "Apariencia",     path: "/settings/appearance" },
     { label: "Campos del Corte", path: "/settings/corte-fields" },
   ],
+  pacientes: [],
   soporte: [
     { label: "Panel",          path: "/soporte/dashboard" },
     { label: "Clientes",       path: "/soporte/clientes" },
@@ -85,6 +88,7 @@ const MODULE_PATHS: Record<ModKey, string[]> = {
   compras:       ["/suppliers", "/purchases", "/costs", "/ocr"],
   reportes:      ["/reports"],
   integraciones: ["/integrations"],
+  pacientes:     ["/patients"],
   auditoria:     ["/settings", "/settings/appearance", "/settings/corte-fields", "/users"],
   soporte:       ["/soporte"],
 };
@@ -126,9 +130,11 @@ export default function TopBar() {
   const aRe = useModulo('reportes');
   const aI  = useModulo('integraciones');
   const aA  = useModulo('configuracion');
+  const aPac = useModulo('pacientes');
   const modAccess: Record<ModKey, boolean> = {
     dashboard: aD, rh: aR, tesoreria: aT, pos: aP,
     compras: aC, reportes: aRe, integraciones: aI, auditoria: aA,
+    pacientes: aPac,
     soporte: user?.roleCode === 'SOPORTE',
   };
 
