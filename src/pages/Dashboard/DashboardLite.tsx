@@ -61,6 +61,7 @@ export default function DashboardLite() {
   }, []);
 
   const filtered = shifts.filter(s => {
+    if (s.status !== 'CERRADO') return false;
     const fecha = new Date(s.createdAt || s.fecha || 0);
     const now = new Date();
     if (period === 'semana') {
@@ -93,18 +94,24 @@ export default function DashboardLite() {
   }, {});
   const chartData = Object.values(byDay);
 
+  const totalIngresos = filtered.reduce((sum, s) => {
+    const f = parseNotas(s.notas);
+    return sum + Number(s.efectivoContado || 0) + (f.tarjeta || 0) + (f.transferencia || 0) + (f.plataformas || 0) + (f.promociones || 0);
+  }, 0);
+
   const canalTotals = CANALES.map(c => {
     const total = filtered.reduce((sum, s) => {
       if (c.key === 'efectivo') return sum + Number(s.efectivoContado || 0);
       const f = parseNotas(s.notas);
       return sum + (f[c.key] || 0);
     }, 0);
-    return { ...c, total, pct: totalVenta > 0 ? (total / totalVenta * 100).toFixed(1) : '0.0' };
+    return { ...c, total, pct: totalIngresos > 0 ? (total / totalIngresos * 100).toFixed(1) : '0.0' };
   }).filter(c => c.total > 0);
 
   const shiftDetalle = selectedShift ? (() => {
     const f = parseNotas(selectedShift.notas);
     const total = shiftTotal(selectedShift);
+    const ingresos = Number(selectedShift.efectivoContado || 0) + (f.tarjeta || 0) + (f.transferencia || 0) + (f.plataformas || 0) + (f.promociones || 0);
     const canales = [
       { label: 'Efectivo',      valor: Number(selectedShift.efectivoContado || 0), resta: false },
       { label: 'Tarjeta',       valor: f.tarjeta       || 0, resta: false },
@@ -115,7 +122,7 @@ export default function DashboardLite() {
       { label: 'Descuentos',    valor: f.descuento     || 0, resta: true  },
       { label: 'Gastos',        valor: f.gasto         || 0, resta: true  },
     ].filter(c => c.valor > 0);
-    return { canales, total };
+    return { canales, total, ingresos };
   })() : null;
 
   return (
@@ -268,7 +275,7 @@ export default function DashboardLite() {
                             {c.resta ? '-' : ''}{fmt(c.valor)}
                           </div>
                           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>
-                            {shiftDetalle.total > 0 ? (c.valor / shiftDetalle.total * 100).toFixed(1) : '0.0'}%
+                            {shiftDetalle.ingresos > 0 ? (c.valor / shiftDetalle.ingresos * 100).toFixed(1) : '0.0'}%
                           </div>
                         </div>
                       </div>
