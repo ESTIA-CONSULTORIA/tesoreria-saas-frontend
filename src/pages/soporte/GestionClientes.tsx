@@ -196,6 +196,15 @@ export default function GestionClientes() {
     }
   }
 
+  async function handleRenew(tenantId: string) {
+    try {
+      await api.post(`/subscriptions/${tenantId}/renew`);
+      loadTenants();
+    } catch (err: any) {
+      console.error('Error renovando suscripción:', err.response?.data?.message || err.message);
+    }
+  }
+
   async function handleCreateWizard() {
     setCreating(true);
     setWizardError('');
@@ -357,6 +366,17 @@ export default function GestionClientes() {
                           }`}
                         >
                           {tenant.isActive ? "Desactivar" : "Activar"}
+                        </button>
+                        <button
+                          onClick={() => handleRenew(tenant.id)}
+                          style={{
+                            padding: '3px 8px', borderRadius: 6,
+                            border: '1px solid rgba(74,222,128,0.2)',
+                            background: 'transparent', color: 'rgba(74,222,128,0.7)',
+                            fontSize: 11, cursor: 'pointer',
+                          }}
+                        >
+                          Renovar
                         </button>
                       </div>
                     </td>
