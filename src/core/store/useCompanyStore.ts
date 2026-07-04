@@ -13,8 +13,18 @@ interface CompanyState {
 }
 
 export const useCompanyStore = create<CompanyState>((set) => ({
-    activeCompany: null,
-    activeBranch: null,
+    activeCompany: localStorage.getItem('active_company_id')
+      ? {
+          id: localStorage.getItem('active_company_id')!,
+          name: localStorage.getItem('active_company_name') || '',
+        }
+      : null,
+    activeBranch: localStorage.getItem('active_branch_id')
+      ? {
+          id: localStorage.getItem('active_branch_id')!,
+          name: localStorage.getItem('active_branch_name') || '',
+        }
+      : null,
 
     setActiveCompany: (company) => {
       if (company) {
