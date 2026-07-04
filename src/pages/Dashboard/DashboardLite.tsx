@@ -7,7 +7,7 @@ export default function DashboardLite() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/shifts', { params: { limit: 7 } })
+    api.get('/pos/shifts', { params: { limit: 7 } })
       .then(r => setShifts(Array.isArray(r.data) ? r.data : []))
       .catch(() => {})
       .finally(() => setLoading(false));
