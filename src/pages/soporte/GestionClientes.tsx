@@ -92,6 +92,8 @@ export default function GestionClientes() {
   const [newUserError, setNewUserError] = useState('');
   const [newUserSuccess, setNewUserSuccess] = useState('');
 
+  const [alerts, setAlerts] = useState<any[]>([]);
+
   // Wizard
   const [showWizard, setShowWizard] = useState(false);
   const [wizardStep, setWizardStep] = useState(1);
@@ -102,6 +104,9 @@ export default function GestionClientes() {
 
   useEffect(() => {
     loadTenants();
+    api.get('/subscriptions/alerts')
+      .then(r => setAlerts(Array.isArray(r.data) ? r.data : []))
+      .catch(() => {});
   }, []);
 
   async function loadTenants() {
@@ -281,6 +286,23 @@ export default function GestionClientes() {
             + Nuevo Cliente
           </button>
         </div>
+
+        {alerts.length > 0 && (
+          <div style={{
+            padding: '12px 16px', borderRadius: 10,
+            background: 'rgba(251,191,36,0.08)',
+            border: '1px solid rgba(251,191,36,0.2)',
+          }}>
+            <div style={{ fontSize: 13, color: 'rgba(251,191,36,0.9)', fontWeight: 500, marginBottom: 8 }}>
+              ⚠️ {alerts.length} suscripción{alerts.length > 1 ? 'es' : ''} por vencer
+            </div>
+            {alerts.map((a: any) => (
+              <div key={a.id} style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', padding: '3px 0' }}>
+                Tenant {a.tenantId} — vence el {new Date(a.endDate).toLocaleDateString('es-MX')}
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
           <div className="overflow-x-auto">
