@@ -13,7 +13,28 @@ export default function DashboardLite() {
       .finally(() => setLoading(false));
   }, []);
 
-  const total = shifts.reduce((sum, s) => sum + Number(s.totalVentas || 0), 0);
+  const shiftTotal = (s: any): number => {
+    let total = Number(s.efectivoContado || 0);
+    if (s.notas) {
+      const tarjeta   = s.notas.match(/Tarjeta[:\s]+\$?([\d,]+\.?\d*)/i);
+      const transf    = s.notas.match(/Transferencia[:\s]+\$?([\d,]+\.?\d*)/i);
+      const plat      = s.notas.match(/Plataformas[:\s]+\$?([\d,]+\.?\d*)/i);
+      const prom      = s.notas.match(/Promociones[:\s]+\$?([\d,]+\.?\d*)/i);
+      const cortesia  = s.notas.match(/Cortesías[:\s]+\$?([\d,]+\.?\d*)/i);
+      const descuento = s.notas.match(/Descuentos[:\s]+\$?([\d,]+\.?\d*)/i);
+      const gasto     = s.notas.match(/Gastos[:\s]+\$?([\d,]+\.?\d*)/i);
+      if (tarjeta)   total += parseFloat(tarjeta[1].replace(/,/g, ''));
+      if (transf)    total += parseFloat(transf[1].replace(/,/g, ''));
+      if (plat)      total += parseFloat(plat[1].replace(/,/g, ''));
+      if (prom)      total += parseFloat(prom[1].replace(/,/g, ''));
+      if (cortesia)  total -= parseFloat(cortesia[1].replace(/,/g, ''));
+      if (descuento) total -= parseFloat(descuento[1].replace(/,/g, ''));
+      if (gasto)     total -= parseFloat(gasto[1].replace(/,/g, ''));
+    }
+    return total;
+  };
+
+  const total = shifts.reduce((sum, s) => sum + shiftTotal(s), 0);
 
   return (
     <MainLayout>
@@ -41,7 +62,7 @@ export default function DashboardLite() {
             {shifts.map((s: any) => (
               <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                 <span style={{ fontSize: 13, color: '#c8cdd8' }}>{new Date(s.fecha).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
-                <span style={{ fontSize: 13, fontWeight: 500, color: '#4ade80' }}>${Number(s.totalVentas || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+                <span style={{ fontSize: 13, fontWeight: 500, color: '#4ade80' }}>${shiftTotal(s).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
               </div>
             ))}
           </div>
