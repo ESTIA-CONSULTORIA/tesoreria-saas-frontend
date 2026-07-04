@@ -177,14 +177,15 @@ export default function LoginPage() {
         justifyContent: 'space-between',
         padding: '48px 64px',
         borderRight: '1px solid rgba(255,255,255,0.05)',
+        position: 'relative',
       }}>
-        {/* Logo / marca */}
+        {/* Logo ESTIA ERP — protagonista */}
         <div>
-          <div style={{ fontSize: 11, letterSpacing: '0.3em', color: 'rgba(143,175,212,0.6)', textTransform: 'uppercase', marginBottom: 8 }}>
-            ESTIA
+          <div style={{ fontSize: 32, fontWeight: 200, color: '#e8ecf0', letterSpacing: '0.15em', marginBottom: 6 }}>
+            ESTIA <span style={{ color: '#8fafd4' }}>ERP</span>
           </div>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em' }}>
-            Consultoría Empresarial
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.15em', fontWeight: 300 }}>
+            Una solución de ESTIA Consultoría
           </div>
         </div>
 
@@ -198,9 +199,21 @@ export default function LoginPage() {
           </div>
         </div>
 
+        {/* Relieve institucional en fondo */}
+        <div style={{
+          position: 'absolute', bottom: 60, left: 40,
+          fontSize: 120, fontWeight: 700, color: 'rgba(255,255,255,0.015)',
+          letterSpacing: '0.1em', userSelect: 'none', pointerEvents: 'none',
+          lineHeight: 1,
+        }}>
+          ESTIA
+        </div>
+
         {/* Footer */}
-        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.15)', letterSpacing: '0.05em' }}>
-          © {new Date().getFullYear()} ESTIA Consultoría · Todos los derechos reservados
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.15)', letterSpacing: '0.1em' }}>
+            © 2026 ESTIA Consultoría · Todos los derechos reservados
+          </div>
         </div>
       </div>
 
