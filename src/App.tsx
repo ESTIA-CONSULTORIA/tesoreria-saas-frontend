@@ -28,6 +28,7 @@ import EmployeeDocuments from "./pages/employee/EmployeeDocuments";
 import EmployeeProfile from "./pages/employee/EmployeeProfile";
 import OnboardingWizard from "./components/OnboardingWizard";
 import PatientsPage from "./pages/patients/PatientsPage";
+import SolutionsCenter from "./pages/solutions/SolutionsCenter";
 
 import LoginPage from "./pages/Login/LoginPage";
 import ExecutivePage from "./pages/executive/ExecutivePage";
@@ -522,6 +523,15 @@ function App() {
         element={
           <ProtectedRoute>
             <PatientsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/solutions"
+        element={
+          <ProtectedRoute>
+            <SolutionsCenter />
           </ProtectedRoute>
         }
       />
