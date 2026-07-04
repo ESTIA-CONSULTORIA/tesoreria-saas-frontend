@@ -94,6 +94,10 @@ export default function GestionClientes() {
 
   const [alerts, setAlerts] = useState<any[]>([]);
 
+  const [tenantModules, setTenantModules] = useState<string[]>([]);
+  const [allModules, setAllModules] = useState<any[]>([]);
+  const [loadingModules, setLoadingModules] = useState(false);
+
   // Wizard
   const [showWizard, setShowWizard] = useState(false);
   const [wizardStep, setWizardStep] = useState(1);
@@ -125,6 +129,7 @@ export default function GestionClientes() {
       const response = await api.get(`/administration/tenants/${tenantId}`);
       setSelectedTenant(response.data);
       setDetailModalOpen(true);
+      loadTenantModules(tenantId);
     } catch (error) {
       console.error("Error loading tenant detail:", error);
     }
@@ -157,6 +162,7 @@ export default function GestionClientes() {
     setNewUserName(''); setNewUserEmail(''); setNewUserPass('');
     setNewUserRole('ADMIN'); setNewUserError(''); setNewUserSuccess('');
     setEditTenantOpen(true);
+    loadTenantModules(tenant.id);
   }
 
   async function handleCreateUser() {
@@ -200,6 +206,29 @@ export default function GestionClientes() {
       setEditLoading(false);
     }
   }
+
+  const loadTenantModules = async (tenantId: string) => {
+    setLoadingModules(true);
+    try {
+      const [active, all] = await Promise.all([
+        api.get(`/modules/tenant/${tenantId}`),
+        api.get('/modules'),
+      ]);
+      setTenantModules(Array.isArray(active.data) ? active.data : []);
+      setAllModules(Array.isArray(all.data) ? all.data : []);
+    } catch {}
+    setLoadingModules(false);
+  };
+
+  const toggleModule = async (tenantId: string, moduleCode: string, isActive: boolean) => {
+    if (isActive) {
+      await api.delete(`/modules/tenant/${tenantId}/${moduleCode}`);
+      setTenantModules(prev => prev.filter(m => m !== moduleCode));
+    } else {
+      await api.post(`/modules/tenant/${tenantId}/activate`, { moduleCode, source: 'manual_support' });
+      setTenantModules(prev => [...prev, moduleCode]);
+    }
+  };
 
   async function handleRenew(tenantId: string) {
     try {
@@ -491,6 +520,37 @@ export default function GestionClientes() {
                   >
                     {newUserLoading ? 'Creando...' : '+ Crear usuario'}
                   </button>
+                </div>
+
+                {/* Sección módulos */}
+                <div style={{ marginTop: 20 }}>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>
+                    Módulos activos
+                  </div>
+                  {loadingModules ? (
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>Cargando...</div>
+                  ) : (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      {allModules.map(m => {
+                        const isActive = tenantModules.includes(m.code);
+                        return (
+                          <button key={m.code}
+                            onClick={() => editTenant && toggleModule(editTenant.id, m.code, isActive)}
+                            style={{
+                              padding: '5px 12px', borderRadius: 99, fontSize: 11, cursor: 'pointer',
+                              border: `1px solid ${isActive ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                              background: isActive ? 'rgba(74,222,128,0.08)' : 'rgba(255,255,255,0.02)',
+                              color: isActive ? '#4ade80' : 'rgba(255,255,255,0.3)',
+                            }}>
+                            {isActive ? '✓' : '+'} {m.name}
+                            {m.isAddon && !isActive && m.defaultPrice > 0 && (
+                              <span style={{ marginLeft: 4, color: 'rgba(255,255,255,0.2)' }}>${m.defaultPrice}/mo</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -877,14 +937,31 @@ export default function GestionClientes() {
                 </div>
 
                 <div className="p-4 rounded-lg bg-slate-800">
-                  <h4 className="text-sm text-slate-400 mb-3">Módulos Activos</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {getModulesForPlan(selectedTenant.plan).map((mod) => (
-                      <span key={mod} className="px-3 py-1 rounded bg-blue-900/40 text-blue-300 text-sm">
-                        {mod}
-                      </span>
-                    ))}
-                  </div>
+                  <h4 className="text-sm text-slate-400 mb-3">Módulos</h4>
+                  {loadingModules ? (
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>Cargando...</div>
+                  ) : (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      {allModules.map(m => {
+                        const isActive = tenantModules.includes(m.code);
+                        return (
+                          <button key={m.code}
+                            onClick={() => toggleModule(selectedTenant.id, m.code, isActive)}
+                            style={{
+                              padding: '5px 12px', borderRadius: 99, fontSize: 11, cursor: 'pointer',
+                              border: `1px solid ${isActive ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                              background: isActive ? 'rgba(74,222,128,0.08)' : 'rgba(255,255,255,0.02)',
+                              color: isActive ? '#4ade80' : 'rgba(255,255,255,0.3)',
+                            }}>
+                            {isActive ? '✓' : '+'} {m.name}
+                            {m.isAddon && !isActive && m.defaultPrice > 0 && (
+                              <span style={{ marginLeft: 4, color: 'rgba(255,255,255,0.2)' }}>${m.defaultPrice}/mo</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 <div className="p-4 rounded-lg bg-slate-800">
