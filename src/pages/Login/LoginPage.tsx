@@ -210,9 +210,9 @@ export default function LoginPage() {
 
           {/* Logo oficial */}
           <img
-            src="/logo-estia-erp.png"
-            alt="ESTIA ERP"
-            style={{ height: 90, objectFit: 'contain', marginBottom: 16, filter: 'drop-shadow(0 0 30px rgba(37,99,235,0.5))' }}
+            src="/logo-estia-isotipo.png"
+            alt="ESTIA"
+            style={{ height: 180, objectFit: 'contain', marginBottom: 16, filter: 'drop-shadow(0 0 40px rgba(37,99,235,0.6))' }}
           />
 
           <div style={{ fontSize: 10, letterSpacing: '0.28em', color: '#64748B', textTransform: 'uppercase', marginBottom: 40 }}>
@@ -272,7 +272,7 @@ export default function LoginPage() {
       {/* ══════════ PANEL DERECHO 45% ══════════ */}
       <div style={{
         flex: '0 0 45%',
-        background: 'rgba(7,16,31,0.98)',
+        background: '#07111f',
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
         padding: '48px 56px', position: 'relative',
