@@ -208,14 +208,22 @@ export default function LoginPage() {
         {/* Contenido */}
         <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 520, width: '100%' }}>
 
-          {/* Logo oficial */}
-          <img
-            src="/logo-estia-isotipo.png"
-            alt="ESTIA"
-            style={{ height: 180, objectFit: 'contain', marginBottom: 16, filter: 'drop-shadow(0 0 40px rgba(37,99,235,0.6))' }}
-          />
+          {/* Isotipo centrado */}
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 24 }}>
+            <img
+              src="/logo-estia-isotipo.png"
+              alt="ESTIA"
+              style={{
+                height: 260,
+                objectFit: 'contain',
+                mixBlendMode: 'screen',
+                filter: 'drop-shadow(0 0 60px rgba(37,99,235,0.8))',
+              }}
+            />
+          </div>
 
-          <div style={{ fontSize: 10, letterSpacing: '0.28em', color: '#64748B', textTransform: 'uppercase', marginBottom: 40 }}>
+          {/* Badge — justo debajo del isotipo */}
+          <div style={{ fontSize: 10, letterSpacing: '0.28em', color: '#64748B', textTransform: 'uppercase', marginBottom: 24 }}>
             Inteligencia Empresarial
           </div>
 
@@ -229,8 +237,8 @@ export default function LoginPage() {
             Plataforma empresarial modular — multi-empresa, multi-sucursal, multi-usuario.
           </p>
 
-          {/* Features */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px 32px', textAlign: 'left' }}>
+          {/* Features — 4 en fila */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, textAlign: 'center' }}>
             {[
               {
                 title: 'Multi-empresa',
@@ -248,21 +256,19 @@ export default function LoginPage() {
                 icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D7CFF" strokeWidth="1.5" strokeLinecap="round"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="7" r="3" opacity="0.5"/><path d="M1 20c0-3.3 3.6-6 8-6s8 2.7 8 6"/><path d="M17 11c2.2 0 4 1.8 4 4.5" opacity="0.5"/></svg>
               },
               {
-                title: 'Reportes en tiempo real',
+                title: 'Tiempo real',
                 desc: 'Toma decisiones con información actualizada.',
                 icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D7CFF" strokeWidth="1.5" strokeLinecap="round"><path d="M3 20l4.5-6 4 4 4.5-7.5L20 16"/></svg>
               },
             ].map(f => (
-              <div key={f.title} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+              <div key={f.title} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                 <div style={{
-                  width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+                  width: 36, height: 36, borderRadius: 8,
                   background: 'rgba(29,124,255,0.1)', border: '1px solid rgba(29,124,255,0.2)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>{f.icon}</div>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#F8FAFC', marginBottom: 3 }}>{f.title}</div>
-                  <div style={{ fontSize: 12, color: '#64748B', lineHeight: 1.5 }}>{f.desc}</div>
-                </div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#F8FAFC' }}>{f.title}</div>
+                <div style={{ fontSize: 11, color: '#64748B', lineHeight: 1.5 }}>{f.desc}</div>
               </div>
             ))}
           </div>
@@ -272,7 +278,7 @@ export default function LoginPage() {
       {/* ══════════ PANEL DERECHO 45% ══════════ */}
       <div style={{
         flex: '0 0 45%',
-        background: '#07111f',
+        background: '#050A14',
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
         padding: '48px 56px', position: 'relative',
@@ -282,10 +288,16 @@ export default function LoginPage() {
 
           {/* Logo ESTIA ERP */}
           <div style={{ textAlign: 'center', marginBottom: 40 }}>
-            <img src="/logo-estia-erp.png" alt="ESTIA ERP" style={{ height: 48, objectFit: 'contain', marginBottom: 8 }} />
-            <div style={{ fontSize: 10, color: '#334155', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
-              Una solución de ESTIA Consultoría
-            </div>
+            <img
+              src="/logo-estia-erp.png"
+              alt="ESTIA ERP"
+              style={{
+                height: 100,
+                objectFit: 'contain',
+                marginBottom: 32,
+                mixBlendMode: 'screen',
+              }}
+            />
           </div>
 
           {/* ── Selección inicial ── */}
@@ -316,7 +328,7 @@ export default function LoginPage() {
                   key={item.mode}
                   onClick={() => { setMode(item.mode); setError(""); }}
                   style={{
-                    borderRadius: 16, padding: '24px',
+                    borderRadius: 20, padding: '28px 24px',
                     background: 'rgba(15,23,42,0.35)',
                     border: '1px solid rgba(148,163,184,0.16)',
                     cursor: 'pointer',
