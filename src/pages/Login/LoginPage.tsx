@@ -217,7 +217,7 @@ export default function LoginPage() {
                 height: 240,
                 objectFit: 'contain',
                 mixBlendMode: 'screen',
-                filter: 'drop-shadow(0 0 50px rgba(37,99,235,0.7))',
+                filter: 'drop-shadow(0 0 50px rgba(37,99,235,0.8))',
               }}
             />
           </div>
@@ -290,11 +290,11 @@ export default function LoginPage() {
           {!mode && (
             <>
               {/* Logo ERP justo arriba del título */}
-              <div style={{ textAlign: 'center', marginBottom: 24 }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 28 }}>
                 <img
                   src="/logo-estia-erp.png"
                   alt="ESTIA ERP"
-                  style={{ height: 90, objectFit: 'contain', mixBlendMode: 'screen' }}
+                  style={{ height: 88, objectFit: 'contain', mixBlendMode: 'screen' }}
                 />
               </div>
 
