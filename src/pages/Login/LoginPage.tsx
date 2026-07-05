@@ -9,7 +9,7 @@ export default function LoginPage() {
   const { login } = useAuthStore();
   const { config, loadConfig } = useLoginConfigStore();
   const navigate = useNavigate();
-  const { backgroundImage: brandingBg, logoUrl: brandingLogo } = useBrandingStore();
+  useBrandingStore(); // keep store subscribed
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,8 +17,7 @@ export default function LoginPage() {
   const [nip, setNip] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [selectedAccess, setSelectedAccess] = useState<"main" | "pos" | null>(null);
-  const [expandedCard, setExpandedCard] = useState<"main" | "pos" | null>(null);
+  const [mode, setMode] = useState<"main" | "pos" | null>(null);
 
   useEffect(() => {
     useBrandingStore.getState().load();
@@ -162,230 +161,297 @@ export default function LoginPage() {
     );
   }
 
+  // keep cajero referenced to avoid lint
+  void cajero;
+
   return (
     <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      background: '#050709',
-      fontFamily: "'Inter', -apple-system, sans-serif",
+      display: 'flex', height: '100vh', overflow: 'hidden',
+      fontFamily: "'Manrope', sans-serif",
+      background: '#030712',
     }}>
-      {/* Panel izquierdo — branding */}
+
+      {/* ══════════ PANEL IZQUIERDO 55% ══════════ */}
       <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
+        flex: '0 0 55%',
+        background: `
+          radial-gradient(circle at 50% 85%, rgba(37,99,235,.45), transparent 18%),
+          radial-gradient(circle at 0% 55%, rgba(37,99,235,.30), transparent 25%),
+          radial-gradient(circle at 100% 55%, rgba(37,99,235,.25), transparent 25%),
+          linear-gradient(180deg, #07101F 0%, #030712 100%)
+        `,
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
         padding: '48px 64px',
-        borderRight: '1px solid rgba(255,255,255,0.05)',
-        position: 'relative',
+        position: 'relative', overflow: 'hidden',
+        borderRight: '1px solid rgba(59,130,246,0.25)',
       }}>
-        {/* Logo ESTIA ERP — protagonista */}
-        <div>
-          <div style={{ fontSize: 32, fontWeight: 200, color: '#e8ecf0', letterSpacing: '0.15em', marginBottom: 6 }}>
-            ESTIA <span style={{ color: '#8fafd4' }}>ERP</span>
-          </div>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.15em', fontWeight: 300 }}>
-            Una solución de ESTIA Consultoría
-          </div>
-        </div>
 
-        {/* Tagline central */}
-        <div>
-          <div style={{ fontSize: 48, fontWeight: 200, color: '#e8ecf0', lineHeight: 1.2, marginBottom: 24, letterSpacing: '-0.02em' }}>
-            Control, orden<br />y decisión<br />para tu <span style={{ color: '#8fafd4' }}>empresa</span>
-          </div>
-          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.25)', fontWeight: 300, lineHeight: 1.8, maxWidth: 380 }}>
-            Plataforma empresarial modular — multi-empresa, multi-sucursal, multi-usuario.
-          </div>
-        </div>
-
-        {/* Relieve institucional en fondo */}
+        {/* Grid sutil */}
         <div style={{
-          position: 'absolute', bottom: 60, left: 40,
-          fontSize: 120, fontWeight: 700, color: 'rgba(255,255,255,0.015)',
-          letterSpacing: '0.1em', userSelect: 'none', pointerEvents: 'none',
-          lineHeight: 1,
-        }}>
-          ESTIA
-        </div>
+          position: 'absolute', inset: 0,
+          backgroundImage: `
+            linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px)
+          `,
+          backgroundSize: '64px 64px', pointerEvents: 'none',
+        }} />
 
-        {/* Footer */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.15)', letterSpacing: '0.1em' }}>
-            © 2026 ESTIA Consultoría · Todos los derechos reservados
+        {/* Glow inferior */}
+        <div style={{
+          position: 'absolute', bottom: '18%', left: '50%',
+          transform: 'translateX(-50%)',
+          width: 420, height: 2, background: '#38BDF8',
+          filter: 'blur(18px)', pointerEvents: 'none',
+        }} />
+
+        {/* Contenido */}
+        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 520, width: '100%' }}>
+
+          {/* Logo oficial */}
+          <img
+            src="/logo-estia-erp.png"
+            alt="ESTIA ERP"
+            style={{ height: 90, objectFit: 'contain', marginBottom: 16, filter: 'drop-shadow(0 0 30px rgba(37,99,235,0.5))' }}
+          />
+
+          <div style={{ fontSize: 10, letterSpacing: '0.28em', color: '#64748B', textTransform: 'uppercase', marginBottom: 40 }}>
+            Inteligencia Empresarial
+          </div>
+
+          <h1 style={{ fontSize: 52, fontWeight: 400, lineHeight: 1.12, color: '#F8FAFC', marginBottom: 20, letterSpacing: '-0.02em' }}>
+            Control, orden<br />
+            y decisión<br />
+            para tu <span style={{ color: '#1D7CFF' }}>empresa</span>
+          </h1>
+
+          <p style={{ fontSize: 16, color: '#64748B', fontWeight: 400, lineHeight: 1.7, maxWidth: 440, margin: '0 auto 56px' }}>
+            Plataforma empresarial modular — multi-empresa, multi-sucursal, multi-usuario.
+          </p>
+
+          {/* Features */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px 32px', textAlign: 'left' }}>
+            {[
+              {
+                title: 'Multi-empresa',
+                desc: 'Gestiona todas tus empresas desde un solo sistema.',
+                icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D7CFF" strokeWidth="1.5" strokeLinecap="round"><path d="M3 21h18M3 10h18M3 7l9-4 9 4M4 10v11M20 10v11M8 10v11M16 10v11M12 10v11"/></svg>
+              },
+              {
+                title: 'Multi-sucursal',
+                desc: 'Control total de tus sucursales en tiempo real.',
+                icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D7CFF" strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 7v4M10.5 15l-3.5 2M13.5 15l3.5 2"/></svg>
+              },
+              {
+                title: 'Multi-usuario',
+                desc: 'Usuarios y permisos por rol para mayor seguridad.',
+                icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D7CFF" strokeWidth="1.5" strokeLinecap="round"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="7" r="3" opacity="0.5"/><path d="M1 20c0-3.3 3.6-6 8-6s8 2.7 8 6"/><path d="M17 11c2.2 0 4 1.8 4 4.5" opacity="0.5"/></svg>
+              },
+              {
+                title: 'Reportes en tiempo real',
+                desc: 'Toma decisiones con información actualizada.',
+                icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D7CFF" strokeWidth="1.5" strokeLinecap="round"><path d="M3 20l4.5-6 4 4 4.5-7.5L20 16"/></svg>
+              },
+            ].map(f => (
+              <div key={f.title} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+                  background: 'rgba(29,124,255,0.1)', border: '1px solid rgba(29,124,255,0.2)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>{f.icon}</div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#F8FAFC', marginBottom: 3 }}>{f.title}</div>
+                  <div style={{ fontSize: 12, color: '#64748B', lineHeight: 1.5 }}>{f.desc}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Panel derecho — acceso */}
+      {/* ══════════ PANEL DERECHO 45% ══════════ */}
       <div style={{
-        width: 480,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        padding: '48px 56px',
+        flex: '0 0 45%',
+        background: 'rgba(7,16,31,0.98)',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        padding: '48px 56px', position: 'relative',
       }}>
-        {!expandedCard ? (
-          <>
-            <div style={{ fontSize: 10, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', marginBottom: 32 }}>
-              Selecciona tu acceso
+
+        <div style={{ width: '100%', maxWidth: 380 }}>
+
+          {/* Logo ESTIA ERP */}
+          <div style={{ textAlign: 'center', marginBottom: 40 }}>
+            <img src="/logo-estia-erp.png" alt="ESTIA ERP" style={{ height: 48, objectFit: 'contain', marginBottom: 8 }} />
+            <div style={{ fontSize: 10, color: '#334155', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+              Una solución de ESTIA Consultoría
             </div>
+          </div>
 
-            {/* Botón Sistema Principal */}
-            <button
-              onClick={() => setExpandedCard('main')}
-              style={{
-                width: '100%', padding: '24px 28px', marginBottom: 12,
-                border: '1px solid rgba(255,255,255,0.08)',
-                background: 'rgba(255,255,255,0.02)',
-                borderRadius: 14, cursor: 'pointer', textAlign: 'left',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(143,175,212,0.3)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
-            >
-              <div style={{ fontSize: 15, fontWeight: 400, color: '#c8cdd8', marginBottom: 6 }}>
-                Sistema Principal
-              </div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', lineHeight: 1.6 }}>
-                Administración, finanzas, RH, reportes y configuración
-              </div>
-            </button>
+          {/* ── Selección inicial ── */}
+          {!mode && (
+            <>
+              <h2 style={{ fontSize: 22, fontWeight: 500, color: '#F8FAFC', textAlign: 'center', marginBottom: 8 }}>
+                Bienvenido de regreso
+              </h2>
+              <p style={{ fontSize: 14, color: '#64748B', textAlign: 'center', marginBottom: 36 }}>
+                Selecciona una opción para continuar
+              </p>
 
-            {/* Botón Punto de Venta */}
-            <button
-              onClick={() => setExpandedCard('pos')}
-              style={{
-                width: '100%', padding: '24px 28px',
-                border: '1px solid rgba(255,255,255,0.08)',
-                background: 'rgba(255,255,255,0.02)',
-                borderRadius: 14, cursor: 'pointer', textAlign: 'left',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(74,222,128,0.3)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
-            >
-              <div style={{ fontSize: 15, fontWeight: 400, color: '#c8cdd8', marginBottom: 6 }}>
-                Punto de Venta
-              </div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', lineHeight: 1.6 }}>
-                Cortes de caja, ventas, cobros y tickets
-              </div>
-            </button>
-          </>
-        ) : (
-          /* Formulario expandido — sin cambios de lógica */
-          <div style={{ maxWidth: '448px', margin: '0 auto', width: '100%' }}>
-            <button
-              onClick={() => setExpandedCard(null)}
-              style={{ marginBottom: '24px', fontSize: '14px', color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
-            >
-              ← Volver
-            </button>
-
-            <h2 style={{ fontSize: '24px', fontWeight: 300, color: '#e8ecf0', marginBottom: '24px' }}>
-              {expandedCard === 'main' ? 'Sistema Principal' : 'Punto de Venta'}
-            </h2>
-
-            {error && (
-              <div style={{ marginBottom: '16px', padding: '12px', borderRadius: '6px', fontSize: '14px', textAlign: 'center', backgroundColor: 'rgba(155, 58, 58, 0.1)', color: '#9B3A3A', border: '1px solid #9B3A3A' }}>
-                {error}
-              </div>
-            )}
-
-            {expandedCard === 'main' ? (
-              <>
-                <input
-                  type="email"
-                  placeholder="Correo electrónico"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  style={{ marginBottom: '16px', width: '100%', padding: '12px', borderRadius: '6px', fontSize: '14px', backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#e8ecf0', boxSizing: 'border-box' }}
-                />
-                <input
-                  type="password"
-                  placeholder="Contraseña"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleMainLogin()}
-                  style={{ marginBottom: '24px', width: '100%', padding: '12px', borderRadius: '6px', fontSize: '14px', backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#e8ecf0', boxSizing: 'border-box' }}
-                />
-                <button
-                  onClick={handleMainLogin}
-                  disabled={loading}
+              {[
+                {
+                  mode: 'main' as const,
+                  title: 'Sistema Principal',
+                  desc: 'Administración, finanzas, RH, reportes y configuración',
+                  icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1D7CFF" strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5" opacity="0.5"/><rect x="3" y="14" width="7" height="7" rx="1.5" opacity="0.5"/><rect x="14" y="14" width="7" height="7" rx="1.5" opacity="0.3"/></svg>
+                },
+                {
+                  mode: 'pos' as const,
+                  title: 'Punto de Venta',
+                  desc: 'Cortes de caja, ventas, cobros y tickets',
+                  icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1D7CFF" strokeWidth="1.5" strokeLinecap="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M7 10h10M7 14h6"/></svg>
+                }
+              ].map((item, i) => (
+                <div
+                  key={item.mode}
+                  onClick={() => { setMode(item.mode); setError(""); }}
                   style={{
-                    width: '100%', padding: '13px', fontSize: '13px', fontWeight: 400,
-                    letterSpacing: '0.08em', color: loading ? 'rgba(255,255,255,0.2)' : '#c8cdd8',
-                    backgroundColor: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '8px', cursor: loading ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s',
+                    borderRadius: 16, padding: '24px',
+                    background: 'rgba(15,23,42,0.35)',
+                    border: '1px solid rgba(148,163,184,0.16)',
+                    cursor: 'pointer',
+                    marginBottom: i === 0 ? 14 : 0,
+                    display: 'flex', alignItems: 'center', gap: 18,
+                    transition: 'all 0.25s ease',
                   }}
-                  onMouseEnter={(e) => { if (!loading) e.currentTarget.style.borderColor = 'rgba(143,175,212,0.4)'; }}
-                  onMouseLeave={(e) => { if (!loading) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = 'rgba(37,99,235,0.55)';
+                    e.currentTarget.style.boxShadow = '0 0 40px rgba(37,99,235,0.12)';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = 'rgba(148,163,184,0.16)';
+                    e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
                 >
-                  {loading ? "Entrando..." : "Ingresar"}
-                </button>
-              </>
-            ) : (
-              <>
-                {/* Display de NIP */}
-                <div style={{ marginBottom: '32px', textAlign: 'center' }}>
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '12px' }}>
-                    {[0, 1, 2, 3].map((index) => (
-                      <div
-                        key={index}
-                        style={{
-                          width: '48px', height: '48px', borderRadius: '50%',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: '24px', backgroundColor: 'rgba(255,255,255,0.04)',
-                          border: '1px solid rgba(255,255,255,0.08)', color: '#8fafd4',
-                        }}
-                      >
-                        {index < nip.length ? '●' : '○'}
-                      </div>
-                    ))}
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+                    background: 'rgba(29,124,255,0.12)', border: '1px solid rgba(29,124,255,0.25)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>{item.icon}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: '#F8FAFC', marginBottom: 4 }}>{item.title}</div>
+                    <div style={{ fontSize: 12, color: '#64748B', lineHeight: 1.5 }}>{item.desc}</div>
                   </div>
-                  <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.25)' }}>
-                    Ingresa tu NIP de 4 dígitos
-                  </p>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D7CFF" strokeWidth="1.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
                 </div>
+              ))}
+            </>
+          )}
 
-                {/* Teclado numérico */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
-                  {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((num) => (
-                    <button
-                      key={num}
-                      onClick={() => handleNipInput(num)}
+          {/* ── Formulario Sistema Principal ── */}
+          {mode === 'main' && (
+            <div>
+              <button
+                onClick={() => { setMode(null); setError(""); }}
+                style={{ marginBottom: '24px', fontSize: '14px', color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                ← Volver
+              </button>
+
+              <h2 style={{ fontSize: '24px', fontWeight: 300, color: '#e8ecf0', marginBottom: '24px' }}>
+                Sistema Principal
+              </h2>
+
+              {error && (
+                <div style={{ marginBottom: '16px', padding: '12px', borderRadius: '6px', fontSize: '14px', textAlign: 'center', backgroundColor: 'rgba(155, 58, 58, 0.1)', color: '#9B3A3A', border: '1px solid #9B3A3A' }}>
+                  {error}
+                </div>
+              )}
+
+              <input
+                type="email"
+                placeholder="Correo electrónico"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={{ marginBottom: '16px', width: '100%', padding: '12px', borderRadius: '6px', fontSize: '14px', backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#e8ecf0', boxSizing: 'border-box' }}
+              />
+              <input
+                type="password"
+                placeholder="Contraseña"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleMainLogin()}
+                style={{ marginBottom: '24px', width: '100%', padding: '12px', borderRadius: '6px', fontSize: '14px', backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#e8ecf0', boxSizing: 'border-box' }}
+              />
+              <button
+                onClick={handleMainLogin}
+                disabled={loading}
+                style={{
+                  width: '100%', padding: '13px', fontSize: '13px', fontWeight: 400,
+                  letterSpacing: '0.08em', color: loading ? 'rgba(255,255,255,0.2)' : '#c8cdd8',
+                  backgroundColor: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '8px', cursor: loading ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => { if (!loading) e.currentTarget.style.borderColor = 'rgba(143,175,212,0.4)'; }}
+                onMouseLeave={(e) => { if (!loading) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}
+              >
+                {loading ? "Entrando..." : "Ingresar"}
+              </button>
+            </div>
+          )}
+
+          {/* ── Formulario POS / NIP ── */}
+          {mode === 'pos' && (
+            <div>
+              <button
+                onClick={() => { setMode(null); setError(""); setNip(""); }}
+                style={{ marginBottom: '24px', fontSize: '14px', color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                ← Volver
+              </button>
+
+              <h2 style={{ fontSize: '24px', fontWeight: 300, color: '#e8ecf0', marginBottom: '24px' }}>
+                Punto de Venta
+              </h2>
+
+              {error && (
+                <div style={{ marginBottom: '16px', padding: '12px', borderRadius: '6px', fontSize: '14px', textAlign: 'center', backgroundColor: 'rgba(155, 58, 58, 0.1)', color: '#9B3A3A', border: '1px solid #9B3A3A' }}>
+                  {error}
+                </div>
+              )}
+
+              {/* Display de NIP */}
+              <div style={{ marginBottom: '32px', textAlign: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '12px' }}>
+                  {[0, 1, 2, 3].map((index) => (
+                    <div
+                      key={index}
                       style={{
-                        width: '64px', height: '64px', borderRadius: '8px',
-                        fontSize: '24px', fontWeight: 400,
-                        backgroundColor: 'rgba(255,255,255,0.04)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        color: '#e8ecf0', cursor: 'pointer', transition: 'all 0.15s',
+                        width: '48px', height: '48px', borderRadius: '50%',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '24px', backgroundColor: 'rgba(255,255,255,0.04)',
+                        border: '1px solid rgba(255,255,255,0.08)', color: '#8fafd4',
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
                     >
-                      {num}
-                    </button>
+                      {index < nip.length ? '●' : '○'}
+                    </div>
                   ))}
+                </div>
+                <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.25)' }}>
+                  Ingresa tu NIP de 4 dígitos
+                </p>
+              </div>
+
+              {/* Teclado numérico */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
+                {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((num) => (
                   <button
-                    onClick={handleNipDelete}
-                    style={{
-                      width: '64px', height: '64px', borderRadius: '8px',
-                      fontSize: '20px', fontWeight: 400,
-                      backgroundColor: 'rgba(252,165,165,0.05)',
-                      border: '1px solid rgba(252,165,165,0.15)',
-                      color: 'rgba(252,165,165,0.6)', cursor: 'pointer', transition: 'all 0.15s',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(252,165,165,0.3)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(252,165,165,0.15)'; }}
-                  >
-                    ⌫
-                  </button>
-                  <button
-                    onClick={() => handleNipInput('0')}
+                    key={num}
+                    onClick={() => handleNipInput(num)}
                     style={{
                       width: '64px', height: '64px', borderRadius: '8px',
                       fontSize: '24px', fontWeight: 400,
@@ -396,41 +462,75 @@ export default function LoginPage() {
                     onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
                   >
-                    0
+                    {num}
                   </button>
-                  <button
-                    onClick={handleNipClear}
-                    style={{
-                      width: '64px', height: '64px', borderRadius: '8px',
-                      fontSize: '16px', fontWeight: 400,
-                      backgroundColor: 'rgba(255,255,255,0.04)',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      color: 'rgba(255,255,255,0.25)', cursor: 'pointer', transition: 'all 0.15s',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
-                  >
-                    C
-                  </button>
-                </div>
-
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={4}
-                  value={nip}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/[^0-9]/g, '');
-                    setNip(value);
+                ))}
+                <button
+                  onClick={handleNipDelete}
+                  style={{
+                    width: '64px', height: '64px', borderRadius: '8px',
+                    fontSize: '20px', fontWeight: 400,
+                    backgroundColor: 'rgba(252,165,165,0.05)',
+                    border: '1px solid rgba(252,165,165,0.15)',
+                    color: 'rgba(252,165,165,0.6)', cursor: 'pointer', transition: 'all 0.15s',
                   }}
-                  style={{ opacity: 0, position: 'absolute', pointerEvents: 'none' }}
-                  autoFocus
-                />
-              </>
-            )}
-          </div>
-        )}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(252,165,165,0.3)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(252,165,165,0.15)'; }}
+                >
+                  ⌫
+                </button>
+                <button
+                  onClick={() => handleNipInput('0')}
+                  style={{
+                    width: '64px', height: '64px', borderRadius: '8px',
+                    fontSize: '24px', fontWeight: 400,
+                    backgroundColor: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    color: '#e8ecf0', cursor: 'pointer', transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                >
+                  0
+                </button>
+                <button
+                  onClick={handleNipClear}
+                  style={{
+                    width: '64px', height: '64px', borderRadius: '8px',
+                    fontSize: '16px', fontWeight: 400,
+                    backgroundColor: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    color: 'rgba(255,255,255,0.25)', cursor: 'pointer', transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                >
+                  C
+                </button>
+              </div>
+
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={4}
+                value={nip}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  setNip(value);
+                }}
+                style={{ opacity: 0, position: 'absolute', pointerEvents: 'none' }}
+                autoFocus
+              />
+            </div>
+          )}
+
+        </div>
+
+        {/* Footer */}
+        <div style={{ position: 'absolute', bottom: 24, fontSize: 11, color: '#1e293b', letterSpacing: '0.05em' }}>
+          © 2026 ESTIA Consultoría · Todos los derechos reservados
+        </div>
       </div>
     </div>
   );
