@@ -214,10 +214,10 @@ export default function LoginPage() {
               src="/logo-estia-isotipo.png"
               alt="ESTIA"
               style={{
-                height: 260,
+                height: 240,
                 objectFit: 'contain',
                 mixBlendMode: 'screen',
-                filter: 'drop-shadow(0 0 60px rgba(37,99,235,0.8))',
+                filter: 'drop-shadow(0 0 50px rgba(37,99,235,0.7))',
               }}
             />
           </div>
@@ -286,23 +286,18 @@ export default function LoginPage() {
 
         <div style={{ width: '100%', maxWidth: 380 }}>
 
-          {/* Logo ESTIA ERP */}
-          <div style={{ textAlign: 'center', marginBottom: 40 }}>
-            <img
-              src="/logo-estia-erp.png"
-              alt="ESTIA ERP"
-              style={{
-                height: 100,
-                objectFit: 'contain',
-                marginBottom: 32,
-                mixBlendMode: 'screen',
-              }}
-            />
-          </div>
-
           {/* ── Selección inicial ── */}
           {!mode && (
             <>
+              {/* Logo ERP justo arriba del título */}
+              <div style={{ textAlign: 'center', marginBottom: 24 }}>
+                <img
+                  src="/logo-estia-erp.png"
+                  alt="ESTIA ERP"
+                  style={{ height: 90, objectFit: 'contain', mixBlendMode: 'screen' }}
+                />
+              </div>
+
               <h2 style={{ fontSize: 22, fontWeight: 500, color: '#F8FAFC', textAlign: 'center', marginBottom: 8 }}>
                 Bienvenido de regreso
               </h2>
