@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 
-const ESTIA_LOGO = 'https://res.cloudinary.com/dv8wvstg2/image/upload/v1782465248/estia/brand/estia-logo.png';
+const ESTIA_LOGO = '/logo-estia-splash.png';
 
 interface Props {
   onDone: () => void;

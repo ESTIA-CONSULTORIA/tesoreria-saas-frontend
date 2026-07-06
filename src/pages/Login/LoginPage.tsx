@@ -216,7 +216,6 @@ export default function LoginPage() {
               style={{
                 height: 240,
                 objectFit: 'contain',
-                mixBlendMode: 'screen',
                 filter: 'drop-shadow(0 0 50px rgba(37,99,235,0.8))',
               }}
             />
