@@ -79,6 +79,9 @@ export default function CorteCajaLite() {
   const [insumos, setInsumos] = useState<any[]>([]);
   const [newInsumo, setNewInsumo] = useState({ nombre: '', tipo: 'insumo', estado: 'proximo', notas: '' });
   const [savingInsumo, setSavingInsumo] = useState(false);
+  const [showFondoModal, setShowFondoModal] = useState(false);
+  const [pendingNipData, setPendingNipData] = useState<{ cajero: string; accessToken: string } | null>(null);
+  const [fondoInicialInput, setFondoInicialInput] = useState('');
 
   const activeFieldOrder = dynamicFields.map(f => f.key);
   const total = dynamicFields.reduce((sum, f) => {
@@ -115,80 +118,110 @@ export default function CorteCajaLite() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [screen, activeField, inputValue]);
 
+  const finishLogin = async (currentShift: any, accessToken: string) => {
+    // Cargar campos configurables del corte
+    try {
+      const fieldsRes = await axios.get(`${API}/pos/corte-fields`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const active = (fieldsRes.data as any[])
+        .filter(f => f.isActive)
+        .sort((a, b) => a.order - b.order)
+        .map(f => ({ key: f.key as keyof Totales, label: f.label, resta: f.resta }));
+      if (active.length > 0) setDynamicFields(active);
+    } catch { /* usa FIELDS por defecto */ }
+
+    setShift(currentShift);
+    setToken(accessToken);
+    sessionStorage.setItem('lite_token', accessToken);
+    sessionStorage.setItem('lite_shift', JSON.stringify(currentShift));
+    sessionStorage.setItem('lite_company', JSON.stringify(selectedCompany));
+    setScreen('corte');
+    setLoading(false);
+  };
+
   const handlePin = async (digit: string) => {
     if (digit === 'del') { setPin(p => p.slice(0, -1)); return; }
     const newPin = pin + digit;
     setPin(newPin);
-    if (newPin.length === 4) {
-      setLoading(true);
-      setError('');
-      try {
-        const res = await axios.post(`${API}/pos/cashiers/nip`, {
-          nip: newPin,
-          companyId: selectedCompany.id,
-          tenantId,
-        });
-        let currentShift = null;
-        try {
-          const shiftRes = await axios.get(`${API}/pos/shifts/open`, {
-            params: { cajero: res.data.user?.id, sucursalId: selectedCompany.branchId || selectedCompany.id },
-            headers: { Authorization: `Bearer ${res.data.access_token}` },
-          });
-          const shiftData = shiftRes.data;
-          if (shiftData && typeof shiftData === 'object' && shiftData.id) {
-            currentShift = shiftData;
-            sessionStorage.setItem('lite_shift', JSON.stringify(shiftData));
-            sessionStorage.setItem('lite_token', res.data.access_token);
-            if (shiftData.precorteDeclaracion) {
-              const d = shiftData.precorteDeclaracion;
-              setTotales({ efectivo: d.efectivo || 0, tarjeta: d.tarjeta || 0, transferencia: d.transferencia || 0, plataformas: d.plataformas || 0, promociones: d.promociones || 0, cortesia: d.cortesia || 0, descuento: d.descuento || 0, gasto: d.gasto || 0 });
-            }
-          } else {
-            throw new Error('no_shift');
-          }
-        } catch {
-          try {
-            const openRes = await axios.post(`${API}/pos/shifts`, {
-              cajero: res.data.user?.id,
-              sucursalId: selectedCompany.branchId || selectedCompany.id,
-              tenantId,
-              fondoInicial: 0,
-            }, { headers: { Authorization: `Bearer ${res.data.access_token}` } });
-            currentShift = openRes.data;
-            sessionStorage.setItem('lite_shift', JSON.stringify(openRes.data));
-            sessionStorage.setItem('lite_token', res.data.access_token);
-          } catch (e2: any) {
-            const msg = e2?.response?.data?.message || e2?.message || 'Error desconocido';
-            setError(`Error al abrir turno: ${msg}`);
-            setPin('');
-            setLoading(false);
-            return;
-          }
-        }
-        // Cargar campos configurables del corte
-        try {
-          const fieldsRes = await axios.get(`${API}/pos/corte-fields`, {
-            headers: { Authorization: `Bearer ${res.data.access_token}` },
-          });
-          const active = (fieldsRes.data as any[])
-            .filter(f => f.isActive)
-            .sort((a, b) => a.order - b.order)
-            .map(f => ({ key: f.key as keyof Totales, label: f.label, resta: f.resta }));
-          if (active.length > 0) setDynamicFields(active);
-        } catch { /* usa FIELDS por defecto */ }
+    if (newPin.length !== 4) return;
 
-        setShift(currentShift);
-        setToken(res.data.access_token);
-        sessionStorage.setItem('lite_token', res.data.access_token);
-        sessionStorage.setItem('lite_shift', JSON.stringify(currentShift));
-        sessionStorage.setItem('lite_company', JSON.stringify(selectedCompany));
-        setScreen('corte');
-      } catch {
-        setError('PIN incorrecto');
-        setPin('');
+    setLoading(true);
+    setError('');
+
+    let loginRes;
+    try {
+      loginRes = await axios.post(`${API}/pos/cashiers/nip`, {
+        nip: newPin,
+        companyId: selectedCompany.id,
+        tenantId,
+      });
+    } catch {
+      setError('PIN incorrecto');
+      setPin('');
+      setLoading(false);
+      return;
+    }
+
+    const accessToken = loginRes.data.access_token;
+    const cajeroId = loginRes.data.user?.id;
+
+    try {
+      const shiftRes = await axios.get(`${API}/pos/shifts/open`, {
+        params: { cajero: cajeroId, sucursalId: selectedCompany.branchId || selectedCompany.id },
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const shiftData = shiftRes.data;
+      if (shiftData && typeof shiftData === 'object' && shiftData.id) {
+        if (shiftData.precorteDeclaracion) {
+          const d = shiftData.precorteDeclaracion;
+          setTotales({ efectivo: d.efectivo || 0, tarjeta: d.tarjeta || 0, transferencia: d.transferencia || 0, plataformas: d.plataformas || 0, promociones: d.promociones || 0, cortesia: d.cortesia || 0, descuento: d.descuento || 0, gasto: d.gasto || 0 });
+        }
+        await finishLogin(shiftData, accessToken);
+        return;
       }
+    } catch {
+      // No hay turno abierto: seguimos abajo a pedir el fondo inicial
+    }
+
+    // No hay turno abierto: pedir fondo inicial de caja antes de abrirlo
+    setPendingNipData({ cajero: cajeroId, accessToken });
+    setFondoInicialInput('');
+    setShowFondoModal(true);
+    setLoading(false);
+  };
+
+  const confirmFondoInicial = async () => {
+    if (!pendingNipData) return;
+    const fondoInicial = parseFloat(fondoInicialInput) || 0;
+    setLoading(true);
+    setError('');
+    try {
+      const openRes = await axios.post(`${API}/pos/shifts`, {
+        cajero: pendingNipData.cajero,
+        sucursalId: selectedCompany.branchId || selectedCompany.id,
+        tenantId,
+        fondoInicial,
+      }, { headers: { Authorization: `Bearer ${pendingNipData.accessToken}` } });
+      setShowFondoModal(false);
+      await finishLogin(openRes.data, pendingNipData.accessToken);
+      setPendingNipData(null);
+    } catch (e2: any) {
+      const msg = e2?.response?.data?.message || e2?.message || 'Error desconocido';
+      setError(`Error al abrir turno: ${msg}`);
+      setShowFondoModal(false);
+      setPendingNipData(null);
+      setPin('');
       setLoading(false);
     }
+  };
+
+  const cancelFondoInicial = () => {
+    setShowFondoModal(false);
+    setPendingNipData(null);
+    setFondoInicialInput('');
+    setPin('');
+    setLoading(false);
   };
 
   const handleMonto = (digit: string) => {
@@ -418,6 +451,39 @@ export default function CorteCajaLite() {
                 Cambiar sucursal
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Fondo inicial de caja (turno nuevo) */}
+      {showFondoModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ width: '100%', maxWidth: 360, background: '#ffffff', borderRadius: 20, padding: 28, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+            <div style={{ fontSize: 10, letterSpacing: '0.2em', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 6 }}>Nuevo turno</div>
+            <div style={{ fontSize: 19, fontWeight: 700, color: '#111827', marginBottom: 20 }}>Fondo inicial de caja</div>
+            <input
+              type="number"
+              inputMode="decimal"
+              autoFocus
+              placeholder="0.00"
+              value={fondoInicialInput}
+              onChange={e => setFondoInicialInput(e.target.value)}
+              style={{ width: '100%', padding: '16px 14px', borderRadius: 12, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#111827', fontSize: 22, fontWeight: 600, marginBottom: 16, boxSizing: 'border-box' }}
+            />
+            {error && <div style={{ color: '#dc2626', fontSize: 13, marginBottom: 12, fontWeight: 500 }}>{error}</div>}
+            <button onClick={confirmFondoInicial} disabled={loading} style={{
+              width: '100%', padding: 16, borderRadius: 12, border: 'none',
+              background: '#1d4ed8', color: '#ffffff', fontSize: 15, fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'inherit', marginBottom: 10,
+            }}>
+              {loading ? 'Abriendo turno...' : 'Confirmar y abrir turno'}
+            </button>
+            <button onClick={cancelFondoInicial} disabled={loading} style={{
+              width: '100%', padding: 14, borderRadius: 12, border: 'none',
+              background: 'none', color: '#94a3b8', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
+            }}>
+              Cancelar
+            </button>
           </div>
         </div>
       )}

@@ -18,6 +18,7 @@ import CostsPage from "./pages/costs/CostsPage";
 import LogsPage from "./pages/administration/LogsPage";
 import ESTIAExecutiveAccess from "./pages/mobile-analytics/MobileAnalyticsApp";
 import POSPage from "./pages/pos/POSPage";
+import BackfillCortePage from "./pages/pos/BackfillCortePage";
 import OCRPage from "./pages/ocr/OCRPage";
 import HRPage from "./pages/hr/HRPage";
 import IntegrationsPage from "./pages/integrations/IntegrationsPage";
@@ -400,6 +401,15 @@ function App() {
         element={
           <ProtectedRoute>
             <POSPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/pos/backfill"
+        element={
+          <ProtectedRoute>
+            <BackfillCortePage />
           </ProtectedRoute>
         }
       />

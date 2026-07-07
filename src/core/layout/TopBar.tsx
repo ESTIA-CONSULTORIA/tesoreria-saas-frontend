@@ -249,8 +249,14 @@ export default function TopBar() {
       ]
     : [];
 
+  const posSubItems = isAdmin
+    ? [...SUBNAV.pos, { label: 'Captura Retroactiva', path: '/pos/backfill' }]
+    : SUBNAV.pos;
+
   const subItems = activeKey === 'dashboard' && dashboardSubItems.length > 0
     ? dashboardSubItems
+    : activeKey === 'pos'
+    ? posSubItems
     : activeKey ? (SUBNAV[activeKey] || []) : [];
 
   const userInitials = (() => {
