@@ -21,15 +21,17 @@ const IC: Record<string, React.ReactNode> = {
   soporte:   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>,
   pacientes: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
   centro_soluciones: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>,
+  corte_retroactivo: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
 };
 
-type ModKey = "dashboard" | "rh" | "tesoreria" | "pos" | "compras" | "reportes" | "integraciones" | "auditoria" | "soporte" | "pacientes" | "centro_soluciones";
+type ModKey = "dashboard" | "rh" | "tesoreria" | "pos" | "compras" | "reportes" | "integraciones" | "auditoria" | "soporte" | "pacientes" | "centro_soluciones" | "corte_retroactivo";
 
 const NAV: { label: string; key: ModKey; path: string; modulo: string }[] = [
   { label: "Dashboard",     key: "dashboard",     path: "/dashboard",    modulo: "dashboard" },
   { label: "RH",            key: "rh",            path: "/hr",           modulo: "rh" },
   { label: "Tesorería",     key: "tesoreria",     path: "/treasury",     modulo: "tesoreria" },
   { label: "POS",           key: "pos",           path: "/pos",          modulo: "pos" },
+  { label: "Captura Retroactiva", key: "corte_retroactivo", path: "/pos/backfill", modulo: "corte_retroactivo" },
   { label: "Compras",       key: "compras",       path: "/purchases",    modulo: "compras" },
   { label: "Reportes",      key: "reportes",      path: "/reports",      modulo: "reportes" },
   { label: "Integraciones", key: "integraciones", path: "/integrations", modulo: "integraciones" },
@@ -74,6 +76,7 @@ const SUBNAV: Record<ModKey, { label: string; path: string }[]> = {
   ],
   pacientes: [],
   centro_soluciones: [],
+  corte_retroactivo: [],
   soporte: [
     { label: "Panel",          path: "/soporte/dashboard" },
     { label: "Clientes",       path: "/soporte/clientes" },
@@ -87,6 +90,7 @@ const MODULE_PATHS: Record<ModKey, string[]> = {
   dashboard:     ["/dashboard", "/companies", "/branches"],
   rh:            ["/hr", "/employee"],
   tesoreria:     ["/banks", "/movements", "/transfers", "/treasury", "/reconciliation"],
+  corte_retroactivo: ["/pos/backfill"],
   pos:           ["/pos"],
   compras:       ["/suppliers", "/purchases", "/costs", "/ocr"],
   reportes:      ["/reports"],
@@ -124,6 +128,8 @@ export default function TopBar() {
   const { companyId: userCompanyId } = useAuthStore();
   const { activeCompany, activeBranch, setActiveCompany, setActiveBranch } = useCompanyStore();
 
+  const isAdmin = user?.roleCode === 'ADMIN' || user?.roleCode === 'SOPORTE';
+
   // Module access — hooks always in same order
   const modulosActivos = useAuthStore((state) => state.modulosActivos);
   const aD  = useModulo('dashboard');
@@ -135,11 +141,13 @@ export default function TopBar() {
   const aI  = useModulo('integraciones');
   const aA  = useModulo('configuracion');
   const aPac = useModulo('pacientes');
+  const aCR = useModulo('corte_retroactivo') && isAdmin;
   const modAccess: Record<ModKey, boolean> = {
     dashboard: aD, rh: aR, tesoreria: aT, pos: aP,
     compras: aC, reportes: aRe, integraciones: aI, auditoria: aA,
     pacientes: aPac,
     centro_soluciones: true,
+    corte_retroactivo: aCR,
     soporte: user?.roleCode === 'SOPORTE',
   };
 
@@ -151,7 +159,6 @@ export default function TopBar() {
   const [pendingCo, setPendingCo]           = useState<{ id: string; name: string } | null>(null);
   const ctxRef = useRef<HTMLDivElement>(null);
 
-  const isAdmin = user?.roleCode === 'ADMIN' || user?.roleCode === 'SOPORTE';
   const isRestricted = !!userCompanyId && !isAdmin;
 
   useEffect(() => {
@@ -238,7 +245,7 @@ export default function TopBar() {
 
   const activeKey  = getActiveKey(loc.pathname);
   const visibleNav = NAV.filter(m => modAccess[m.key]);
-  const operationalModules: ModKey[] = ['rh', 'tesoreria', 'pos', 'compras', 'reportes', 'integraciones'];
+  const operationalModules: ModKey[] = ['rh', 'tesoreria', 'pos', 'compras', 'reportes', 'integraciones', 'corte_retroactivo'];
 
   const dashboardSubItems = (modulosActivos?.includes('empresas') || modulosActivos?.includes('sucursales') || modulosActivos?.includes('usuarios'))
     ? [
@@ -249,14 +256,8 @@ export default function TopBar() {
       ]
     : [];
 
-  const posSubItems = isAdmin
-    ? [...SUBNAV.pos, { label: 'Captura Retroactiva', path: '/pos/backfill' }]
-    : SUBNAV.pos;
-
   const subItems = activeKey === 'dashboard' && dashboardSubItems.length > 0
     ? dashboardSubItems
-    : activeKey === 'pos'
-    ? posSubItems
     : activeKey ? (SUBNAV[activeKey] || []) : [];
 
   const userInitials = (() => {
