@@ -172,7 +172,7 @@ export default function CorteCajaLite() {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       const shiftData = shiftRes.data;
-      if (shiftData && typeof shiftData === 'object' && shiftData.id) {
+      if (shiftData && typeof shiftData === 'object' && shiftData.id && shiftData.cajero === cajeroId) {
         if (shiftData.precorteDeclaracion) {
           const d = shiftData.precorteDeclaracion;
           setTotales({ efectivo: d.efectivo || 0, tarjeta: d.tarjeta || 0, transferencia: d.transferencia || 0, plataformas: d.plataformas || 0, promociones: d.promociones || 0, cortesia: d.cortesia || 0, descuento: d.descuento || 0, gasto: d.gasto || 0 });
