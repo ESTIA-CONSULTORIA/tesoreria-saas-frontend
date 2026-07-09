@@ -123,7 +123,7 @@ export default function ExecutiveReport({
           const rawData = res.data;
           const allShifts = Array.isArray(rawData) ? rawData : Array.isArray(rawData?.value) ? rawData.value : [];
           const shifts = allShifts.filter((s: any) => {
-            const fecha = new Date(s.createdAt || s.fecha || 0);
+            const fecha = new Date(s.fecha || s.createdAt || 0);
             return fecha >= new Date(dateFrom) && fecha <= new Date(dateTo);
           });
 
@@ -131,7 +131,7 @@ export default function ExecutiveReport({
 
           const byDayMap: Record<string, { total: number; canales: any[] }> = {};
           shifts.forEach((s: any) => {
-            const fecha = new Date(s.createdAt || s.fecha || 0);
+            const fecha = new Date(s.fecha || s.createdAt || 0);
             const label = fecha.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
             if (!byDayMap[label]) byDayMap[label] = { total: 0, canales: [] };
 

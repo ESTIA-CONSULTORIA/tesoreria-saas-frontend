@@ -62,7 +62,7 @@ export default function DashboardLite() {
 
   const filtered = shifts.filter(s => {
     if (s.status !== 'CERRADO') return false;
-    const fecha = new Date(s.createdAt || s.fecha || 0);
+    const fecha = new Date(s.fecha || s.createdAt || 0);
     const now = new Date();
     if (period === 'semana') {
       const from = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -81,7 +81,7 @@ export default function DashboardLite() {
   const totalVenta = filtered.reduce((sum, s) => sum + shiftTotal(s), 0);
 
   const byDay = filtered.reduce((acc: any, s) => {
-    const fecha = new Date(s.createdAt || s.fecha || 0);
+    const fecha = new Date(s.fecha || s.createdAt || 0);
     const day = fecha.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
     if (!acc[day]) acc[day] = { day, efectivo: 0, tarjeta: 0, transferencia: 0, plataformas: 0, promociones: 0 };
     const f = parseNotas(s.notas);
@@ -230,7 +230,7 @@ export default function DashboardLite() {
                   <div style={{ padding: 32, textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>Sin cortes registrados</div>
                 ) : (
                   filtered.map(s => {
-                    const fecha = new Date(s.createdAt || s.fecha || 0);
+                    const fecha = new Date(s.fecha || s.createdAt || 0);
                     const total = shiftTotal(s);
                     const isSelected = selectedShift?.id === s.id;
                     return (
