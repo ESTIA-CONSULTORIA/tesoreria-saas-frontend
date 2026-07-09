@@ -53,7 +53,7 @@ export default function ExecutiveReport({
   const [customTo, setCustomTo] = useState('');
   const [giroDetected, setGiroDetected] = useState<"restaurant" | "retail" | "default">("default");
   const [isLite, setIsLite] = useState(false);
-  const [byDayData, setByDayData] = useState<{ label: string; total: number; canales: any[] }[]>([]);
+  const [byDayData, setByDayData] = useState<{ label: string; total: number; canales: any[]; rawDate: Date }[]>([]);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
   const showPeriodSelector = module === "VENTA";
@@ -132,17 +132,25 @@ export default function ExecutiveReport({
           const rawData = res.data;
           const allShifts = Array.isArray(rawData) ? rawData : Array.isArray(rawData?.value) ? rawData.value : [];
           const shifts = allShifts.filter((s: any) => {
+            if (s.status !== 'CERRADO') return false;
             const fecha = parseBusinessDate(s.fecha || s.createdAt);
             return fecha >= new Date(dateFrom) && fecha <= new Date(dateTo);
           });
 
           val = shifts.reduce((sum: number, s: any) => sum + shiftTotal(s), 0);
 
-          const byDayMap: Record<string, { total: number; canales: any[] }> = {};
+          const byDayMap: Record<string, {
+            total: number; rawDate: Date;
+            efectivo: number; tarjeta: number; transferencia: number; plataformas: number;
+            promociones: number; cortesia: number; descuento: number; gasto: number;
+          }> = {};
           shifts.forEach((s: any) => {
             const fecha = parseBusinessDate(s.fecha || s.createdAt);
             const label = fecha.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
-            if (!byDayMap[label]) byDayMap[label] = { total: 0, canales: [] };
+            if (!byDayMap[label]) byDayMap[label] = {
+              total: 0, rawDate: fecha,
+              efectivo: 0, tarjeta: 0, transferencia: 0, plataformas: 0, promociones: 0, cortesia: 0, descuento: 0, gasto: 0,
+            };
 
             const efectivo = Number(s.efectivoContado || 0);
             let tarjeta = 0, transf = 0, plat = 0, prom = 0, cortesia = 0, descuento = 0, gasto = 0;
@@ -167,22 +175,38 @@ export default function ExecutiveReport({
             if (Number(s.totalTarjeta) > 0) tarjeta = Number(s.totalTarjeta);
             if (Number(s.totalTransferencia) > 0) transf = Number(s.totalTransferencia);
             if (Number(s.totalCortesia) > 0) cortesia = Number(s.totalCortesia);
-            byDayMap[label].total += efectivo + tarjeta + transf + plat + prom - cortesia - descuento - gasto;
-            byDayMap[label].canales = [
-              { label: 'Efectivo',      valor: efectivo,  resta: false },
-              { label: 'Tarjeta',       valor: tarjeta,   resta: false },
-              { label: 'Transferencia', valor: transf,    resta: false },
-              { label: 'Plataformas',   valor: plat,      resta: false },
-              { label: 'Promociones',   valor: prom,      resta: false },
-              { label: 'Cortesías',     valor: cortesia,  resta: true  },
-              { label: 'Descuentos',    valor: descuento, resta: true  },
-              { label: 'Gastos',        valor: gasto,     resta: true  },
-            ].filter(c => c.valor > 0);
+
+            // Acumula por categoría en vez de sobreescribir — permite varios
+            // turnos CERRADO el mismo día (ej. dos cajeros) sin perder datos.
+            const day = byDayMap[label];
+            day.total += efectivo + tarjeta + transf + plat + prom - cortesia - descuento - gasto;
+            day.efectivo += efectivo;
+            day.tarjeta += tarjeta;
+            day.transferencia += transf;
+            day.plataformas += plat;
+            day.promociones += prom;
+            day.cortesia += cortesia;
+            day.descuento += descuento;
+            day.gasto += gasto;
           });
 
           const byDayArr = Object.entries(byDayMap)
-            .map(([label, data]) => ({ label, ...data }))
-            .sort((a, b) => new Date(b.label).getTime() - new Date(a.label).getTime());
+            .map(([label, d]) => ({
+              label,
+              total: d.total,
+              rawDate: d.rawDate,
+              canales: [
+                { label: 'Efectivo',      valor: d.efectivo,      resta: false },
+                { label: 'Tarjeta',       valor: d.tarjeta,       resta: false },
+                { label: 'Transferencia', valor: d.transferencia, resta: false },
+                { label: 'Plataformas',   valor: d.plataformas,   resta: false },
+                { label: 'Promociones',   valor: d.promociones,   resta: false },
+                { label: 'Cortesías',     valor: d.cortesia,      resta: true  },
+                { label: 'Descuentos',    valor: d.descuento,     resta: true  },
+                { label: 'Gastos',        valor: d.gasto,         resta: true  },
+              ].filter(c => c.valor > 0),
+            }))
+            .sort((a, b) => b.rawDate.getTime() - a.rawDate.getTime());
 
           setByDayData(byDayArr);
           setMainDesc(`${shifts.length} corte${shifts.length !== 1 ? 's' : ''} — ${period}`);

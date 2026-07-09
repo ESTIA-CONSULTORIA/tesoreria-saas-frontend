@@ -78,22 +78,30 @@ export default function ExecutiveDashboard({
           const shifts = Array.isArray(rawData) ? rawData : Array.isArray(rawData?.value) ? rawData.value : [];
           const shiftTotal = (s: any): number => {
             let total = Number(s.efectivoContado || 0);
+            let tarjeta = 0, transf = 0, plat = 0, prom = 0, cortesia = 0, descuento = 0, gasto = 0;
             if (s.notas) {
-              const tarjeta = s.notas.match(/Tarjeta[:\s]+\$?([\d,]+\.?\d*)/i);
-              const transf = s.notas.match(/Transferencia[:\s]+\$?([\d,]+\.?\d*)/i);
-              const plat = s.notas.match(/Plataformas[:\s]+\$?([\d,]+\.?\d*)/i);
-              const prom = s.notas.match(/Promociones[:\s]+\$?([\d,]+\.?\d*)/i);
-              const cortesia = s.notas.match(/Cortesías[:\s]+\$?([\d,]+\.?\d*)/i);
-              const descuento = s.notas.match(/Descuentos[:\s]+\$?([\d,]+\.?\d*)/i);
-              const gasto = s.notas.match(/Gastos[:\s]+\$?([\d,]+\.?\d*)/i);
-              if (tarjeta) total += parseFloat(tarjeta[1].replace(/,/g, ''));
-              if (transf) total += parseFloat(transf[1].replace(/,/g, ''));
-              if (plat) total += parseFloat(plat[1].replace(/,/g, ''));
-              if (prom) total += parseFloat(prom[1].replace(/,/g, ''));
-              if (cortesia) total -= parseFloat(cortesia[1].replace(/,/g, ''));
-              if (descuento) total -= parseFloat(descuento[1].replace(/,/g, ''));
-              if (gasto) total -= parseFloat(gasto[1].replace(/,/g, ''));
+              const mTar = s.notas.match(/Tarjeta[:\s]+\$?([\d,]+\.?\d*)/i);
+              const mTrf = s.notas.match(/Transferencia[:\s]+\$?([\d,]+\.?\d*)/i);
+              const mPlt = s.notas.match(/Plataformas[:\s]+\$?([\d,]+\.?\d*)/i);
+              const mPrm = s.notas.match(/Promociones[:\s]+\$?([\d,]+\.?\d*)/i);
+              const mCor = s.notas.match(/Cortesías[:\s]+\$?([\d,]+\.?\d*)/i);
+              const mDes = s.notas.match(/Descuentos[:\s]+\$?([\d,]+\.?\d*)/i);
+              const mGas = s.notas.match(/Gastos[:\s]+\$?([\d,]+\.?\d*)/i);
+              if (mTar) tarjeta   = parseFloat(mTar[1].replace(/,/g, ''));
+              if (mTrf) transf    = parseFloat(mTrf[1].replace(/,/g, ''));
+              if (mPlt) plat      = parseFloat(mPlt[1].replace(/,/g, ''));
+              if (mPrm) prom      = parseFloat(mPrm[1].replace(/,/g, ''));
+              if (mCor) cortesia  = parseFloat(mCor[1].replace(/,/g, ''));
+              if (mDes) descuento = parseFloat(mDes[1].replace(/,/g, ''));
+              if (mGas) gasto     = parseFloat(mGas[1].replace(/,/g, ''));
             }
+            // Columnas reales (backfill) tienen prioridad sobre notas; turnos Lite
+            // normales dejan estas columnas en 0 y el monto real vive solo en notas.
+            if (Number(s.totalTarjeta) > 0) tarjeta = Number(s.totalTarjeta);
+            if (Number(s.totalTransferencia) > 0) transf = Number(s.totalTransferencia);
+            if (Number(s.totalCortesia) > 0) cortesia = Number(s.totalCortesia);
+            total += tarjeta + transf + plat + prom;
+            total -= cortesia + descuento + gasto;
             return total;
           };
           const totalVenta = shifts.reduce((sum: number, s: any) => sum + shiftTotal(s), 0);
