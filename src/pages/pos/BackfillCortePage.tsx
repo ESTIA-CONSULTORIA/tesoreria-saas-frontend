@@ -35,6 +35,7 @@ export default function BackfillCortePage() {
   const [fecha, setFecha] = useState(todayStr());
   const [values, setValues] = useState<Record<string, string>>({});
   const [fondoInicial, setFondoInicial] = useState('');
+  const [aplicoFondoInicial, setAplicoFondoInicial] = useState(false);
   const [notas, setNotas] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -63,6 +64,7 @@ export default function BackfillCortePage() {
   const resetValues = () => {
     setValues({});
     setFondoInicial('');
+    setAplicoFondoInicial(false);
     setNotas('');
     setError('');
   };
@@ -88,7 +90,7 @@ export default function BackfillCortePage() {
       await api.post('/pos/shifts/backfill', {
         sucursalId: activeBranch.id,
         fecha,
-        fondoInicial: parseFloat(fondoInicial || '') || 0,
+        fondoInicial: aplicoFondoInicial ? (parseFloat(fondoInicial || '') || 0) : 0,
         totalVentas: total,
         totalEfectivo: num('efectivo'),
         totalTarjeta: num('tarjeta'),
@@ -198,16 +200,29 @@ export default function BackfillCortePage() {
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <label style={labelStyle}>Fondo inicial de caja</label>
-              <input
-                type="number"
-                inputMode="decimal"
-                placeholder="0.00"
-                value={fondoInicial}
-                onChange={e => setFondoInicial(e.target.value)}
-                style={inputStyle}
-              />
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'rgba(255,255,255,0.7)', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={aplicoFondoInicial}
+                  onChange={e => setAplicoFondoInicial(e.target.checked)}
+                />
+                Este día aplicó fondo inicial de caja
+              </label>
             </div>
+
+            {aplicoFondoInicial && (
+              <div style={{ marginBottom: 16 }}>
+                <label style={labelStyle}>Fondo inicial de caja</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="0.00"
+                  value={fondoInicial}
+                  onChange={e => setFondoInicial(e.target.value)}
+                  style={inputStyle}
+                />
+              </div>
+            )}
 
             <div style={{ marginBottom: 20 }}>
               <label style={labelStyle}>Notas</label>
