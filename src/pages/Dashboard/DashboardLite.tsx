@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../core/api/api';
 import MainLayout from '../../core/layout/MainLayout';
+import { parseBusinessDate } from '../../core/utils/date';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 type Period = 'semana' | 'mes' | 'custom';
@@ -35,8 +36,14 @@ function parseNotas(notas: string | null) {
 function shiftTotal(s: any): number {
   let total = Number(s.efectivoContado || 0);
   const f = parseNotas(s.notas);
-  total += (f.tarjeta || 0) + (f.transferencia || 0) + (f.plataformas || 0) + (f.promociones || 0);
-  total -= (f.cortesia || 0) + (f.descuento || 0) + (f.gasto || 0);
+  // Columnas reales (turnos capturados vía backfill) tienen prioridad sobre el
+  // texto de notas; los turnos Lite normales dejan estas columnas en 0 y el
+  // monto real vive únicamente en notas — nunca se suman ambas fuentes.
+  const tarjeta       = Number(s.totalTarjeta) > 0 ? Number(s.totalTarjeta) : (f.tarjeta || 0);
+  const transferencia = Number(s.totalTransferencia) > 0 ? Number(s.totalTransferencia) : (f.transferencia || 0);
+  const cortesia      = Number(s.totalCortesia) > 0 ? Number(s.totalCortesia) : (f.cortesia || 0);
+  total += tarjeta + transferencia + (f.plataformas || 0) + (f.promociones || 0);
+  total -= cortesia + (f.descuento || 0) + (f.gasto || 0);
   return total;
 }
 
@@ -62,7 +69,7 @@ export default function DashboardLite() {
 
   const filtered = shifts.filter(s => {
     if (s.status !== 'CERRADO') return false;
-    const fecha = new Date(s.fecha || s.createdAt || 0);
+    const fecha = parseBusinessDate(s.fecha || s.createdAt);
     const now = new Date();
     if (period === 'semana') {
       const from = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -81,7 +88,7 @@ export default function DashboardLite() {
   const totalVenta = filtered.reduce((sum, s) => sum + shiftTotal(s), 0);
 
   const byDay = filtered.reduce((acc: any, s) => {
-    const fecha = new Date(s.fecha || s.createdAt || 0);
+    const fecha = parseBusinessDate(s.fecha || s.createdAt);
     const day = fecha.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
     if (!acc[day]) acc[day] = { day, efectivo: 0, tarjeta: 0, transferencia: 0, plataformas: 0, promociones: 0 };
     const f = parseNotas(s.notas);
@@ -94,15 +101,21 @@ export default function DashboardLite() {
   }, {});
   const chartData = Object.values(byDay);
 
+  // Columnas reales (backfill) tienen prioridad sobre notas; turnos Lite
+  // normales dejan estas columnas en 0 y el monto real vive solo en notas.
   const totalIngresos = filtered.reduce((sum, s) => {
     const f = parseNotas(s.notas);
-    return sum + Number(s.efectivoContado || 0) + (f.tarjeta || 0) + (f.transferencia || 0) + (f.plataformas || 0) + (f.promociones || 0);
+    const tarjeta = Number(s.totalTarjeta) > 0 ? Number(s.totalTarjeta) : (f.tarjeta || 0);
+    const transferencia = Number(s.totalTransferencia) > 0 ? Number(s.totalTransferencia) : (f.transferencia || 0);
+    return sum + Number(s.efectivoContado || 0) + tarjeta + transferencia + (f.plataformas || 0) + (f.promociones || 0);
   }, 0);
 
   const canalTotals = CANALES.map(c => {
     const total = filtered.reduce((sum, s) => {
       if (c.key === 'efectivo') return sum + Number(s.efectivoContado || 0);
       const f = parseNotas(s.notas);
+      if (c.key === 'tarjeta') return sum + (Number(s.totalTarjeta) > 0 ? Number(s.totalTarjeta) : (f.tarjeta || 0));
+      if (c.key === 'transferencia') return sum + (Number(s.totalTransferencia) > 0 ? Number(s.totalTransferencia) : (f.transferencia || 0));
       return sum + (f[c.key] || 0);
     }, 0);
     return { ...c, total, pct: totalIngresos > 0 ? (total / totalIngresos * 100).toFixed(1) : '0.0' };
@@ -111,14 +124,19 @@ export default function DashboardLite() {
   const shiftDetalle = selectedShift ? (() => {
     const f = parseNotas(selectedShift.notas);
     const total = shiftTotal(selectedShift);
-    const ingresos = Number(selectedShift.efectivoContado || 0) + (f.tarjeta || 0) + (f.transferencia || 0) + (f.plataformas || 0) + (f.promociones || 0);
+    // Columnas reales (backfill) tienen prioridad sobre notas; turnos Lite
+    // normales dejan estas columnas en 0 y el monto real vive solo en notas.
+    const tarjeta = Number(selectedShift.totalTarjeta) > 0 ? Number(selectedShift.totalTarjeta) : (f.tarjeta || 0);
+    const transferencia = Number(selectedShift.totalTransferencia) > 0 ? Number(selectedShift.totalTransferencia) : (f.transferencia || 0);
+    const cortesia = Number(selectedShift.totalCortesia) > 0 ? Number(selectedShift.totalCortesia) : (f.cortesia || 0);
+    const ingresos = Number(selectedShift.efectivoContado || 0) + tarjeta + transferencia + (f.plataformas || 0) + (f.promociones || 0);
     const canales = [
       { label: 'Efectivo',      valor: Number(selectedShift.efectivoContado || 0), resta: false },
-      { label: 'Tarjeta',       valor: f.tarjeta       || 0, resta: false },
-      { label: 'Transferencia', valor: f.transferencia || 0, resta: false },
+      { label: 'Tarjeta',       valor: tarjeta,       resta: false },
+      { label: 'Transferencia', valor: transferencia, resta: false },
       { label: 'Plataformas',   valor: f.plataformas   || 0, resta: false },
       { label: 'Promociones',   valor: f.promociones   || 0, resta: false },
-      { label: 'Cortesías',     valor: f.cortesia      || 0, resta: true  },
+      { label: 'Cortesías',     valor: cortesia,      resta: true  },
       { label: 'Descuentos',    valor: f.descuento     || 0, resta: true  },
       { label: 'Gastos',        valor: f.gasto         || 0, resta: true  },
     ].filter(c => c.valor > 0);
@@ -230,7 +248,7 @@ export default function DashboardLite() {
                   <div style={{ padding: 32, textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>Sin cortes registrados</div>
                 ) : (
                   filtered.map(s => {
-                    const fecha = new Date(s.fecha || s.createdAt || 0);
+                    const fecha = parseBusinessDate(s.fecha || s.createdAt);
                     const total = shiftTotal(s);
                     const isSelected = selectedShift?.id === s.id;
                     return (
