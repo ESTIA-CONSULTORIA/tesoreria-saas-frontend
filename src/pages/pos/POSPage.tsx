@@ -161,7 +161,7 @@ export default function POSPage() {
   // Login/Shift opening screens
   const [showLoginScreen, setShowLoginScreen] = useState(false);
   const [cashierPin, setCashierPin] = useState<string>("");
-  const [selectedCashier, setSelectedCashier] = useState<string>(localStorage.getItem("selected_cashier") || "");
+  const [selectedCashier, setSelectedCashier] = useState<string>("");
   const [shiftNotes, setShiftNotes] = useState<string>("");
   const [showChatPanel, setShowChatPanel] = useState(false);
   
@@ -281,46 +281,31 @@ export default function POSPage() {
 
   useEffect(() => {
     if (!token) return; // esperar token
-    const savedCashier = localStorage.getItem('selected_cashier');
     loadCategories().then((cats) => {
       loadProducts(cats);
     });
     loadPosCategories();
     loadAreas();
-    loadOpenShift().then((openShift) => {
-      // Si el usuario es CAJERO, omitir pantalla de login de cajero
-      if (user?.roleCode === 'CAJERO') {
-        setShowLoginScreen(false);
-        if (openShift) {
-          setSelectedCashier(localStorage.getItem('selected_cashier') || user?.id || '');
-        } else {
-          // Si no hay turno abierto, mostrar modal de apertura
-          setShowOpenShiftModal(true);
-        }
-      } else if (openShift && savedCashier) {
-        // Si es ADMIN/SOPORTE, mostrar login de cajero si hay turno abierto
-        setSelectedCashier(savedCashier);
-        setShowLoginScreen(false);
-      } else {
-        localStorage.removeItem('selected_cashier');
-        setShowLoginScreen(true);
-      }
-    });
+
+    if (user?.roleCode === 'CAJERO') {
+      // El usuario ERP autenticado ya ES el cajero — no requiere PIN adicional.
+      setShowLoginScreen(false);
+      setSelectedCashier(user?.id || '');
+      loadOpenShift(user?.id || '').then((openShift) => {
+        if (!openShift) setShowOpenShiftModal(true);
+      });
+    } else {
+      // ADMIN/SOPORTE: pedir PIN siempre al cargar la página, sin excepción —
+      // nunca se asume identidad de una sesión anterior.
+      setSelectedCashier('');
+      setShowLoginScreen(true);
+    }
   }, [token]);
 
   useEffect(() => {
-    const savedCashier = localStorage.getItem('selected_cashier');
-    // Si el usuario es CAJERO, no mostrar pantalla de login de cajero
-    if (user?.roleCode === 'CAJERO') {
-      setShowLoginScreen(false);
-      if (shift) {
-        setSelectedCashier(user?.id || '');
-      }
-    } else if (!shift && !savedCashier) {
-      // Si es ADMIN/SOPORTE, mostrar login de cajero si no hay turno ni cajero seleccionado
-      setShowLoginScreen(true);
-    } else if (savedCashier && !selectedCashier) {
-      setSelectedCashier(savedCashier);
+    // Salvaguarda: si el usuario ERP es CAJERO, su propia sesión ya es la identidad.
+    if (user?.roleCode === 'CAJERO' && shift) {
+      setSelectedCashier(user?.id || '');
     }
   }, [shift]);
 
@@ -381,14 +366,12 @@ export default function POSPage() {
     }
   }
 
-  async function loadOpenShift() {
+  async function loadOpenShift(cajeroId: string) {
     try {
-      const user = JSON.parse(localStorage.getItem('user') || 'null');
-      const savedCashier = localStorage.getItem('selected_cashier');
       const response = await api.get("/pos/shifts/open", {
         params: {
-          cajero: savedCashier || user?.id || "current-user-id",
-          sucursalId: user?.branchId || "default-branch-id",
+          cajero: cajeroId,
+          sucursalId: user?.branchId || branchId,
         },
       });
       const shiftData = response.data ? {
@@ -481,10 +464,15 @@ export default function POSPage() {
       return;
     }
     try {
-      await api.post("/pos/cashiers/nip", { nip: cashierPin });
+      const response = await api.post("/pos/cashiers/nip", { nip: cashierPin });
+      const cajeroId = response.data?.user?.id || '';
+      setSelectedCashier(cajeroId);
       setShowLoginScreen(false);
-      setShowOpenShiftModal(true);
       setCashierPin("");
+      const openShift = await loadOpenShift(cajeroId);
+      if (!openShift) {
+        setShowOpenShiftModal(true);
+      }
     } catch {
       alert("PIN incorrecto o cajero no autorizado");
     }
@@ -506,7 +494,6 @@ export default function POSPage() {
         efectivoContado: Number(declaracion.efectivoContado) || 0,
       });
       setShift(null);
-      localStorage.removeItem('selected_cashier');
       setSelectedCashier('');
       setShowCloseShiftModal(false);
       setShowLoginScreen(true);
@@ -532,7 +519,7 @@ export default function POSPage() {
       setWithdrawalAmount("");
       setWithdrawalReason("");
       setWithdrawalAuthorizedBy("");
-      loadOpenShift();
+      loadOpenShift(selectedCashier);
     } catch (error) {
       console.error("Error processing withdrawal:", error);
       alert("Error al procesar retiro");
@@ -554,7 +541,7 @@ export default function POSPage() {
       setDepositAmount("");
       setDepositOrigin("");
       setDepositAuthorizedBy("");
-      loadOpenShift();
+      loadOpenShift(selectedCashier);
     } catch (error) {
       console.error("Error processing deposit:", error);
       alert("Error al procesar depósito");
@@ -1044,10 +1031,6 @@ export default function POSPage() {
                     setShowExitConfirmModal(true);
                   } else {
                     if (user?.roleCode === 'CAJERO') {
-                      // NO limpiar selected_cashier si hay turno abierto
-                      if (!shift) {
-                        localStorage.removeItem('selected_cashier');
-                      }
                       logout();
                       navigate('/');
                     } else {
@@ -2164,7 +2147,6 @@ export default function POSPage() {
                   value={selectedCashier}
                   onChange={(e) => {
                     setSelectedCashier(e.target.value);
-                    localStorage.setItem("selected_cashier", e.target.value);
                   }}
                   className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white"
                 >
@@ -3606,10 +3588,6 @@ export default function POSPage() {
               <button
                 onClick={() => {
                   if (user?.roleCode === 'CAJERO') {
-                    // NO limpiar selected_cashier si hay turno abierto
-                    if (!shift) {
-                      localStorage.removeItem('selected_cashier');
-                    }
                     logout();
                     localStorage.removeItem('access_token');
                     localStorage.removeItem('user');
