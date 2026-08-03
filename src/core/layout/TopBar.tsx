@@ -22,9 +22,10 @@ const IC: Record<string, React.ReactNode> = {
   pacientes: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
   centro_soluciones: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>,
   corte_retroactivo: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+  costos: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
 };
 
-type ModKey = "dashboard" | "rh" | "tesoreria" | "pos" | "compras" | "reportes" | "integraciones" | "auditoria" | "soporte" | "pacientes" | "centro_soluciones" | "corte_retroactivo";
+type ModKey = "dashboard" | "rh" | "tesoreria" | "pos" | "compras" | "reportes" | "integraciones" | "auditoria" | "soporte" | "pacientes" | "centro_soluciones" | "corte_retroactivo" | "costos";
 
 const NAV: { label: string; key: ModKey; path: string; modulo: string }[] = [
   { label: "Dashboard",     key: "dashboard",     path: "/dashboard",    modulo: "dashboard" },
@@ -33,6 +34,7 @@ const NAV: { label: string; key: ModKey; path: string; modulo: string }[] = [
   { label: "POS",           key: "pos",           path: "/pos",          modulo: "pos" },
   { label: "Captura Retroactiva", key: "corte_retroactivo", path: "/pos/backfill", modulo: "corte_retroactivo" },
   { label: "Compras",       key: "compras",       path: "/purchases",    modulo: "compras" },
+  { label: "Costos",        key: "costos",        path: "/costs",        modulo: "costos" },
   { label: "Reportes",      key: "reportes",      path: "/reports",      modulo: "reportes" },
   { label: "Integraciones", key: "integraciones", path: "/integrations", modulo: "integraciones" },
   { label: "Pacientes",     key: "pacientes",          path: "/patients",          modulo: "pacientes" },
@@ -62,7 +64,6 @@ const SUBNAV: Record<ModKey, { label: string; path: string }[]> = {
   compras: [
     { label: "Proveedores",    path: "/suppliers" },
     { label: "Compras",        path: "/purchases" },
-    { label: "Costos",         path: "/costs" },
     { label: "OCR Documentos", path: "/ocr" },
   ],
   reportes:      [{ label: "Reportes",      path: "/reports" }],
@@ -77,6 +78,7 @@ const SUBNAV: Record<ModKey, { label: string; path: string }[]> = {
   pacientes: [],
   centro_soluciones: [],
   corte_retroactivo: [],
+  costos: [],
   soporte: [
     { label: "Panel",          path: "/soporte/dashboard" },
     { label: "Clientes",       path: "/soporte/clientes" },
@@ -92,7 +94,8 @@ const MODULE_PATHS: Record<ModKey, string[]> = {
   tesoreria:     ["/banks", "/movements", "/transfers", "/treasury", "/reconciliation"],
   corte_retroactivo: ["/pos/backfill"],
   pos:           ["/pos"],
-  compras:       ["/suppliers", "/purchases", "/costs", "/ocr"],
+  compras:       ["/suppliers", "/purchases", "/ocr"],
+  costos:        ["/costs"],
   reportes:      ["/reports"],
   integraciones: ["/integrations"],
   pacientes:        ["/patients"],
@@ -142,12 +145,14 @@ export default function TopBar() {
   const aA  = useModulo('configuracion');
   const aPac = useModulo('pacientes');
   const aCR = useModulo('corte_retroactivo') && isAdmin;
+  const aCos = useModulo('costos');
   const modAccess: Record<ModKey, boolean> = {
     dashboard: aD, rh: aR, tesoreria: aT, pos: aP,
     compras: aC, reportes: aRe, integraciones: aI, auditoria: aA,
     pacientes: aPac,
     centro_soluciones: true,
     corte_retroactivo: aCR,
+    costos: aCos,
     soporte: user?.roleCode === 'SOPORTE',
   };
 
@@ -245,7 +250,7 @@ export default function TopBar() {
 
   const activeKey  = getActiveKey(loc.pathname);
   const visibleNav = NAV.filter(m => modAccess[m.key]);
-  const operationalModules: ModKey[] = ['rh', 'tesoreria', 'pos', 'compras', 'reportes', 'integraciones', 'corte_retroactivo'];
+  const operationalModules: ModKey[] = ['rh', 'tesoreria', 'pos', 'compras', 'reportes', 'integraciones', 'corte_retroactivo', 'costos'];
 
   const dashboardSubItems = (modulosActivos?.includes('empresas') || modulosActivos?.includes('sucursales') || modulosActivos?.includes('usuarios'))
     ? [
