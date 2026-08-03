@@ -67,6 +67,19 @@ export default function CreateRecipeModal({ open, onClose, onCreated, insumos, r
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, recipe]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, onClose]);
+
   async function loadRecipeItems(recipeId: string) {
     try {
       setLoadingItems(true);
@@ -254,7 +267,7 @@ export default function CreateRecipeModal({ open, onClose, onCreated, insumos, r
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-3xl max-h-[90vh] flex flex-col rounded-xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden">
         {/* Header - flex-shrink-0 */}
-        <div className="flex-shrink-0 p-4 border-b border-slate-800">
+        <div className="flex-shrink-0 p-3 border-b border-slate-800">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-bold text-white">{recipe ? "Editar Receta" : "Nueva Receta"}</h3>
@@ -270,14 +283,14 @@ export default function CreateRecipeModal({ open, onClose, onCreated, insumos, r
         </div>
 
         {/* Body - flex-1 overflow-y-auto */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-3">
           {error && (
-            <div className="mb-4 rounded-xl border border-red-700 bg-red-900/30 p-3 text-red-300 text-sm">
+            <div className="mb-3 rounded-xl border border-red-700 bg-red-900/30 p-2.5 text-red-300 text-sm">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-3">
+          <form onSubmit={handleSubmit} className="space-y-2">
           <div>
             <label className="block text-xs text-slate-400 mb-1">Nombre *</label>
             <input
@@ -363,87 +376,95 @@ export default function CreateRecipeModal({ open, onClose, onCreated, insumos, r
             {loadingItems ? (
               <p className="text-xs text-slate-400">Cargando ingredientes...</p>
             ) : (
-              <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
-                {items.map((item) => {
-                  const selectValue = item.insumoId
-                    ? `insumo:${item.insumoId}`
-                    : item.componentRecipeId
-                    ? `receta:${item.componentRecipeId}`
-                    : "";
+              <>
+                <div className="hidden md:grid grid-cols-5 gap-2 px-2 mb-1 text-xs text-slate-400">
+                  <span className="col-span-2">Ingrediente</span>
+                  <span>Cantidad</span>
+                  <span>Costo Unit.</span>
+                  <span>Subtotal</span>
+                </div>
+                <div className="max-h-60 overflow-y-auto space-y-1.5 pr-1">
+                  {items.map((item) => {
+                    const selectValue = item.insumoId
+                      ? `insumo:${item.insumoId}`
+                      : item.componentRecipeId
+                      ? `receta:${item.componentRecipeId}`
+                      : "";
 
-                  return (
-                    <div key={item._key} className="grid gap-2 grid-cols-1 md:grid-cols-5 items-end p-2 rounded-lg bg-slate-800">
-                      <div className="md:col-span-2">
-                        <label className="block text-xs text-slate-400 mb-1">Ingrediente</label>
-                        <select
-                          value={selectValue}
-                          onChange={(e) => handleIngredientChange(item._key, e.target.value)}
-                          disabled={item.loadingCosto}
-                          className="w-full rounded border border-slate-700 bg-slate-700 p-1.5 text-white text-xs outline-none focus:border-blue-500 disabled:opacity-50"
-                        >
-                          <option value="">Seleccionar</option>
-                          <optgroup label="Insumos">
-                            {insumos.map((i) => (
-                              <option key={`insumo:${i.id}`} value={`insumo:${i.id}`}>{i.nombre}</option>
-                            ))}
-                          </optgroup>
-                          <optgroup label="Recetas (insumo elaborado)">
-                            {recipes.map((r) => (
-                              <option key={`receta:${r.id}`} value={`receta:${r.id}`}>{r.nombre}</option>
-                            ))}
-                          </optgroup>
-                        </select>
-                        {item.loadingCosto && <p className="text-xs text-slate-400 mt-1">Calculando costo...</p>}
-                      </div>
-                      <div>
-                        <label className="block text-xs text-slate-400 mb-1">Cantidad</label>
-                        <input
-                          type="number"
-                          value={item.cantidad}
-                          onChange={(e) => updateItemField(item._key, "cantidad", Number(e.target.value))}
-                          step="0.0001"
-                          className="w-full rounded border border-slate-700 bg-slate-700 p-1.5 text-white text-xs outline-none focus:border-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-slate-400 mb-1">Costo Unit.</label>
-                        <input
-                          type="number"
-                          value={item.costoUnitario}
-                          onChange={(e) => updateItemField(item._key, "costoUnitario", Number(e.target.value))}
-                          step="0.01"
-                          disabled={item.loadingCosto}
-                          className="w-full rounded border border-slate-700 bg-slate-700 p-1.5 text-white text-xs outline-none focus:border-blue-500 disabled:opacity-50"
-                        />
-                      </div>
-                      <div className="flex gap-1">
-                        <div className="flex-1">
-                          <label className="block text-xs text-slate-400 mb-1">Subtotal</label>
+                    return (
+                      <div key={item._key} className="grid gap-2 grid-cols-1 md:grid-cols-5 items-end p-1.5 rounded-lg bg-slate-800">
+                        <div className="md:col-span-2">
+                          <label className="md:hidden block text-xs text-slate-400 mb-1">Ingrediente</label>
+                          <select
+                            value={selectValue}
+                            onChange={(e) => handleIngredientChange(item._key, e.target.value)}
+                            disabled={item.loadingCosto}
+                            className="w-full rounded border border-slate-700 bg-slate-700 p-1.5 text-white text-xs outline-none focus:border-blue-500 disabled:opacity-50"
+                          >
+                            <option value="">Seleccionar</option>
+                            <optgroup label="Insumos">
+                              {insumos.map((i) => (
+                                <option key={`insumo:${i.id}`} value={`insumo:${i.id}`}>{i.nombre}</option>
+                              ))}
+                            </optgroup>
+                            <optgroup label="Recetas (insumo elaborado)">
+                              {recipes.map((r) => (
+                                <option key={`receta:${r.id}`} value={`receta:${r.id}`}>{r.nombre}</option>
+                              ))}
+                            </optgroup>
+                          </select>
+                          {item.loadingCosto && <p className="text-xs text-slate-400 mt-1">Calculando costo...</p>}
+                        </div>
+                        <div>
+                          <label className="md:hidden block text-xs text-slate-400 mb-1">Cantidad</label>
                           <input
-                            type="text"
-                            value={(item.cantidad * item.costoUnitario).toFixed(2)}
-                            readOnly
-                            className="w-full rounded border border-slate-700 bg-slate-600 p-1.5 text-white text-xs outline-none"
+                            type="number"
+                            value={item.cantidad}
+                            onChange={(e) => updateItemField(item._key, "cantidad", Number(e.target.value))}
+                            step="0.0001"
+                            className="w-full rounded border border-slate-700 bg-slate-700 p-1.5 text-white text-xs outline-none focus:border-blue-500"
                           />
                         </div>
-                        {items.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => removeItem(item._key)}
-                            className="rounded bg-red-600 px-1.5 py-1.5 text-white hover:bg-red-700 text-xs"
-                          >
-                            ×
-                          </button>
-                        )}
+                        <div>
+                          <label className="md:hidden block text-xs text-slate-400 mb-1">Costo Unit.</label>
+                          <input
+                            type="number"
+                            value={item.costoUnitario}
+                            onChange={(e) => updateItemField(item._key, "costoUnitario", Number(e.target.value))}
+                            step="0.01"
+                            disabled={item.loadingCosto}
+                            className="w-full rounded border border-slate-700 bg-slate-700 p-1.5 text-white text-xs outline-none focus:border-blue-500 disabled:opacity-50"
+                          />
+                        </div>
+                        <div className="flex gap-1">
+                          <div className="flex-1">
+                            <label className="md:hidden block text-xs text-slate-400 mb-1">Subtotal</label>
+                            <input
+                              type="text"
+                              value={(item.cantidad * item.costoUnitario).toFixed(2)}
+                              readOnly
+                              className="w-full rounded border border-slate-700 bg-slate-600 p-1.5 text-white text-xs outline-none"
+                            />
+                          </div>
+                          {items.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeItem(item._key)}
+                              className="rounded bg-red-600 px-1.5 py-1.5 text-white hover:bg-red-700 text-xs"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              </>
             )}
           </div>
 
-          <div className="border-t border-slate-800 pt-3">
+          <div className="border-t border-slate-800 pt-2">
             <div className="flex justify-between text-xs">
               <span className="text-slate-400">Costo Total:</span>
               <span className="text-white">{getCostoTotal().toFixed(2)}</span>
@@ -471,7 +492,7 @@ export default function CreateRecipeModal({ open, onClose, onCreated, insumos, r
             </label>
           </div>
 
-          <div className="flex justify-end gap-2 pt-3">
+          <div className="flex justify-end gap-2 pt-2">
             <button
               type="button"
               onClick={onClose}

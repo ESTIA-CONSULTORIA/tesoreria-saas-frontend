@@ -230,3 +230,19 @@ html { height: 100%; }
 #exec-root textarea::placeholder {
   color: rgba(150, 150, 150, 0.5) !important;
 }
+
+/* Impresión — aísla el contenido de #print-area, oculta nav/sidebar/resto de la página */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #print-area, #print-area * {
+    visibility: visible;
+  }
+  #print-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+}

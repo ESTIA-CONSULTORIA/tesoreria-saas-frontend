@@ -686,7 +686,7 @@ export default function CostsPage() {
         )}
 
         {loading ? (
-          <div className="rounded-xl bg-slate-900 p-6">Cargando...</div>
+          <div className="rounded-xl bg-slate-900 p-4">Cargando...</div>
         ) : (
           <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
             {/* TAB 1: Insumos */}
@@ -832,7 +832,7 @@ export default function CostsPage() {
                 </div>
                 <div className="md:hidden space-y-3">
                   {recipes.map((recipe) => (
-                    <div key={recipe.id} className="rounded-lg border border-slate-800 bg-slate-800 p-4">
+                    <div key={recipe.id} className="rounded-lg border border-slate-800 bg-slate-800 p-3">
                       <div className="flex justify-between items-start mb-2">
                         <p className="font-semibold text-white">{recipe.nombre}</p>
                         <span className="text-xs px-2 py-1 rounded bg-blue-900/40 text-blue-300">
@@ -899,7 +899,7 @@ export default function CostsPage() {
                 </div>
                 <div className="md:hidden space-y-3">
                   {inventory.map((inv) => (
-                    <div key={inv.id} className="rounded-lg border border-slate-800 bg-slate-800 p-4">
+                    <div key={inv.id} className="rounded-lg border border-slate-800 bg-slate-800 p-3">
                       <p className="font-semibold text-white mb-2">{getInsumoName(inv.insumoId)}</p>
                       <div className="text-xs text-slate-400 space-y-1 mb-3">
                         <p><span className="text-slate-500">Inv. Inicial:</span> {Number(inv.inventarioInicial).toFixed(2)}</p>
@@ -953,7 +953,7 @@ export default function CostsPage() {
                   </div>
                   <div className="md:hidden space-y-3">
                     {physicalCounts.map((pc) => (
-                      <div key={pc.id} className="rounded-lg border border-slate-800 bg-slate-800 p-4">
+                      <div key={pc.id} className="rounded-lg border border-slate-800 bg-slate-800 p-3">
                         <div className="flex justify-between items-start mb-2">
                           <p className="font-semibold text-white">{getInsumoName(pc.insumoId)}</p>
                           <span className="text-xs text-slate-400">{new Date(pc.fecha).toLocaleDateString()}</span>
@@ -1030,7 +1030,7 @@ export default function CostsPage() {
                 </div>
                 <div className="md:hidden space-y-3">
                   {almacenes.map((alm) => (
-                    <div key={alm.id} className="rounded-lg border border-slate-800 bg-slate-800 p-4">
+                    <div key={alm.id} className="rounded-lg border border-slate-800 bg-slate-800 p-3">
                       <div className="flex justify-between items-start mb-2">
                         <p className="font-semibold text-white">{alm.nombre}</p>
                         <span className={`px-2 py-1 rounded text-xs ${alm.isActive ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}`}>
@@ -1124,7 +1124,7 @@ export default function CostsPage() {
                 </div>
                 <div className="md:hidden space-y-3">
                   {familias.map((fam) => (
-                    <div key={fam.id} className="rounded-lg border border-slate-800 bg-slate-800 p-4">
+                    <div key={fam.id} className="rounded-lg border border-slate-800 bg-slate-800 p-3">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center gap-2">
                           <div className="w-4 h-4 rounded" style={{ backgroundColor: fam.color }}></div>
@@ -1175,9 +1175,10 @@ export default function CostsPage() {
                     </button>
                   </div>
                 </div>
+                <div id="print-area">
                 {costOfSales && (
                   <div>
-                    <div className="mb-4 p-4 rounded-lg bg-slate-800">
+                    <div className="mb-3 p-3 rounded-lg bg-slate-800">
                       <p className="text-sm text-slate-400">Período: {costOfSales.periodo}</p>
                       <p className="text-lg font-bold text-white">Total General: {Number(costOfSales.totalGeneral).toFixed(2)}</p>
                     </div>
@@ -1207,7 +1208,7 @@ export default function CostsPage() {
                     </div>
                     <div className="md:hidden space-y-3">
                       {costOfSales.detalles.map((detalle: any, index: number) => (
-                        <div key={index} className="rounded-lg border border-slate-800 bg-slate-800 p-4">
+                        <div key={index} className="rounded-lg border border-slate-800 bg-slate-800 p-3">
                           <p className="font-semibold text-white mb-2">{getInsumoName(detalle.insumoId)}</p>
                           <div className="text-xs text-slate-400 space-y-1 mb-3">
                             <p><span className="text-slate-500">Inv. Inicial:</span> {Number(detalle.inventarioInicial).toFixed(2)}</p>
@@ -1227,7 +1228,7 @@ export default function CostsPage() {
                     <h3 className="text-xl font-semibold">Justificables</h3>
                   </div>
                   {justifiableTotals && (
-                    <div className="mb-4 p-4 rounded-lg bg-slate-800">
+                    <div className="mb-3 p-3 rounded-lg bg-slate-800">
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                         <div>
                           <p className="text-xs text-slate-400">Energéticos</p>
@@ -1274,7 +1275,7 @@ export default function CostsPage() {
                   </div>
                   <div className="md:hidden space-y-3">
                     {justificables.map((j) => (
-                      <div key={j.id} className="rounded-lg border border-slate-800 bg-slate-800 p-4">
+                      <div key={j.id} className="rounded-lg border border-slate-800 bg-slate-800 p-3">
                         <div className="flex justify-between items-start mb-2">
                           <p className="font-semibold text-white">{getCategoriaLabel(j.categoria)}</p>
                           <span className="text-white font-bold">{Number(j.monto).toFixed(2)}</span>
@@ -1283,6 +1284,7 @@ export default function CostsPage() {
                       </div>
                     ))}
                   </div>
+                </div>
                 </div>
               </div>
             )}
@@ -1427,7 +1429,7 @@ export default function CostsPage() {
         {/* Modal de Configuración de Conteo Físico */}
         {physicalCountConfigOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-6">
+            <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-4">
               <h3 className="text-xl font-bold text-white mb-4">Configurar Conteo Físico</h3>
               <div className="space-y-4">
                 <div>
@@ -1578,7 +1580,7 @@ export default function CostsPage() {
         {/* Modal de Almacen */}
         {almacenModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-6">
+            <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-4">
               <h3 className="text-xl font-bold text-white mb-4">
                 {selectedAlmacen ? 'Editar Almacén' : 'Nuevo Almacén'}
               </h3>
@@ -1680,7 +1682,7 @@ export default function CostsPage() {
         {/* Modal de Familia */}
         {familiaModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-6">
+            <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-4">
               <h3 className="text-xl font-bold text-white mb-4">
                 {selectedFamilia ? 'Editar Familia' : 'Nueva Familia'}
               </h3>
@@ -1788,7 +1790,7 @@ export default function CostsPage() {
                   📥 Descargar Plantilla CSV
                 </button>
 
-                <div className="border-2 border-dashed border-slate-700 rounded-lg p-8 text-center">
+                <div className="border-2 border-dashed border-slate-700 rounded-lg p-6 text-center">
                   <input
                     type="file"
                     accept=".csv"
@@ -1953,7 +1955,7 @@ export default function CostsPage() {
         {/* Modal de Confirmación de Eliminación */}
         {deleteConfirmOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-sm rounded-xl border border-slate-800 bg-slate-900 p-6">
+            <div className="w-full max-w-sm rounded-xl border border-slate-800 bg-slate-900 p-4">
               <h3 className="text-lg font-bold text-white mb-3">Confirmar eliminación</h3>
               <p className="text-slate-400 text-sm mb-6">
                 ¿Estás seguro de que deseas eliminar este {deleteConfirmType === "almacen" ? "almacén" : "familia"}? Esta acción no se puede deshacer.
@@ -1990,7 +1992,7 @@ export default function CostsPage() {
                   📥 Descargar Plantilla CSV
                 </button>
 
-                <div className="border-2 border-dashed border-slate-700 rounded-lg p-8 text-center">
+                <div className="border-2 border-dashed border-slate-700 rounded-lg p-6 text-center">
                   <input
                     type="file"
                     accept=".csv"
