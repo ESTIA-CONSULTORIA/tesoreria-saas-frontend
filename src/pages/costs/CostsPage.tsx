@@ -1303,6 +1303,7 @@ export default function CostsPage() {
           onClose={() => setRecipeModalOpen(false)}
           onCreated={() => { loadRecipes(); setRecipeModalOpen(false); }}
           insumos={insumos}
+          recipes={recipes.filter(r => r.tipo === 'INSUMO_ELABORADO' && r.isActive && r.id !== selectedRecipe?.id)}
           recipe={selectedRecipe}
         />
 

@@ -6,10 +6,22 @@ interface Props {
   onClose: () => void;
   onCreated: () => void;
   insumos: any[];
+  recipes: any[];
   recipe?: any;
 }
 
-export default function CreateRecipeModal({ open, onClose, onCreated, insumos, recipe }: Props) {
+function makeKey() {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return Math.random().toString(36).slice(2);
+}
+
+function emptyItem() {
+  return { _key: makeKey(), id: undefined, insumoId: "", componentRecipeId: "", cantidad: 1, unidadMedida: "", costoUnitario: 0 };
+}
+
+export default function CreateRecipeModal({ open, onClose, onCreated, insumos, recipes, recipe }: Props) {
   const [formData, setFormData] = useState({
     nombre: "",
     descripcion: "",
@@ -19,66 +31,153 @@ export default function CreateRecipeModal({ open, onClose, onCreated, insumos, r
     margenDeseado: 0.35,
     isActive: true,
   });
-  const [items, setItems] = useState<any[]>([{ insumoId: "", cantidad: 1, unidadMedida: "", costoUnitario: 0 }]);
+  const [items, setItems] = useState<any[]>([emptyItem()]);
+  const [originalItemIds, setOriginalItemIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingItems, setLoadingItems] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (open) {
-      if (recipe) {
-        setFormData({
-          nombre: recipe.nombre || "",
-          descripcion: recipe.descripcion || "",
-          tipo: recipe.tipo || "PRODUCTO_VENTA",
-          rendimiento: recipe.rendimiento || 1,
-          unidadRendimiento: recipe.unidadRendimiento || "",
-          margenDeseado: recipe.margenDeseado || 0.35,
-          isActive: recipe.isActive !== undefined ? recipe.isActive : true,
-        });
-        setItems(recipe.items || [{ insumoId: "", cantidad: 1, unidadMedida: "", costoUnitario: 0 }]);
-      } else {
-        setFormData({
-          nombre: "",
-          descripcion: "",
-          tipo: "PRODUCTO_VENTA",
-          rendimiento: 1,
-          unidadRendimiento: "",
-          margenDeseado: 0.35,
-          isActive: true,
-        });
-        setItems([{ insumoId: "", cantidad: 1, unidadMedida: "", costoUnitario: 0 }]);
-      }
+    if (!open) return;
+
+    if (recipe) {
+      setFormData({
+        nombre: recipe.nombre || "",
+        descripcion: recipe.descripcion || "",
+        tipo: recipe.tipo || "PRODUCTO_VENTA",
+        rendimiento: recipe.rendimiento || 1,
+        unidadRendimiento: recipe.unidadRendimiento || "",
+        margenDeseado: recipe.margenDeseado || 0.35,
+        isActive: recipe.isActive !== undefined ? recipe.isActive : true,
+      });
+      loadRecipeItems(recipe.id);
+    } else {
+      setFormData({
+        nombre: "",
+        descripcion: "",
+        tipo: "PRODUCTO_VENTA",
+        rendimiento: 1,
+        unidadRendimiento: "",
+        margenDeseado: 0.35,
+        isActive: true,
+      });
+      setItems([emptyItem()]);
+      setOriginalItemIds([]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, recipe]);
 
+  async function loadRecipeItems(recipeId: string) {
+    try {
+      setLoadingItems(true);
+      setError("");
+      const response = await api.get(`/costs/recipes/${recipeId}/items`);
+      const rows = Array.isArray(response.data) ? response.data : [];
+
+      const resolved = await Promise.all(
+        rows.map(async (row: any) => {
+          let costoUnitario = 0;
+          if (row.insumoId) {
+            const insumo = insumos.find((i) => i.id === row.insumoId);
+            costoUnitario = insumo ? Number(insumo.costoUnitario) : 0;
+          } else if (row.componentRecipeId) {
+            try {
+              const costRes = await api.get(`/costs/recipes/${row.componentRecipeId}/cost`);
+              costoUnitario = Number(costRes.data.costoPorUnidad);
+            } catch {
+              costoUnitario = 0;
+            }
+          }
+          return {
+            _key: makeKey(),
+            id: row.id,
+            insumoId: row.insumoId || "",
+            componentRecipeId: row.componentRecipeId || "",
+            cantidad: Number(row.cantidad),
+            unidadMedida: row.unidadMedida || "",
+            costoUnitario,
+          };
+        })
+      );
+
+      setItems(resolved.length > 0 ? resolved : [emptyItem()]);
+      setOriginalItemIds(rows.map((r: any) => r.id));
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible cargar los ingredientes de la receta");
+      setItems([emptyItem()]);
+      setOriginalItemIds([]);
+    } finally {
+      setLoadingItems(false);
+    }
+  }
+
   function addItem() {
-    setItems([...items, { insumoId: "", cantidad: 1, unidadMedida: "", costoUnitario: 0 }]);
+    setItems((prev) => [...prev, emptyItem()]);
   }
 
-  function removeItem(index: number) {
+  function removeItem(key: string) {
     if (items.length > 1) {
-      setItems(items.filter((_, i) => i !== index));
+      setItems((prev) => prev.filter((it) => it._key !== key));
     }
   }
 
-  function updateItem(index: number, field: string, value: any) {
-    const newItems = [...items];
-    newItems[index] = { ...newItems[index], [field]: value };
-    
-    // Si se selecciona un insumo, cargar su costo unitario y unidad
-    if (field === "insumoId" && value) {
-      const insumo = insumos.find((i) => i.id === value);
-      if (insumo) {
-        newItems[index].costoUnitario = insumo.costoUnitario;
-        newItems[index].unidadMedida = insumo.unidadMedida;
-      }
+  function updateItemField(key: string, field: string, value: any) {
+    setItems((prev) => prev.map((it) => (it._key === key ? { ...it, [field]: value } : it)));
+  }
+
+  async function handleIngredientChange(key: string, rawValue: string) {
+    if (!rawValue) {
+      setItems((prev) =>
+        prev.map((it) => (it._key === key ? { ...it, insumoId: "", componentRecipeId: "", costoUnitario: 0, unidadMedida: "" } : it))
+      );
+      return;
     }
-    
-    setItems(newItems);
+
+    const separatorIndex = rawValue.indexOf(":");
+    const kind = rawValue.slice(0, separatorIndex);
+    const id = rawValue.slice(separatorIndex + 1);
+
+    if (kind === "insumo") {
+      const insumo = insumos.find((i) => i.id === id);
+      setItems((prev) =>
+        prev.map((it) =>
+          it._key === key
+            ? {
+                ...it,
+                insumoId: id,
+                componentRecipeId: "",
+                costoUnitario: insumo ? Number(insumo.costoUnitario) : 0,
+                unidadMedida: insumo ? insumo.unidadMedida : "",
+              }
+            : it
+        )
+      );
+      return;
+    }
+
+    // kind === "receta"
+    const receta = recipes.find((r) => r.id === id);
+    setItems((prev) =>
+      prev.map((it) =>
+        it._key === key
+          ? { ...it, insumoId: "", componentRecipeId: id, unidadMedida: receta ? receta.unidadRendimiento : "", loadingCosto: true }
+          : it
+      )
+    );
+
+    try {
+      const response = await api.get(`/costs/recipes/${id}/cost`);
+      setItems((prev) =>
+        prev.map((it) => (it._key === key ? { ...it, costoUnitario: Number(response.data.costoPorUnidad), loadingCosto: false } : it))
+      );
+    } catch (err: any) {
+      setItems((prev) => prev.map((it) => (it._key === key ? { ...it, costoUnitario: 0, loadingCosto: false } : it)));
+      setError("No fue posible calcular el costo de la receta seleccionada");
+    }
   }
 
   function getCostoTotal() {
-    return items.reduce((sum, item) => sum + (item.cantidad * item.costoUnitario), 0);
+    return items.reduce((sum, item) => sum + Number(item.cantidad) * Number(item.costoUnitario), 0);
   }
 
   function getPrecioSugerido() {
@@ -89,32 +188,61 @@ export default function CreateRecipeModal({ open, onClose, onCreated, insumos, r
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    let recipeId: string;
     try {
-      setLoading(true);
-      setError("");
-
-      const itemsWithSubtotal = items.map((item) => ({
-        ...item,
-        subtotal: item.cantidad * item.costoUnitario,
-      }));
-
       const recipeData = {
         ...formData,
-        items: itemsWithSubtotal,
         costoTotal: getCostoTotal(),
         precioVentaSugerido: getPrecioSugerido(),
       };
 
       if (recipe) {
         await api.put(`/costs/recipes/${recipe.id}`, recipeData);
+        recipeId = recipe.id;
       } else {
-        await api.post("/costs/recipes", recipeData);
+        const created = await api.post("/costs/recipes", recipeData);
+        recipeId = created.data.id;
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || "No fue posible guardar la receta");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const validItems = items.filter((it) => it.insumoId || it.componentRecipeId);
+
+      for (const item of validItems) {
+        const payload = {
+          insumoId: item.insumoId || null,
+          componentRecipeId: item.componentRecipeId || null,
+          cantidad: item.cantidad,
+          unidadMedida: item.unidadMedida,
+        };
+
+        if (item.id) {
+          await api.put(`/costs/recipe-items/${item.id}`, payload);
+        } else {
+          await api.post(`/costs/recipes/${recipeId}/items`, payload);
+        }
+      }
+
+      const currentIds = validItems.filter((it) => it.id).map((it) => it.id);
+      const idsToDelete = originalItemIds.filter((id) => !currentIds.includes(id));
+      for (const id of idsToDelete) {
+        await api.delete(`/costs/recipe-items/${id}`);
       }
 
       onCreated();
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.message || "No fue posible guardar la receta");
+      setError(
+        (err.response?.data?.message || "No fue posible guardar todos los ingredientes") +
+          " — la receta ya se guardó, pero revisa la lista de ingredientes antes de salir."
+      );
     } finally {
       setLoading(false);
     }
@@ -222,7 +350,7 @@ export default function CreateRecipeModal({ open, onClose, onCreated, insumos, r
 
           <div>
             <div className="flex justify-between items-center mb-2">
-              <h4 className="text-sm font-semibold text-white">Insumos</h4>
+              <h4 className="text-sm font-semibold text-white">Ingredientes</h4>
               <button
                 type="button"
                 onClick={addItem}
@@ -232,64 +360,87 @@ export default function CreateRecipeModal({ open, onClose, onCreated, insumos, r
               </button>
             </div>
 
-            <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
-              {items.map((item, index) => (
-                <div key={index} className="grid gap-2 grid-cols-1 md:grid-cols-5 items-end p-2 rounded-lg bg-slate-800">
-                  <div className="md:col-span-2">
-                    <label className="block text-xs text-slate-400 mb-1">Insumo</label>
-                    <select
-                      value={item.insumoId}
-                      onChange={(e) => updateItem(index, "insumoId", e.target.value)}
-                      className="w-full rounded border border-slate-700 bg-slate-700 p-1.5 text-white text-xs outline-none focus:border-blue-500"
-                    >
-                      <option value="">Seleccionar</option>
-                      {insumos.map((i) => (
-                        <option key={i.id} value={i.id}>{i.nombre}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-400 mb-1">Cantidad</label>
-                    <input
-                      type="number"
-                      value={item.cantidad}
-                      onChange={(e) => updateItem(index, "cantidad", Number(e.target.value))}
-                      className="w-full rounded border border-slate-700 bg-slate-700 p-1.5 text-white text-xs outline-none focus:border-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-400 mb-1">Costo Unit.</label>
-                    <input
-                      type="number"
-                      value={item.costoUnitario}
-                      onChange={(e) => updateItem(index, "costoUnitario", Number(e.target.value))}
-                      step="0.01"
-                      className="w-full rounded border border-slate-700 bg-slate-700 p-1.5 text-white text-xs outline-none focus:border-blue-500"
-                    />
-                  </div>
-                  <div className="flex gap-1">
-                    <div className="flex-1">
-                      <label className="block text-xs text-slate-400 mb-1">Subtotal</label>
-                      <input
-                        type="text"
-                        value={(item.cantidad * item.costoUnitario).toFixed(2)}
-                        readOnly
-                        className="w-full rounded border border-slate-700 bg-slate-600 p-1.5 text-white text-xs outline-none"
-                      />
+            {loadingItems ? (
+              <p className="text-xs text-slate-400">Cargando ingredientes...</p>
+            ) : (
+              <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+                {items.map((item) => {
+                  const selectValue = item.insumoId
+                    ? `insumo:${item.insumoId}`
+                    : item.componentRecipeId
+                    ? `receta:${item.componentRecipeId}`
+                    : "";
+
+                  return (
+                    <div key={item._key} className="grid gap-2 grid-cols-1 md:grid-cols-5 items-end p-2 rounded-lg bg-slate-800">
+                      <div className="md:col-span-2">
+                        <label className="block text-xs text-slate-400 mb-1">Ingrediente</label>
+                        <select
+                          value={selectValue}
+                          onChange={(e) => handleIngredientChange(item._key, e.target.value)}
+                          disabled={item.loadingCosto}
+                          className="w-full rounded border border-slate-700 bg-slate-700 p-1.5 text-white text-xs outline-none focus:border-blue-500 disabled:opacity-50"
+                        >
+                          <option value="">Seleccionar</option>
+                          <optgroup label="Insumos">
+                            {insumos.map((i) => (
+                              <option key={`insumo:${i.id}`} value={`insumo:${i.id}`}>{i.nombre}</option>
+                            ))}
+                          </optgroup>
+                          <optgroup label="Recetas (insumo elaborado)">
+                            {recipes.map((r) => (
+                              <option key={`receta:${r.id}`} value={`receta:${r.id}`}>{r.nombre}</option>
+                            ))}
+                          </optgroup>
+                        </select>
+                        {item.loadingCosto && <p className="text-xs text-slate-400 mt-1">Calculando costo...</p>}
+                      </div>
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1">Cantidad</label>
+                        <input
+                          type="number"
+                          value={item.cantidad}
+                          onChange={(e) => updateItemField(item._key, "cantidad", Number(e.target.value))}
+                          step="0.0001"
+                          className="w-full rounded border border-slate-700 bg-slate-700 p-1.5 text-white text-xs outline-none focus:border-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1">Costo Unit.</label>
+                        <input
+                          type="number"
+                          value={item.costoUnitario}
+                          onChange={(e) => updateItemField(item._key, "costoUnitario", Number(e.target.value))}
+                          step="0.01"
+                          disabled={item.loadingCosto}
+                          className="w-full rounded border border-slate-700 bg-slate-700 p-1.5 text-white text-xs outline-none focus:border-blue-500 disabled:opacity-50"
+                        />
+                      </div>
+                      <div className="flex gap-1">
+                        <div className="flex-1">
+                          <label className="block text-xs text-slate-400 mb-1">Subtotal</label>
+                          <input
+                            type="text"
+                            value={(item.cantidad * item.costoUnitario).toFixed(2)}
+                            readOnly
+                            className="w-full rounded border border-slate-700 bg-slate-600 p-1.5 text-white text-xs outline-none"
+                          />
+                        </div>
+                        {items.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeItem(item._key)}
+                            className="rounded bg-red-600 px-1.5 py-1.5 text-white hover:bg-red-700 text-xs"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    {items.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeItem(index)}
-                        className="rounded bg-red-600 px-1.5 py-1.5 text-white hover:bg-red-700 text-xs"
-                      >
-                        ×
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="border-t border-slate-800 pt-3">
@@ -330,7 +481,7 @@ export default function CreateRecipeModal({ open, onClose, onCreated, insumos, r
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || loadingItems}
               className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-40"
             >
               {loading ? "Guardando..." : recipe ? "Actualizar" : "Crear"}
