@@ -186,6 +186,10 @@ export default function POSPage() {
   const [cardBank, setCardBank] = useState<string>("");
   const [speiKey, setSpeiKey] = useState<string>("");
   const paymentInputRef = useRef<HTMLInputElement>(null);
+  // Cuenta fallos consecutivos de POST /pos/sales para el cobro actual. Se resetea al
+  // cobrar con éxito. No sobrevive a un refresh de página (es intencional: es solo para
+  // distinguir "primer intento" de "ya reintentó y sigue fallando" dentro de la misma sesión de cobro).
+  const paymentFailureCountRef = useRef<number>(0);
   
   // Productos tab state
   const [posProducts, setPosProducts] = useState<any[]>([]);
@@ -807,6 +811,7 @@ export default function POSPage() {
       const response = await api.post("/pos/sales", saleData);
       const sale = response.data;
 
+      paymentFailureCountRef.current = 0;
       setCurrentSale(sale);
       setShowReceipt(true);
       setShowPaymentModal(false);
@@ -816,7 +821,12 @@ export default function POSPage() {
       loadSalesHistory();
     } catch (error) {
       console.error("Error processing payment:", error);
-      alert("Error al procesar pago");
+      paymentFailureCountRef.current += 1;
+      if (paymentFailureCountRef.current >= 2) {
+        alert("No se pudo procesar la venta después de varios intentos. Reporta esto a soporte antes de continuar — no se realizó ningún cobro.");
+      } else {
+        alert("No se pudo procesar la venta, intenta de nuevo.");
+      }
     }
   }
 
