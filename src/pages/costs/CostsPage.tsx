@@ -57,6 +57,19 @@ interface PhysicalCount {
   motivo: string;
 }
 
+interface InventoryMovement {
+  id: string;
+  insumoId: string;
+  tipo: string;
+  cantidad: number;
+  stockResultante: number;
+  costoUnitario: number;
+  referencia: string;
+  sucursalId: string;
+  notas: string;
+  fecha: string;
+}
+
 interface Justifiable {
   id: string;
   periodo: string;
@@ -115,6 +128,8 @@ export default function CostsPage() {
   const [physicalCountConfigOpen, setPhysicalCountConfigOpen] = useState(false);
   const [physicalCountSessionOpen, setPhysicalCountSessionOpen] = useState(false);
   const [selectedInsumo, setSelectedInsumo] = useState<Insumo | null>(null);
+  const [insumoMovements, setInsumoMovements] = useState<InventoryMovement[]>([]);
+  const [insumoMovementsLoading, setInsumoMovementsLoading] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [selectedAlmacen, setSelectedAlmacen] = useState<Almacen | null>(null);
   const [selectedFamilia, setSelectedFamilia] = useState<FamiliaInsumo | null>(null);
@@ -449,6 +464,19 @@ export default function CostsPage() {
   function handleViewInsumo(insumo: Insumo) {
     setSelectedInsumo(insumo);
     setViewInsumoModalOpen(true);
+    loadInsumoMovements(insumo.id);
+  }
+
+  async function loadInsumoMovements(insumoId: string) {
+    setInsumoMovementsLoading(true);
+    try {
+      const response = await api.get("/costs/inventory-movements", { params: { insumoId } });
+      setInsumoMovements(Array.isArray(response.data) ? response.data : []);
+    } catch {
+      setInsumoMovements([]);
+    } finally {
+      setInsumoMovementsLoading(false);
+    }
   }
 
   function getRecipesUsingInsumo(insumoId: string): Recipe[] {
@@ -1324,7 +1352,7 @@ export default function CostsPage() {
                       {selectedInsumo.isActive ? "Activo" : "Inactivo"}
                     </span>
                     <button
-                      onClick={() => { setViewInsumoModalOpen(false); setSelectedInsumo(null); }}
+                      onClick={() => { setViewInsumoModalOpen(false); setSelectedInsumo(null); setInsumoMovements([]); }}
                       className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-700"
                     >
                       Cerrar
@@ -1416,10 +1444,39 @@ export default function CostsPage() {
                   })()}
                 </div>
 
-                {/* Historial de movimientos (placeholder - requiere endpoint backend) */}
+                {/* Historial de movimientos */}
                 <div>
                   <h4 className="text-lg font-semibold text-white mb-3">Historial de movimientos</h4>
-                  <p className="text-slate-400 text-sm">El historial de entradas y salidas estará disponible en una próxima versión.</p>
+                  {insumoMovementsLoading ? (
+                    <p className="text-slate-400 text-sm">Cargando...</p>
+                  ) : insumoMovements.length === 0 ? (
+                    <p className="text-slate-400 text-sm">Sin movimientos registrados para este insumo.</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full text-left text-sm">
+                        <thead className="text-slate-400">
+                          <tr>
+                            <th className="p-2">Fecha</th>
+                            <th className="p-2">Tipo</th>
+                            <th className="p-2">Cantidad</th>
+                            <th className="p-2">Stock resultante</th>
+                            <th className="p-2">Referencia</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {insumoMovements.map((mov) => (
+                            <tr key={mov.id} className="border-t border-slate-800">
+                              <td className="p-2">{new Date(mov.fecha).toLocaleString()}</td>
+                              <td className="p-2">{mov.tipo}</td>
+                              <td className="p-2">{Number(mov.cantidad).toFixed(2)}</td>
+                              <td className="p-2">{Number(mov.stockResultante).toFixed(2)}</td>
+                              <td className="p-2">{mov.referencia || "-"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
