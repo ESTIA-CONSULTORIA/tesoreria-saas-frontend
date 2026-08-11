@@ -4,6 +4,7 @@ import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
 import { useLoginConfigStore } from "../../core/store/useLoginConfigStore";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
+import { getDeviceId } from "../../core/device/deviceId";
 import PosChatPanel from "./PosChatPanel";
 import TableLayout from "./TableLayout";
 import CheckoutFast from "./CheckoutFast";
@@ -275,6 +276,12 @@ export default function POSPage() {
     copiasTicket: "1",
     moneda: "MXN"
   });
+
+  useEffect(() => {
+    // Asegura la identidad del dispositivo desde el arranque del POS, antes de que
+    // exista cualquier necesidad de armar un folio con ella (Fase A1, modo offline).
+    getDeviceId();
+  }, []);
 
   useEffect(() => {
     if (!activeCompany?.id) return;
