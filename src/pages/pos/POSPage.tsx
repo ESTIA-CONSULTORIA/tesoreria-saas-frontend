@@ -5,7 +5,11 @@ import { useAuthStore } from "../../core/store/useAuthStore";
 import { useLoginConfigStore } from "../../core/store/useLoginConfigStore";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
 import { getDeviceId } from "../../core/device/deviceId";
-import { offlineDb, replaceLocalCache, readLocalCache, isNetworkOrTimeoutError } from "../../core/offline/db";
+import {
+  offlineDb, replaceLocalCache, readLocalCache, isNetworkOrTimeoutError,
+  enqueueOperation, getPendingSalesForShift, countPendingOperations,
+  generateLocalId, generateOfflineSaleFolio,
+} from "../../core/offline/db";
 import PosChatPanel from "./PosChatPanel";
 import TableLayout from "./TableLayout";
 import CheckoutFast from "./CheckoutFast";
@@ -114,6 +118,16 @@ export default function POSPage() {
   const [usingCachedCategories, setUsingCachedCategories] = useState(false);
   const [usingCachedProducts, setUsingCachedProducts] = useState(false);
   const [usingCachedAreas, setUsingCachedAreas] = useState(false);
+  // Fase C2: operaciones de escritura encoladas localmente, pendientes de sincronizar.
+  const [pendingOpsCount, setPendingOpsCount] = useState(0);
+
+  async function refreshPendingCount() {
+    setPendingOpsCount(await countPendingOperations());
+  }
+
+  useEffect(() => {
+    refreshPendingCount();
+  }, []);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [ticket, setTicket] = useState<TicketItem[]>([]);
@@ -469,13 +483,14 @@ export default function POSPage() {
       alert("El fondo de caja es obligatorio");
       return;
     }
+    const body = {
+      cajero: selectedCashier || user?.id,
+      sucursalId: user?.branchId || branchId,
+      fondoInicial: Number(initialFund) || 0,
+      notas: shiftNotes,
+    };
     try {
-      const response = await api.post("/pos/shifts", {
-        cajero: selectedCashier || user?.id,
-        sucursalId: user?.branchId || branchId,
-        fondoInicial: Number(initialFund) || 0,
-        notas: shiftNotes,
-      });
+      const response = await api.post("/pos/shifts", body);
       setShowOpenShiftModal(false);
       setInitialFund("");
       setShiftNotes("");
@@ -495,7 +510,35 @@ export default function POSPage() {
       });
     } catch (error) {
       console.error("Error opening shift:", error);
-      alert("Error al abrir turno");
+      if (!isNetworkOrTimeoutError(error)) {
+        alert("Error al abrir turno");
+        return;
+      }
+      // Fase C2: sin red/timeout — encolar y abrir el turno de forma optimista con un
+      // id local. Fase D lo reemplaza por el id real del servidor al sincronizar.
+      const clientTimestamp = new Date().toISOString();
+      await enqueueOperation('OPEN_SHIFT', { ...body, clientTimestamp }, clientTimestamp);
+      await refreshPendingCount();
+      setShowOpenShiftModal(false);
+      setInitialFund("");
+      setShiftNotes("");
+      setShift({
+        id: generateLocalId(),
+        fondoInicial: body.fondoInicial,
+        fecha: clientTimestamp,
+        horaApertura: new Date(clientTimestamp).toTimeString().slice(0, 8),
+        totalVentas: 0,
+        totalEfectivo: 0,
+        totalTarjeta: 0,
+        totalTransferencia: 0,
+        totalCortesia: 0,
+        totalDevoluciones: 0,
+        totalRetiros: 0,
+        totalDepositos: 0,
+        status: 'ABIERTO',
+        precorteGuardado: false,
+        precorteDeclaracion: null,
+      });
     }
   }
 
@@ -521,19 +564,31 @@ export default function POSPage() {
 
   async function closeShift() {
     if (!shift) return;
+
+    // Fase C2: bloqueo 100% local — si hay ventas de este turno todavía sin
+    // sincronizar, ni siquiera se intenta la petición. closeShift recalcula los
+    // totales desde las ventas ya guardadas en el servidor; cerrar con ventas
+    // pendientes dejaría el corte con datos incompletos, sin ningún error visible.
+    const pendingSales = await getPendingSalesForShift(shift.id);
+    if (pendingSales.length > 0) {
+      alert(`Tienes ${pendingSales.length} venta(s) pendientes de guardar. Espera a tener señal para cerrar el turno.`);
+      return;
+    }
+
+    const declaracion = shift.precorteDeclaracion || {};
+    const body = {
+      totalVentas: shift.totalVentas,
+      totalEfectivo: shift.totalEfectivo || 0,
+      totalTarjeta: shift.totalTarjeta || 0,
+      totalTransferencia: shift.totalTransferencia || 0,
+      totalCortesia: shift.totalCortesia || 0,
+      totalDevoluciones: shift.totalDevoluciones || 0,
+      totalRetiros: shift.totalRetiros || 0,
+      totalDepositos: shift.totalDepositos || 0,
+      efectivoContado: Number(declaracion.efectivoContado) || 0,
+    };
     try {
-      const declaracion = shift.precorteDeclaracion || {};
-      await api.put(`/pos/shifts/${shift.id}/close`, {
-        totalVentas: shift.totalVentas,
-        totalEfectivo: shift.totalEfectivo || 0,
-        totalTarjeta: shift.totalTarjeta || 0,
-        totalTransferencia: shift.totalTransferencia || 0,
-        totalCortesia: shift.totalCortesia || 0,
-        totalDevoluciones: shift.totalDevoluciones || 0,
-        totalRetiros: shift.totalRetiros || 0,
-        totalDepositos: shift.totalDepositos || 0,
-        efectivoContado: Number(declaracion.efectivoContado) || 0,
-      });
+      await api.put(`/pos/shifts/${shift.id}/close`, body);
       setShift(null);
       setSelectedCashier('');
       setShowCloseShiftModal(false);
@@ -541,7 +596,18 @@ export default function POSPage() {
       alert("Turno cerrado exitosamente");
     } catch (error) {
       console.error("Error closing shift:", error);
-      alert("Error al cerrar turno");
+      if (!isNetworkOrTimeoutError(error)) {
+        alert("Error al cerrar turno");
+        return;
+      }
+      const clientTimestamp = new Date().toISOString();
+      await enqueueOperation('CLOSE_SHIFT', { shiftId: shift.id, ...body, clientTimestamp }, clientTimestamp);
+      await refreshPendingCount();
+      setShift(null);
+      setSelectedCashier('');
+      setShowCloseShiftModal(false);
+      setShowLoginScreen(true);
+      alert("Turno cerrado (pendiente de sincronizar) — se completará cuando haya conexión.");
     }
   }
 
@@ -550,12 +616,13 @@ export default function POSPage() {
       alert("Todos los campos son obligatorios");
       return;
     }
+    const body = {
+      monto: Number(withdrawalAmount),
+      motivo: withdrawalReason,
+      autorizadoPor: withdrawalAuthorizedBy,
+    };
     try {
-      await api.post(`/pos/shifts/${shift.id}/withdrawal`, {
-        monto: Number(withdrawalAmount),
-        motivo: withdrawalReason,
-        autorizadoPor: withdrawalAuthorizedBy,
-      });
+      await api.post(`/pos/shifts/${shift.id}/withdrawal`, body);
       setShowWithdrawalModal(false);
       setWithdrawalAmount("");
       setWithdrawalReason("");
@@ -563,7 +630,19 @@ export default function POSPage() {
       loadOpenShift(selectedCashier);
     } catch (error) {
       console.error("Error processing withdrawal:", error);
-      alert("Error al procesar retiro");
+      if (!isNetworkOrTimeoutError(error)) {
+        alert("Error al procesar retiro");
+        return;
+      }
+      // Fase C2: totales del turno quedan congelados hasta que sincronice de verdad
+      // (mismo criterio que stock/ventas) — no se recalcula ni se estima localmente.
+      const clientTimestamp = new Date().toISOString();
+      await enqueueOperation('WITHDRAWAL', { shiftId: shift.id, ...body, clientTimestamp }, clientTimestamp);
+      await refreshPendingCount();
+      setShowWithdrawalModal(false);
+      setWithdrawalAmount("");
+      setWithdrawalReason("");
+      setWithdrawalAuthorizedBy("");
     }
   }
 
@@ -572,12 +651,13 @@ export default function POSPage() {
       alert("Todos los campos son obligatorios");
       return;
     }
+    const body = {
+      monto: Number(depositAmount),
+      origen: depositOrigin,
+      autorizadoPor: depositAuthorizedBy,
+    };
     try {
-      await api.post(`/pos/shifts/${shift.id}/deposit`, {
-        monto: Number(depositAmount),
-        origen: depositOrigin,
-        autorizadoPor: depositAuthorizedBy,
-      });
+      await api.post(`/pos/shifts/${shift.id}/deposit`, body);
       setShowDepositModal(false);
       setDepositAmount("");
       setDepositOrigin("");
@@ -585,34 +665,39 @@ export default function POSPage() {
       loadOpenShift(selectedCashier);
     } catch (error) {
       console.error("Error processing deposit:", error);
-      alert("Error al procesar depósito");
+      if (!isNetworkOrTimeoutError(error)) {
+        alert("Error al procesar depósito");
+        return;
+      }
+      // Fase C2: mismo criterio — totales congelados hasta sincronización real.
+      const clientTimestamp = new Date().toISOString();
+      await enqueueOperation('DEPOSIT', { shiftId: shift.id, ...body, clientTimestamp }, clientTimestamp);
+      await refreshPendingCount();
+      setShowDepositModal(false);
+      setDepositAmount("");
+      setDepositOrigin("");
+      setDepositAuthorizedBy("");
     }
   }
 
   async function handlePrecut() {
     if (!shift) return;
+    const body = {
+      efectivoContado: calculateTotalCash(),
+      efectivoDenominaciones: cashCounts,
+      debitoDeclarado: Number(debitoDeclarado) || 0,
+      creditoDeclarado: Number(creditoDeclarado) || 0,
+      transferenciaDeclarada: Number(transferenciaDeclarada) || 0,
+      valesDeclarados: Number(valesDeclarados) || 0,
+    };
     try {
-      await api.post(`/pos/shifts/${shift.id}/precut`, {
-        efectivoContado: calculateTotalCash(),
-        efectivoDenominaciones: cashCounts,
-        debitoDeclarado: Number(debitoDeclarado) || 0,
-        creditoDeclarado: Number(creditoDeclarado) || 0,
-        transferenciaDeclarada: Number(transferenciaDeclarada) || 0,
-        valesDeclarados: Number(valesDeclarados) || 0,
-      });
+      await api.post(`/pos/shifts/${shift.id}/precut`, body);
       setShowPrecutModal(false);
       // Update local shift state to mark precorte as saved
       setShift(prev => prev ? {
         ...prev,
         precorteGuardado: true,
-        precorteDeclaracion: {
-          efectivoContado: calculateTotalCash(),
-          efectivoDenominaciones: cashCounts,
-          debitoDeclarado: Number(debitoDeclarado) || 0,
-          creditoDeclarado: Number(creditoDeclarado) || 0,
-          transferenciaDeclarada: Number(transferenciaDeclarada) || 0,
-          valesDeclarados: Number(valesDeclarados) || 0,
-        }
+        precorteDeclaracion: { ...body },
       } : prev);
       // Reset precorte form state
       setCashCounts({});
@@ -623,7 +708,23 @@ export default function POSPage() {
       alert("Precorte guardado correctamente");
     } catch (error) {
       console.error("Error saving precut:", error);
-      alert("Error al guardar precorte");
+      if (!isNetworkOrTimeoutError(error)) {
+        alert("Error al guardar precorte");
+        return;
+      }
+      // Fase C2: NO marcamos precorteGuardado=true localmente (decisión (a) — congelado
+      // hasta sync real). El botón "Cerrar turno" seguirá deshabilitado hasta entonces,
+      // mismo comportamiento que ya existe hoy para "todavía no hice precorte".
+      const clientTimestamp = new Date().toISOString();
+      await enqueueOperation('PRECUT', { shiftId: shift.id, ...body, clientTimestamp }, clientTimestamp);
+      await refreshPendingCount();
+      setShowPrecutModal(false);
+      setCashCounts({});
+      setDebitoDeclarado("");
+      setCreditoDeclarado("");
+      setTransferenciaDeclarada("");
+      setValesDeclarados("");
+      alert("Precorte guardado (pendiente de sincronizar) — se completará cuando haya conexión.");
     }
   }
 
@@ -832,19 +933,20 @@ export default function POSPage() {
       return;
     }
 
+    const saleData = {
+      items: ticket,
+      subtotal: getSubtotal(),
+      descuento: getTotalDiscount(),
+      impuestos: getTaxes(),
+      total: getTotal(),
+      formasPago: paymentForms,
+      cajero: selectedCashier || user?.id,
+      turnoId: shift.id,
+      sucursalId: user?.branchId || branchId,
+      mesaId: selectedTableForPOS?.id || undefined,
+    };
+
     try {
-      const saleData = {
-        items: ticket,
-        subtotal: getSubtotal(),
-        descuento: getTotalDiscount(),
-        impuestos: getTaxes(),
-        total: getTotal(),
-        formasPago: paymentForms,
-        cajero: selectedCashier || user?.id,
-        turnoId: shift.id,
-        sucursalId: user?.branchId || branchId,
-        mesaId: selectedTableForPOS?.id || undefined,
-      };
       const response = await api.post("/pos/sales", saleData);
       const sale = response.data;
 
@@ -858,6 +960,42 @@ export default function POSPage() {
       loadSalesHistory();
     } catch (error) {
       console.error("Error processing payment:", error);
+
+      if (isNetworkOrTimeoutError(error)) {
+        // Fase C2: sin red/timeout — encolar la venta y mostrar el ticket como si se
+        // hubiera cobrado, para no dejar al cajero varado. El caché de C1 (stock) NO
+        // se toca: sigue mostrando el último conteo confirmado, no un descuento
+        // adelantado que podría descuadrar si la venta termina fallando de verdad.
+        const clientTimestamp = new Date().toISOString();
+        const folio = generateOfflineSaleFolio(clientTimestamp);
+        await enqueueOperation('SALE', { ...saleData, folio, clientTimestamp }, clientTimestamp);
+        await refreshPendingCount();
+
+        const optimisticSale: Sale = {
+          id: generateLocalId(),
+          folio,
+          fecha: clientTimestamp,
+          hora: new Date(clientTimestamp).toTimeString().slice(0, 8),
+          items: ticket,
+          total: saleData.total,
+          subtotal: saleData.subtotal,
+          descuento: saleData.descuento,
+          impuestos: saleData.impuestos,
+          formaPago: paymentForms[0]?.forma || 'EFECTIVO',
+          formasPago: paymentForms,
+          status: 'PAGADA',
+        };
+
+        paymentFailureCountRef.current = 0;
+        setCurrentSale(optimisticSale);
+        setShowReceipt(true);
+        setShowPaymentModal(false);
+        setTicket([]);
+        setPaymentForms([]);
+        setSelectedTableForPOS(null);
+        return;
+      }
+
       paymentFailureCountRef.current += 1;
       if (paymentFailureCountRef.current >= 2) {
         alert("No se pudo procesar la venta después de varios intentos. Reporta esto a soporte antes de continuar — no se realizó ningún cobro.");
@@ -1103,6 +1241,14 @@ export default function POSPage() {
                   title="No se pudo conectar al servidor — mostrando la última copia guardada en este dispositivo, puede no estar actualizada."
                 >
                   ⚠ Datos sin conexión
+                </div>
+              )}
+              {pendingOpsCount > 0 && (
+                <div
+                  className="text-xs text-orange-400 border border-orange-700 rounded px-2 py-1"
+                  title="Operaciones guardadas en este dispositivo que aún no se han enviado al servidor — se sincronizan solas cuando haya conexión."
+                >
+                  ⏳ {pendingOpsCount} pendiente{pendingOpsCount === 1 ? "" : "s"}
                 </div>
               )}
             </div>
