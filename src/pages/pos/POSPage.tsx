@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLiveQuery } from "dexie-react-hooks";
 import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
 import { useLoginConfigStore } from "../../core/store/useLoginConfigStore";
@@ -8,8 +9,9 @@ import { getDeviceId } from "../../core/device/deviceId";
 import {
   offlineDb, replaceLocalCache, readLocalCache, isNetworkOrTimeoutError,
   enqueueOperation, getPendingSalesForShift, countPendingOperations,
-  generateLocalId, generateOfflineSaleFolio,
+  countFailedOperations, generateLocalId, generateOfflineSaleFolio,
 } from "../../core/offline/db";
+import { OFFLINE_SYNC_COMPLETED_EVENT } from "../../core/offline/syncEngine";
 import PosChatPanel from "./PosChatPanel";
 import TableLayout from "./TableLayout";
 import CheckoutFast from "./CheckoutFast";
@@ -118,15 +120,23 @@ export default function POSPage() {
   const [usingCachedCategories, setUsingCachedCategories] = useState(false);
   const [usingCachedProducts, setUsingCachedProducts] = useState(false);
   const [usingCachedAreas, setUsingCachedAreas] = useState(false);
-  // Fase C2: operaciones de escritura encoladas localmente, pendientes de sincronizar.
-  const [pendingOpsCount, setPendingOpsCount] = useState(0);
+  // Fase D: contadores reactivos vía useLiveQuery — se actualizan solos, tanto cuando
+  // este componente encola algo como cuando el motor de sincronización (corriendo en
+  // segundo plano, arrancado en App.tsx) cambia la cola. Sin esto, el contador se
+  // quedaría desactualizado mientras el motor trabaja fuera de cualquier acción del cajero.
+  const pendingOpsCount = useLiveQuery(() => countPendingOperations(), [], 0);
+  const failedOpsCount = useLiveQuery(() => countFailedOperations(), [], 0);
 
-  async function refreshPendingCount() {
-    setPendingOpsCount(await countPendingOperations());
-  }
-
+  // Confirmación breve de "todo sincronizado" — señal aparte del contador persistente,
+  // porque useLiveQuery solo da el valor actual, no si acaba de bajar a 0 recién.
+  const [showSyncedToast, setShowSyncedToast] = useState(false);
   useEffect(() => {
-    refreshPendingCount();
+    function onSyncCompleted() {
+      setShowSyncedToast(true);
+      setTimeout(() => setShowSyncedToast(false), 3000);
+    }
+    window.addEventListener(OFFLINE_SYNC_COMPLETED_EVENT, onSyncCompleted);
+    return () => window.removeEventListener(OFFLINE_SYNC_COMPLETED_EVENT, onSyncCompleted);
   }, []);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -515,15 +525,17 @@ export default function POSPage() {
         return;
       }
       // Fase C2: sin red/timeout — encolar y abrir el turno de forma optimista con un
-      // id local. Fase D lo reemplaza por el id real del servidor al sincronizar.
+      // id local. Fase D (localId dentro del payload) lo reemplaza por el id real del
+      // servidor al sincronizar — por eso se genera UNA sola vez y se reutiliza en
+      // ambos lados (el payload encolado y el shift optimista en pantalla).
       const clientTimestamp = new Date().toISOString();
-      await enqueueOperation('OPEN_SHIFT', { ...body, clientTimestamp }, clientTimestamp);
-      await refreshPendingCount();
+      const localId = generateLocalId();
+      await enqueueOperation('OPEN_SHIFT', { ...body, clientTimestamp, localId }, clientTimestamp);
       setShowOpenShiftModal(false);
       setInitialFund("");
       setShiftNotes("");
       setShift({
-        id: generateLocalId(),
+        id: localId,
         fondoInicial: body.fondoInicial,
         fecha: clientTimestamp,
         horaApertura: new Date(clientTimestamp).toTimeString().slice(0, 8),
@@ -602,7 +614,6 @@ export default function POSPage() {
       }
       const clientTimestamp = new Date().toISOString();
       await enqueueOperation('CLOSE_SHIFT', { shiftId: shift.id, ...body, clientTimestamp }, clientTimestamp);
-      await refreshPendingCount();
       setShift(null);
       setSelectedCashier('');
       setShowCloseShiftModal(false);
@@ -638,7 +649,6 @@ export default function POSPage() {
       // (mismo criterio que stock/ventas) — no se recalcula ni se estima localmente.
       const clientTimestamp = new Date().toISOString();
       await enqueueOperation('WITHDRAWAL', { shiftId: shift.id, ...body, clientTimestamp }, clientTimestamp);
-      await refreshPendingCount();
       setShowWithdrawalModal(false);
       setWithdrawalAmount("");
       setWithdrawalReason("");
@@ -672,7 +682,6 @@ export default function POSPage() {
       // Fase C2: mismo criterio — totales congelados hasta sincronización real.
       const clientTimestamp = new Date().toISOString();
       await enqueueOperation('DEPOSIT', { shiftId: shift.id, ...body, clientTimestamp }, clientTimestamp);
-      await refreshPendingCount();
       setShowDepositModal(false);
       setDepositAmount("");
       setDepositOrigin("");
@@ -717,7 +726,6 @@ export default function POSPage() {
       // mismo comportamiento que ya existe hoy para "todavía no hice precorte".
       const clientTimestamp = new Date().toISOString();
       await enqueueOperation('PRECUT', { shiftId: shift.id, ...body, clientTimestamp }, clientTimestamp);
-      await refreshPendingCount();
       setShowPrecutModal(false);
       setCashCounts({});
       setDebitoDeclarado("");
@@ -969,7 +977,6 @@ export default function POSPage() {
         const clientTimestamp = new Date().toISOString();
         const folio = generateOfflineSaleFolio(clientTimestamp);
         await enqueueOperation('SALE', { ...saleData, folio, clientTimestamp }, clientTimestamp);
-        await refreshPendingCount();
 
         const optimisticSale: Sale = {
           id: generateLocalId(),
@@ -1249,6 +1256,19 @@ export default function POSPage() {
                   title="Operaciones guardadas en este dispositivo que aún no se han enviado al servidor — se sincronizan solas cuando haya conexión."
                 >
                   ⏳ {pendingOpsCount} pendiente{pendingOpsCount === 1 ? "" : "s"}
+                </div>
+              )}
+              {failedOpsCount > 0 && (
+                <div
+                  className="text-xs text-red-400 border border-red-700 rounded px-2 py-1"
+                  title="El servidor rechazó estas operaciones (no es un problema de conexión) — necesitan revisión manual, no se van a reintentar solas."
+                >
+                  ✕ {failedOpsCount} necesita{failedOpsCount === 1 ? "" : "n"} revisión
+                </div>
+              )}
+              {showSyncedToast && (
+                <div className="text-xs text-green-400 border border-green-700 rounded px-2 py-1">
+                  ✓ Todo sincronizado
                 </div>
               )}
             </div>

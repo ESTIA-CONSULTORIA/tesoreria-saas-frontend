@@ -6,8 +6,10 @@ import { getDeviceId, getDeviceIdFragment } from '../device/deviceId';
 //
 // Fase C2: cola de ESCRITURAS pendientes de sincronizar (turnos, ventas, retiros,
 // depósitos, precorte). Solo encola y bloquea localmente lo que ya sabemos que rompería
-// el orden (cierre de turno con ventas sin sincronizar) — el motor que realmente
-// reintenta contra el backend es Fase D, aparte.
+// el orden (cierre de turno con ventas sin sincronizar).
+//
+// Fase D: el motor de sincronización (src/core/offline/syncEngine.ts) que realmente
+// reintenta contra el backend, en orden, propagando ids/folios locales por los reales.
 
 export interface CachedRecord {
   id: string;
@@ -122,6 +124,63 @@ export async function getPendingSalesForShift(shiftId: string): Promise<PendingO
 
 export async function countPendingOperations(): Promise<number> {
   return offlineDb.pendingOperations.where('status').equals('pending').count();
+}
+
+export async function countFailedOperations(): Promise<number> {
+  return offlineDb.pendingOperations.where('status').equals('failed').count();
+}
+
+/** El id de turno (local o real) al que pertenece una operación, sin importar el tipo:
+ * OPEN_SHIFT se identifica por el localId que ella misma generó; el resto, por
+ * shiftId/turnoId dentro de su payload. Usado tanto para propagar el reemplazo de id
+ * como para encontrar dependientes cuando algo se rechaza de verdad. */
+export function getOperationShiftKey(op: PendingOperation): string | undefined {
+  if (op.type === 'OPEN_SHIFT') return op.payload?.localId;
+  if (op.type === 'SALE') return op.payload?.turnoId;
+  return op.payload?.shiftId;
+}
+
+/** Operaciones pendientes (de cualquier tipo) que referencian un id de turno dado —
+ * ya sea local (para propagar el reemplazo tras un OPEN_SHIFT exitoso) o real (para
+ * encontrar dependientes al marcar una cadena como fallida). */
+export async function findPendingOpsReferencingShift(shiftId: string): Promise<PendingOperation[]> {
+  const pending = await offlineDb.pendingOperations.where('status').equals('pending').toArray();
+  return pending.filter((op) => {
+    if (op.type === 'OPEN_SHIFT') return false; // una OPEN_SHIFT no "referencia" un turno, lo origina
+    return op.type === 'SALE' ? op.payload?.turnoId === shiftId : op.payload?.shiftId === shiftId;
+  });
+}
+
+/** Reemplaza un id/folio local por el real en todas las operaciones pendientes que lo
+ * referencien (shiftId o turnoId según el tipo) — se llama tras sincronizar con éxito
+ * la OPEN_SHIFT que originó ese id local. */
+export async function propagateShiftIdReplacement(localShiftId: string, realShiftId: string): Promise<void> {
+  const referencing = await findPendingOpsReferencingShift(localShiftId);
+  for (const op of referencing) {
+    const payload = { ...op.payload };
+    if (op.type === 'SALE') payload.turnoId = realShiftId;
+    else payload.shiftId = realShiftId;
+    await offlineDb.pendingOperations.update(op.id!, { payload });
+  }
+}
+
+export async function markOperationSynced(id: number, updatedPayload?: any): Promise<void> {
+  const changes: Partial<PendingOperation> = { status: 'synced' };
+  if (updatedPayload) changes.payload = updatedPayload;
+  await offlineDb.pendingOperations.update(id, changes);
+}
+
+export async function markOperationFailed(id: number): Promise<void> {
+  await offlineDb.pendingOperations.update(id, { status: 'failed' });
+}
+
+export async function incrementOperationAttempts(id: number, attempts: number): Promise<void> {
+  await offlineDb.pendingOperations.update(id, { attempts: attempts + 1 });
+}
+
+/** Operaciones pendientes, en el orden estricto en que deben sincronizarse. */
+export async function getPendingOperationsInOrder(): Promise<PendingOperation[]> {
+  return offlineDb.pendingOperations.where('status').equals('pending').sortBy('sequenceNumber');
 }
 
 /** ID local temporal para algo creado offline (turno, venta) — Fase D lo reconoce por

@@ -47,6 +47,7 @@ import { SplashScreen } from "./components/SplashScreen";
 import { OutroSplash } from "./components/OutroSplash";
 import { NoContextBanner } from "./core/components/NoContextBanner";
 import { UpdatePrompt } from "./core/pwa/UpdatePrompt";
+import { startSyncEngine } from "./core/offline/syncEngine";
 import TopBar from "./core/layout/TopBar";
 import { api } from "./core/api/api";
 
@@ -79,6 +80,13 @@ function App() {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Fase D: motor de sincronización de la cola offline (Fase C2) — arranca una sola vez
+  // para toda la vida de la app, en segundo plano, independiente de qué pantalla esté
+  // montada (no depende de que POSPage esté abierto).
+  useEffect(() => {
+    startSyncEngine();
   }, []);
 
   useEffect(() => {
