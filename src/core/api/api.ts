@@ -42,7 +42,14 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Sesión expirada: 401 normal, o 403 "Sesión inválida" — el mensaje exacto que lanza
+    // SubscriptionGuard cuando el token está ausente/expirado (verificado: es el único
+    // lugar del backend que usa ese texto; otros 403 legítimos, como falta de permisos de
+    // rol o de módulo, tienen mensajes distintos y no deben disparar un refresh).
+    const isExpiredSession = error.response?.status === 401 ||
+      (error.response?.status === 403 && error.response?.data?.message === 'Sesión inválida');
+
+    if (isExpiredSession && !originalRequest._retry) {
       originalRequest._retry = true;
 
       const refreshToken = localStorage.getItem('refresh_token');
