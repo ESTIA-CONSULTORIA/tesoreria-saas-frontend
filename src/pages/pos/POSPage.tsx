@@ -5,6 +5,7 @@ import { useAuthStore } from "../../core/store/useAuthStore";
 import { useLoginConfigStore } from "../../core/store/useLoginConfigStore";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
 import { getDeviceId } from "../../core/device/deviceId";
+import { offlineDb, replaceLocalCache, readLocalCache, isNetworkOrTimeoutError } from "../../core/offline/db";
 import PosChatPanel from "./PosChatPanel";
 import TableLayout from "./TableLayout";
 import CheckoutFast from "./CheckoutFast";
@@ -108,6 +109,11 @@ export default function POSPage() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  // Fase C1: true cuando ese dato de referencia vino de la copia local (Dexie) porque
+  // el GET falló por red/timeout — no por otra razón (permisos, servidor, etc.).
+  const [usingCachedCategories, setUsingCachedCategories] = useState(false);
+  const [usingCachedProducts, setUsingCachedProducts] = useState(false);
+  const [usingCachedAreas, setUsingCachedAreas] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [ticket, setTicket] = useState<TicketItem[]>([]);
@@ -334,16 +340,24 @@ export default function POSPage() {
   }, [activeTab]);
 
   async function loadProducts(cats: any[]) {
+    const mapProducts = (raw: any[]) => raw.map((p: any) => ({
+      ...p,
+      price: Number(p.price) || 0,
+      category: cats.find(c => c.id === p.categoryId)?.name || 'Sin categoría'
+    }));
     try {
       const response = await api.get("/pos/products");
-      const mappedProducts = Array.isArray(response.data) ? response.data.map((p: any) => ({
-        ...p,
-        price: Number(p.price) || 0,
-        category: cats.find(c => c.id === p.categoryId)?.name || 'Sin categoría'
-      })) : [];
-      setProducts(mappedProducts);
+      const rawProducts = Array.isArray(response.data) ? response.data : [];
+      await replaceLocalCache(offlineDb.products, rawProducts);
+      setProducts(mapProducts(rawProducts));
+      setUsingCachedProducts(false);
     } catch (error) {
       console.error("Error loading products:", error);
+      if (isNetworkOrTimeoutError(error)) {
+        const cached = await readLocalCache(offlineDb.products);
+        setProducts(mapProducts(cached));
+        setUsingCachedProducts(true);
+      }
     }
   }
 
@@ -351,10 +365,18 @@ export default function POSPage() {
     try {
       const response = await api.get("/pos/categories");
       const cats = Array.isArray(response.data) ? response.data : [];
+      await replaceLocalCache(offlineDb.categories, cats);
       setCategories(cats);
+      setUsingCachedCategories(false);
       return cats;
     } catch (error) {
       console.error("Error loading categories:", error);
+      if (isNetworkOrTimeoutError(error)) {
+        const cached = await readLocalCache(offlineDb.categories);
+        setCategories(cached);
+        setUsingCachedCategories(true);
+        return cached;
+      }
       return [];
     }
   }
@@ -371,9 +393,17 @@ export default function POSPage() {
   async function loadAreas() {
     try {
       const response = await api.get('/pos/areas');
-      setAreas(response.data || []);
+      const areasData = response.data || [];
+      await replaceLocalCache(offlineDb.areas, areasData);
+      setAreas(areasData);
+      setUsingCachedAreas(false);
     } catch (error) {
       console.error('Error loading areas:', error);
+      if (isNetworkOrTimeoutError(error)) {
+        const cached = await readLocalCache(offlineDb.areas);
+        setAreas(cached);
+        setUsingCachedAreas(true);
+      }
     }
   }
 
@@ -1065,6 +1095,14 @@ export default function POSPage() {
               {shift && (
                 <div className="text-sm text-slate-400">
                   Turno: <span className="text-green-400">Abierto</span> ({shift.horaApertura || new Date(shift.fecha).toLocaleTimeString('es-MX', { timeZone: 'America/Tijuana' })})
+                </div>
+              )}
+              {(usingCachedCategories || usingCachedProducts || usingCachedAreas) && (
+                <div
+                  className="text-xs text-yellow-400 border border-yellow-700 rounded px-2 py-1"
+                  title="No se pudo conectar al servidor — mostrando la última copia guardada en este dispositivo, puede no estar actualizada."
+                >
+                  ⚠ Datos sin conexión
                 </div>
               )}
             </div>

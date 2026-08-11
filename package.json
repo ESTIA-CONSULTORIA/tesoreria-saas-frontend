@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "axios": "^1.16.1",
+    "dexie": "^4.4.4",
     "framer-motion": "^12.39.0",
     "jwt-decode": "^4.0.0",
     "react": "^19.2.6",
