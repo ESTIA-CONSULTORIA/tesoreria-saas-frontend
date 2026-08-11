@@ -46,6 +46,7 @@ import { useBrandingStore } from "./core/store/useBrandingStore";
 import { SplashScreen } from "./components/SplashScreen";
 import { OutroSplash } from "./components/OutroSplash";
 import { NoContextBanner } from "./core/components/NoContextBanner";
+import { UpdatePrompt } from "./core/pwa/UpdatePrompt";
 import TopBar from "./core/layout/TopBar";
 import { api } from "./core/api/api";
 
@@ -192,6 +193,7 @@ function App() {
 
   return (
     <>
+    <UpdatePrompt />
     {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
     {showOutroSplash && (
       <OutroSplash onDone={() => {
