@@ -80,7 +80,7 @@ export default function CorteCajaLite() {
   const [newInsumo, setNewInsumo] = useState({ nombre: '', tipo: 'insumo', estado: 'proximo', notas: '' });
   const [savingInsumo, setSavingInsumo] = useState(false);
   const [showFondoModal, setShowFondoModal] = useState(false);
-  const [pendingNipData, setPendingNipData] = useState<{ cajero: string; accessToken: string } | null>(null);
+  const [pendingNipData, setPendingNipData] = useState<{ cajero: string; accessToken: string; branchId: string | null } | null>(null);
   const [fondoInicialInput, setFondoInicialInput] = useState('');
 
   const activeFieldOrder = dynamicFields.map(f => f.key);
@@ -165,10 +165,13 @@ export default function CorteCajaLite() {
 
     const accessToken = loginRes.data.access_token;
     const cajeroId = loginRes.data.user?.id;
+    // sucursal real del cajero (User.branchId), no la empresa — Company no tiene branchId,
+    // usar selectedCompany.id como sucursal guardaba turnos con el id de la empresa.
+    const cajeroBranchId = loginRes.data.user?.branchId || null;
 
     try {
       const shiftRes = await axios.get(`${API}/pos/shifts/open`, {
-        params: { cajero: cajeroId, sucursalId: selectedCompany.branchId || selectedCompany.id },
+        params: { cajero: cajeroId, sucursalId: cajeroBranchId },
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       const shiftData = shiftRes.data;
@@ -185,7 +188,7 @@ export default function CorteCajaLite() {
     }
 
     // No hay turno abierto: pedir fondo inicial de caja antes de abrirlo
-    setPendingNipData({ cajero: cajeroId, accessToken });
+    setPendingNipData({ cajero: cajeroId, accessToken, branchId: cajeroBranchId });
     setFondoInicialInput('');
     setShowFondoModal(true);
     setLoading(false);
@@ -199,7 +202,7 @@ export default function CorteCajaLite() {
     try {
       const openRes = await axios.post(`${API}/pos/shifts`, {
         cajero: pendingNipData.cajero,
-        sucursalId: selectedCompany.branchId || selectedCompany.id,
+        sucursalId: pendingNipData.branchId,
         tenantId,
         fondoInicial,
       }, { headers: { Authorization: `Bearer ${pendingNipData.accessToken}` } });

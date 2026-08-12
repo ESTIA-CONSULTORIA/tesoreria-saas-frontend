@@ -439,7 +439,12 @@ export default function POSPage() {
           sucursalId: user?.branchId || branchId,
         },
       });
-      const shiftData = response.data ? {
+      // Verificación redundante de dueño del turno — el backend (findOpenShift) ya filtra
+      // por cajero desde julio 2026, pero se agrega la misma comprobación que ya tiene
+      // CorteCajaLite.tsx como red de seguridad ante cualquier caso futuro donde cajeroId
+      // llegue vacío o incorrecto a esta función.
+      const isOwnShift = response.data && response.data.id && response.data.cajero === cajeroId;
+      const shiftData = isOwnShift ? {
         ...response.data,
         totalVentas: Number(response.data.totalVentas) || 0,
         totalEfectivo: Number(response.data.totalEfectivo) || 0,
