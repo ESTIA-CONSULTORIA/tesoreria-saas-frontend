@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import ExecutiveLogin from "./ExecutiveLogin";
 import ExecutiveDashboard from "./ExecutiveDashboard";
 import ExecutiveHome from "./ExecutiveHome";
 import ExecutiveReport from "./ExecutiveReport";
 import ExecutiveConfig from "./ExecutiveConfig";
+import { execApi } from "./execApi";
 import type { ExecTheme } from "./theme";
 
 export interface ExecConfig {
@@ -54,6 +55,26 @@ export default function ExecutivePage() {
   // Separate displayTheme so ExecutiveConfig can preview theme changes before saving
   const [displayTheme, setDisplayTheme] = useState<ExecTheme>(() => config.theme);
 
+  // Config real del backend, compartida por tenant — localStorage es solo caché para
+  // pintar rápido al abrir (lo que ya quedó de la sesión anterior en este dispositivo);
+  // en cuanto responde el backend, esa es la fuente de verdad. Si no hay fila todavía
+  // (tenant nunca guardó config) o falla la red, se queda con el default/caché local.
+  useEffect(() => {
+    if (!token) return;
+    execApi(token)
+      .get("/executive-config")
+      .then((r) => {
+        const data = r.data;
+        if (data && (data.theme || data.modules)) {
+          const loaded: ExecConfig = { theme: data.theme || "dark", modules: data.modules || {} };
+          setConfig(loaded);
+          setDisplayTheme(loaded.theme);
+          localStorage.setItem("executive_config", JSON.stringify(loaded));
+        }
+      })
+      .catch(() => {});
+  }, [token]);
+
   function onLogin(t: string, name?: string) {
     sessionStorage.setItem("executive_token", t);
     sessionStorage.setItem("exec_user_name", name || "");
@@ -77,6 +98,9 @@ export default function ExecutivePage() {
     setConfig(c);
     setDisplayTheme(c.theme);
     localStorage.setItem("executive_config", JSON.stringify(c));
+    if (token) {
+      execApi(token).put("/executive-config", c).catch(() => {});
+    }
   }
 
   let content: ReactNode;

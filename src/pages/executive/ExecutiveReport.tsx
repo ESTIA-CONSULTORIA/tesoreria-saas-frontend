@@ -407,10 +407,9 @@ export default function ExecutiveReport({
 
         else if (module === "PRESUPUESTO") {
           val = 0;
+          setMainDesc("Presupuesto por categoría — función planeada");
           items = [
-            { label: "EJECUTADO", value: "$0" },
-            { label: "DISPONIBLE", value: "$0" },
-            { label: "ESTADO", value: "En desarrollo" },
+            { label: "ESTADO", value: "Función planeada" },
           ];
         }
 
@@ -621,7 +620,7 @@ export default function ExecutiveReport({
                 letterSpacing: "-0.01em",
               }}
             >
-              {fmtValue(mainValue, modDef.format)}
+              {module === "PRESUPUESTO" ? "Próximamente" : fmtValue(mainValue, modDef.format)}
             </p>
             <p
               style={{
