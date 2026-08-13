@@ -3,8 +3,10 @@ import { api } from '../../core/api/api';
 import MainLayout from '../../core/layout/MainLayout';
 import { parseBusinessDate } from '../../core/utils/date';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { useDashboardFilterStore } from '../../core/store/useDashboardFilterStore';
+import type { DashboardLitePeriod } from '../../core/store/useDashboardFilterStore';
 
-type Period = 'semana' | 'mes' | 'custom';
+type Period = DashboardLitePeriod;
 
 const CANALES = [
   { key: 'efectivo',      label: 'Efectivo',      color: '#4ade80' },
@@ -52,9 +54,9 @@ function fmt(n: number) {
 }
 
 export default function DashboardLite() {
+  const { periodLite: period, setPeriodLite: setPeriod } = useDashboardFilterStore();
   const [shifts, setShifts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState<Period>('semana');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
   const [selectedShift, setSelectedShift] = useState<any>(null);

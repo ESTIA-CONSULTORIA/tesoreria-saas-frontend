@@ -5,17 +5,18 @@ import { useNavigate } from "react-router-dom";
 import DashboardInfoModal from "./DashboardInfoModal";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
+import { useDashboardFilterStore } from "../../core/store/useDashboardFilterStore";
 
 
 export default function DashboardPage() {
   const navigate = useNavigate();
   const { activeBranch, activeCompany } = useCompanyStore();
+  const { period, setPeriod } = useDashboardFilterStore();
 
   const [kpis, setKpis] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [infoOpen, setInfoOpen] = useState(false);
-  const [period, setPeriod] = useState<"today" | "week" | "month" | "quarter" | "year">("month");
   const [pendingShifts, setPendingShifts] = useState<any[]>([]);
 
   const loadPendingShifts = useCallback(async () => {
