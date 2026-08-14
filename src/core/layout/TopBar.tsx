@@ -4,7 +4,6 @@ import { useAuthStore } from "../store/useAuthStore";
 import { useCompanyStore } from "../store/useCompanyStore";
 import { useModulo } from "../hooks/useModulo";
 import { api } from "../api/api";
-import { jwtDecode } from "jwt-decode";
 
 interface Company { id: string; legalName: string; tradeName: string; }
 interface Branch  { id: string; name: string; }
@@ -219,15 +218,15 @@ export default function TopBar() {
     setCtxOpen(false);
     setCtxPhase('company');
     try {
+      // El backend ya puso las cookies httpOnly nuevas; el body solo trae el user
+      // actualizado.
       const r = await api.post('/auth/switch-company', { companyId: pendingCo.id });
-      const { access_token, user: nu } = r.data;
-      if (access_token) {
-        localStorage.setItem('access_token', access_token);
-        const dec: any = jwtDecode(access_token);
+      const nu = r.data?.user;
+      if (nu) {
         const mods = JSON.parse(localStorage.getItem('modulos_activos') || '[]');
-        useAuthStore.getState().login(access_token, dec.tenantId || '', {
-          id: nu?.id || dec.sub, email: nu?.email || dec.email, name: nu?.name,
-          roleCode: dec.roleCode, tenantId: dec.tenantId, companyId: pendingCo.id,
+        useAuthStore.getState().login({
+          id: nu.id, email: nu.email, name: nu.name,
+          roleCode: nu.roleCode, tenantId: nu.tenantId, companyId: pendingCo.id,
         }, mods);
       }
     } catch {}

@@ -82,6 +82,37 @@ function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Bootstrap de sesión — GET /auth/me confirma contra el backend si hay una cookie de
+  // sesión válida (ERP normal) o un header válido (NIP/otros sistemas, vía el interceptor
+  // de api.ts). El user cacheado en localStorage ya pintó la UI al instante; esto solo
+  // confirma o corrige esa caché contra la fuente real. Corre una sola vez al montar.
+  useEffect(() => {
+    api.get('/auth/me')
+      .then((res) => {
+        if (res.data?.id) {
+          useAuthStore.getState().login(
+            {
+              id: res.data.id,
+              email: res.data.email,
+              roleCode: res.data.roleCode,
+              tenantId: res.data.tenantId,
+              companyId: res.data.companyId,
+              branchId: res.data.branchId,
+            },
+            res.data.modulosActivos || [],
+          );
+        } else {
+          useAuthStore.getState().clearSession();
+        }
+      })
+      .catch(() => {
+        useAuthStore.getState().clearSession();
+      })
+      .finally(() => {
+        useAuthStore.getState().setAuthChecked(true);
+      });
+  }, []);
+
   // Fase D: motor de sincronización de la cola offline (Fase C2) — arranca una sola vez
   // para toda la vida de la app, en segundo plano, independiente de qué pantalla esté
   // montada (no depende de que POSPage esté abierto).
@@ -130,13 +161,9 @@ function App() {
       if (!user || !tenantId) return;
       if (user.roleCode === 'SOPORTE') return;
       try {
-        const res = await api.get(`/tenants/${tenantId}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
-        });
+        const res = await api.get(`/tenants/${tenantId}`);
         if (res.data && res.data.isOnboarded === false) {
-          const companiesRes = await api.get(`/companies`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
-          });
+          const companiesRes = await api.get(`/companies`);
           const companies = companiesRes.data ?? [];
           if (companies.length === 0) {
             setShowWizard(true);

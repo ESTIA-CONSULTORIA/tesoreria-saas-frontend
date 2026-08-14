@@ -37,9 +37,8 @@ interface Form {
 
 export default function AppearancePage() {
   const store = useBrandingStore();
-  const token = localStorage.getItem('access_token');
   const tenantId = localStorage.getItem('tenant_id') || '';
-  const headers = { Authorization: `Bearer ${token}`, 'x-tenant-id': tenantId };
+  const headers = { 'x-tenant-id': tenantId };
 
   const [form, setForm] = useState<Form>({
     logoUrl: store.logoUrl || '',

@@ -8,25 +8,21 @@ interface Props {
 export default function ProtectedRoute({
   children,
 }: Props) {
-  const token = useAuthStore((state) => state.token) || localStorage.getItem('access_token');
-  const user = useAuthStore((state) => state.user) || JSON.parse(localStorage.getItem('user') || 'null');
+  // Ya no hay JWT legible en el cliente para decodificar su exp() — una sesión de cookie
+  // (ERP normal) es httpOnly. La verdad ahora es el bootstrap de App.tsx (GET /auth/me):
+  // mientras no resuelva, no se decide nada (evita un flash-redirect a /login antes de
+  // tiempo); si ya resolvió y no hay user, no hay sesión. Si la sesión expira después de
+  // este punto, cualquier llamada normal del componente lo descubre vía 401 y el
+  // interceptor de api.ts se encarga (refresh o redirect), igual que siempre.
+  const authChecked = useAuthStore((state) => state.authChecked);
+  const user = useAuthStore((state) => state.user);
 
-  if (!token) {
-    return <Navigate to="/login" replace />;
+  if (!authChecked) {
+    return null;
   }
 
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    if (payload.exp && payload.exp < Date.now() / 1000) {
-      return <Navigate to="/login" replace />;
-    }
-  } catch {
+  if (!user) {
     return <Navigate to="/login" replace />;
-  }
-
-  // SOPORTE tiene acceso a todos los módulos sin verificación
-  if (user?.roleCode === 'SOPORTE') {
-    return <>{children}</>;
   }
 
   return <>{children}</>;

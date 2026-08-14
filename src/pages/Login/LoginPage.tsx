@@ -52,7 +52,8 @@ export default function LoginPage() {
         password,
       });
 
-      const token = response.data.access_token;
+      // El backend ya puso access_token/refresh_token en cookies httpOnly — el body solo
+      // trae user/modulosActivos, nada de tokens que leer aquí.
       const modulosActivos = response.data.modulosActivos || [];
       const user = response.data.user || {};
 
@@ -66,13 +67,13 @@ export default function LoginPage() {
         ];
       }
 
-      login(token, user.tenantId || '', {
+      login({
         id: user.id || "1",
         email,
         name: user.name || "Administrador",
         roleCode: user.roleCode,
         tenantId: user.tenantId,
-      }, finalModulosActivos, response.data.refresh_token);
+      }, finalModulosActivos);
 
       navigate("/");
     } catch (error: any) {
@@ -97,13 +98,13 @@ export default function LoginPage() {
       const modulosActivos = response.data.modulosActivos || [];
       const user = response.data.user || {};
 
-      login(token, user.tenantId || '', {
+      login({
         id: user.id || "1",
         email: user.email || cajero,
         name: user.name || "Cajero",
         roleCode: user.roleCode,
         tenantId: user.tenantId,
-      }, modulosActivos);
+      }, modulosActivos, token);
 
       const planCode: string = response.data.planCode || '';
       const isLiteCorte = planCode === 'LITE_CORTE' || planCode === 'LITE_POS';

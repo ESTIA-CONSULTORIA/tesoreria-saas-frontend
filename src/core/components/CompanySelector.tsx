@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { api } from "../api/api";
 import { useCompanyStore } from "../store/useCompanyStore";
 import { useAuthStore } from "../store/useAuthStore";
-import { jwtDecode } from "jwt-decode";
 
 interface Company {
   id: string;
@@ -142,22 +141,19 @@ export default function CompanySelector() {
     loadBranches(company.id);
     setCompanyDropdownOpen(false);
 
-    // Switch company context — best-effort, fire and forget
+    // Switch company context — best-effort, fire and forget. El backend ya puso las
+    // cookies httpOnly nuevas; el body solo trae el user actualizado.
     api.post('/auth/switch-company', { companyId: company.id }).then((res: any) => {
-      const { access_token, user: newUser } = res.data;
-      if (access_token) {
-        localStorage.setItem('access_token', access_token);
-        const decoded: any = jwtDecode(access_token);
+      const newUser = res.data?.user;
+      if (newUser) {
         const modulosActivos = JSON.parse(localStorage.getItem('modulos_activos') || '[]');
         useAuthStore.getState().login(
-          access_token,
-          decoded.tenantId || localStorage.getItem('tenant_id') || '',
           {
-            id: newUser?.id || decoded.sub,
-            email: newUser?.email || decoded.email,
-            name: newUser?.name,
-            roleCode: decoded.roleCode,
-            tenantId: decoded.tenantId,
+            id: newUser.id,
+            email: newUser.email,
+            name: newUser.name,
+            roleCode: newUser.roleCode,
+            tenantId: newUser.tenantId,
             companyId: company.id,
           },
           modulosActivos

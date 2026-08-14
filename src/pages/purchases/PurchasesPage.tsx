@@ -5,6 +5,7 @@ import CreateOrderModal from "./CreateOrderModal";
 import ReceiveOrderModal from "./ReceiveOrderModal";
 import CreateInvoiceModal from "./CreateInvoiceModal";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
+import { useAuthStore } from "../../core/store/useAuthStore";
 
 
 interface PurchaseOrder {
@@ -65,7 +66,10 @@ export default function PurchasesPage() {
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<Purchase | null>(null);
   const [cancelMotivo, setCancelMotivo] = useState("");
-  const [userRole, setUserRole] = useState("");
+  // Antes decodificaba el JWT de localStorage a mano — con la migración a cookies
+  // httpOnly ese token ya no es legible desde JS para una sesión de cookie (ERP normal).
+  // Ambos campos ya vivían en useAuthStore.user sin usarse.
+  const userRole = useAuthStore((state) => state.user?.roleCode || "");
   const [paymentData, setPaymentData] = useState({
     amount: 0,
     accountId: "",
@@ -77,7 +81,6 @@ export default function PurchasesPage() {
   useEffect(() => {
     loadSuppliers();
     loadBankAccounts();
-    loadUserRole();
   }, []);
 
   useEffect(() => {
@@ -86,18 +89,6 @@ export default function PurchasesPage() {
     if (activeTab === "facturas") loadInvoices();
     if (activeTab === "cuentas-pagar") loadAccountsPayable();
   }, [activeTab, activeBranch?.id, activeCompany?.id]);
-
-  function loadUserRole() {
-    const auth = localStorage.getItem("access_token");
-    if (auth) {
-      try {
-        const payload = JSON.parse(atob(auth.split('.')[1]));
-        setUserRole(payload.roleCode || "");
-      } catch {
-        setUserRole("");
-      }
-    }
-  }
 
   async function loadSuppliers() {
     try {
@@ -174,14 +165,7 @@ export default function PurchasesPage() {
 
   async function requestCancellation(id: string) {
     try {
-      const auth = localStorage.getItem("access_token");
-      let userId = "";
-      if (auth) {
-        try {
-          const payload = JSON.parse(atob(auth.split('.')[1]));
-          userId = payload.sub || "";
-        } catch {}
-      }
+      const userId = useAuthStore.getState().user?.id || "";
       await api.post(`/purchases/orders/${id}/request-cancellation`, {
         motivo: cancelMotivo,
         userId,
@@ -196,14 +180,7 @@ export default function PurchasesPage() {
 
   async function approveCancellation(id: string) {
     try {
-      const auth = localStorage.getItem("access_token");
-      let userId = "";
-      if (auth) {
-        try {
-          const payload = JSON.parse(atob(auth.split('.')[1]));
-          userId = payload.sub || "";
-        } catch {}
-      }
+      const userId = useAuthStore.getState().user?.id || "";
       await api.post(`/purchases/orders/${id}/approve-cancellation`, { userId });
       loadOrders();
     } catch (err: any) {
@@ -236,14 +213,7 @@ export default function PurchasesPage() {
     }
 
     try {
-      const auth = localStorage.getItem("access_token");
-      let userId = "";
-      if (auth) {
-        try {
-          const payload = JSON.parse(atob(auth.split('.')[1]));
-          userId = payload.sub || "";
-        } catch {}
-      }
+      const userId = useAuthStore.getState().user?.id || "";
 
       await api.post(`/purchases/invoices/${selectedInvoice.id}/register-payment`, {
         ...paymentData,

@@ -41,16 +41,13 @@ export default function IntegrationsPage() {
   const [saving, setSaving] = useState(false);
   const [testResult, setTestResult] = useState<{ slug: string; success: boolean; message: string } | null>(null);
 
-  const token = localStorage.getItem("access_token");
-  const headers = { Authorization: `Bearer ${token}` };
-
   useEffect(() => {
     loadIntegrations();
   }, []);
 
   async function loadIntegrations() {
     try {
-      const res = await api.get("/integrations", { headers });
+      const res = await api.get("/integrations");
       setIntegrations(res.data ?? []);
     } catch {
       // silent
@@ -69,7 +66,7 @@ export default function IntegrationsPage() {
     if (!modal) return;
     setSaving(true);
     try {
-      await api.post(`/integrations/${modal.slug}/activate`, { credentials }, { headers });
+      await api.post(`/integrations/${modal.slug}/activate`, { credentials });
       await loadIntegrations();
       setModal(null);
     } catch (e: any) {
@@ -82,7 +79,7 @@ export default function IntegrationsPage() {
   async function handleDeactivate(slug: string) {
     if (!confirm("¿Desactivar esta integración?")) return;
     try {
-      await api.delete(`/integrations/${slug}`, { headers });
+      await api.delete(`/integrations/${slug}`);
       await loadIntegrations();
     } catch (e: any) {
       alert(e?.response?.data?.message || "Error al desactivar");
@@ -92,7 +89,7 @@ export default function IntegrationsPage() {
   async function handleTest(slug: string) {
     setTestResult(null);
     try {
-      const res = await api.get(`/integrations/${slug}/test`, { headers });
+      const res = await api.get(`/integrations/${slug}/test`);
       setTestResult({ slug, ...res.data });
     } catch {
       setTestResult({ slug, success: false, message: "Error de conexión" });

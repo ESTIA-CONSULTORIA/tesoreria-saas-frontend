@@ -35,10 +35,6 @@ export default function OnboardingWizard({ onComplete }: Props) {
   // Step 4 — gerente
   const [gerente, setGerente] = useState({ name: "", email: "", password: "" });
 
-  const authHeaders = () => ({
-    headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
-  });
-
   const handleStep1 = async () => {
     setError("");
     if (!empresa.razonSocial.trim()) { setError("La razón social es obligatoria."); return; }
@@ -50,7 +46,7 @@ export default function OnboardingWizard({ onComplete }: Props) {
         taxId: empresa.rfc,
         giro: empresa.giro,
         tenantId,
-      }, authHeaders());
+      });
       setCompanyId(res.data.id);
       setStep(1);
     } catch {
@@ -71,7 +67,7 @@ export default function OnboardingWizard({ onComplete }: Props) {
         city: sucursal.ciudad,
         state: sucursal.estado,
         companyId,
-      }, authHeaders());
+      });
       setBranchId(res.data.id);
       setStep(2);
     } catch {
@@ -97,7 +93,7 @@ export default function OnboardingWizard({ onComplete }: Props) {
         initialBalance: 0,
         type: "BANCO",
         branchId,
-      }, authHeaders());
+      });
       setStep(3);
     } catch {
       setError("Error al crear la cuenta bancaria.");
@@ -119,7 +115,7 @@ export default function OnboardingWizard({ onComplete }: Props) {
         email: gerente.email,
         password: gerente.password,
         roleCode: "GERENTE",
-      }, authHeaders());
+      });
       setStep(4);
     } catch {
       setError("Error al crear el usuario gerente.");
@@ -131,7 +127,7 @@ export default function OnboardingWizard({ onComplete }: Props) {
   const handleFinish = async () => {
     setLoading(true);
     try {
-      await api.patch(`/tenants/${tenantId}/onboard`, {}, authHeaders());
+      await api.patch(`/tenants/${tenantId}/onboard`, {});
     } catch {
       // non-fatal
     } finally {
