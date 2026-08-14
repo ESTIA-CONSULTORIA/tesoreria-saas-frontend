@@ -13,6 +13,11 @@ dist-ssr
 dev-dist
 *.local
 
+# Config local por dev — cada quien apunta VITE_API_URL a su propio backend (local o
+# producción) sin que git lo controle. No se toca el historial ya commiteado, solo se deja
+# de versionar hacia adelante (ver git rm --cached en el commit que agrega esta línea).
+.env
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
