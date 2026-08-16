@@ -161,6 +161,10 @@ export default function TopBar() {
   const [companies, setCompanies]           = useState<Company[]>([]);
   const [branches, setBranches]             = useState<Branch[]>([]);
   const [pendingCo, setPendingCo]           = useState<{ id: string; name: string } | null>(null);
+  // Cubre clearCtx (Vista Global) y pickBranch (elegir sucursal) — feedback visual
+  // mientras se espera el round-trip de /auth/switch-company que ahora corre ANTES de
+  // tocar el contexto local en ambos.
+  const [ctxSwitching, setCtxSwitching]     = useState(false);
   const ctxRef = useRef<HTMLDivElement>(null);
 
   const isRestricted = !!userCompanyId && !isAdmin;
@@ -213,37 +217,73 @@ export default function TopBar() {
 
   async function pickBranch(br: Branch) {
     if (!pendingCo) return;
-    setActiveCompany(pendingCo);
-    setActiveBranch({ id: br.id, name: br.name });
-    setCtxOpen(false);
-    setCtxPhase('company');
+    const co = pendingCo; // snapshot — el dropdown queda abierto durante el await de
+    // abajo, y "Volver" podría poner pendingCo en null mientras tanto.
+    setCtxSwitching(true);
+
+    // Await ANTES de tocar activeCompany/activeBranch — mismo motivo que clearCtx: si
+    // el store se actualiza primero, DashboardPage dispara su GET /dashboard/kpis en el
+    // mismo tick, con la cookie del JWT todavía apuntando al contexto anterior.
     try {
       // El backend ya puso las cookies httpOnly nuevas; el body solo trae el user
       // actualizado.
-      const r = await api.post('/auth/switch-company', { companyId: pendingCo.id });
+      const r = await api.post('/auth/switch-company', { companyId: co.id });
       const nu = r.data?.user;
       if (nu) {
         const mods = JSON.parse(localStorage.getItem('modulos_activos') || '[]');
         useAuthStore.getState().login({
           id: nu.id, email: nu.email, name: nu.name,
-          roleCode: nu.roleCode, tenantId: nu.tenantId, companyId: pendingCo.id,
+          roleCode: nu.roleCode, tenantId: nu.tenantId, companyId: co.id,
         }, mods);
       }
     } catch {}
+
+    setActiveCompany(co);
+    setActiveBranch({ id: br.id, name: br.name });
+    setCtxOpen(false);
+    setCtxPhase('company');
+    setCtxSwitching(false);
+  }
+
+  async function viewFullCompany() {
+    if (!pendingCo) return;
+    const co = pendingCo; // snapshot — mismo motivo que pickBranch
+    setCtxSwitching(true);
+
+    // Await ANTES de tocar activeCompany/activeBranch — mismo motivo que pickBranch/
+    // clearCtx: si el store se actualiza primero, DashboardPage dispara su
+    // GET /dashboard/kpis en el mismo tick, con la cookie del JWT todavía apuntando al
+    // contexto anterior.
+    try {
+      const r = await api.post('/auth/switch-company', { companyId: co.id });
+      const nu = r.data?.user;
+      if (nu) {
+        const mods = JSON.parse(localStorage.getItem('modulos_activos') || '[]');
+        useAuthStore.getState().login({
+          id: nu.id, email: nu.email, name: nu.name,
+          roleCode: nu.roleCode, tenantId: nu.tenantId, companyId: co.id,
+        }, mods);
+      }
+    } catch {}
+
+    setActiveCompany(co);
+    setActiveBranch(null);
+    setCtxOpen(false);
+    setCtxPhase('company');
+    setCtxSwitching(false);
   }
 
   async function clearCtx() {
-    setActiveCompany(null);
-    setActiveBranch(null);
-    ['active_company_id','active_company_name','active_branch_id','active_branch_name']
-      .forEach(k => localStorage.removeItem(k));
-    setCtxOpen(false);
-    setCtxPhase('company');
+    setCtxSwitching(true);
 
-    // Mismo POST que pickBranch — sin esto, el JWT (cookie httpOnly) seguía firmado con
-    // el companyId de la última empresa elegida y dashboard.controller.ts caía a
-    // req.user.companyId como fallback en cuanto X-Company-Id dejaba de mandarse, así
-    // que Vista Global seguía filtrando por la empresa anterior.
+    // Await ANTES de tocar activeCompany/activeBranch — a propósito, en ese orden.
+    // Si se limpia el store primero (como estaba antes), el useEffect de
+    // DashboardPage reacciona al cambio de contexto y dispara su GET /dashboard/kpis
+    // en el mismo tick, con la cookie del JWT todavía vieja — este POST recién empieza
+    // su round-trip en ese momento, así que el GET siempre gana la carrera y sale sin
+    // X-Company-Id pero con req.user.companyId todavía apuntando a la empresa
+    // anterior (dashboard.controller.ts cae a ese fallback). Esperando el POST primero,
+    // la cookie ya está actualizada cuando recién ahí se dispara el refetch.
     try {
       const r = await api.post('/auth/switch-company', { companyId: null });
       const nu = r.data?.user;
@@ -255,6 +295,14 @@ export default function TopBar() {
         }, mods);
       }
     } catch {}
+
+    setActiveCompany(null);
+    setActiveBranch(null);
+    ['active_company_id','active_company_name','active_branch_id','active_branch_name']
+      .forEach(k => localStorage.removeItem(k));
+    setCtxOpen(false);
+    setCtxPhase('company');
+    setCtxSwitching(false);
   }
 
   const ctxLabel = activeCompany
@@ -411,11 +459,18 @@ export default function TopBar() {
                   <>
                     <div style={{ padding: '8px 12px 4px', fontSize: 9.5, color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Empresa</div>
                     {isAdmin && (
-                      <CtxItem label="Vista Global" icon={<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>} active={!activeCompany} onClick={clearCtx} />
+                      <CtxItem
+                        label={ctxSwitching ? 'Cambiando…' : 'Vista Global'}
+                        icon={<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>}
+                        active={!activeCompany}
+                        disabled={ctxSwitching}
+                        onClick={clearCtx}
+                      />
                     )}
                     {companies.length === 0 && <div style={{ padding: '8px 12px', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>Cargando...</div>}
                     {companies.map(co => (
                       <CtxItem key={co.id} label={co.tradeName || co.legalName} active={activeCompany?.id === co.id}
+                        disabled={ctxSwitching}
                         onClick={() => pickCompany(co)}
                         after={<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>}
                       />
@@ -424,31 +479,36 @@ export default function TopBar() {
                 ) : (
                   <>
                     <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                      <button onClick={() => { setCtxPhase('company'); setPendingCo(null); }} style={{
-                        display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none',
-                        color: 'rgba(255,255,255,0.35)', cursor: 'pointer', fontSize: 11, padding: 0,
-                      }}>
+                      <button
+                        onClick={() => { setCtxPhase('company'); setPendingCo(null); }}
+                        disabled={ctxSwitching}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none',
+                          color: 'rgba(255,255,255,0.35)', cursor: ctxSwitching ? 'default' : 'pointer', fontSize: 11, padding: 0,
+                          opacity: ctxSwitching ? 0.5 : 1,
+                        }}>
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
                         Volver
                       </button>
                       <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>{pendingCo?.name}</span>
                     </div>
                     <CtxItem
-                      label="Ver toda la empresa"
+                      label={ctxSwitching ? 'Cambiando…' : 'Ver toda la empresa'}
                       icon={<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>}
                       active={activeCompany?.id === pendingCo?.id && !activeBranch}
-                      onClick={() => {
-                        if (!pendingCo) return;
-                        setActiveCompany(pendingCo);
-                        setActiveBranch(null);
-                        setCtxOpen(false);
-                        setCtxPhase('company');
-                      }}
+                      disabled={ctxSwitching}
+                      onClick={viewFullCompany}
                     />
                     <div style={{ padding: '6px 12px 4px', fontSize: 9.5, color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Sucursal</div>
                     {branches.length === 0 && <div style={{ padding: '8px 12px', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>Cargando...</div>}
                     {branches.map(br => (
-                      <CtxItem key={br.id} label={br.name} active={activeBranch?.id === br.id} onClick={() => pickBranch(br)} />
+                      <CtxItem
+                        key={br.id}
+                        label={br.name}
+                        active={activeBranch?.id === br.id}
+                        disabled={ctxSwitching}
+                        onClick={() => pickBranch(br)}
+                      />
                     ))}
                   </>
                 )}
@@ -521,20 +581,21 @@ export default function TopBar() {
 
 // Helper item component for dropdown
 function CtxItem({
-  label, icon, after, active, onClick,
+  label, icon, after, active, disabled, onClick,
 }: {
   label: string; icon?: React.ReactNode; after?: React.ReactNode;
-  active?: boolean; onClick: () => void;
+  active?: boolean; disabled?: boolean; onClick: () => void;
 }) {
   return (
-    <div onClick={onClick} style={{
-      padding: '8px 12px', fontSize: 12.5, cursor: 'pointer',
+    <div onClick={disabled ? undefined : onClick} style={{
+      padding: '8px 12px', fontSize: 12.5, cursor: disabled ? 'default' : 'pointer',
       color: active ? '#c8cdd8' : 'rgba(255,255,255,0.55)',
       background: active ? 'rgba(255,255,255,0.04)' : 'transparent',
+      opacity: disabled ? 0.55 : 1,
       display: 'flex', alignItems: 'center', gap: 8,
       transition: 'background 0.1s',
     }}
-    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)'; }}
+    onMouseEnter={e => { if (!disabled) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)'; }}
     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = active ? 'rgba(255,255,255,0.04)' : 'transparent'; }}
     >
       {icon && <span style={{ opacity: 0.6, display: 'flex' }}>{icon}</span>}

@@ -22,6 +22,10 @@ export default function CompanySelector() {
   const [loading, setLoading] = useState(false);
   const [companyDropdownOpen, setCompanyDropdownOpen] = useState(false);
   const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
+  // Feedback visual mientras se espera el round-trip de /auth/switch-company que ahora
+  // corre ANTES de tocar activeCompany/activeBranch (ver handleCompanySelect y
+  // handleGlobalView).
+  const [switchingCompany, setSwitchingCompany] = useState(false);
 
   const isCompanyRestricted = !!userCompanyId;
   const isBranchRestricted = !!userBranchId;
@@ -129,21 +133,20 @@ export default function CompanySelector() {
     }
   }
 
-  const handleCompanySelect = (company: Company, preserveBranch = false) => {
-    setActiveCompany({ id: company.id, name: company.tradeName || company.legalName });
-    localStorage.setItem('active_company_id', company.id);
-    localStorage.setItem('active_company_name', company.tradeName || company.legalName);
-    if (!preserveBranch) {
-      setActiveBranch(null);
-      localStorage.removeItem('active_branch_id');
-      localStorage.removeItem('active_branch_name');
-    }
+  const handleCompanySelect = async (company: Company, preserveBranch = false) => {
+    setSwitchingCompany(true);
+    // Cargar sucursales no depende de la carrera de abajo (el backend filtra por el
+    // companyId explícito del query param, no por el contexto del JWT) — se dispara
+    // en paralelo, sin esperar el switch-company.
     loadBranches(company.id);
-    setCompanyDropdownOpen(false);
 
-    // Switch company context — best-effort, fire and forget. El backend ya puso las
-    // cookies httpOnly nuevas; el body solo trae el user actualizado.
-    api.post('/auth/switch-company', { companyId: company.id }).then((res: any) => {
+    // Await ANTES de tocar activeCompany/activeBranch — mismo motivo que
+    // handleGlobalView: si el store se actualiza primero, DashboardPage dispara su
+    // GET /dashboard/kpis en el mismo tick, con la cookie del JWT todavía apuntando al
+    // contexto anterior (otra empresa, o Vista Global) — el POST recién empieza su
+    // round-trip en ese momento y siempre pierde la carrera.
+    try {
+      const res: any = await api.post('/auth/switch-company', { companyId: company.id });
       const newUser = res.data?.user;
       if (newUser) {
         const modulosActivos = JSON.parse(localStorage.getItem('modulos_activos') || '[]');
@@ -159,7 +162,18 @@ export default function CompanySelector() {
           modulosActivos
         );
       }
-    }).catch(() => {});
+    } catch {}
+
+    setActiveCompany({ id: company.id, name: company.tradeName || company.legalName });
+    localStorage.setItem('active_company_id', company.id);
+    localStorage.setItem('active_company_name', company.tradeName || company.legalName);
+    if (!preserveBranch) {
+      setActiveBranch(null);
+      localStorage.removeItem('active_branch_id');
+      localStorage.removeItem('active_branch_name');
+    }
+    setCompanyDropdownOpen(false);
+    setSwitchingCompany(false);
   };
 
   function handleBranchSelect(branch: Branch) {
@@ -169,22 +183,19 @@ export default function CompanySelector() {
     setBranchDropdownOpen(false);
   }
 
-  function handleGlobalView() {
-    setActiveCompany(null);
-    setActiveBranch(null);
-    setBranches([]);
-    localStorage.removeItem('active_company_id');
-    localStorage.removeItem('active_company_name');
-    localStorage.removeItem('active_branch_id');
-    localStorage.removeItem('active_branch_name');
-    setCompanyDropdownOpen(false);
+  async function handleGlobalView() {
+    setSwitchingCompany(true);
 
-    // Switch company context a null — mismo fire-and-forget que handleCompanySelect.
-    // Sin esto, el JWT (cookie httpOnly) seguía firmado con el companyId de la última
-    // empresa elegida: X-Company-Id dejaba de mandarse acá, pero
-    // dashboard.controller.ts caía a req.user.companyId (ese JWT viejo) como fallback,
-    // así que Vista Global seguía filtrando por la empresa anterior.
-    api.post('/auth/switch-company', { companyId: null }).then((res: any) => {
+    // Await ANTES de tocar activeCompany/activeBranch — a propósito, en ese orden.
+    // Si se limpia el store primero (como estaba antes), el useEffect de
+    // DashboardPage reacciona al cambio de contexto y dispara su GET /dashboard/kpis
+    // en el mismo tick, con la cookie del JWT todavía vieja — este POST recién empieza
+    // su round-trip en ese momento, así que el GET siempre gana la carrera y sale sin
+    // X-Company-Id pero con req.user.companyId todavía apuntando a la empresa
+    // anterior (dashboard.controller.ts cae a ese fallback). Esperando el POST primero,
+    // la cookie ya está actualizada cuando recién ahí se dispara el refetch.
+    try {
+      const res: any = await api.post('/auth/switch-company', { companyId: null });
       const newUser = res.data?.user;
       if (newUser) {
         const modulosActivos = JSON.parse(localStorage.getItem('modulos_activos') || '[]');
@@ -200,7 +211,17 @@ export default function CompanySelector() {
           modulosActivos
         );
       }
-    }).catch(() => {});
+    } catch {}
+
+    setActiveCompany(null);
+    setActiveBranch(null);
+    setBranches([]);
+    localStorage.removeItem('active_company_id');
+    localStorage.removeItem('active_company_name');
+    localStorage.removeItem('active_branch_id');
+    localStorage.removeItem('active_branch_name');
+    setCompanyDropdownOpen(false);
+    setSwitchingCompany(false);
   }
 
   function handleViewAllBranches() {
@@ -271,32 +292,34 @@ export default function CompanySelector() {
               }}>
                 {/* Vista Global */}
                 <div
-                  onClick={handleGlobalView}
+                  onClick={switchingCompany ? undefined : handleGlobalView}
                   style={{
                     padding: '8px 12px',
                     fontSize: '12px',
                     color: !activeCompany ? '#F5F5F5' : '#9A9A9A',
-                    cursor: 'pointer',
-                    background: !activeCompany ? '#222222' : 'transparent'
+                    cursor: switchingCompany ? 'default' : 'pointer',
+                    background: !activeCompany ? '#222222' : 'transparent',
+                    opacity: switchingCompany ? 0.6 : 1,
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = '#222222'}
+                  onMouseEnter={(e) => { if (!switchingCompany) e.currentTarget.style.background = '#222222'; }}
                   onMouseLeave={(e) => e.currentTarget.style.background = !activeCompany ? '#222222' : 'transparent'}
                 >
-                  🌐 Vista Global
+                  {switchingCompany ? 'Cambiando…' : '🌐 Vista Global'}
                 </div>
 
                 {companies.map((company) => (
                   <div
                     key={company.id}
-                    onClick={() => handleCompanySelect(company)}
+                    onClick={switchingCompany ? undefined : () => handleCompanySelect(company)}
                     style={{
                       padding: '8px 12px',
                       fontSize: '12px',
                       color: activeCompany?.id === company.id ? '#F5F5F5' : '#9A9A9A',
-                      cursor: 'pointer',
-                      background: activeCompany?.id === company.id ? '#222222' : 'transparent'
+                      cursor: switchingCompany ? 'default' : 'pointer',
+                      background: activeCompany?.id === company.id ? '#222222' : 'transparent',
+                      opacity: switchingCompany ? 0.6 : 1,
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = '#222222'}
+                    onMouseEnter={(e) => { if (!switchingCompany) e.currentTarget.style.background = '#222222'; }}
                     onMouseLeave={(e) => e.currentTarget.style.background = activeCompany?.id === company.id ? '#222222' : 'transparent'}
                   >
                     {company.tradeName || company.legalName}
