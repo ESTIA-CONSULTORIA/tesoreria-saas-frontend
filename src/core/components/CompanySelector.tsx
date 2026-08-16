@@ -178,6 +178,29 @@ export default function CompanySelector() {
     localStorage.removeItem('active_branch_id');
     localStorage.removeItem('active_branch_name');
     setCompanyDropdownOpen(false);
+
+    // Switch company context a null — mismo fire-and-forget que handleCompanySelect.
+    // Sin esto, el JWT (cookie httpOnly) seguía firmado con el companyId de la última
+    // empresa elegida: X-Company-Id dejaba de mandarse acá, pero
+    // dashboard.controller.ts caía a req.user.companyId (ese JWT viejo) como fallback,
+    // así que Vista Global seguía filtrando por la empresa anterior.
+    api.post('/auth/switch-company', { companyId: null }).then((res: any) => {
+      const newUser = res.data?.user;
+      if (newUser) {
+        const modulosActivos = JSON.parse(localStorage.getItem('modulos_activos') || '[]');
+        useAuthStore.getState().login(
+          {
+            id: newUser.id,
+            email: newUser.email,
+            name: newUser.name,
+            roleCode: newUser.roleCode,
+            tenantId: newUser.tenantId,
+            companyId: null,
+          },
+          modulosActivos
+        );
+      }
+    }).catch(() => {});
   }
 
   function handleViewAllBranches() {

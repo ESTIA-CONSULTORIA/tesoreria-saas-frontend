@@ -232,13 +232,29 @@ export default function TopBar() {
     } catch {}
   }
 
-  function clearCtx() {
+  async function clearCtx() {
     setActiveCompany(null);
     setActiveBranch(null);
     ['active_company_id','active_company_name','active_branch_id','active_branch_name']
       .forEach(k => localStorage.removeItem(k));
     setCtxOpen(false);
     setCtxPhase('company');
+
+    // Mismo POST que pickBranch — sin esto, el JWT (cookie httpOnly) seguía firmado con
+    // el companyId de la última empresa elegida y dashboard.controller.ts caía a
+    // req.user.companyId como fallback en cuanto X-Company-Id dejaba de mandarse, así
+    // que Vista Global seguía filtrando por la empresa anterior.
+    try {
+      const r = await api.post('/auth/switch-company', { companyId: null });
+      const nu = r.data?.user;
+      if (nu) {
+        const mods = JSON.parse(localStorage.getItem('modulos_activos') || '[]');
+        useAuthStore.getState().login({
+          id: nu.id, email: nu.email, name: nu.name,
+          roleCode: nu.roleCode, tenantId: nu.tenantId, companyId: null,
+        }, mods);
+      }
+    } catch {}
   }
 
   const ctxLabel = activeCompany
