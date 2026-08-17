@@ -15,9 +15,11 @@ export default function EmployeeLogin() {
     setLoading(true);
     try {
       const res = await employeeApi.post("/auth/portal-login", { email, password });
-      const { access_token, user } = res.data;
-      if (!access_token) throw new Error("Sin token");
-      sessionStorage.setItem("employee_token", access_token);
+      // Desde la migración a cookies httpOnly, /auth/portal-login ya no manda
+      // access_token en el body (lo pone directo como cookie, mismo mecanismo que el
+      // login del ERP normal) — un 200 acá ya significa sesión creada. `user` solo se
+      // guarda para que la UI tenga algo que mostrar, no para autenticar nada.
+      const { user } = res.data;
       sessionStorage.setItem("employee_user", JSON.stringify(user));
       navigate("/employee/home");
     } catch (e: any) {
