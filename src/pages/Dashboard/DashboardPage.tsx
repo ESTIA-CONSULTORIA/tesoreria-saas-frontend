@@ -1,5 +1,5 @@
 import MainLayout from "../../core/layout/MainLayout";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../../core/api/api";
 import { useNavigate } from "react-router-dom";
 import DashboardInfoModal from "./DashboardInfoModal";
@@ -19,6 +19,17 @@ export default function DashboardPage() {
   const [infoOpen, setInfoOpen] = useState(false);
   const [pendingShifts, setPendingShifts] = useState<any[]>([]);
 
+  // Guard contra respuestas fuera de orden: cada llamada a loadData() se identifica con
+  // un id incremental. Si para cuando su GET /dashboard/kpis resuelve ya se disparó una
+  // llamada más nueva (cambió period/activeBranch/activeCompany mientras la vieja seguía
+  // en vuelo), esa respuesta vieja se ignora en vez de pisar con setKpis() el resultado
+  // ya correcto de la más reciente. Sin esto: seleccionar una sucursal y pasar rápido a
+  // Vista Global podía dejar dos requests en vuelo (uno scopeado a la sucursal, uno
+  // global) — si el de la sucursal volvía después (el global hace más queries, una por
+  // empresa del tenant, y puede tardar más), su resultado viejo terminaba pisando al
+  // global recién llegado.
+  const requestIdRef = useRef(0);
+
   const loadPendingShifts = useCallback(async () => {
     try {
       const response = await api.get("/pos/shifts", { params: { status: 'PENDIENTE_APROBACION' } });
@@ -29,17 +40,20 @@ export default function DashboardPage() {
   }, []);
 
   const loadData = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
     try {
       setLoading(true);
       setError("");
       // El interceptor de api.ts inyecta X-Company-Id y X-Branch-Id desde
       // localStorage automáticamente — getKpis() filtra por empresa/sucursal activa
       const res = await api.get('/dashboard/kpis', { params: { period } });
+      if (requestId !== requestIdRef.current) return; // ya hay una llamada más nueva en vuelo
       setKpis(res.data);
     } catch (e) {
+      if (requestId !== requestIdRef.current) return;
       setError("No fue posible cargar dashboard");
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) setLoading(false);
     }
   }, [period, activeBranch, activeCompany]);
 
