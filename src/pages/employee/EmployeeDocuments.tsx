@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import EmployeeLayout from "./EmployeeLayout";
 import { employeeApi } from "../../core/api/employeeApi";
 
@@ -20,12 +19,10 @@ const TIPO_ICONS: Record<string, string> = {
 };
 
 export default function EmployeeDocuments() {
-  const navigate = useNavigate();
   const [documents, setDocuments] = useState<HrDocument[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!sessionStorage.getItem("employee_token")) { navigate("/employee"); return; }
     employeeApi
       .get("/hr/portal/documents")
       .then((res) => setDocuments(res.data ?? []))

@@ -20,10 +20,15 @@ employeeApi.interceptors.request.use((config) => {
 employeeApi.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Sin redirect automático a propósito: cada pantalla ya maneja su propio 401
+    // (EmployeeHome/EmployeeProfile/EmployeeRequests navegan a /employee en su catch;
+    // EmployeeDocuments cae a su estado vacío). Un window.location.href acá encima
+    // pisaría esos mensajes/estados con un hard reload — y en check-in/check-out o los
+    // formularios de solicitudes, cortaría al usuario a mitad de una acción. Este Portal
+    // no tiene refresh token como el ERP normal, así que tampoco hay nada que reintentar
+    // acá — solo limpieza pasiva de la sesión cacheada.
     if (error.response?.status === 401) {
-      sessionStorage.removeItem("employee_token");
       sessionStorage.removeItem("employee_user");
-      window.location.href = "/employee";
     }
     return Promise.reject(error);
   }

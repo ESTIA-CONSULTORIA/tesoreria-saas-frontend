@@ -49,7 +49,6 @@ export default function EmployeeRequests() {
   const [formError, setFormError] = useState("");
 
   useEffect(() => {
-    if (!sessionStorage.getItem("employee_token")) { navigate("/employee"); return; }
     load();
   }, []);
 

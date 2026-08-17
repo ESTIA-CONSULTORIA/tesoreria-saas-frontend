@@ -37,7 +37,6 @@ export default function EmployeeProfile() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!sessionStorage.getItem("employee_token")) { navigate("/employee"); return; }
     employeeApi
       .get("/hr/portal/me")
       .then((res) => setEmployee(res.data))

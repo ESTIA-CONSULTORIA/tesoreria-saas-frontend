@@ -78,10 +78,7 @@ export default function EmployeeHome() {
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
 
-  const token = sessionStorage.getItem("employee_token");
-
   useEffect(() => {
-    if (!token) { navigate("/employee"); return; }
     Promise.all([
       employeeApi.get("/hr/portal/me"),
       employeeApi.get("/hr/portal/attendance-today"),
