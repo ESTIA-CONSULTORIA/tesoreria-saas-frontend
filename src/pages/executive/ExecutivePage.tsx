@@ -5,7 +5,7 @@ import ExecutiveDashboard from "./ExecutiveDashboard";
 import ExecutiveHome from "./ExecutiveHome";
 import ExecutiveReport from "./ExecutiveReport";
 import ExecutiveConfig from "./ExecutiveConfig";
-import { execApi } from "./execApi";
+import { execApi, execPublicApi } from "./execApi";
 import type { ExecTheme } from "./theme";
 
 export interface ExecConfig {
@@ -35,12 +35,17 @@ const BG: Record<ExecTheme, string> = {
 };
 
 export default function ExecutivePage() {
-  const [token, setToken] = useState<string | null>(
-    () => sessionStorage.getItem("executive_token"),
-  );
-  const [view, setView] = useState<View>(
-    () => (sessionStorage.getItem("executive_token") ? "dashboard" : "login"),
-  );
+  // Ya no hay token legible en JS (httpOnly) — la verdad es el bootstrap de abajo
+  // (GET /auth/executive-me), igual que App.tsx hace con GET /auth/me para el ERP normal.
+  // authChecked evita un flash a la pantalla de PIN mientras esa llamada sigue en vuelo.
+  const [authChecked, setAuthChecked] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [userName, setUserName] = useState("");
+  // Reemplaza el decode de JWT que hacía ExecutiveDashboard.tsx con atob(token...) — ya no
+  // hay token legible en JS, así que el tenantId viaja explícito desde el backend (login o
+  // bootstrap), no se extrae del lado del cliente.
+  const [sessionTenantId, setSessionTenantId] = useState<string>("");
+  const [view, setView] = useState<View>("login");
   const [activeModule, setActiveModule] = useState("");
   const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
@@ -55,13 +60,32 @@ export default function ExecutivePage() {
   // Separate displayTheme so ExecutiveConfig can preview theme changes before saving
   const [displayTheme, setDisplayTheme] = useState<ExecTheme>(() => config.theme);
 
+  // Bootstrap de sesión — GET /auth/executive-me confirma contra el backend si hay una
+  // cookie exec_access_token válida. Corre una sola vez al montar, igual que el bootstrap
+  // de App.tsx para el ERP normal.
+  useEffect(() => {
+    execPublicApi
+      .get("/auth/executive-me")
+      .then((r) => {
+        setAuthenticated(true);
+        setUserName(r.data?.user?.name || "");
+        setSessionTenantId(r.data?.user?.tenantId || "");
+        setView("dashboard");
+      })
+      .catch(() => {
+        setAuthenticated(false);
+        setView("login");
+      })
+      .finally(() => setAuthChecked(true));
+  }, []);
+
   // Config real del backend, compartida por tenant — localStorage es solo caché para
   // pintar rápido al abrir (lo que ya quedó de la sesión anterior en este dispositivo);
   // en cuanto responde el backend, esa es la fuente de verdad. Si no hay fila todavía
   // (tenant nunca guardó config) o falla la red, se queda con el default/caché local.
   useEffect(() => {
-    if (!token) return;
-    execApi(token)
+    if (!authenticated) return;
+    execApi()
       .get("/executive-config")
       .then((r) => {
         const data = r.data;
@@ -73,44 +97,56 @@ export default function ExecutivePage() {
         }
       })
       .catch(() => {});
-  }, [token]);
+  }, [authenticated]);
 
-  function onLogin(t: string, name?: string) {
-    sessionStorage.setItem("executive_token", t);
-    sessionStorage.setItem("exec_user_name", name || "");
-    setToken(t);
+  function onLogin(name?: string, tenantId?: string) {
+    // La cookie ya la puso el backend en la respuesta de /auth/executive-login — acá solo
+    // se actualiza el estado de la UI.
+    setAuthenticated(true);
+    setUserName(name || "");
+    setSessionTenantId(tenantId || "");
     setView("dashboard");
   }
 
-  function onLogout() {
-    sessionStorage.removeItem("executive_token");
-    setToken(null);
+  async function doLogout() {
+    // await obligatorio antes de limpiar estado/navegar — mismo fix que useAuthStore.ts
+    // logout() del ERP normal (sin esto, la navegación puede abortar la conexión antes de
+    // que el navegador procese el Set-Cookie de limpieza).
+    await execPublicApi.post("/auth/executive-logout").catch(() => {});
+    setAuthenticated(false);
+    setUserName("");
+    setSessionTenantId("");
     setView("login");
   }
 
+  function onLogout() {
+    doLogout();
+  }
+
   function onAuthError() {
-    sessionStorage.removeItem("executive_token");
-    setToken(null);
-    setView("login");
+    doLogout();
   }
 
   function onSaveConfig(c: ExecConfig) {
     setConfig(c);
     setDisplayTheme(c.theme);
     localStorage.setItem("executive_config", JSON.stringify(c));
-    if (token) {
-      execApi(token).put("/executive-config", c).catch(() => {});
+    if (authenticated) {
+      execApi().put("/executive-config", c).catch(() => {});
     }
   }
 
   let content: ReactNode;
 
-  if (!token || view === "login") {
+  if (!authChecked) {
+    content = null;
+  } else if (!authenticated || view === "login") {
     content = <ExecutiveLogin onLogin={onLogin} config={config} />;
   } else if (view === "dashboard") {
     content = (
       <ExecutiveDashboard
-        token={token}
+        userName={userName}
+        tenantId={sessionTenantId}
         config={config}
         companies={companies}
         selectedCompanyId={selectedCompanyId}
@@ -138,7 +174,7 @@ export default function ExecutivePage() {
     content = (
       <ExecutiveReport
         key={activeModule}
-        token={token}
+        tenantId={sessionTenantId}
         module={activeModule}
         config={config}
         selectedCompanyId={selectedCompanyId}
@@ -149,7 +185,6 @@ export default function ExecutivePage() {
   } else {
     content = (
       <ExecutiveHome
-        token={token}
         config={config}
         companies={companies}
         selectedCompanyId={selectedCompanyId}

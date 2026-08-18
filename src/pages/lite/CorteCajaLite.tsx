@@ -53,19 +53,32 @@ export default function CorteCajaLite() {
     }
   }, []);
 
-  const [token, setToken] = useState<string>(() => sessionStorage.getItem('lite_token') || '');
   const [shift, setShift] = useState<any>(() => {
     const s = sessionStorage.getItem('lite_shift');
     return s ? JSON.parse(s) : null;
   });
+  // lite_shift en sessionStorage es solo el indicio local para pintar rápido (optimista);
+  // ya no hay token legible en JS (httpOnly), así que la verdad real es el bootstrap de
+  // abajo (GET /pos/cashiers/me) — si no confirma, se vuelve a 'empresa'.
   const [screen, setScreen] = useState<Screen>(() => {
-    const hasSession = sessionStorage.getItem('lite_token') && sessionStorage.getItem('lite_shift');
-    return hasSession ? 'corte' : 'empresa';
+    const hasLocalHint = sessionStorage.getItem('lite_shift');
+    return hasLocalHint ? 'corte' : 'empresa';
   });
   const [selectedCompany, setSelectedCompany] = useState<any>(() => {
     const s = sessionStorage.getItem('lite_company');
     return s ? JSON.parse(s) : null;
   });
+
+  useEffect(() => {
+    if (!sessionStorage.getItem('lite_shift')) return;
+    axios.get(`${API}/pos/cashiers/me`, { withCredentials: true, headers: { 'x-session-scope': 'pos-lite' } })
+      .catch(() => {
+        sessionStorage.removeItem('lite_shift');
+        sessionStorage.removeItem('lite_company');
+        setShift(null);
+        setScreen('empresa');
+      });
+  }, []);
 
   const [companies, setCompanies] = useState<any[]>([]);
   const [pin, setPin] = useState('');
@@ -80,7 +93,7 @@ export default function CorteCajaLite() {
   const [newInsumo, setNewInsumo] = useState({ nombre: '', tipo: 'insumo', estado: 'proximo', notas: '' });
   const [savingInsumo, setSavingInsumo] = useState(false);
   const [showFondoModal, setShowFondoModal] = useState(false);
-  const [pendingNipData, setPendingNipData] = useState<{ cajero: string; accessToken: string; branchId: string | null } | null>(null);
+  const [pendingNipData, setPendingNipData] = useState<{ cajero: string; branchId: string | null } | null>(null);
   const [fondoInicialInput, setFondoInicialInput] = useState('');
 
   const activeFieldOrder = dynamicFields.map(f => f.key);
@@ -118,11 +131,12 @@ export default function CorteCajaLite() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [screen, activeField, inputValue]);
 
-  const finishLogin = async (currentShift: any, accessToken: string) => {
+  const finishLogin = async (currentShift: any) => {
     // Cargar campos configurables del corte
     try {
       const fieldsRes = await axios.get(`${API}/pos/corte-fields`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
+        withCredentials: true,
+        headers: { 'x-session-scope': 'pos-lite' },
       });
       const active = (fieldsRes.data as any[])
         .filter(f => f.isActive)
@@ -132,8 +146,6 @@ export default function CorteCajaLite() {
     } catch { /* usa FIELDS por defecto */ }
 
     setShift(currentShift);
-    setToken(accessToken);
-    sessionStorage.setItem('lite_token', accessToken);
     sessionStorage.setItem('lite_shift', JSON.stringify(currentShift));
     sessionStorage.setItem('lite_company', JSON.stringify(selectedCompany));
     setScreen('corte');
@@ -155,7 +167,7 @@ export default function CorteCajaLite() {
         nip: newPin,
         companyId: selectedCompany.id,
         tenantId,
-      });
+      }, { withCredentials: true });
     } catch {
       setError('PIN incorrecto');
       setPin('');
@@ -163,7 +175,6 @@ export default function CorteCajaLite() {
       return;
     }
 
-    const accessToken = loginRes.data.access_token;
     const cajeroId = loginRes.data.user?.id;
     // sucursal real del cajero (User.branchId), no la empresa — Company no tiene branchId,
     // usar selectedCompany.id como sucursal guardaba turnos con el id de la empresa.
@@ -172,7 +183,8 @@ export default function CorteCajaLite() {
     try {
       const shiftRes = await axios.get(`${API}/pos/shifts/open`, {
         params: { cajero: cajeroId, sucursalId: cajeroBranchId },
-        headers: { Authorization: `Bearer ${accessToken}` },
+        withCredentials: true,
+        headers: { 'x-session-scope': 'pos-lite' },
       });
       const shiftData = shiftRes.data;
       if (shiftData && typeof shiftData === 'object' && shiftData.id && shiftData.cajero === cajeroId) {
@@ -180,7 +192,7 @@ export default function CorteCajaLite() {
           const d = shiftData.precorteDeclaracion;
           setTotales({ efectivo: d.efectivo || 0, tarjeta: d.tarjeta || 0, transferencia: d.transferencia || 0, plataformas: d.plataformas || 0, promociones: d.promociones || 0, cortesia: d.cortesia || 0, descuento: d.descuento || 0, gasto: d.gasto || 0 });
         }
-        await finishLogin(shiftData, accessToken);
+        await finishLogin(shiftData);
         return;
       }
     } catch {
@@ -188,7 +200,7 @@ export default function CorteCajaLite() {
     }
 
     // No hay turno abierto: pedir fondo inicial de caja antes de abrirlo
-    setPendingNipData({ cajero: cajeroId, accessToken, branchId: cajeroBranchId });
+    setPendingNipData({ cajero: cajeroId, branchId: cajeroBranchId });
     setFondoInicialInput('');
     setShowFondoModal(true);
     setLoading(false);
@@ -205,9 +217,9 @@ export default function CorteCajaLite() {
         sucursalId: pendingNipData.branchId,
         tenantId,
         fondoInicial,
-      }, { headers: { Authorization: `Bearer ${pendingNipData.accessToken}` } });
+      }, { withCredentials: true, headers: { 'x-session-scope': 'pos-lite' } });
       setShowFondoModal(false);
-      await finishLogin(openRes.data, pendingNipData.accessToken);
+      await finishLogin(openRes.data);
       setPendingNipData(null);
     } catch (e2: any) {
       const msg = e2?.response?.data?.message || e2?.message || 'Error desconocido';
@@ -248,22 +260,24 @@ export default function CorteCajaLite() {
     }
   };
 
-  const handleBloquear = () => {
-    sessionStorage.removeItem('lite_token');
+  const handleBloquear = async () => {
+    // await antes de limpiar/navegar — mismo fix que useAuthStore.ts logout() del ERP
+    // normal: sin esperar la respuesta, la navegación puede abortar la conexión antes de
+    // que el navegador procese el Set-Cookie de limpieza, dejando la cookie viva.
+    await axios.post(`${API}/pos/cashiers/logout`, {}, { withCredentials: true }).catch(() => {});
     sessionStorage.removeItem('lite_shift');
     sessionStorage.removeItem('lite_company');
-    setToken('');
     setShift(null);
     setPin('');
     setError('');
     setScreen('pin');
   };
 
+  const POS_LITE_AUTH = { withCredentials: true as const, headers: { 'x-session-scope': 'pos-lite' } };
+
   const loadInsumos = async () => {
     try {
-      const res = await axios.get(`${API}/pos/insumo-alerts/all`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(`${API}/pos/insumo-alerts/all`, POS_LITE_AUTH);
       const all = Array.isArray(res.data) ? res.data : [];
       setInsumos(all.filter((i: any) => i.estado !== 'disponible'));
     } catch {}
@@ -276,7 +290,7 @@ export default function CorteCajaLite() {
       await axios.post(`${API}/pos/insumo-alerts`, {
         ...newInsumo,
         companyId: selectedCompany?.id,
-      }, { headers: { Authorization: `Bearer ${token}` } });
+      }, POS_LITE_AUTH);
       setNewInsumo({ nombre: '', tipo: 'insumo', estado: 'proximo', notas: '' });
       await loadInsumos();
     } catch {}
@@ -285,15 +299,13 @@ export default function CorteCajaLite() {
 
   const updateInsumoEstado = async (id: string, estado: string) => {
     try {
-      await axios.put(`${API}/pos/insumo-alerts/${id}`, { estado }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.put(`${API}/pos/insumo-alerts/${id}`, { estado }, POS_LITE_AUTH);
       await loadInsumos();
     } catch {}
   };
 
   const guardarCorte = async () => {
-    if (!shift || !token) {
+    if (!shift) {
       setError('Error: sesión inválida. Vuelve a ingresar tu PIN.');
       return;
     }
@@ -305,12 +317,14 @@ export default function CorteCajaLite() {
         debitoDeclarado: totales.tarjeta,
         transferenciaDeclarada: totales.transferencia,
         valesDeclarados: totales.cortesia,
-      }, { headers: { Authorization: `Bearer ${token}` } });
+      }, POS_LITE_AUTH);
       await axios.put(`${API}/pos/shifts/${shift.id}/close`, {
         efectivoContado: totales.efectivo,
         notas: `Tarjeta: $${totales.tarjeta} / Transferencia: $${totales.transferencia} / Plataformas: $${totales.plataformas} / Promociones: $${totales.promociones} / Cortesías: $${totales.cortesia} / Descuentos: $${totales.descuento} / Gastos: $${totales.gasto}`,
-      }, { headers: { Authorization: `Bearer ${token}` } });
-      sessionStorage.removeItem('lite_token');
+      }, POS_LITE_AUTH);
+      // await antes de limpiar/navegar — mismo fix que useAuthStore.ts logout() del ERP
+      // normal (ver handleBloquear más arriba).
+      await axios.post(`${API}/pos/cashiers/logout`, {}, { withCredentials: true }).catch(() => {});
       sessionStorage.removeItem('lite_shift');
       sessionStorage.removeItem('lite_company');
       setScreen('confirmacion');

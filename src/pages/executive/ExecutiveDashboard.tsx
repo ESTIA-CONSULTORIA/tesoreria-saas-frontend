@@ -6,7 +6,8 @@ import type { ExecConfig } from "./ExecutivePage";
 import type { Company } from "./ExecutivePage";
 
 interface Props {
-  token: string;
+  userName: string;
+  tenantId: string;
   config: ExecConfig;
   companies: Company[];
   selectedCompanyId: string | null;
@@ -35,7 +36,7 @@ function companyName(c: Company): string {
 }
 
 export default function ExecutiveDashboard({
-  token, config, companies,
+  userName: userNameProp, tenantId, config, companies,
   onSelectCompany, onCompaniesLoaded, onViewModules, onLogout, onAuthError,
 }: Props) {
   const t = getTheme(config.theme);
@@ -58,10 +59,8 @@ export default function ExecutiveDashboard({
     async function load() {
       let lite = false;
       try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const tid: string = payload.tenantId || '';
-        if (tid) {
-          const r = await execApi(token).get(`/tenants/${tid}`);
+        if (tenantId) {
+          const r = await execApi().get(`/tenants/${tenantId}`);
           const plan: string = r.data?.plan || '';
           lite = plan === 'LITE_CORTE' || plan === 'LITE_POS';
           if (!cancelled) setIsLite(lite);
@@ -73,7 +72,7 @@ export default function ExecutiveDashboard({
 
       try {
         if (lite) {
-          const shiftsRes = await execApi(token).get('/pos/shifts', { params: { limit: 100 } });
+          const shiftsRes = await execApi().get('/pos/shifts', { params: { limit: 100 } });
           const rawData = shiftsRes.data;
           const shifts = Array.isArray(rawData) ? rawData : Array.isArray(rawData?.value) ? rawData.value : [];
           const shiftTotal = (s: any): number => {
@@ -107,7 +106,7 @@ export default function ExecutiveDashboard({
           const totalVenta = shifts.reduce((sum: number, s: any) => sum + shiftTotal(s), 0);
           if (!cancelled) setKpis({ venta: totalVenta, costo: 0, gasto: 0, flujo: totalVenta });
         } else {
-          const eApi = execApi(token);
+          const eApi = execApi();
           const [kpisData, costData] = await Promise.all([
             eApi.get("/dashboard/kpis").then((r) => r.data).catch(() => ({})),
             eApi.get("/costs/cost-of-sales").then((r) => r.data).catch(() => null),
@@ -135,9 +134,9 @@ export default function ExecutiveDashboard({
     }
     load();
     return () => { cancelled = true; };
-  }, [token]);
+  }, [tenantId]);
 
-  const userName = (sessionStorage.getItem("exec_user_name") || "").replace(/\.\s*$/, '').trim();
+  const userName = (userNameProp || "").replace(/\.\s*$/, '').trim();
 
   // Real-time clock — refresh every 60 s
   useEffect(() => {
@@ -150,16 +149,15 @@ export default function ExecutiveDashboard({
   const clockLabel = `${timeStr} · ${dateStr}`;
 
   useEffect(() => {
-    if (!token) return;
-    execApi(token).get('/pos/insumo-alerts')
+    execApi().get('/pos/insumo-alerts')
       .then(r => setInsumoAlerts(Array.isArray(r.data) ? r.data : []))
       .catch(() => {});
-  }, [token]);
+  }, []);
 
   // Load companies once
   useEffect(() => {
     if (companies.length > 0) return;
-    execApi(token)
+    execApi()
       .get("/companies")
       .then((r) => {
         const list = Array.isArray(r.data) ? r.data : [];

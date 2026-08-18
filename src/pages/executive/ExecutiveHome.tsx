@@ -6,7 +6,6 @@ import type { ExecConfig } from "./ExecutivePage";
 import type { Company } from "./ExecutivePage";
 
 interface Props {
-  token: string;
   config: ExecConfig;
   selectedCompanyId: string | null;
   companies: Company[];

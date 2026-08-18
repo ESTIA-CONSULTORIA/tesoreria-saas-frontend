@@ -14,7 +14,7 @@ import { MODULES, fmtValue } from "./modules";
 import type { ExecConfig } from "./ExecutivePage";
 
 interface Props {
-  token: string;
+  tenantId: string;
   module: string;
   config: ExecConfig;
   selectedCompanyId: string | null;
@@ -38,7 +38,7 @@ function fmt(v: number) {
 }
 
 export default function ExecutiveReport({
-  token, module, config, selectedCompanyId, onBack, onAuthError,
+  tenantId, module, config, selectedCompanyId, onBack, onAuthError,
 }: Props) {
   const t = getTheme(config.theme);
   const modDef = MODULES.find((m) => m.key === module) ?? MODULES[0];
@@ -60,7 +60,7 @@ export default function ExecutiveReport({
   const showChart = module === "FLUJO" && chartDays !== null;
 
   useEffect(() => {
-    const eApi = execApi(token, selectedCompanyId);
+    const eApi = execApi(selectedCompanyId);
     setLoading(true);
     setError("");
     setChartDays(null);
@@ -75,10 +75,8 @@ export default function ExecutiveReport({
         // Detect LITE plan
         let lite = false;
         try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          const tid: string = payload.tenantId || '';
-          if (tid) {
-            const r = await eApi.get(`/tenants/${tid}`);
+          if (tenantId) {
+            const r = await eApi.get(`/tenants/${tenantId}`);
             const plan: string = r.data?.plan || '';
             lite = plan === 'LITE_CORTE' || plan === 'LITE_POS';
             setIsLite(lite);
@@ -521,7 +519,7 @@ export default function ExecutiveReport({
     }
 
     load();
-  }, [token, module, period, selectedCompanyId]);
+  }, [tenantId, module, period, selectedCompanyId]);
 
   return (
     <div
