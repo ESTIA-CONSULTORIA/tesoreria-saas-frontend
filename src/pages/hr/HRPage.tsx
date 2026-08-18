@@ -26,6 +26,7 @@ interface Employee {
   deducciones: number;
   status: string;
   shiftId?: string;
+  userId?: string; // vínculo opcional a un User del sistema (portal empleado)
   // Datos personales
   domicilio?: string;
   colonia?: string;
@@ -79,6 +80,7 @@ const EMPTY_EMP: Partial<Employee> = {
   salarioDiarioIntegrado: 0, claveRiesgoTrabajo: "",
   imssNumber: "", banco: "", clabe: "", periodoPago: "QUINCENAL",
   fechaNacimiento: "", genero: "M",
+  userId: "", // "" = Sin vincular
 };
 
 function calcPeriodo(sd: number, periodo: string): number {
@@ -129,6 +131,7 @@ export default function HRPage() {
   }, [searchParams]);
 
   const [employees, setEmployees]           = useState<Employee[]>([]);
+  const [systemUsers, setSystemUsers]       = useState<{ id: string; email: string; name?: string }[]>([]);
   const [loading, setLoading]               = useState(false);
   const [error, setError]                   = useState("");
   const [showEmpModal, setShowEmpModal]     = useState(false);
@@ -227,6 +230,7 @@ export default function HRPage() {
     loadPayrollRuns();
     loadCajas();
     loadCatalog();
+    loadSystemUsers();
   }, []);
 
   useEffect(() => {
@@ -238,6 +242,13 @@ export default function HRPage() {
   useEffect(() => {
     if (tab === "asistencia" && employees.length > 0) loadPeriodAttendance();
   }, [attendancePeriod, employees]);
+
+  async function loadSystemUsers() {
+    try {
+      const res = await api.get("/users", { headers });
+      setSystemUsers(Array.isArray(res.data) ? res.data : []);
+    } catch { /* selector queda vacío, no bloquea el resto del alta */ }
+  }
 
   async function loadEmployees() {
     setLoading(true);
@@ -1880,6 +1891,22 @@ export default function HRPage() {
                     <select value={editingEmp.status ?? "ACTIVO"} onChange={(e) => setEditingEmp((p) => ({ ...p, status: e.target.value }))} className={inp}>
                       <option value="ACTIVO">Activo</option><option value="BAJA">Baja</option><option value="VACACIONES">Vacaciones</option>
                     </select>
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-xs text-slate-400 mb-1">Usuario vinculado (opcional)</label>
+                    <select
+                      value={editingEmp.userId ?? ""}
+                      onChange={(e) => setEditingEmp((p) => ({ ...p, userId: e.target.value }))}
+                      className={inp}
+                    >
+                      <option value="">— Sin vincular —</option>
+                      {systemUsers
+                        .filter((u) => u.id === editingEmp.userId || !employees.some((e) => e.userId === u.id && e.id !== (editingEmp as any).id))
+                        .map((u) => (
+                          <option key={u.id} value={u.id}>{u.name ? `${u.name} (${u.email})` : u.email}</option>
+                        ))}
+                    </select>
+                    <p className="text-xs text-slate-500 mt-1">Solo necesario si esta persona debe iniciar sesión en el sistema (portal empleado, checador, etc.). Los usuarios ya vinculados a otro empleado no aparecen en la lista.</p>
                   </div>
                 </div>
               )}
