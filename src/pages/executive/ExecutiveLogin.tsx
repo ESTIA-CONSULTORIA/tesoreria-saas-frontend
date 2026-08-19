@@ -10,6 +10,7 @@ interface Props {
 
 const STORAGE_KEY = "exec_tenant_id";
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "del"];
+const isUUID = (v: string) => /^[0-9a-f-]{36}$/.test(v);
 
 export default function ExecutiveLogin({ onLogin, config }: Props) {
   const t = getTheme(config?.theme || "dark");
@@ -28,17 +29,31 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
     return localStorage.getItem(STORAGE_KEY) || localStorage.getItem("tenant_id") || "";
   });
 
+  // resolving/resolveError: antes, esta resolución corría en paralelo con el teclado del
+  // PIN sin ningún gate — si el usuario tecleaba el PIN antes de que volviera la respuesta,
+  // submit() mandaba el slug crudo como tenantId (nunca el UUID resuelto), y un fallo acá
+  // se tragaba en silencio (.catch(() => {})). Con esto, el teclado queda deshabilitado
+  // mientras resolving es true, y cualquier fallo (de red o "no encontrado") queda visible.
+  const [resolving, setResolving] = useState(() => !!tenantId && !isUUID(tenantId));
+  const [resolveError, setResolveError] = useState("");
+
   useEffect(() => {
-    const isUUID = /^[0-9a-f-]{36}$/.test(tenantId);
-    if (!isUUID && tenantId) {
-      execPublicApi.get(`/tenants/resolve/${encodeURIComponent(tenantId)}`)
-        .then(r => {
-          if (r.data?.id) {
-            setTenantId(r.data.id);
-            localStorage.setItem(STORAGE_KEY, r.data.id);
-          }
-        }).catch(() => {});
-    }
+    if (isUUID(tenantId) || !tenantId) return;
+    setResolving(true);
+    setResolveError("");
+    execPublicApi.get(`/tenants/resolve/${encodeURIComponent(tenantId)}`)
+      .then(r => {
+        if (r.data?.id) {
+          setTenantId(r.data.id);
+          localStorage.setItem(STORAGE_KEY, r.data.id);
+        } else {
+          setResolveError("No se encontró la empresa. Verifica el enlace.");
+        }
+      })
+      .catch(() => {
+        setResolveError("No se pudo verificar la empresa. Intenta de nuevo.");
+      })
+      .finally(() => setResolving(false));
   }, []);
 
   useEffect(() => {
@@ -61,6 +76,13 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
 
   async function submit(p: string) {
     if (!tenantId) { setError("Empresa no configurada"); setPin(""); return; }
+    if (!isUUID(tenantId)) {
+      // No debería poder llegar acá (press() ya bloquea), pero por si acaso — nunca mandar
+      // un slug sin resolver como tenantId al backend.
+      setError("Empresa no verificada todavía. Espera un momento e intenta de nuevo.");
+      setPin("");
+      return;
+    }
     setLoading(true);
     setError("");
     try {
@@ -79,7 +101,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
   }
 
   function press(k: string) {
-    if (loading) return;
+    if (loading || resolving) return;
     if (k === "del") { setPin((p) => p.slice(0, -1)); return; }
     const next = pin + k;
     setPin(next);
@@ -168,7 +190,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
             textTransform: "uppercase",
           }}
         >
-          Acceso Ejecutivo
+          {resolving ? "Verificando empresa…" : "Acceso Ejecutivo"}
         </p>
 
         {/* PIN dots */}
@@ -188,7 +210,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
           ))}
         </div>
 
-        {error && (
+        {(error || resolveError) && (
           <p
             style={{
               color: "#EF4444",
@@ -198,7 +220,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
               marginTop: -4,
             }}
           >
-            {error}
+            {resolveError || error}
           </p>
         )}
       </div>
@@ -232,7 +254,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
                   onPointerDown={() => setPressedKey(k)}
                   onPointerUp={() => setPressedKey(null)}
                   onPointerLeave={() => setPressedKey(null)}
-                  disabled={loading}
+                  disabled={loading || resolving}
                   style={{
                     background: "none",
                     border: "none",
@@ -240,7 +262,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
                     fontSize: k === "del" ? "1.3rem" : "1.8rem",
                     fontWeight: 300,
                     fontFamily: "'Inter', sans-serif",
-                    cursor: loading ? "wait" : "pointer",
+                    cursor: loading || resolving ? "wait" : "pointer",
                     WebkitTapHighlightColor: "transparent",
                     outline: "none",
                     opacity: pressedKey === k ? 0.3 : 1,
