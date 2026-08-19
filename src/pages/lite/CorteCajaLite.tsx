@@ -90,7 +90,11 @@ export default function CorteCajaLite() {
   const [error, setError] = useState('');
   const [showInsumos, setShowInsumos] = useState(false);
   const [insumos, setInsumos] = useState<any[]>([]);
-  const [newInsumo, setNewInsumo] = useState({ nombre: '', tipo: 'insumo', estado: 'proximo', notas: '' });
+  const [newInsumo, setNewInsumo] = useState({ nombre: '', tipo: 'insumo', estado: 'proximo', notas: '', insumoId: '' });
+  // Catálogo real del tenant para el selector — id/nombre únicamente (GET /pos/insumo-alerts/insumos-lista,
+  // sin el gate de @Modulo('costos')). Si viene vacío (tenant sin insumos cargados, ej. BOCATTA), el
+  // formulario cae a texto libre como antes — no bloquea el aviso por falta de catálogo.
+  const [insumosCatalogo, setInsumosCatalogo] = useState<{ id: string; nombre: string }[]>([]);
   const [savingInsumo, setSavingInsumo] = useState(false);
   const [showFondoModal, setShowFondoModal] = useState(false);
   const [pendingNipData, setPendingNipData] = useState<{ cajero: string; branchId: string | null } | null>(null);
@@ -283,15 +287,25 @@ export default function CorteCajaLite() {
     } catch {}
   };
 
+  const loadInsumosCatalogo = async () => {
+    try {
+      const res = await axios.get(`${API}/pos/insumo-alerts/insumos-lista`, POS_LITE_AUTH);
+      setInsumosCatalogo(Array.isArray(res.data) ? res.data : []);
+    } catch {
+      setInsumosCatalogo([]); // fallback silencioso a texto libre, mismo criterio que el resto de esta pantalla
+    }
+  };
+
   const saveInsumo = async () => {
     if (!newInsumo.nombre.trim()) return;
     setSavingInsumo(true);
     try {
       await axios.post(`${API}/pos/insumo-alerts`, {
         ...newInsumo,
+        insumoId: newInsumo.insumoId || undefined, // '' (modo texto libre) no se manda como insumoId real
         companyId: selectedCompany?.id,
       }, POS_LITE_AUTH);
-      setNewInsumo({ nombre: '', tipo: 'insumo', estado: 'proximo', notas: '' });
+      setNewInsumo({ nombre: '', tipo: 'insumo', estado: 'proximo', notas: '', insumoId: '' });
       await loadInsumos();
     } catch {}
     setSavingInsumo(false);
@@ -530,7 +544,7 @@ export default function CorteCajaLite() {
                 }}>
                   BLOQUEAR
                 </button>
-                <button onClick={() => { setShowInsumos(true); loadInsumos(); }} style={{
+                <button onClick={() => { setShowInsumos(true); loadInsumos(); loadInsumosCatalogo(); }} style={{
                   background: '#f1f5f9', border: '1px solid #e2e8f0',
                   color: '#475569', fontSize: 12, padding: '6px 14px',
                   borderRadius: 8, cursor: 'pointer', letterSpacing: '0.05em',
@@ -637,12 +651,29 @@ export default function CorteCajaLite() {
                 {/* Formulario nuevo aviso */}
                 <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 14, padding: 16, marginBottom: 20 }}>
                   <div style={{ fontSize: 12, color: '#64748b', letterSpacing: '0.08em', marginBottom: 12, fontWeight: 600 }}>NUEVO AVISO</div>
-                  <input
-                    placeholder="Nombre del insumo o producto"
-                    value={newInsumo.nombre}
-                    onChange={e => setNewInsumo(p => ({ ...p, nombre: e.target.value }))}
-                    style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid #e2e8f0', background: '#ffffff', color: '#111827', fontSize: 15, marginBottom: 10, boxSizing: 'border-box' }}
-                  />
+                  {insumosCatalogo.length > 0 ? (
+                    <select
+                      value={newInsumo.insumoId}
+                      onChange={e => {
+                        const id = e.target.value;
+                        const found = insumosCatalogo.find(i => i.id === id);
+                        setNewInsumo(p => ({ ...p, insumoId: id, nombre: found?.nombre || '' }));
+                      }}
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid #e2e8f0', background: '#ffffff', color: '#111827', fontSize: 15, marginBottom: 10, boxSizing: 'border-box' }}
+                    >
+                      <option value="">Selecciona un insumo...</option>
+                      {insumosCatalogo.map(i => (
+                        <option key={i.id} value={i.id}>{i.nombre}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      placeholder="Nombre del insumo o producto"
+                      value={newInsumo.nombre}
+                      onChange={e => setNewInsumo(p => ({ ...p, nombre: e.target.value }))}
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid #e2e8f0', background: '#ffffff', color: '#111827', fontSize: 15, marginBottom: 10, boxSizing: 'border-box' }}
+                    />
+                  )}
                   <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
                     {['insumo', 'producto'].map(tp => (
                       <button key={tp} onClick={() => setNewInsumo(p => ({ ...p, tipo: tp }))} style={{
