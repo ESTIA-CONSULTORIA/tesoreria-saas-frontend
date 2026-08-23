@@ -1,15 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useBrandingStore } from '../core/store/useBrandingStore';
 
-const ESTIA_LOGO = 'https://res.cloudinary.com/dv8wvstg2/image/upload/v1782465248/estia/brand/estia-logo.png';
+const ESTIA_LOGO = '/logo-estia-splash.png';
 
 interface Props {
   onDone: () => void;
 }
 
 export function OutroSplash({ onDone }: Props) {
-  const { logoUrl } = useBrandingStore();
-  const logo = logoUrl || ESTIA_LOGO;
   const [opacity, setOpacity] = useState(0);
 
   useEffect(() => {
@@ -33,15 +30,13 @@ export function OutroSplash({ onDone }: Props) {
         background: 'radial-gradient(ellipse at 50% 45%, #0d1829 0%, #0a0c12 70%)',
       }} />
       <img
-        src={logo}
-        alt="Logo"
+        src={ESTIA_LOGO}
+        alt="ESTIA Systems"
         style={{
-          width: 140, height: 140,
+          width: 250, height: 'auto',
           objectFit: 'contain',
           position: 'relative', zIndex: 1,
           opacity: 0.8,
-          WebkitMaskImage: 'radial-gradient(ellipse 85% 85% at 50% 50%, black 55%, transparent 80%)',
-          maskImage: 'radial-gradient(ellipse 85% 85% at 50% 50%, black 55%, transparent 80%)',
           filter: 'drop-shadow(0 0 20px rgba(60,120,200,0.3))',
         }}
       />

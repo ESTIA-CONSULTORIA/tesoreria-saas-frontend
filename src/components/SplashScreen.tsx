@@ -115,23 +115,21 @@ export function SplashScreen({ onDone }: Props) {
         {/* Halo detrás del logo */}
         <div style={{
           position: 'absolute',
-          width: 280, height: 280,
+          width: 520, height: 300,
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(45,106,142,0.18) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse, rgba(45,106,142,0.18) 0%, transparent 70%)',
           animation: 'pulse-halo 2.5s ease-in-out infinite',
         }} />
 
         <img
           src={ESTIA_LOGO}
-          alt="ESTIA"
+          alt="ESTIA Systems"
           style={{
-            width: 260, height: 260,
+            width: 460, height: 'auto',
             objectFit: 'contain',
             position: 'relative', zIndex: 1,
             filter: 'drop-shadow(0 0 40px rgba(60,120,200,0.4)) drop-shadow(0 0 80px rgba(30,80,150,0.2))',
             animation: 'logo-float 4s ease-in-out infinite',
-            WebkitMaskImage: 'radial-gradient(ellipse 85% 85% at 50% 50%, black 55%, transparent 80%)',
-            maskImage: 'radial-gradient(ellipse 85% 85% at 50% 50%, black 55%, transparent 80%)',
           }}
         />
 
