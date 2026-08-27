@@ -92,6 +92,15 @@ interface PaymentForm {
   autorizadoPor?: string;
 }
 
+// INVARIANTE: esta pantalla NUNCA debe envolverse en <MainLayout> (el wrapper que
+// pone <TopBar/> — el menú lateral del ERP: Dashboard, RH, Tesorería, etc.). Es la
+// terminal de venta, para ADMIN/SOPORTE re-identificado por PIN o para un CAJERO
+// autenticado directo desde el tab "Punto de Venta" de LoginPage.tsx — en ambos
+// casos debe verse a pantalla completa, sin navegación del ERP alrededor. Si en el
+// futuro esta pantalla necesita algún tipo de navegación propia, debe ser un
+// componente propio de POS, no MainLayout — confirmado con evidencia real que hoy
+// POSPage no lo importa (grep: cero matches de MainLayout/TopBar/sidebar en este
+// archivo) y así debe seguir.
 export default function POSPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>("terminal");

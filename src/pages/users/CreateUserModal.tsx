@@ -109,6 +109,23 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
       const fullName = `${firstName} ${lastName}`.trim();
 
       const isExecRole = roleCode === "ADMIN" || roleCode === "GERENTE";
+      const isCajero = roleCode === "CAJERO";
+
+      // El PIN de POS es literalmente el mismo campo password — POST /pos/cashiers/nip
+      // (backend) compara el NIP contra este mismo hash vía bcrypt.compare, no existe una
+      // columna separada. Se exige exactamente 4 dígitos numéricos solo para CAJERO, para
+      // que no quede un cajero con una contraseña larga que nunca podría teclear en el
+      // NIP-pad de 4 dígitos de LoginPage.tsx/POSPage.tsx.
+      if (isCajero && password && !/^\d{4}$/.test(password)) {
+        setError("El PIN del cajero debe ser de exactamente 4 dígitos numéricos.");
+        setLoading(false);
+        return;
+      }
+      if (isCajero && !user && !password) {
+        setError("El PIN del cajero es obligatorio (4 dígitos numéricos).");
+        setLoading(false);
+        return;
+      }
 
       if (user) {
         const payload: Record<string, any> = {
@@ -216,27 +233,61 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
             />
 
             {!user && (
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Contraseña"
-                required
-                className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
-              />
-            )}
-
-            {user && (
-              <div>
-                <label className="block text-xs text-slate-400 mb-1">Nuevo password / PIN (dejar vacío para no cambiar)</label>
+              roleCode === "CAJERO" ? (
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">PIN de acceso al POS (4 dígitos)</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]{4}"
+                    maxLength={4}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                    placeholder="1234"
+                    required
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Es lo que teclea el cajero en el NIP-pad del POS — no un password separado.</p>
+                </div>
+              ) : (
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Dejar vacío para mantener el actual"
+                  placeholder="Contraseña"
+                  required
                   className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
                 />
-              </div>
+              )
+            )}
+
+            {user && (
+              roleCode === "CAJERO" ? (
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Nuevo PIN de POS (4 dígitos — dejar vacío para no cambiar)</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]{4}"
+                    maxLength={4}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                    placeholder="Dejar vacío para mantener el actual"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Nuevo password / PIN (dejar vacío para no cambiar)</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Dejar vacío para mantener el actual"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+              )
             )}
 
             <select

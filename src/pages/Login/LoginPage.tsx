@@ -1,14 +1,27 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
 import { useLoginConfigStore } from "../../core/store/useLoginConfigStore";
 import { useBrandingStore } from "../../core/store/useBrandingStore";
 
+// Clave dedicada y exclusiva del tab "Punto de Venta" — a propósito NO es 'tenant_id'.
+// Esa otra clave la escribe useAuthStore.login() (sesión central del ERP: login de
+// "Sistema Principal", el bootstrap de App.tsx vía /auth/me, y también el propio login
+// por NIP), así que puede traer el tenant de una prueba/sesión de admin completamente
+// ajena a esta terminal — confirmado con evidencia real: un dispositivo usado hoy para
+// probar Vista Ejecutiva/Sistema Principal contra un tenant demo saltaba el selector de
+// empresa y entraba directo al PIN con el tenant equivocado, porque el fallback leía
+// 'tenant_id' y encontraba ahí el residuo de esa prueba ajena. Esta clave solo la
+// escribe este flujo (resolución por ?tenant= en la URL, o confirmación manual del
+// selector de empresa) y no se lee en ningún otro lado del sistema.
+const POS_TENANT_STORAGE_KEY = 'pos_login_tenant_id';
+
 export default function LoginPage() {
   const { login } = useAuthStore();
   const { config, loadConfig } = useLoginConfigStore();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   useBrandingStore(); // keep store subscribed
 
   const [email, setEmail] = useState("");
@@ -18,6 +31,88 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [mode, setMode] = useState<"main" | "pos" | null>(null);
+
+  // Tenant para el tab "Punto de Venta" — un cajero puede llegar a /login sin haber
+  // tenido nunca una sesión ERP en este dispositivo. Mismo patrón que CorteCajaLite.tsx:
+  // ?tenant=slug-o-uuid en la URL (para terminales dedicadas, dejadas abiertas en un
+  // bookmark) con fallback a localStorage — pero con clave propia (POS_TENANT_STORAGE_KEY),
+  // nunca 'tenant_id' (ver comentario arriba del componente).
+  const [posTenantId, setPosTenantId] = useState<string>(
+    () => localStorage.getItem(POS_TENANT_STORAGE_KEY) || '',
+  );
+  const [posTenantName, setPosTenantName] = useState('');
+
+  // Selector de empresa manual — solo entra en juego cuando ni la URL (?tenant=) ni
+  // localStorage resolvieron un tenant (dispositivo nuevo, sin bookmark provisionado).
+  // Texto + confirmación, no dropdown: un GET /tenants — sin filtro — expondría el
+  // roster completo de clientes de ESTIA a cualquiera que abra /login. En cambio
+  // /tenants/resolve/:slug (ya público, ya en uso por CorteCajaLite.tsx) solo devuelve
+  // un tenant a la vez y solo si ya sabes su nombre/slug — no permite enumerar clientes.
+  const [posCompanyInput, setPosCompanyInput] = useState('');
+  const [posResolving, setPosResolving] = useState(false);
+  const [posConfirmPending, setPosConfirmPending] = useState<{ id: string; name: string } | null>(null);
+
+  useEffect(() => {
+    const param = searchParams.get('tenant');
+    if (!param) return;
+    const isUUID = /^[0-9a-f-]{36}$/i.test(param);
+    if (isUUID) {
+      setPosTenantId(param);
+      localStorage.setItem(POS_TENANT_STORAGE_KEY, param);
+      return;
+    }
+    api.get(`/tenants/resolve/${encodeURIComponent(param)}`)
+      .then((r) => {
+        if (r.data?.id) {
+          setPosTenantId(r.data.id);
+          setPosTenantName(r.data.tradeName || r.data.legalName || '');
+          localStorage.setItem(POS_TENANT_STORAGE_KEY, r.data.id);
+        }
+      })
+      .catch(() => { /* deja el fallback de localStorage (POS_TENANT_STORAGE_KEY) ya seteado arriba */ });
+  }, [searchParams]);
+
+  async function handleResolveCompany() {
+    const q = posCompanyInput.trim();
+    if (!q) {
+      setError("Escribe el nombre o código de tu empresa.");
+      return;
+    }
+    try {
+      setPosResolving(true);
+      setError("");
+      const r = await api.get(`/tenants/resolve/${encodeURIComponent(q)}`);
+      if (r.data?.id) {
+        setPosConfirmPending({ id: r.data.id, name: r.data.tradeName || r.data.legalName || q });
+      } else {
+        setError("No encontramos una empresa con ese nombre. Verifica e intenta de nuevo.");
+      }
+    } catch {
+      setError("No encontramos una empresa con ese nombre. Verifica e intenta de nuevo.");
+    } finally {
+      setPosResolving(false);
+    }
+  }
+
+  function handleConfirmCompany() {
+    if (!posConfirmPending) return;
+    setPosTenantId(posConfirmPending.id);
+    setPosTenantName(posConfirmPending.name);
+    localStorage.setItem(POS_TENANT_STORAGE_KEY, posConfirmPending.id);
+    setPosConfirmPending(null);
+    setPosCompanyInput('');
+    setError("");
+  }
+
+  function handleChangeCompany() {
+    setPosTenantId('');
+    setPosTenantName('');
+    setPosCompanyInput('');
+    setPosConfirmPending(null);
+    setNip('');
+    setError("");
+    localStorage.removeItem(POS_TENANT_STORAGE_KEY);
+  }
 
   useEffect(() => {
     useBrandingStore.getState().load();
@@ -89,9 +184,15 @@ export default function LoginPage() {
       setLoading(true);
       setError("");
 
-      const tenantId = localStorage.getItem('tenant_id');
+      if (!posTenantId) {
+        setError("No se pudo determinar la empresa de este dispositivo. Contacta a soporte.");
+        setNip("");
+        setLoading(false);
+        return;
+      }
+
       const response = await api.post("/pos/cashiers/nip", { nip }, {
-        headers: { 'tenant-id': tenantId || '' },
+        headers: { 'tenant-id': posTenantId },
       });
 
       const token = response.data.access_token;
@@ -431,6 +532,73 @@ export default function LoginPage() {
                 </div>
               )}
 
+              {!posTenantId && (
+                posConfirmPending ? (
+                  /* ── Confirmación de empresa resuelta ── */
+                  <div>
+                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginBottom: '12px', textAlign: 'center' }}>
+                      ¿Es esta tu empresa?
+                    </p>
+                    <div style={{
+                      marginBottom: '20px', padding: '16px', borderRadius: '8px', textAlign: 'center',
+                      backgroundColor: 'rgba(29,124,255,0.08)', border: '1px solid rgba(29,124,255,0.25)',
+                      color: '#e8ecf0', fontSize: '16px', fontWeight: 500,
+                    }}>
+                      {posConfirmPending.name}
+                    </div>
+                    <button
+                      onClick={handleConfirmCompany}
+                      style={{ width: '100%', marginBottom: '12px', padding: '13px', fontSize: '13px', fontWeight: 400, letterSpacing: '0.08em', color: '#c8cdd8', backgroundColor: 'rgba(29,124,255,0.12)', border: '1px solid rgba(29,124,255,0.3)', borderRadius: '8px', cursor: 'pointer' }}
+                    >
+                      Confirmar
+                    </button>
+                    <button
+                      onClick={() => setPosConfirmPending(null)}
+                      style={{ width: '100%', padding: '13px', fontSize: '13px', fontWeight: 400, letterSpacing: '0.08em', color: 'rgba(255,255,255,0.4)', backgroundColor: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', cursor: 'pointer' }}
+                    >
+                      No es esta — buscar de nuevo
+                    </button>
+                  </div>
+                ) : (
+                  /* ── Selector de empresa (texto + confirmación, no dropdown) ── */
+                  <div>
+                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginBottom: '12px', textAlign: 'center' }}>
+                      Escribe el nombre de tu empresa para continuar
+                    </p>
+                    <input
+                      type="text"
+                      placeholder="Nombre o código de tu empresa"
+                      value={posCompanyInput}
+                      onChange={(e) => setPosCompanyInput(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleResolveCompany()}
+                      autoFocus
+                      style={{ marginBottom: '16px', width: '100%', padding: '12px', borderRadius: '6px', fontSize: '14px', backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#e8ecf0', boxSizing: 'border-box' }}
+                    />
+                    <button
+                      onClick={handleResolveCompany}
+                      disabled={posResolving}
+                      style={{
+                        width: '100%', padding: '13px', fontSize: '13px', fontWeight: 400,
+                        letterSpacing: '0.08em', color: posResolving ? 'rgba(255,255,255,0.2)' : '#c8cdd8',
+                        backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '8px', cursor: posResolving ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      {posResolving ? "Buscando..." : "Continuar"}
+                    </button>
+                  </div>
+                )
+              )}
+
+              {posTenantId && (
+              <>
+              <button
+                onClick={handleChangeCompany}
+                style={{ display: 'block', margin: '0 auto 20px', fontSize: '12px', color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center' }}
+              >
+                {posTenantName ? `${posTenantName} · Cambiar empresa` : 'Cambiar empresa'}
+              </button>
+
               {/* Display de NIP */}
               <div style={{ marginBottom: '32px', textAlign: 'center' }}>
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '12px' }}>
@@ -529,6 +697,8 @@ export default function LoginPage() {
                 style={{ opacity: 0, position: 'absolute', pointerEvents: 'none' }}
                 autoFocus
               />
+              </>
+              )}
             </div>
           )}
 
