@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../../core/api/api";
+import { useAuthStore } from "../../core/store/useAuthStore";
 
 interface User {
   id: string;
@@ -7,6 +8,7 @@ interface User {
   email: string;
   roleId?: string;
   roleCode?: string;
+  companyId?: string;
   branchId?: string;
   isActive: boolean;
   executivePin?: string;
@@ -30,18 +32,32 @@ interface Branch {
   name: string;
 }
 
+interface Company {
+  id: string;
+  tradeName: string;
+  legalName: string;
+}
+
 export default function CreateUserModal({ open, onClose, onCreated, user }: Props) {
+  const currentUser = useAuthStore((s) => s.user);
+  // Selector de empresa: solo SOPORTE lo ve y lo puede editar — casos de corrección de
+  // datos, no un campo normal de alta/edición. El backend refuerza lo mismo del lado
+  // servidor (PUT /users/:id/company con @Roles('SOPORTE')), esto no es la única barrera.
+  const isSoporte = currentUser?.roleCode === "SOPORTE";
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [roleId, setRoleId] = useState("");
   const [roleCode, setRoleCode] = useState("USER");
+  const [companyId, setCompanyId] = useState("");
   const [branchId, setBranchId] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [executivePin, setExecutivePin] = useState("");
   const [roles, setRoles] = useState<Role[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -49,7 +65,9 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
     if (open) {
       loadRoles();
       loadBranches();
+      if (isSoporte) loadCompanies();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   useEffect(() => {
@@ -60,6 +78,7 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
       setEmail(user.email);
       setRoleId(user.roleId || "");
       setRoleCode(user.roleCode || "USER");
+      setCompanyId(user.companyId || "");
       setBranchId(user.branchId || "");
       setIsActive(user.isActive);
       setExecutivePin(user.executivePin || "");
@@ -71,6 +90,7 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
       setPassword("");
       setRoleId("");
       setRoleCode("USER");
+      setCompanyId("");
       setBranchId("");
       setIsActive(true);
       setExecutivePin("");
@@ -94,6 +114,16 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
       setBranches(branchList);
     } catch {
       setBranches([]);
+    }
+  }
+
+  async function loadCompanies() {
+    try {
+      const response = await api.get("/companies");
+      const companyList = Array.isArray(response.data) ? response.data : [];
+      setCompanies(companyList);
+    } catch {
+      setCompanies([]);
     }
   }
 
@@ -133,10 +163,18 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
           roleId: roleId || undefined,
           roleCode,
           isActive,
+          branchId: branchId || undefined,
           ...(isExecRole ? { executivePin: executivePin || undefined } : {}),
         };
         if (password) payload.password = password;
         await api.put(`/users/${user.id}`, payload);
+
+        // Empresa: endpoint separado y SOPORTE-only a propósito (ver users.controller.ts)
+        // — solo se llama si de verdad cambió, para no disparar una request extra en el
+        // caso común de editar un usuario sin tocar su empresa.
+        if (isSoporte && companyId && companyId !== (user.companyId || "")) {
+          await api.put(`/users/${user.id}/company`, { companyId });
+        }
       } else {
         await api.post("/users", {
           name: fullName,
@@ -145,6 +183,10 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
           roleId: roleId || undefined,
           roleCode,
           branchId: branchId || undefined,
+          // Un ADMIN/GERENTE normal nunca manda esto — el backend ya asigna su propio
+          // companyId al usuario nuevo. Solo SOPORTE (sin companyId propio) lo elige
+          // explícito acá, para tenants/empresas específicas.
+          ...(isSoporte && companyId ? { companyId } : {}),
           ...(isExecRole ? { executivePin: executivePin || undefined } : {}),
         });
       }
@@ -158,6 +200,7 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
       setPassword("");
       setRoleId("");
       setRoleCode("USER");
+      setCompanyId("");
       setBranchId("");
       setIsActive(true);
       setExecutivePin("");
@@ -303,19 +346,37 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
               ))}
             </select>
 
-            {!user && (
-              <select
-                value={branchId}
-                onChange={(e) => setBranchId(e.target.value)}
-                className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
-              >
-                <option value="">Seleccionar sucursal (opcional)</option>
-                {branches.map((branch) => (
-                  <option key={branch.id} value={branch.id}>
-                    {branch.name}
-                  </option>
-                ))}
-              </select>
+            {/* Antes solo aparecía al crear — un CAJERO/GERENTE editado no tenía forma de
+                que le asignaran/corrigieran sucursal después de creado. */}
+            <select
+              value={branchId}
+              onChange={(e) => setBranchId(e.target.value)}
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+            >
+              <option value="">Seleccionar sucursal (opcional)</option>
+              {branches.map((branch) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
+                </option>
+              ))}
+            </select>
+
+            {isSoporte && (
+              <div>
+                <select
+                  value={companyId}
+                  onChange={(e) => setCompanyId(e.target.value)}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
+                >
+                  <option value="">Seleccionar empresa (SOPORTE)</option>
+                  {companies.map((company) => (
+                    <option key={company.id} value={company.id}>
+                      {company.tradeName || company.legalName}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-slate-500 mt-1">Solo visible para SOPORTE — reasignar empresa es un caso de corrección, no una edición normal.</p>
+              </div>
             )}
 
             {(roleCode === "ADMIN" || roleCode === "GERENTE") && (
