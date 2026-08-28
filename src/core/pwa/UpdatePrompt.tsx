@@ -5,11 +5,33 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 // actualización quedaría esperando en silencio hasta que el usuario cierre y reabra
 // todas las pestañas, sin ningún aviso. Este componente cierra ese hueco: aviso mínimo,
 // el cajero decide cuándo aplicar la actualización (nunca se aplica sola a mitad de turno).
+
+// Auditoría de service worker (GoodsHabits): sin esto, needRefresh solo pasaba a true si
+// el navegador decidía por su cuenta re-chequear sw.js — y eso típicamente ocurre en una
+// navegación de página completa, no en el ruteo interno de una SPA. Una pestaña dejada
+// abierta durante toda una sesión (confirmado con evidencia real: un smoke test de
+// Compras quedó corriendo un build viejo en silencio, sin ningún error, hasta un hard
+// reload manual) podía no disparar ese chequeo nunca. 30 min es un default razonable para
+// una sesión de POS/ERP que puede durar un turno completo — ajustable, es un solo const.
+const CHECK_INTERVAL_MS = 30 * 60 * 1000;
+
+// Guard contra doble registro del intervalo — en dev, React StrictMode puede invocar
+// efectos/callbacks de montaje dos veces; sin esto, dos intervalos corriendo en paralelo
+// no rompen nada funcionalmente (ambos llaman al mismo registration.update() idempotente),
+// pero duplican tráfico de red sin necesidad.
+let pollingStarted = false;
+
 export function UpdatePrompt() {
   const {
     needRefresh: [needRefresh],
     updateServiceWorker,
-  } = useRegisterSW();
+  } = useRegisterSW({
+    onRegisteredSW(_swUrl, registration) {
+      if (!registration || pollingStarted) return;
+      pollingStarted = true;
+      setInterval(() => registration.update(), CHECK_INTERVAL_MS);
+    },
+  });
 
   if (!needRefresh) return null;
 
@@ -31,7 +53,12 @@ export function UpdatePrompt() {
         fontSize: 14,
       }}
     >
-      <span>Hay una versión nueva disponible.</span>
+      {/* Antes: "Hay una versión nueva disponible." — genérico y, peor, implicaba que el
+          riesgo era NO actualizar. Es al revés: mientras no se haga clic, la pestaña sigue
+          en la versión vieja funcionando normal, sin perder nada — el riesgo real está en
+          el clic mismo, que recarga la página de inmediato (updateServiceWorker(true)) y
+          puede tirar un formulario abierto o una venta a medio capturar. */}
+      <span>Hay una versión nueva disponible. Guarda tu trabajo antes de actualizar — la página se recargará.</span>
       <button
         onClick={() => updateServiceWorker(true)}
         style={{
