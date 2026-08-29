@@ -320,6 +320,28 @@ export default function POSPage() {
     moneda: "MXN"
   });
 
+  // Auditoría de producto (GoodsHabits, Hallazgo 0): stockPolicy se movió aquí desde
+  // PosConfigPage.tsx (huérfano, sin ruta en App.tsx — la pantalla real de Parámetros del
+  // POS siempre fue esta). El valor mostrado se lee directo de useBrandingStore (línea
+  // ~118, ya usado por el bloqueo de botones de producto) — no hace falta duplicarlo en
+  // estado local, solo el feedback visual del guardado.
+  const [savingStockPolicy, setSavingStockPolicy] = useState(false);
+  const [stockPolicySaved, setStockPolicySaved] = useState(false);
+
+  async function saveStockPolicy(value: 'BLOQUEAR' | 'PERMITIR_NEGATIVO') {
+    const tenantId = localStorage.getItem('tenant_id');
+    if (!tenantId) return;
+    setSavingStockPolicy(true);
+    setStockPolicySaved(false);
+    try {
+      await api.put(`/tenant-settings/${tenantId}`, { stockPolicy: value });
+      await useBrandingStore.getState().load();
+      setStockPolicySaved(true);
+    } finally {
+      setSavingStockPolicy(false);
+    }
+  }
+
   useEffect(() => {
     // Asegura la identidad del dispositivo desde el arranque del POS, antes de que
     // exista cualquier necesidad de armar un folio con ella (Fase A1, modo offline).
@@ -2212,6 +2234,46 @@ export default function POSPage() {
                     className="w-full px-3 py-2 rounded bg-slate-800 text-white"
                   />
                 </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+              <h3 className="text-lg font-semibold mb-3">Stock insuficiente al vender</h3>
+              <p className="text-xs text-slate-500 mb-4">
+                Aplica a toda la empresa, no solo a esta sucursal.
+              </p>
+
+              <label className="flex items-start gap-3 mb-3 cursor-pointer">
+                <input
+                  type="radio"
+                  name="stockPolicy"
+                  checked={stockPolicy === 'PERMITIR_NEGATIVO'}
+                  onChange={() => saveStockPolicy('PERMITIR_NEGATIVO')}
+                  className="mt-1"
+                />
+                <div>
+                  <div className="text-sm font-medium text-white">Permitir venta (stock queda en negativo)</div>
+                  <div className="text-xs text-slate-400">El cajero puede vender igual; el stock refleja el déficit real.</div>
+                </div>
+              </label>
+
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="radio"
+                  name="stockPolicy"
+                  checked={stockPolicy === 'BLOQUEAR'}
+                  onChange={() => saveStockPolicy('BLOQUEAR')}
+                  className="mt-1"
+                />
+                <div>
+                  <div className="text-sm font-medium text-white">Bloquear venta</div>
+                  <div className="text-xs text-slate-400">Sin stock suficiente, la venta se rechaza — el botón del producto se ve deshabilitado en el POS.</div>
+                </div>
+              </label>
+
+              <div className="mt-3 h-4 text-xs">
+                {savingStockPolicy && <span className="text-slate-400">Guardando...</span>}
+                {!savingStockPolicy && stockPolicySaved && <span className="text-green-400">Guardado.</span>}
               </div>
             </div>
 

@@ -141,7 +141,7 @@ export default function TopBar() {
   const aC  = useModulo('compras');
   const aRe = useModulo('reportes');
   const aI  = useModulo('integraciones');
-  const aA  = useModulo('configuracion');
+  const aA  = useModulo('configuracion') && isAdmin;
   const aPac = useModulo('pacientes');
   const aCR = useModulo('corte_retroactivo') && isAdmin;
   const aCos = useModulo('costos');
