@@ -162,12 +162,18 @@ export default function LoginPage() {
         ];
       }
 
+      // Auditoría de producto (GoodsHabits, Hallazgo 4): companyId/branchId antes no se
+      // reenviaban aquí, aunque /auth/login ya los devuelve — la sesión arrancaba sin la
+      // empresa fija del usuario hasta el próximo refresh duro (que sí la trae, vía el
+      // bootstrap /auth/me en App.tsx). Mismo campo que TopBar.tsx lee para isRestricted.
       login({
         id: user.id || "1",
         email,
         name: user.name || "Administrador",
         roleCode: user.roleCode,
         tenantId: user.tenantId,
+        companyId: user.companyId ?? null,
+        branchId: user.branchId ?? null,
       }, finalModulosActivos);
 
       navigate("/");

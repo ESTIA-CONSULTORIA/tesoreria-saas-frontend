@@ -10,6 +10,12 @@ interface Tenant {
   isActive: boolean;
   createdAt: string;
   taxId?: string;
+  giro?: string;
+}
+
+interface GiroOption {
+  code: string;
+  label: string;
 }
 
 interface TenantDetail extends Tenant {
@@ -60,7 +66,10 @@ const WIZARD_INITIAL = {
   legalName: '',
   tradeName: '',
   rfc: '',
-  industry: '',
+  // Auditoría de producto (GoodsHabits, Hallazgo 3): reemplaza "industry" (texto libre,
+  // sin validar, sin ningún consumidor en el backend) por "giro" (catálogo cerrado que sí
+  // gatea módulos verticales — ver GET /tenants/giros).
+  giro: '',
   ownerName: '',
   email: '',
   phone: '',
@@ -82,6 +91,7 @@ export default function GestionClientes() {
   const [editTenant, setEditTenant] = useState<Tenant | null>(null);
   const [editName, setEditName] = useState('');
   const [editPlan, setEditPlan] = useState('BASIC');
+  const [editGiro, setEditGiro] = useState('generico');
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState('');
   const [newUserName, setNewUserName] = useState('');
@@ -106,10 +116,19 @@ export default function GestionClientes() {
   const [createSuccess, setCreateSuccess] = useState(false);
   const [wizardError, setWizardError] = useState('');
 
+  // Auditoría de producto (GoodsHabits, Hallazgo 3): catálogo de giros, fuente única en
+  // GIROS/GIRO_LABELS del backend (src/config/giros.config.ts) — se pide una vez al montar
+  // en vez de hardcodearlo aquí, para que agregar un giro nuevo no requiera tocar el
+  // frontend.
+  const [giros, setGiros] = useState<GiroOption[]>([]);
+
   useEffect(() => {
     loadTenants();
     api.get('/subscriptions/alerts')
       .then(r => setAlerts(Array.isArray(r.data) ? r.data : []))
+      .catch(() => {});
+    api.get('/tenants/giros')
+      .then(r => setGiros(Array.isArray(r.data) ? r.data : []))
       .catch(() => {});
   }, []);
 
@@ -158,6 +177,7 @@ export default function GestionClientes() {
     setEditTenant(tenant);
     setEditName(tenant.legalName || tenant.tradeName || '');
     setEditPlan(tenant.plan || 'BASIC');
+    setEditGiro(tenant.giro || 'generico');
     setEditError('');
     setNewUserName(''); setNewUserEmail(''); setNewUserPass('');
     setNewUserRole('ADMIN'); setNewUserError(''); setNewUserSuccess('');
@@ -197,6 +217,7 @@ export default function GestionClientes() {
         legalName: editName,
         tradeName: editName,
         plan: editPlan,
+        giro: editGiro,
       });
       setEditTenantOpen(false);
       loadTenants();
@@ -248,7 +269,7 @@ export default function GestionClientes() {
         tradeName: wizardData.tradeName || wizardData.legalName,
         rfc: wizardData.rfc,
         taxId: wizardData.rfc,
-        industry: wizardData.industry,
+        giro: wizardData.giro,
         ownerName: wizardData.ownerName,
         email: wizardData.email,
         phone: wizardData.phone,
@@ -478,6 +499,18 @@ export default function GestionClientes() {
                       <option value="ENTERPRISE">ENTERPRISE</option>
                     </select>
                   </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Giro</label>
+                    <select value={editGiro} onChange={e => setEditGiro(e.target.value)}
+                      className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500">
+                      {giros.map(g => (
+                        <option key={g.code} value={g.code}>{g.label}</option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Determina qué módulos verticales puede tener este tenant (ej. Pacientes solo para giros médicos), además de lo que ya permite el plan.
+                    </p>
+                  </div>
                   <button disabled={editLoading}
                     className="w-full rounded-lg bg-blue-600 p-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-60">
                     {editLoading ? 'Guardando...' : 'Guardar cambios'}
@@ -637,18 +670,14 @@ export default function GestionClientes() {
                       style={{ width: '100%', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', padding: '10px 12px', color: '#e8edf5', fontSize: 13, marginBottom: 10, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace' }}
                     />
                     <select
-                      value={wizardData.industry}
-                      onChange={e => setWizardData(p => ({ ...p, industry: e.target.value }))}
-                      style={{ width: '100%', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: '#0d1117', padding: '10px 12px', color: wizardData.industry ? '#e8edf5' : 'rgba(255,255,255,0.3)', fontSize: 13, marginBottom: 10, outline: 'none', boxSizing: 'border-box' }}
+                      value={wizardData.giro}
+                      onChange={e => setWizardData(p => ({ ...p, giro: e.target.value }))}
+                      style={{ width: '100%', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: '#0d1117', padding: '10px 12px', color: wizardData.giro ? '#e8edf5' : 'rgba(255,255,255,0.3)', fontSize: 13, marginBottom: 10, outline: 'none', boxSizing: 'border-box' }}
                     >
                       <option value="">Selecciona el giro</option>
-                      <option value="restaurante">Restaurante / Alimentos</option>
-                      <option value="comercio">Comercio / Retail</option>
-                      <option value="servicios">Servicios</option>
-                      <option value="manufactura">Manufactura</option>
-                      <option value="salud">Salud / Médico</option>
-                      <option value="educacion">Educación</option>
-                      <option value="otro">Otro</option>
+                      {giros.map(g => (
+                        <option key={g.code} value={g.code}>{g.label}</option>
+                      ))}
                     </select>
                   </div>
                 )}
@@ -796,7 +825,7 @@ export default function GestionClientes() {
                         { label: 'Nombre legal', value: wizardData.legalName },
                         { label: 'Nombre comercial', value: wizardData.tradeName },
                         { label: 'RFC', value: wizardData.rfc },
-                        { label: 'Giro', value: wizardData.industry },
+                        { label: 'Giro', value: giros.find(g => g.code === wizardData.giro)?.label || wizardData.giro },
                         { label: 'Administrador', value: wizardData.ownerName },
                         { label: 'Email', value: wizardData.email },
                         { label: 'Teléfono', value: wizardData.phone },

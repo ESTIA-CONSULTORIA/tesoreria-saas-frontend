@@ -216,10 +216,14 @@ export default function HRPage() {
   const [lockedDates, setLockedDates] = useState<Set<string>>(new Set());
 
   const tenantId  = useAuthStore((s) => s.tenantId);
-  const companyId = useAuthStore((s) => s.companyId);
   const user      = useAuthStore((s) => s.user);
   const activeCompany = useCompanyStore((s) => s.activeCompany);
   const activeBranch  = useCompanyStore((s) => s.activeBranch);
+  // Auditoría de producto (GoodsHabits, Hallazgo 4): antes leía companyId de useAuthStore,
+  // que ahora es SOLO la empresa fija del perfil del usuario, no la que está activa en la
+  // sesión — activeCompany (useCompanyStore) es la fuente correcta, igual que el resto de
+  // las páginas del ERP (BanksPage, MovementsPage, DashboardPage, etc.).
+  const companyId = activeCompany?.id ?? null;
 
   const headers = { "x-tenant-id": tenantId ?? "", "x-company-id": companyId ?? "" };
 

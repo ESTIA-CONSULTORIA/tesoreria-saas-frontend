@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
+import { useCompanyStore } from "../../core/store/useCompanyStore";
 
 interface OcrDocument {
   id: string;
@@ -37,8 +38,12 @@ const FIELD_LABELS: Record<string, string> = {
 };
 
 export default function OCRPage() {
-  const companyId = useAuthStore((s) => s.companyId);
   const tenantId = useAuthStore((s) => s.tenantId);
+  // Auditoría de producto (GoodsHabits, Hallazgo 4): antes leía companyId de useAuthStore,
+  // que ahora es SOLO la empresa fija del perfil del usuario, no la que está activa en la
+  // sesión — activeCompany (useCompanyStore) es la fuente correcta, igual que el resto de
+  // las páginas del ERP.
+  const companyId = useCompanyStore((s) => s.activeCompany?.id ?? null);
 
   const [documents, setDocuments] = useState<OcrDocument[]>([]);
   const [loading, setLoading] = useState(false);

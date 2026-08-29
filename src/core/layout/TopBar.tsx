@@ -169,6 +169,23 @@ export default function TopBar() {
 
   const isRestricted = !!userCompanyId && !isAdmin;
 
+  // Auditoría de producto (GoodsHabits, Hallazgo 4): restaura el auto-select que existía
+  // en CompanySelector.tsx (huérfano, borrado en el mismo cambio) — sin esto, un usuario
+  // restringido (isRestricted, ej. GERENTE) que arranca sin activeCompany en localStorage
+  // (dispositivo nuevo, cache limpio) se queda con la nav operativa deshabilitada para
+  // siempre: el dropdown nunca se le muestra (ver el render de abajo), así que no tiene
+  // forma manual de fijar su única empresa.
+  useEffect(() => {
+    if (!isRestricted || activeCompany || !userCompanyId) return;
+    api.get('/companies')
+      .then((r) => {
+        const list: Company[] = Array.isArray(r.data) ? r.data : [];
+        const mine = list.find((c) => c.id === userCompanyId);
+        if (mine) setActiveCompany({ id: mine.id, name: mine.tradeName || mine.legalName });
+      })
+      .catch(() => {});
+  }, [isRestricted, activeCompany, userCompanyId]);
+
   useEffect(() => {
     function onOut(e: MouseEvent) {
       if (ctxRef.current && !ctxRef.current.contains(e.target as Node)) {
@@ -221,21 +238,15 @@ export default function TopBar() {
     // abajo, y "Volver" podría poner pendingCo en null mientras tanto.
     setCtxSwitching(true);
 
-    // Await ANTES de tocar activeCompany/activeBranch — mismo motivo que clearCtx: si
-    // el store se actualiza primero, DashboardPage dispara su GET /dashboard/kpis en el
-    // mismo tick, con la cookie del JWT todavía apuntando al contexto anterior.
+    // Await ANTES de tocar activeCompany/activeBranch — si el store se actualiza primero,
+    // DashboardPage dispara su GET /dashboard/kpis en el mismo tick, con la cookie del JWT
+    // todavía apuntando al contexto anterior. El backend ya puso las cookies httpOnly
+    // nuevas en la respuesta — no hace falta leer el body ni tocar useAuthStore aquí (ver
+    // Hallazgo 4): companyId en useAuthStore es SOLO la empresa fija del perfil del
+    // usuario (para isRestricted/CompaniesPage), nunca la que se está viendo ahora — eso
+    // lo sigue activeCompany en useCompanyStore, que es lo único que tocamos abajo.
     try {
-      // El backend ya puso las cookies httpOnly nuevas; el body solo trae el user
-      // actualizado.
-      const r = await api.post('/auth/switch-company', { companyId: co.id });
-      const nu = r.data?.user;
-      if (nu) {
-        const mods = JSON.parse(localStorage.getItem('modulos_activos') || '[]');
-        useAuthStore.getState().login({
-          id: nu.id, email: nu.email, name: nu.name,
-          roleCode: nu.roleCode, tenantId: nu.tenantId, companyId: co.id,
-        }, mods);
-      }
+      await api.post('/auth/switch-company', { companyId: co.id });
     } catch {}
 
     setActiveCompany(co);
@@ -250,20 +261,10 @@ export default function TopBar() {
     const co = pendingCo; // snapshot — mismo motivo que pickBranch
     setCtxSwitching(true);
 
-    // Await ANTES de tocar activeCompany/activeBranch — mismo motivo que pickBranch/
-    // clearCtx: si el store se actualiza primero, DashboardPage dispara su
-    // GET /dashboard/kpis en el mismo tick, con la cookie del JWT todavía apuntando al
-    // contexto anterior.
+    // Await ANTES de tocar activeCompany/activeBranch — mismo motivo que pickBranch
+    // (ver comentario ahí sobre por qué ya no se toca useAuthStore).
     try {
-      const r = await api.post('/auth/switch-company', { companyId: co.id });
-      const nu = r.data?.user;
-      if (nu) {
-        const mods = JSON.parse(localStorage.getItem('modulos_activos') || '[]');
-        useAuthStore.getState().login({
-          id: nu.id, email: nu.email, name: nu.name,
-          roleCode: nu.roleCode, tenantId: nu.tenantId, companyId: co.id,
-        }, mods);
-      }
+      await api.post('/auth/switch-company', { companyId: co.id });
     } catch {}
 
     setActiveCompany(co);
@@ -283,17 +284,10 @@ export default function TopBar() {
     // su round-trip en ese momento, así que el GET siempre gana la carrera y sale sin
     // X-Company-Id pero con req.user.companyId todavía apuntando a la empresa
     // anterior (dashboard.controller.ts cae a ese fallback). Esperando el POST primero,
-    // la cookie ya está actualizada cuando recién ahí se dispara el refetch.
+    // la cookie ya está actualizada cuando recién ahí se dispara el refetch. Mismo motivo
+    // que pickBranch para no tocar useAuthStore aquí.
     try {
-      const r = await api.post('/auth/switch-company', { companyId: null });
-      const nu = r.data?.user;
-      if (nu) {
-        const mods = JSON.parse(localStorage.getItem('modulos_activos') || '[]');
-        useAuthStore.getState().login({
-          id: nu.id, email: nu.email, name: nu.name,
-          roleCode: nu.roleCode, tenantId: nu.tenantId, companyId: null,
-        }, mods);
-      }
+      await api.post('/auth/switch-company', { companyId: null });
     } catch {}
 
     setActiveCompany(null);
