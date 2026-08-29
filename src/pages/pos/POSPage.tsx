@@ -5,6 +5,7 @@ import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
 import { useLoginConfigStore } from "../../core/store/useLoginConfigStore";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
+import { useBrandingStore } from "../../core/store/useBrandingStore";
 import { getDeviceId } from "../../core/device/deviceId";
 import {
   offlineDb, replaceLocalCache, readLocalCache, isNetworkOrTimeoutError,
@@ -112,6 +113,9 @@ export default function POSPage() {
   const { config } = useLoginConfigStore();
   const { activeCompany } = useCompanyStore();
   const isAdminOrSoporte = user?.roleCode === "ADMIN" || user?.roleCode === "SOPORTE";
+  // Auditoría de producto (GoodsHabits, Punto 1): mismo store que ya carga branding —
+  // App.tsx lo dispara en cuanto hay `user` (ERP normal o cajero por NIP, ambos lo pueblan).
+  const stockPolicy = useBrandingStore((state) => state.stockPolicy);
 
   // Giro detection
   const [giro, setGiro] = useState<string>("");
@@ -1451,11 +1455,28 @@ export default function POSPage() {
 
               <div className="flex-1 overflow-y-auto p-4">
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                  {filteredProducts.map((product) => (
+                  {filteredProducts.map((product) => {
+                    // Auditoría de producto (GoodsHabits, Punto 1): stockPolicy la elige
+                    // el tenant en PosConfigPage.tsx — bajo PERMITIR_NEGATIVO (default) el
+                    // botón nunca se deshabilita, mismo comportamiento de siempre, el badge
+                    // sigue siendo solo informativo. Bajo BLOQUEAR, coincide con lo que el
+                    // backend igual va a rechazar (checkStockAvailability en sales.service.ts)
+                    // — anticipa el problema antes del submit, no solo lo rechaza después.
+                    // <= 0, no === 0: un tenant que cambie de PERMITIR_NEGATIVO a BLOQUEAR
+                    // puede tener insumos que ya quedaron en déficit de antes — deben
+                    // seguir bloqueados, no solo los que están en exactamente 0.
+                    const isOutOfStock = product.stock !== null && product.stock !== undefined && product.stock <= 0;
+                    const isBlocked = stockPolicy === 'BLOQUEAR' && isOutOfStock;
+                    return (
                     <button
                       key={product.id}
-                      onClick={() => addToTicket(product)}
-                      className="max-w-[120px] max-h-[120px] p-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left transition-colors flex flex-col relative"
+                      onClick={() => !isBlocked && addToTicket(product)}
+                      disabled={isBlocked}
+                      className={`max-w-[120px] max-h-[120px] p-3 rounded-lg border text-left transition-colors flex flex-col relative ${
+                        isBlocked
+                          ? 'bg-slate-900 border-slate-800 opacity-40 grayscale cursor-not-allowed'
+                          : 'bg-slate-800 hover:bg-slate-700 border-slate-700'
+                      }`}
                     >
                       <div className="w-full aspect-square bg-slate-700 rounded mb-2 flex items-center justify-center overflow-hidden">
                         {product.imageUrl ? (
@@ -1468,17 +1489,18 @@ export default function POSPage() {
                       <p className="text-green-400 font-bold text-sm">${product.price.toFixed(2)}</p>
                       {product.stock !== null && product.stock !== undefined && (
                         <div className={`absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                          product.stock === 0
+                          product.stock <= 0
                             ? 'bg-red-600 text-white'
                             : product.stock <= (product.stockMinimo || 0)
                             ? 'bg-yellow-600 text-white'
                             : 'bg-green-600 text-white'
                         }`}>
-                          {product.stock}
+                          {product.stock <= 0 ? 'Agotado' : product.stock <= (product.stockMinimo || 0) ? `Quedan ${product.stock}` : product.stock}
                         </div>
                       )}
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>

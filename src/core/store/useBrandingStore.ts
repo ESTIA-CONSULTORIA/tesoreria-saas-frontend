@@ -17,6 +17,10 @@ interface BrandingState {
   fontFamily: string;
   theme: 'dark' | 'light';
   companyDisplayName: string;
+  // Auditoría de producto (GoodsHabits, Punto 1): política de stock insuficiente en POS,
+  // vive en TenantSetting igual que el resto de estos campos — se reusa este store (ya se
+  // carga temprano en App.tsx cuando hay sesión) en vez de crear un fetch aparte.
+  stockPolicy: 'BLOQUEAR' | 'PERMITIR_NEGATIVO';
   loaded: boolean;
 
   load: () => Promise<void>;
@@ -34,6 +38,7 @@ const defaults = {
   fontFamily: 'Inter',
   theme: 'dark' as const,
   companyDisplayName: '',
+  stockPolicy: 'PERMITIR_NEGATIVO' as const,
   loaded: false,
 };
 
@@ -54,11 +59,12 @@ export const useBrandingStore = create<BrandingState>((set) => ({
         const fontFamily = res.data.fontFamily || 'Inter';
         const theme = res.data.theme || 'dark';
         const companyDisplayName = res.data.companyDisplayName || res.data.name || '';
+        const stockPolicy = res.data.stockPolicy || 'PERMITIR_NEGATIVO';
         lsSet("system_name", systemName);
         lsSet("system_logo", logoUrl);
         lsSet("system_accent", accentColor);
         lsSet("system_bg", backgroundImage);
-        set({ systemName, logoUrl, accentColor, backgroundImage, splashBg, fontFamily, theme, companyDisplayName, loaded: true });
+        set({ systemName, logoUrl, accentColor, backgroundImage, splashBg, fontFamily, theme, companyDisplayName, stockPolicy, loaded: true });
       }
     } catch {
       set((s) => ({ ...s, loaded: true }));

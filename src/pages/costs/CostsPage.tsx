@@ -3,6 +3,7 @@ import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import CreateInsumoModal from "./CreateInsumoModal";
 import CreateRecipeModal from "./CreateRecipeModal";
+import ReplaceInsumoModal from "./ReplaceInsumoModal";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
 
 interface Insumo {
@@ -121,6 +122,8 @@ export default function CostsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [insumoModalOpen, setInsumoModalOpen] = useState(false);
+  const [replaceInsumoModalOpen, setReplaceInsumoModalOpen] = useState(false);
+  const [insumoToReplace, setInsumoToReplace] = useState<Insumo | null>(null);
   const [recipeModalOpen, setRecipeModalOpen] = useState(false);
   const [viewInsumoModalOpen, setViewInsumoModalOpen] = useState(false);
   const [almacenModalOpen, setAlmacenModalOpen] = useState(false);
@@ -769,6 +772,11 @@ export default function CostsPage() {
                               <button className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700" onClick={() => { setSelectedInsumo(insumo); setInsumoModalOpen(true); }}>
                                 Editar
                               </button>
+                              {insumo.isActive && (
+                                <button className="rounded bg-amber-700 px-2 py-1 text-xs text-white hover:bg-amber-600" onClick={() => { setInsumoToReplace(insumo); setReplaceInsumoModalOpen(true); }}>
+                                  Reemplazar
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -800,6 +808,11 @@ export default function CostsPage() {
                         <button className="flex-1 rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700" onClick={() => { setSelectedInsumo(insumo); setInsumoModalOpen(true); }}>
                           Editar
                         </button>
+                        {insumo.isActive && (
+                          <button className="flex-1 rounded bg-amber-700 px-2 py-1 text-xs text-white hover:bg-amber-600" onClick={() => { setInsumoToReplace(insumo); setReplaceInsumoModalOpen(true); }}>
+                            Reemplazar
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -1326,6 +1339,14 @@ export default function CostsPage() {
           onCreated={() => { loadInsumos(); setInsumoModalOpen(false); }}
           suppliers={suppliers}
           insumo={selectedInsumo}
+        />
+
+        <ReplaceInsumoModal
+          open={replaceInsumoModalOpen}
+          onClose={() => setReplaceInsumoModalOpen(false)}
+          onReplaced={() => { loadInsumos(); setReplaceInsumoModalOpen(false); }}
+          insumo={insumoToReplace}
+          insumos={insumos}
         />
 
         <CreateRecipeModal
