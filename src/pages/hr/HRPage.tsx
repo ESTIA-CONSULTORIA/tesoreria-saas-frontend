@@ -4,6 +4,7 @@ import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
+import { useModulo } from "../../core/hooks/useModulo";
 
 import { ConceptsEditor } from './ConceptsEditor';
 import { IncidenceInput } from './IncidenceInput';
@@ -119,6 +120,11 @@ const INCIDENCE_KEYS = [
 
 export default function HRPage() {
   const [searchParams] = useSearchParams();
+
+  // Auditoría de producto (GoodsHabits, Fase 3 — Nómina): addons independientes, no
+  // amarrados a plan — activos solo si el tenant los tiene en tenant_modules.
+  const hasDispersionBancaria = useModulo('dispersion_bancaria');
+  const hasDispersionLayout = useModulo('dispersion_layout');
 
   const [tab, setTab] = useState<Tab>(() => {
     const t = searchParams.get('tab') as Tab;
@@ -246,6 +252,11 @@ export default function HRPage() {
   useEffect(() => {
     if (tab === "asistencia" && employees.length > 0) loadPeriodAttendance();
   }, [attendancePeriod, employees]);
+
+  useEffect(() => {
+    if (!hasDispersionLayout) return;
+    api.get('/payroll/dispersion/banks').then(res => setBanks(Array.isArray(res.data) ? res.data : [])).catch(() => {});
+  }, [hasDispersionLayout]);
 
   async function loadSystemUsers() {
     try {
@@ -484,6 +495,53 @@ export default function HRPage() {
       setPayrollTab('lista');
       setSelectedCajaId('');
     } catch (e) { console.error(e); }
+  };
+
+  // Auditoría de producto (GoodsHabits, Fase 3 — Nómina): mismo resultado final que
+  // confirmPayment (corrida PAGADA) pero un movimiento por empleado — addon
+  // 'dispersion_bancaria', gateado más abajo con useModulo.
+  const confirmPaymentPerEmployee = async () => {
+    if (!selectedRun || !selectedCajaId) return;
+    try {
+      await api.put(`/payroll/runs/${selectedRun.id}/confirm-payment-per-employee`, { bankId: selectedCajaId });
+      await loadPayrollRuns();
+      setSelectedRun(null);
+      setPayrollTab('lista');
+      setSelectedCajaId('');
+    } catch (e) { console.error(e); }
+  };
+
+  function downloadBase64File(base64: string, fileName: string, mimeType: string) {
+    const link = document.createElement('a');
+    link.href = `data:${mimeType};base64,${base64}`;
+    link.download = fileName;
+    link.click();
+  }
+
+  const [banks, setBanks] = useState<any[]>([]);
+  const [selectedBankCode, setSelectedBankCode] = useState('GENERIC');
+
+  const downloadDispersionFile = async () => {
+    if (!selectedRun) return;
+    try {
+      const res = await api.get(`/payroll/runs/${selectedRun.id}/dispersion-file`, { params: { bankCode: selectedBankCode } });
+      downloadBase64File(btoa(unescape(encodeURIComponent(res.data.content))), res.data.fileName, res.data.mimeType);
+    } catch (e: any) {
+      console.error(e);
+      alert(e.response?.data?.message || 'No fue posible generar el archivo de dispersión');
+    }
+  };
+
+  const generateReceipts = async () => {
+    if (!selectedRun) return;
+    try {
+      const res = await api.post(`/payroll/runs/${selectedRun.id}/generate-receipts`);
+      downloadBase64File(res.data.listaDeRayaPdf, `lista_de_raya_${selectedRun.periodStart}.pdf`, 'application/pdf');
+      alert(`${res.data.receiptsGenerated} recibo(s) generado(s) — cada empleado ya los puede ver en su Portal, en "Mis Documentos".`);
+    } catch (e: any) {
+      console.error(e);
+      alert(e.response?.data?.message || 'No fue posible generar los recibos');
+    }
   };
 
   async function saveShift() {
@@ -1140,6 +1198,39 @@ export default function HRPage() {
                   </div>
                   <div style={{ marginTop: 8, fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
                     Al confirmar se registra un egreso interno "NOMINA" en la caja seleccionada.
+                  </div>
+
+                  {/* Auditoría de producto (GoodsHabits, Fase 3 — Nómina): dispersión real
+                      — addons independientes, cada uno visible solo si el tenant lo tiene
+                      contratado (tenant_modules, no el plan). */}
+                  {(hasDispersionBancaria || hasDispersionLayout) && (
+                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.07)', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                      {hasDispersionBancaria && (
+                        <button onClick={confirmPaymentPerEmployee}
+                          disabled={!selectedCajaId || selectedRun.status === 'PAGADA'}
+                          style={{ padding: '7px 16px', borderRadius: 8, border: '1px solid rgba(143,175,212,0.3)', background: 'rgba(143,175,212,0.08)', color: '#8fafd4', fontSize: 12, cursor: selectedCajaId ? 'pointer' : 'not-allowed' }}
+                        >Dispersar — un movimiento por empleado</button>
+                      )}
+                      {hasDispersionLayout && (
+                        <>
+                          <select value={selectedBankCode} onChange={e => setSelectedBankCode(e.target.value)}
+                            style={{ padding: '7px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 12 }}>
+                            {banks.map((b: any) => (
+                              <option key={b.code} value={b.code} disabled={!b.hasFormatter}>{b.name}{!b.hasFormatter ? ' (sin implementar)' : ''}</option>
+                            ))}
+                          </select>
+                          <button onClick={downloadDispersionFile}
+                            style={{ padding: '7px 16px', borderRadius: 8, border: '1px solid rgba(143,175,212,0.3)', background: 'rgba(143,175,212,0.08)', color: '#8fafd4', fontSize: 12, cursor: 'pointer' }}
+                          >Descargar archivo de dispersión</button>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                    <button onClick={generateReceipts}
+                      style={{ padding: '7px 16px', borderRadius: 8, border: '1px solid rgba(74,222,128,0.3)', background: 'rgba(74,222,128,0.08)', color: '#4ade80', fontSize: 12, cursor: 'pointer' }}
+                    >Generar recibos (PDF por empleado, visibles en su Portal)</button>
                   </div>
                 </div>
 

@@ -15,6 +15,7 @@ const TIPO_ICONS: Record<string, string> = {
   CONSTANCIA: "◻",
   NOMINA: "◯",
   RECIBO: "▸",
+  RECIBO_NOMINA: "▸",
   OTRO: "·",
 };
 
