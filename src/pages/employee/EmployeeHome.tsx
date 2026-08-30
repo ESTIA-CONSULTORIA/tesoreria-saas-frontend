@@ -41,6 +41,12 @@ interface PermRequest {
   status: string;
 }
 
+interface PendingContract {
+  id: string;
+  status: string;
+  createdAt?: string;
+}
+
 function formatTime(dateStr?: string): string {
   if (!dateStr) return "--:--";
   const d = new Date(dateStr);
@@ -74,6 +80,7 @@ export default function EmployeeHome() {
   const [recentAttendance, setRecentAttendance] = useState<AttendanceRecord[]>([]);
   const [pendingVac, setPendingVac] = useState<VacRequest[]>([]);
   const [pendingPerm, setPendingPerm] = useState<PermRequest[]>([]);
+  const [pendingContracts, setPendingContracts] = useState<PendingContract[]>([]);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
@@ -95,6 +102,17 @@ export default function EmployeeHome() {
       })
       .catch(() => navigate("/employee"))
       .finally(() => setLoading(false));
+
+    // Auditoría de producto (GoodsHabits, Fase 3 — Firma electrónica): aparte del
+    // Promise.all de arriba — si /contracts/portal/pending falla (ej. tenant sin el
+    // addon RH/Contratos activo), no debe tumbar el resto de la pantalla de inicio.
+    employeeApi
+      .get("/contracts/portal/pending")
+      .then((res) => {
+        const list: PendingContract[] = Array.isArray(res.data) ? res.data : [];
+        setPendingContracts(list.filter((c) => c.status === "PENDIENTE"));
+      })
+      .catch(() => {});
   }, []);
 
   async function handleCheckIn() {
@@ -364,6 +382,34 @@ export default function EmployeeHome() {
                     {rec.status ?? ""}
                   </span>
                 </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Contratos pendientes de firma */}
+        {pendingContracts.length > 0 && (
+          <div style={{
+            background: "#0E1A0E", border: "1px solid #22C55E30",
+            borderRadius: 14, padding: "14px 16px", marginBottom: 12,
+          }}>
+            <div style={{ fontSize: "0.62rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "#22C55E", marginBottom: 10 }}>
+              Tienes {pendingContracts.length} contrato{pendingContracts.length > 1 ? "s" : ""} por firmar
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {pendingContracts.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => navigate(`/employee/sign/${c.id}`)}
+                  style={{
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                    padding: "10px 12px", background: "#0A0A0A", border: "1px solid #1C1C1C",
+                    borderRadius: 10, color: "#F5F5F5", fontSize: "0.78rem", cursor: "pointer",
+                  }}
+                >
+                  <span>Contrato pendiente</span>
+                  <span style={{ color: "#22C55E", fontWeight: 600 }}>Firmar →</span>
+                </button>
               ))}
             </div>
           </div>

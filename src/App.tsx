@@ -27,6 +27,7 @@ import EmployeeHome from "./pages/employee/EmployeeHome";
 import EmployeeRequests from "./pages/employee/EmployeeRequests";
 import EmployeeDocuments from "./pages/employee/EmployeeDocuments";
 import EmployeeProfile from "./pages/employee/EmployeeProfile";
+import EmployeeSignContract from "./pages/employee/EmployeeSignContract";
 import OnboardingWizard from "./components/OnboardingWizard";
 import PatientsPage from "./pages/patients/PatientsPage";
 import SolutionsCenter from "./pages/solutions/SolutionsCenter";
@@ -518,6 +519,7 @@ function App() {
       <Route path="/employee/requests" element={<EmployeeRequests />} />
       <Route path="/employee/documents" element={<EmployeeDocuments />} />
       <Route path="/employee/profile" element={<EmployeeProfile />} />
+      <Route path="/employee/sign/:contractId" element={<EmployeeSignContract />} />
 
       {/* Rutas de SOPORTE - Solo accesibles para rol SOPORTE */}
       <Route
