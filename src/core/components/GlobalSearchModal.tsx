@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/api";
+import { useAuthStore } from "../store/useAuthStore";
 
 interface SearchResult {
   id: string;
@@ -9,6 +10,10 @@ interface SearchResult {
   subtitle?: string;
   path?: string;
   icon?: string;
+  // Auditoría de seguridad (Hallazgo 1b, GoodsHabits): páginas gateadas por rol (no por
+  // módulo) en el frontend — ver RoleRoute.tsx. Sin esto, este buscador las mostraba a
+  // cualquiera aunque el acceso directo a la ruta ya estuviera bloqueado por rol.
+  roles?: string[];
 }
 
 interface Props {
@@ -29,7 +34,7 @@ const pages: SearchResult[] = [
   { id: "costs", type: "page", title: "Costos", path: "/costs", icon: "🏭" },
   { id: "reports", type: "page", title: "Reportes", path: "/reports", icon: "📑" },
   { id: "users", type: "page", title: "Usuarios", path: "/users", icon: "👤" },
-  { id: "administration", type: "page", title: "Administración", path: "/administration", icon: "🔐" },
+  { id: "administration", type: "page", title: "Administración", path: "/administration", icon: "🔐", roles: ["SOPORTE"] },
 ];
 
 const typeIcons: Record<string, string> = {
@@ -57,6 +62,15 @@ export default function GlobalSearchModal({ open, onClose }: Props) {
   const navigate = useNavigate();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
+  const roleCode = useAuthStore((state) => state.user?.roleCode);
+  // Mismo criterio que RoleRoute: una página con `roles` solo aparece en el buscador si el
+  // rol del usuario está en esa lista — evita que "Administración" (o cualquier página
+  // gateada por rol a futuro) aparezca como resultado para quien no puede entrar.
+  const visiblePages = useMemo(
+    () => pages.filter((page) => !page.roles || (!!roleCode && page.roles.includes(roleCode))),
+    [roleCode],
+  );
+
   useEffect(() => {
     if (open && inputRef.current) {
       inputRef.current.focus();
@@ -65,7 +79,7 @@ export default function GlobalSearchModal({ open, onClose }: Props) {
 
   const searchAPI = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
-      setResults(pages);
+      setResults(visiblePages);
       setSelectedIndex(0);
       setLoading(false);
       return;
@@ -112,7 +126,7 @@ export default function GlobalSearchModal({ open, onClose }: Props) {
         icon: typeIcons.company,
       }));
 
-      const pageResults = pages.filter((page) =>
+      const pageResults = visiblePages.filter((page) =>
         page.title.toLowerCase().includes(searchQuery.toLowerCase())
       );
 
@@ -128,13 +142,13 @@ export default function GlobalSearchModal({ open, onClose }: Props) {
       setSelectedIndex(0);
     } catch (error) {
       console.error("Error searching:", error);
-      setResults(pages.filter((page) =>
+      setResults(visiblePages.filter((page) =>
         page.title.toLowerCase().includes(searchQuery.toLowerCase())
       ));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [visiblePages]);
 
   useEffect(() => {
     if (debounceRef.current) {

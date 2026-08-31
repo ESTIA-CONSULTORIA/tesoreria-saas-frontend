@@ -42,6 +42,7 @@ import AppearancePage from "./pages/settings/AppearancePage";
 import CorteFieldsConfig from "./pages/settings/CorteFieldsConfig";
 import ProtectedRoute from "./core/router/ProtectedRoute";
 import ModuloRoute from "./core/router/ModuloRoute";
+import RoleRoute from "./core/router/RoleRoute";
 import { useAuthStore } from "./core/store/useAuthStore";
 import { useBrandingStore } from "./core/store/useBrandingStore";
 import { SplashScreen } from "./components/SplashScreen";
@@ -374,9 +375,9 @@ function App() {
         path="/administration"
         element={
           <ProtectedRoute>
-            <ModuloRoute modulo="administracion">
+            <RoleRoute roles={['SOPORTE']}>
               <AdministrationPage />
-            </ModuloRoute>
+            </RoleRoute>
           </ProtectedRoute>
         }
       />
@@ -385,9 +386,9 @@ function App() {
         path="/logs"
         element={
           <ProtectedRoute>
-            <ModuloRoute modulo="administracion">
+            <RoleRoute roles={['SOPORTE']}>
               <LogsPage />
-            </ModuloRoute>
+            </RoleRoute>
           </ProtectedRoute>
         }
       />
