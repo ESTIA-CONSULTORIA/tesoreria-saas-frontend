@@ -51,19 +51,17 @@ export default function EmployeeSignContract() {
     }
   }, [step]);
 
-  function readFileAsDataUrl(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (ev) => resolve(ev.target?.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }
+  // Auditoría de producto (GoodsHabits, Fase 3 — Firma electrónica, Punto 4a): las 3 fotos
+  // (INE frente/reverso, selfie) ya no vienen de un <input type="file"> — capture=
+  // "environment"/"user" es solo un hint, ningún navegador garantiza bloquear el picker de
+  // galería con eso (confirmado contra MDN). LiveCameraCapture (más abajo) nunca abre un
+  // selector de archivos: el dato siempre sale de un frame de getUserMedia dibujado en
+  // canvas. Los 3 handlers de abajo reciben ya el data-URI directo (mismo formato que antes
+  // producía readFileAsDataUrl(), que por eso desaparece), así que el resto del flujo
+  // (verify-ine, /sign) no cambia en nada.
 
-  async function handleIneFront(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file || !contractId) return;
-    const dataUrl = await readFileAsDataUrl(file);
+  async function handleIneFrontCapture(dataUrl: string) {
+    if (!contractId) return;
     setIneFront(dataUrl);
     setStep("verifying");
     setErrorMsg("");
@@ -80,16 +78,12 @@ export default function EmployeeSignContract() {
     }
   }
 
-  async function handleIneBack(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setIneBack(await readFileAsDataUrl(file));
+  function handleIneBackCapture(dataUrl: string) {
+    setIneBack(dataUrl);
   }
 
-  async function handleSelfie(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setSelfie(await readFileAsDataUrl(file));
+  function handleSelfieCapture(dataUrl: string) {
+    setSelfie(dataUrl);
     setStep("signature");
   }
 
@@ -192,10 +186,11 @@ export default function EmployeeSignContract() {
         {step === "intro" && (
           <Card>
             <StepLabel n={1} total={3} label="Foto de tu INE" />
-            <p style={{ color: "#505050", fontSize: "0.78rem", marginBottom: 16 }}>
-              Frente y reverso, con buena luz y sin reflejos.
-            </p>
-            <FileButton label="Tomar foto — frente de la INE" capture="environment" onChange={handleIneFront} />
+            <LiveCameraCapture
+              facingMode="environment"
+              instructions="Frente de tu INE, con buena luz y sin reflejos."
+              onCapture={handleIneFrontCapture}
+            />
           </Card>
         )}
 
@@ -222,7 +217,11 @@ export default function EmployeeSignContract() {
               </div>
             )}
             {!ineBack ? (
-              <FileButton label="Tomar foto — reverso de la INE" capture="environment" onChange={handleIneBack} />
+              <LiveCameraCapture
+                facingMode="environment"
+                instructions="Ahora el reverso de tu INE."
+                onCapture={handleIneBackCapture}
+              />
             ) : (
               <PrimaryButton label="Continuar — tomar selfie" onClick={() => setStep("selfie")} />
             )}
@@ -244,7 +243,11 @@ export default function EmployeeSignContract() {
               </div>
             ))}
             <div style={{ marginTop: 16 }}>
-              <FileButton label="Reintentar con otra foto" capture="environment" onChange={handleIneFront} />
+              <LiveCameraCapture
+                facingMode="environment"
+                instructions="Vuelve a tomar el frente de tu INE."
+                onCapture={handleIneFrontCapture}
+              />
             </div>
           </Card>
         )}
@@ -252,10 +255,11 @@ export default function EmployeeSignContract() {
         {step === "selfie" && (
           <Card>
             <StepLabel n={2} total={3} label="Una foto tuya" />
-            <p style={{ color: "#505050", fontSize: "0.78rem", marginBottom: 16 }}>
-              Rostro descubierto, mirando de frente a la cámara.
-            </p>
-            <FileButton label="Tomar selfie" capture="user" onChange={handleSelfie} />
+            <LiveCameraCapture
+              facingMode="user"
+              instructions="Rostro descubierto, mirando de frente a la cámara."
+              onCapture={handleSelfieCapture}
+            />
           </Card>
         )}
 
@@ -355,21 +359,179 @@ function PrimaryButton({ label, onClick, disabled }: { label: string; onClick: (
   );
 }
 
-function FileButton({ label, capture, onChange }: { label: string; capture: "user" | "environment"; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void }) {
-  const inputRef = useRef<HTMLInputElement>(null);
+// Auditoría de producto (GoodsHabits, Fase 3 — Firma electrónica, Punto 4a): reemplaza
+// FileButton (input type="file" con capture=, un hint que ningún navegador garantiza —
+// confirmado contra MDN: "el user agent es libre de decidir", desktop lo ignora del todo).
+// Nunca monta un <input type="file"> — el dato sale siempre de un frame de getUserMedia
+// dibujado en canvas, así que no hay ningún selector de archivos/galería que el usuario
+// pueda abrir desde este componente. El stream se mantiene abierto durante "live"⇄"review"
+// (reintentos ilimitados e instantáneos, sin volver a negociar permiso de cámara en cada
+// uno) y solo se libera al confirmar o al desmontar.
+type CameraState = "requesting" | "live" | "review" | "denied" | "no-camera" | "error";
+
+function mapCameraError(err: any): CameraState {
+  if (err?.name === "NotAllowedError" || err?.name === "PermissionDeniedError") return "denied";
+  if (err?.name === "NotFoundError" || err?.name === "DevicesNotFoundError") return "no-camera";
+  return "error"; // ej. NotReadableError — cámara en uso por otra app
+}
+
+function LiveCameraCapture({
+  facingMode,
+  instructions,
+  onCapture,
+}: {
+  facingMode: "user" | "environment";
+  instructions: string;
+  onCapture: (dataUrl: string) => void;
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  const [cameraState, setCameraState] = useState<CameraState>("requesting");
+  const [videoReady, setVideoReady] = useState(false);
+  const [captured, setCaptured] = useState<string | null>(null);
+
+  async function start() {
+    setCameraState("requesting");
+    setVideoReady(false);
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraState("no-camera");
+      return;
+    }
+
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: facingMode } }, audio: false });
+    } catch (err: any) {
+      if (err?.name === "OverconstrainedError") {
+        // El dispositivo no tiene cámara en el sentido pedido (ej. laptop sin webcam
+        // trasera) — se reintenta una vez sin exigir facingMode antes de rendirse: sigue
+        // sirviendo para sostener la INE frente a la única cámara que sí existe.
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        } catch (err2: any) {
+          setCameraState(mapCameraError(err2));
+          return;
+        }
+      } else {
+        setCameraState(mapCameraError(err));
+        return;
+      }
+    }
+
+    streamRef.current = stream;
+    if (videoRef.current) videoRef.current.srcObject = stream;
+    setCameraState("live");
+  }
+
+  useEffect(() => {
+    start();
+    return () => {
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function handleCapture() {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas || !videoReady) return;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    setCaptured(canvas.toDataURL("image/jpeg", 0.85));
+    setCameraState("review");
+  }
+
+  function handleRetry() {
+    setCaptured(null);
+    setCameraState("live");
+  }
+
+  function handleConfirm() {
+    if (!captured) return;
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    onCapture(captured);
+  }
+
   return (
-    <>
-      <input ref={inputRef} type="file" accept="image/*" capture={capture} onChange={onChange} style={{ display: "none" }} />
-      <button
-        onClick={() => inputRef.current?.click()}
-        style={{
-          width: "100%", padding: "14px",
-          background: "#8FAFD415", border: "1px solid #8FAFD440", borderRadius: 10,
-          color: "#8FAFD4", fontSize: "0.82rem", fontWeight: 600, letterSpacing: "0.05em", cursor: "pointer",
-        }}
-      >
-        {label}
-      </button>
-    </>
+    <div>
+      <p style={{ color: "#505050", fontSize: "0.78rem", marginBottom: 12 }}>{instructions}</p>
+
+      {cameraState === "requesting" && (
+        <div style={{ textAlign: "center", padding: "32px 0", color: "#383838", fontSize: "0.8rem", letterSpacing: "0.1em" }}>
+          SOLICITANDO ACCESO A LA CÁMARA...
+        </div>
+      )}
+
+      {(cameraState === "denied" || cameraState === "no-camera" || cameraState === "error") && (
+        <div style={{ background: "#1A0808", border: "1px solid #EF444430", borderRadius: 10, padding: "16px 14px", color: "#EF4444", fontSize: "0.78rem" }}>
+          <div style={{ marginBottom: 12 }}>
+            {cameraState === "denied" &&
+              "No podemos continuar sin acceso a tu cámara. Actívala desde el ícono de candado/cámara en la barra de tu navegador y vuelve a intentar."}
+            {cameraState === "no-camera" &&
+              "Este dispositivo no tiene cámara disponible (o tu navegador no soporta captura de cámara). Completa este paso desde tu celular."}
+            {cameraState === "error" &&
+              "No fue posible acceder a la cámara. Puede estar en uso por otra aplicación — ciérrala y vuelve a intentar."}
+          </div>
+          <button
+            onClick={start}
+            style={{
+              width: "100%", padding: "12px", background: "transparent",
+              border: "1px solid #EF444440", borderRadius: 10, color: "#EF4444",
+              fontSize: "0.78rem", fontWeight: 600, cursor: "pointer",
+            }}
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
+
+      {(cameraState === "live" || cameraState === "review") && (
+        <>
+          <div style={{ borderRadius: 10, overflow: "hidden", background: "#000" }}>
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              onLoadedMetadata={() => setVideoReady(true)}
+              hidden={cameraState !== "live"}
+              style={{ width: "100%", display: "block" }}
+            />
+            {cameraState === "review" && captured && (
+              <img src={captured} alt="Captura" style={{ width: "100%", display: "block" }} />
+            )}
+          </div>
+          <canvas ref={canvasRef} style={{ display: "none" }} />
+
+          {cameraState === "live" && (
+            <div style={{ marginTop: 12 }}>
+              <PrimaryButton label="Capturar" onClick={handleCapture} disabled={!videoReady} />
+            </div>
+          )}
+
+          {cameraState === "review" && (
+            <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+              <button
+                onClick={handleRetry}
+                style={{ flex: 1, padding: "12px", background: "transparent", border: "1px solid #2A2A2A", borderRadius: 10, color: "#A0A0A0", fontSize: "0.78rem" }}
+              >
+                Reintentar
+              </button>
+              <div style={{ flex: 1 }}>
+                <PrimaryButton label="Usar esta foto" onClick={handleConfirm} />
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
   );
 }
