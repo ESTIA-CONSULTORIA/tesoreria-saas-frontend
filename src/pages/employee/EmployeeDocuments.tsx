@@ -7,6 +7,7 @@ interface HrDocument {
   nombre: string;
   tipo: string;
   url?: string;
+  fileData?: string;
   uploadedAt: string;
 }
 
@@ -110,10 +111,11 @@ export default function EmployeeDocuments() {
                   </div>
                 </div>
 
-                {/* Action */}
-                {doc.url && (
+                {/* Action — antes solo revisaba doc.url: con STORAGE_PROVIDER=base64_postgres
+                    el archivo llega como doc.fileData (data URI) y el botón nunca aparecía. */}
+                {(doc.url || doc.fileData) && (
                   <a
-                    href={doc.url}
+                    href={doc.url || doc.fileData}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
