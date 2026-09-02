@@ -3907,12 +3907,11 @@ export default function POSPage() {
               <button
                 onClick={() => {
                   if (user?.roleCode === 'CAJERO') {
+                    // logout() (useAuthStore) ya hace POST /auth/logout (limpia la cookie
+                    // httpOnly server-side) + limpia todo el localStorage relevante +
+                    // redirige a /login — la limpieza manual y el navigate('/') que vivían
+                    // acá eran redundantes y competían con esa redirección.
                     logout();
-                    localStorage.removeItem('access_token');
-                    localStorage.removeItem('user');
-                    localStorage.removeItem('modulos_activos');
-                    localStorage.removeItem('tenant_id');
-                    navigate('/');
                   } else {
                     navigate('/dashboard');
                   }

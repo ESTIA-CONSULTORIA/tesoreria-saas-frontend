@@ -16,7 +16,6 @@ export default function EmployeeLayout({ children }: Props) {
   const navigate = useNavigate();
 
   function logout() {
-    sessionStorage.removeItem("employee_token");
     sessionStorage.removeItem("employee_user");
     navigate("/employee");
   }

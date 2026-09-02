@@ -45,7 +45,6 @@ export default function EmployeeProfile() {
   }, []);
 
   function logout() {
-    sessionStorage.removeItem("employee_token");
     sessionStorage.removeItem("employee_user");
     navigate("/employee");
   }

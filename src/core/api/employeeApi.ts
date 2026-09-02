@@ -11,11 +11,12 @@ const baseURL =
 // cookie de sesión que el backend ya pone en el login del Portal del Empleado.
 export const employeeApi = axios.create({ baseURL, timeout: 30000, withCredentials: true });
 
-employeeApi.interceptors.request.use((config) => {
-  const token = sessionStorage.getItem("employee_token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
+// Auditoría de seguridad (GoodsHabits, cookies httpOnly, Pendiente 4): este interceptor
+// leía sessionStorage.getItem("employee_token") y lo mandaba como Authorization — pero
+// EmployeeLogin.tsx (el único login de este Portal) nunca escribe esa clave, solo
+// "employee_user" (para pintar el nombre en pantalla, no para autenticar). Confirmado con
+// grep en todo el repo: "employee_token" no se escribe en ningún lado — código muerto
+// desde que este Portal migró a cookies httpOnly, retirado.
 
 employeeApi.interceptors.response.use(
   (response) => response,

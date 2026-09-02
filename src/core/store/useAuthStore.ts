@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { jwtDecode } from "jwt-decode";
 import { useCompanyStore } from "./useCompanyStore";
 import { api } from "../api/api";
 
@@ -14,11 +13,13 @@ interface User {
 }
 
 interface AuthState {
-  // Sigue existiendo, pero ahora solo lo puebla el flujo NIP (ver login() más abajo) — se
-  // usa hoy como señal de "ya hay sesión" en POSPage.tsx (gate de useEffect), no como
-  // fuente para armar headers (eso lo sigue leyendo el interceptor directo de
-  // localStorage). Para una sesión de cookie queda null — httpOnly, no hay nada que
-  // guardar aquí de todos modos.
+  // Auditoría de seguridad (GoodsHabits, cookies httpOnly, Pendiente 2): ya no lo puebla
+  // ningún flujo — login() no acepta token (ver abajo). Solo queda la hidratación inicial
+  // de localStorage.getItem("access_token") de la línea de abajo, que sobrevive por
+  // compatibilidad con sesiones viejas que todavía tuvieran ese valor de antes de la
+  // migración a cookies. POSPage.tsx sigue usando este campo como gate de un useEffect
+  // (`if (!token) return`) — para una sesión nueva sin ese residuo, ese gate nunca pasa;
+  // es un problema real y aparte, no se toca en este cambio (ver diagnóstico entregado).
   token: string | null;
   tenantId: string | null;
   user: User | null;
@@ -35,15 +36,15 @@ interface AuthState {
   authChecked: boolean;
   setAuthChecked: (v: boolean) => void;
 
-  // token es opcional: solo lo mandan flujos que no migraron a cookies httpOnly (NIP del
-  // POS completo, vía /pos/cashiers/nip) — ahí sigue viviendo en localStorage como antes,
-  // porque ese endpoint no tiene cookie a la que aferrarse. El ERP normal (login/
-  // portal-login/switch-company) ya no manda token aquí — la cookie la puso el backend
-  // directo en la respuesta, antes de que este código corra.
+  // Auditoría de seguridad (GoodsHabits, cookies httpOnly, Pendiente 2): antes aceptaba un
+  // tercer argumento `token` opcional para el flujo NIP del POS completo — confirmado que
+  // ningún caller en el frontend lo pasaba (App.tsx, el único call site real, siempre
+  // llama con 2 argumentos). Retirado junto con la rama muerta que lo procesaba. La cookie
+  // la pone el backend directo en la respuesta de login/portal-login/switch-company/nip,
+  // antes de que este código corra — nunca hay nada legible en JS que guardar aquí.
   login: (
     user: User,
     modulosActivos?: string[],
-    token?: string,
   ) => void;
 
   logout: () => Promise<void>;
@@ -66,23 +67,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   authChecked: false,
   setAuthChecked: (v) => set({ authChecked: v }),
 
-  login: (user, modulosActivos = [], token) => {
-    let companyId: string | null = user.companyId ?? null;
-    let branchId: string | null = user.branchId ?? null;
-
-    // Solo aplica al flujo NIP (token presente): decodifica el JWT para enriquecer
-    // companyId/branchId y lo persiste en localStorage — comportamiento sin cambios para
-    // ese flujo. Una sesión de cookie nunca pasa token aquí, así que nunca entra aquí.
-    if (token) {
-      try {
-        const decoded: any = jwtDecode(token);
-        companyId = decoded.companyId ?? companyId;
-        branchId = decoded.branchId ?? branchId;
-      } catch (e) {
-        console.error('JWT decode error:', e);
-      }
-      localStorage.setItem("access_token", token);
-    }
+  login: (user, modulosActivos = []) => {
+    const companyId: string | null = user.companyId ?? null;
+    const branchId: string | null = user.branchId ?? null;
 
     const enrichedUser = { ...user, companyId, branchId };
 
@@ -107,10 +94,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     set({
-      // Si no llega token (flujo de cookie), no se toca el que ya hubiera en memoria — un
-      // GET /auth/me en el bootstrap llama a login() sin token, y no debe borrar el token
-      // de una sesión NIP activa que sí lo tenía guardado desde antes.
-      token: token || get().token,
+      // login() ya no recibe token — se deja tal cual el que haya en memoria (la
+      // hidratación inicial de localStorage, si sobrevivía una sesión de antes de la
+      // migración a cookies; ver comentario del campo arriba).
+      token: get().token,
       tenantId: user.tenantId || null,
       user: enrichedUser,
       modulosActivos,
