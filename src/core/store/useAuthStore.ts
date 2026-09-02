@@ -13,14 +13,6 @@ interface User {
 }
 
 interface AuthState {
-  // Auditoría de seguridad (GoodsHabits, cookies httpOnly, Pendiente 2): ya no lo puebla
-  // ningún flujo — login() no acepta token (ver abajo). Solo queda la hidratación inicial
-  // de localStorage.getItem("access_token") de la línea de abajo, que sobrevive por
-  // compatibilidad con sesiones viejas que todavía tuvieran ese valor de antes de la
-  // migración a cookies. POSPage.tsx sigue usando este campo como gate de un useEffect
-  // (`if (!token) return`) — para una sesión nueva sin ese residuo, ese gate nunca pasa;
-  // es un problema real y aparte, no se toca en este cambio (ver diagnóstico entregado).
-  token: string | null;
   tenantId: string | null;
   user: User | null;
   modulosActivos: string[];
@@ -56,8 +48,7 @@ interface AuthState {
   clearLogoutTrigger: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
-  token: localStorage.getItem("access_token"),
+export const useAuthStore = create<AuthState>((set) => ({
   tenantId: localStorage.getItem("tenant_id"),
   user: JSON.parse(localStorage.getItem("user") || "null"),
   modulosActivos: JSON.parse(localStorage.getItem("modulos_activos") || "[]"),
@@ -94,10 +85,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     set({
-      // login() ya no recibe token — se deja tal cual el que haya en memoria (la
-      // hidratación inicial de localStorage, si sobrevivía una sesión de antes de la
-      // migración a cookies; ver comentario del campo arriba).
-      token: get().token,
       tenantId: user.tenantId || null,
       user: enrichedUser,
       modulosActivos,
@@ -118,6 +105,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // (repro aislado: sin await, las cookies sobrevivían al logout; con await, no).
     await api.post('/auth/logout').catch(() => {});
 
+    // access_token: ya no hay campo `token` en el store ni ningún flujo que lo escriba
+    // (ver Pendiente 2) — este removeItem se deja como limpieza defensiva de un residuo de
+    // localStorage de antes de la migración a cookies, por si sobrevivía en el navegador.
     localStorage.removeItem("access_token");
     localStorage.removeItem("tenant_id");
     localStorage.removeItem("user");
@@ -134,7 +124,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     useCompanyStore.getState().setActiveBranch(null);
 
     set({
-      token: null,
       tenantId: null,
       user: null,
       modulosActivos: [],
@@ -154,7 +143,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     localStorage.removeItem("user_branch_id");
 
     set({
-      token: null,
       tenantId: null,
       user: null,
       modulosActivos: [],

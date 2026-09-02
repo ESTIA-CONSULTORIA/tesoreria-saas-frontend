@@ -44,7 +44,17 @@ export default function EmployeeProfile() {
       .finally(() => setLoading(false));
   }, []);
 
-  function logout() {
+  async function logout() {
+    // Auditoría de seguridad (GoodsHabits, cookies httpOnly, Pendiente 3): antes solo
+    // limpiaba sessionStorage — el Portal comparte cookie (access_token/refresh_token) con
+    // el ERP normal (a propósito, ver auth.service.ts::portalLogin()), y solo el servidor
+    // puede invalidarla. Sin este POST, la cookie httpOnly seguía viva y un GET /auth/me
+    // posterior reautenticaba en silencio a alguien que ya "cerró sesión" — grave en un
+    // dispositivo compartido (kiosk de empleados). Mismo patrón que
+    // useAuthStore.ts::logout(): await obligatorio antes de navegar, si no la navegación
+    // puede abortar la conexión antes de que el navegador procese el Set-Cookie de
+    // limpieza.
+    await employeeApi.post("/auth/logout").catch(() => {});
     sessionStorage.removeItem("employee_user");
     navigate("/employee");
   }

@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
+import { employeeApi } from "../../core/api/employeeApi";
 
 interface Props {
   children: React.ReactNode;
@@ -15,7 +16,11 @@ export default function EmployeeLayout({ children }: Props) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  function logout() {
+  async function logout() {
+    // Auditoría de seguridad (GoodsHabits, cookies httpOnly, Pendiente 3): ver el mismo
+    // comentario en EmployeeProfile.tsx::logout() — el Portal comparte cookie con el ERP
+    // normal, solo el servidor puede invalidarla. await obligatorio antes de navegar.
+    await employeeApi.post("/auth/logout").catch(() => {});
     sessionStorage.removeItem("employee_user");
     navigate("/employee");
   }

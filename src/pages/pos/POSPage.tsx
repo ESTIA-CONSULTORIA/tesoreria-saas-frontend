@@ -107,7 +107,7 @@ export default function POSPage() {
   const [activeTab, setActiveTab] = useState<TabType>("terminal");
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
-  const token = useAuthStore((state) => state.token);
+  const authChecked = useAuthStore((state) => state.authChecked);
   const branchId = useAuthStore((state) => state.branchId);
   const tenantId = useAuthStore((state) => state.tenantId);
   const { config } = useLoginConfigStore();
@@ -206,6 +206,42 @@ export default function POSPage() {
   const [showLoginScreen, setShowLoginScreen] = useState(false);
   const [cashierPin, setCashierPin] = useState<string>("");
   const [selectedCashier, setSelectedCashier] = useState<string>("");
+  // Auditoría de seguridad (GoodsHabits, cookies httpOnly, Pendiente 1): true solo cuando
+  // un cajero se identificó por NIP (handleLogin) — NO cuando el usuario ERP ya ES el
+  // cajero (ver el useEffect de "salvaguarda" más abajo, que nunca pasa por handleLogin).
+  // Mientras esté activo, el interceptor de abajo agrega x-session-scope: pos-lite a las
+  // llamadas de turnos/ventas, para que se autentiquen con pos_access_token (la identidad
+  // del cajero) en vez de con la cookie de quien abrió el terminal. Se apaga al cerrar el
+  // turno (closeShift) — mismo momento en que ya se limpia selectedCashier.
+  const [nipSessionActive, setNipSessionActive] = useState(false);
+  const nipSessionActiveRef = useRef(false);
+  useEffect(() => { nipSessionActiveRef.current = nipSessionActive; }, [nipSessionActive]);
+
+  // Interceptor con ámbito al ciclo de vida de esta pantalla (se registra al montar, se
+  // quita al desmontar) — nunca afecta llamadas de otras páginas que compartan el cliente
+  // `api`. Whitelist explícita de URL (solo turnos y ventas, lo que realmente identifica al
+  // cajero) en vez de aplicarlo a ciegas a todo mientras nipSessionActiveRef sea true.
+  // Verificado con curl real que la exclusión de /pos/products (catálogo) NO era necesaria
+  // por 403: PlanModuloGuard resuelve el módulo contra tenant_modules por tenantId, no
+  // contra el modulosActivos del JWT — el catálogo respondió 200 igual con la cookie del
+  // cajero. Se excluye igual, a propósito: /pos/products, /pos/categories, /pos/areas y
+  // /tenant-settings son config de tienda (no una acción del cajero), y no hay ninguna
+  // ganancia real en atribuirlas a su identidad. Se usa un ref, no el state directo, porque
+  // el interceptor se registra una sola vez al montar y debe leer el valor más reciente en
+  // cada request, no el capturado en ese momento.
+  useEffect(() => {
+    const interceptorId = api.interceptors.request.use((config) => {
+      if (nipSessionActiveRef.current) {
+        const url = config.url || '';
+        const isCashierScoped = url.includes('/pos/shifts') || url.includes('/pos/sales');
+        if (isCashierScoped) {
+          config.headers = { ...config.headers, 'x-session-scope': 'pos-lite' };
+        }
+      }
+      return config;
+    });
+    return () => { api.interceptors.request.eject(interceptorId); };
+  }, []);
   const [shiftNotes, setShiftNotes] = useState<string>("");
   const [showChatPanel, setShowChatPanel] = useState(false);
   
@@ -356,7 +392,14 @@ export default function POSPage() {
   }, [activeCompany?.id]);
 
   useEffect(() => {
-    if (!token) return; // esperar token
+    // Auditoría de seguridad (GoodsHabits, cookies httpOnly, Pendiente 2): antes esperaba
+    // `token` (state.token de useAuthStore) — un residuo que ya nadie escribe desde la
+    // migración a cookies httpOnly (confirmado: ningún caller pasa token a login()). Para
+    // una sesión nueva sin ese residuo en localStorage, este efecto nunca corría. La señal
+    // real de sesión resuelta es `authChecked` (se vuelve true una sola vez, cuando el
+    // bootstrap GET /auth/me de App.tsx confirma o descarta la cookie) combinada con
+    // `user` (solo se puebla en éxito) — ambos vienen de useAuthStore.
+    if (!authChecked || !user) return; // esperar a que el bootstrap de sesión resuelva
     loadCategories().then((cats) => {
       loadProducts(cats);
     });
@@ -376,7 +419,7 @@ export default function POSPage() {
       setSelectedCashier('');
       setShowLoginScreen(true);
     }
-  }, [token]);
+  }, [authChecked, user?.id]);
 
   useEffect(() => {
     // Salvaguarda: si el usuario ERP es CAJERO, su propia sesión ya es la identidad.
@@ -603,6 +646,7 @@ export default function POSPage() {
       const response = await api.post("/pos/cashiers/nip", { nip: cashierPin });
       const cajeroId = response.data?.user?.id || '';
       setSelectedCashier(cajeroId);
+      setNipSessionActive(true);
       setShowLoginScreen(false);
       setCashierPin("");
       const openShift = await loadOpenShift(cajeroId);
@@ -643,6 +687,7 @@ export default function POSPage() {
       await api.put(`/pos/shifts/${shift.id}/close`, body);
       setShift(null);
       setSelectedCashier('');
+      setNipSessionActive(false);
       setShowCloseShiftModal(false);
       setShowLoginScreen(true);
       alert("Turno cerrado exitosamente");
@@ -656,6 +701,7 @@ export default function POSPage() {
       await enqueueOperation('CLOSE_SHIFT', { shiftId: shift.id, ...body, clientTimestamp }, clientTimestamp);
       setShift(null);
       setSelectedCashier('');
+      setNipSessionActive(false);
       setShowCloseShiftModal(false);
       setShowLoginScreen(true);
       alert("Turno cerrado (pendiente de sincronizar) — se completará cuando haya conexión.");
