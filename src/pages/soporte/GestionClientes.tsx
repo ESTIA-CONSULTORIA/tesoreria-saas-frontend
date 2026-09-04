@@ -767,7 +767,7 @@ export default function GestionClientes() {
                       <option value="LITE_CORTE">LITE — Corte de Caja Manual ($650/mes)</option>
                       <option value="LITE_POS">LITE — POS Sin Inventario ($650/mes)</option>
                       <option value="BASIC">BASIC ($890/mes)</option>
-                      <option value="PRO">PRO ($1,490/mes)</option>
+                      <option value="PRO">PRO ($1,100/mes)</option>
                       <option value="BUSINESS">BUSINESS ($1,980/mes)</option>
                       <option value="ENTERPRISE">ENTERPRISE (cotización)</option>
                     </select>
