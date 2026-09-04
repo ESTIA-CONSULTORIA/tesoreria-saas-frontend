@@ -213,11 +213,17 @@ export default function LoginPage() {
         return;
       }
 
-      const response = await api.post("/pos/cashiers/nip", { nip }, {
-        headers: { 'tenant-id': posTenantId },
-      });
+      // Auditoría de seguridad (GoodsHabits, diagnóstico sesión POS): este era un TERCER
+      // caller de /pos/cashiers/nip que se me había pasado en la ronda anterior — mandaba
+      // tenant-id como header (lo que el backend viejo leía) y esperaba access_token en el
+      // body para pasarlo a login() como tercer argumento. Ninguna de las dos cosas
+      // funcionaba de verdad: cashiers.controller.ts YA sacaba access_token del body antes
+      // de este cambio (setPosLiteCookie(res, access_token); return rest — sin el token),
+      // así que ese tercer argumento siempre llegaba undefined; y el backend ahora ya no
+      // lee ningún header tenant-id en absoluto. Alineado con el mismo contrato que
+      // POSPage.tsx/CorteCajaLite.tsx: tenantId en el body, login() con 2 argumentos.
+      const response = await api.post("/pos/cashiers/nip", { nip, tenantId: posTenantId });
 
-      const token = response.data.access_token;
       const modulosActivos = response.data.modulosActivos || [];
       const user = response.data.user || {};
 
@@ -227,7 +233,7 @@ export default function LoginPage() {
         name: user.name || "Cajero",
         roleCode: user.roleCode,
         tenantId: user.tenantId,
-      }, modulosActivos, token);
+      }, modulosActivos);
 
       const planCode: string = response.data.planCode || '';
       const isLiteCorte = planCode === 'LITE_CORTE' || planCode === 'LITE_POS';

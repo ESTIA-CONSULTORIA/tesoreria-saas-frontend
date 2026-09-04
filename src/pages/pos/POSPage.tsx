@@ -235,7 +235,10 @@ export default function POSPage() {
         const url = config.url || '';
         const isCashierScoped = url.includes('/pos/shifts') || url.includes('/pos/sales');
         if (isCashierScoped) {
-          config.headers = { ...config.headers, 'x-session-scope': 'pos-lite' };
+          // config.headers es una instancia de AxiosHeaders, no un objeto plano —
+          // reemplazarla con un spread pierde sus métodos de clase (set/get/has/delete...)
+          // y no compila. Setea la propiedad directo en la instancia existente.
+          config.headers['x-session-scope'] = 'pos-lite';
         }
       }
       return config;
