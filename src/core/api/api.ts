@@ -115,6 +115,18 @@ api.interceptors.response.use(
         // decida bien, sin ciclos. Para cualquier otra petición (sesión real que se cayó a
         // medio uso mientras el usuario navegaba) el comportamiento no cambia: si el refresh
         // también falla ahí, sí hay que limpiar y mandar a /login.
+        // Auditoría de seguridad (GoodsHabits, diagnóstico sesión POS): mensaje claro para
+        // quien SÍ tenía una sesión y se la cerraron (refresh_token inválido/revocado —
+        // confirmado con evidencia real que esto pasaba en silencio, la app simplemente
+        // regresaba a /login sin explicación). Solo si localStorage.user existe: un
+        // visitante nuevo que nunca inició sesión también entra a este catch (su /auth/me
+        // da 401, el refresh también, por no tener ninguna cookie — mismo camino, ver nota
+        // arriba) y no debe ver "tu sesión expiró" porque nunca tuvo una. LoginPage.tsx lee
+        // esta clave al montar y la limpia.
+        if (localStorage.getItem('user')) {
+          sessionStorage.setItem('session_expired_message', 'Tu sesión expiró. Por favor, inicia sesión de nuevo.');
+        }
+
         const isMeCheck = originalRequest?.url?.endsWith('/auth/me');
         if (!isMeCheck) {
           localStorage.removeItem('access_token');

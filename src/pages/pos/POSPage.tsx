@@ -643,7 +643,12 @@ export default function POSPage() {
       return;
     }
     try {
-      const response = await api.post("/pos/cashiers/nip", { nip: cashierPin });
+      // Auditoría de seguridad (GoodsHabits, diagnóstico sesión POS): tenantId en el body
+      // como respaldo — el backend ya prioriza req.user?.tenantId (la cookie de sesión que
+      // ya existe en este punto, server-verificada), pero mandarlo explícito no cuesta nada
+      // y cubre el caso borde de que esa resolución fallara. Confirmado con curl real que
+      // sin ninguno de los dos, loginWithNip() buscaba el NIP entre todos los tenants.
+      const response = await api.post("/pos/cashiers/nip", { nip: cashierPin, tenantId });
       const cajeroId = response.data?.user?.id || '';
       setSelectedCashier(cajeroId);
       setNipSessionActive(true);

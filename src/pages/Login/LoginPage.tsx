@@ -17,6 +17,12 @@ import { useBrandingStore } from "../../core/store/useBrandingStore";
 // selector de empresa) y no se lee en ningún otro lado del sistema.
 const POS_TENANT_STORAGE_KEY = 'pos_login_tenant_id';
 
+// Auditoría de seguridad (GoodsHabits, diagnóstico sesión POS): clave que api.ts escribe
+// justo antes de mandar a /login cuando una sesión que SÍ existía se cae (refresh_token
+// inválido/revocado) — para que el usuario entienda que fue expulsado, no que "algo se
+// rompió" en silencio. Ver LoginPage's mount effect abajo, que la lee y la limpia.
+const SESSION_EXPIRED_MESSAGE_KEY = 'session_expired_message';
+
 export default function LoginPage() {
   const { login } = useAuthStore();
   const { config, loadConfig } = useLoginConfigStore();
@@ -29,8 +35,18 @@ export default function LoginPage() {
   const [cajero, setCajero] = useState("");
   const [nip, setNip] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [mode, setMode] = useState<"main" | "pos" | null>(null);
+  const [error, setError] = useState(() => sessionStorage.getItem(SESSION_EXPIRED_MESSAGE_KEY) || "");
+  // Si venimos de una sesión expulsada, arranca directo en "Sistema Principal" con el
+  // mensaje ya visible — el selector de modo (mode === null) no muestra ningún error.
+  const [mode, setMode] = useState<"main" | "pos" | null>(
+    () => (sessionStorage.getItem(SESSION_EXPIRED_MESSAGE_KEY) ? 'main' : null),
+  );
+
+  useEffect(() => {
+    if (sessionStorage.getItem(SESSION_EXPIRED_MESSAGE_KEY)) {
+      sessionStorage.removeItem(SESSION_EXPIRED_MESSAGE_KEY);
+    }
+  }, []);
 
   // Tenant para el tab "Punto de Venta" — un cajero puede llegar a /login sin haber
   // tenido nunca una sesión ERP en este dispositivo. Mismo patrón que CorteCajaLite.tsx:
