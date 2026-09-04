@@ -37,6 +37,8 @@ export default function CreateInsumoModal({ open, onClose, onCreated, suppliers,
     unidadMedida: "",
     presentacionCompra: "",
     factorConversion: 1,
+    precioCompra: 0,
+    merma: 0,
     costoUnitario: 0,
     moneda: "MXN",
     proveedorId: "",
@@ -74,6 +76,8 @@ export default function CreateInsumoModal({ open, onClose, onCreated, suppliers,
           unidadMedida: insumo.unidadMedida || "",
           presentacionCompra: insumo.presentacionCompra || "",
           factorConversion: insumo.factorConversion || 1,
+          precioCompra: insumo.precioCompra || 0,
+          merma: insumo.merma || 0,
           costoUnitario: insumo.costoUnitario || 0,
           moneda: insumo.moneda || "MXN",
           proveedorId: insumo.proveedorId || "",
@@ -92,6 +96,8 @@ export default function CreateInsumoModal({ open, onClose, onCreated, suppliers,
           unidadMedida: "",
           presentacionCompra: "",
           factorConversion: 1,
+          precioCompra: 0,
+          merma: 0,
           costoUnitario: 0,
           moneda: "MXN",
           proveedorId: "",
@@ -103,6 +109,21 @@ export default function CreateInsumoModal({ open, onClose, onCreated, suppliers,
       }
     }
   }, [open, insumo]);
+
+  // Auditoría de seguridad (GoodsHabits, portabilidad Costos standalone): mismo cálculo que
+  // CostsService.calcularCostoUnitario() del backend — se muestra aquí solo como preview en
+  // vivo mientras se captura, el valor real que se guarda lo recalcula el backend siempre que
+  // haya precioCompra (nunca se confía en lo que mande el cliente). Sin precioCompra, el
+  // campo de Costo Unitario abajo vuelve a ser editable a mano, para no romper la captura
+  // manual que ya usan los insumos existentes.
+  const precioCompraActivo = Number(formData.precioCompra) > 0;
+  const costoCalculado = precioCompraActivo
+    ? (() => {
+        const factor = Number(formData.factorConversion) > 0 ? Number(formData.factorConversion) : 1;
+        const denom = factor * (1 - Number(formData.merma || 0) / 100);
+        return denom > 0 ? Number(formData.precioCompra) / denom : 0;
+      })()
+    : null;
 
   async function generateCode() {
     if (!formData.familiaId) {
@@ -269,6 +290,7 @@ export default function CreateInsumoModal({ open, onClose, onCreated, suppliers,
                 placeholder="Ej: Caja 24 latas, Costal 25 kg"
                 className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
               />
+              <p className="mt-1 text-xs text-slate-500">Solo descriptivo (no calcula nada) — lo que compras, ej. "Caja de 24".</p>
             </div>
 
             <div>
@@ -282,18 +304,60 @@ export default function CreateInsumoModal({ open, onClose, onCreated, suppliers,
                 placeholder="Unidades por presentación de compra"
                 className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
               />
+              <p className="mt-1 text-xs text-slate-500">
+                Cuántas {formData.unidadMedida || "unidades de consumo"} rinde esa presentación — ej. 24. Se usa para calcular el costo unitario y para sumar el stock correcto al registrar la compra.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm text-slate-400 mb-1">Precio de Compra</label>
+              <input
+                type="number"
+                value={formData.precioCompra}
+                onChange={(e) => setFormData({ ...formData, precioCompra: Number(e.target.value) })}
+                step="0.01"
+                min="0"
+                placeholder="Precio pagado por la presentación completa"
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+              />
+              <p className="mt-1 text-xs text-slate-500">Lo que pagas por toda la presentación (ej. por la caja completa), no por unidad — de ahí se calcula el costo unitario.</p>
+            </div>
+
+            <div>
+              <label className="block text-sm text-slate-400 mb-1">Merma (%)</label>
+              <input
+                type="number"
+                value={formData.merma}
+                onChange={(e) => setFormData({ ...formData, merma: Number(e.target.value) })}
+                step="0.01"
+                min="0"
+                max="99"
+                placeholder="0"
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+              />
+              <p className="mt-1 text-xs text-slate-500">% que se pierde antes de poder usarlo (opcional).</p>
             </div>
 
             <div>
               <label className="block text-sm text-slate-400 mb-1">Costo Unitario *</label>
               <input
                 type="number"
-                value={formData.costoUnitario}
+                value={precioCompraActivo ? Number(costoCalculado).toFixed(4) : formData.costoUnitario}
                 onChange={(e) => setFormData({ ...formData, costoUnitario: Number(e.target.value) })}
+                readOnly={precioCompraActivo}
                 required
                 step="0.01"
-                className="w-full rounded-lg border border-slate-700 bg-slate-800 p-2 text-white outline-none focus:border-blue-500"
+                className={`w-full rounded-lg border p-2 text-white outline-none ${
+                  precioCompraActivo
+                    ? "border-slate-800 bg-slate-800/50 text-slate-300 cursor-not-allowed"
+                    : "border-slate-700 bg-slate-800 focus:border-blue-500"
+                }`}
               />
+              <p className="mt-1 text-xs text-slate-500">
+                {precioCompraActivo
+                  ? "Calculado automático: Precio de Compra ÷ (Factor de Conversión × (1 − Merma/100)). No editable mientras haya Precio de Compra."
+                  : "Captura manual — déjalo así si no vas a registrar Precio de Compra para este insumo."}
+              </p>
             </div>
 
             <div>
