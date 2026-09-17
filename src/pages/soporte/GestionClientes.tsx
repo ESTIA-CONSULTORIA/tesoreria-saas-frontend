@@ -764,12 +764,12 @@ export default function GestionClientes() {
                       onChange={e => setWizardData(p => ({ ...p, plan: e.target.value }))}
                       style={{ width: '100%', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: '#0d1117', padding: '10px 12px', color: '#e8edf5', fontSize: 13, marginBottom: 12, outline: 'none', boxSizing: 'border-box' }}
                     >
-                      <option value="LITE_CORTE">LITE — Corte de Caja Manual ($650/mes)</option>
-                      <option value="LITE_POS">LITE — POS Sin Inventario ($650/mes)</option>
-                      <option value="BASIC">BASIC ($890/mes)</option>
-                      <option value="PRO">PRO ($1,100/mes)</option>
-                      <option value="BUSINESS">BUSINESS ($1,980/mes)</option>
-                      <option value="ENTERPRISE">ENTERPRISE (cotización)</option>
+                      <option value="LITE_CORTE">LITE — Corte de Caja Manual ($550/mes)</option>
+                      <option value="LITE_POS">LITE — POS Sin Inventario ($550/mes)</option>
+                      <option value="BASIC">BASIC ($800/mes)</option>
+                      <option value="PRO">PRO ($1,050/mes)</option>
+                      <option value="BUSINESS">BUSINESS ($1,400/mes)</option>
+                      <option value="ENTERPRISE">ENTERPRISE ($1,800/mes)</option>
                     </select>
 
                     <div style={{ marginBottom: 12 }}>
