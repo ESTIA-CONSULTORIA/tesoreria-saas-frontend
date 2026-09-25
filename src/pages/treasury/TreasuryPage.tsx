@@ -4,6 +4,7 @@ import MainLayout from "../../core/layout/MainLayout";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import ExecutiveKPI from "../../components/ExecutiveKPI";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
+import { useAuthStore } from "../../core/store/useAuthStore";
 
 
 type TabType = "resumen" | "posicion" | "traslados" | "cxp" | "cxc" | "alertas" | "antiguedad" | "depositos";
@@ -11,6 +12,8 @@ type PeriodType = "week" | "month" | "quarter";
 
 export default function TreasuryPage() {
   const { activeBranch, activeCompany } = useCompanyStore();
+  const authUser = useAuthStore((state) => state.user);
+  const isAdminOrSoporte = authUser?.roleCode === "ADMIN" || authUser?.roleCode === "SOPORTE";
   const [activeTab, setActiveTab] = useState<TabType>("resumen");
   const [period, setPeriod] = useState<PeriodType>("month");
   const [executiveSummary, setExecutiveSummary] = useState<any>(null);
@@ -39,8 +42,16 @@ export default function TreasuryPage() {
     amount: "",
     concept: "",
     referencia: "",
+    empresaOrigenId: "",
+    empresaDestinoId: "",
+    motivo: "",
   });
   const [transferHistory, setTransferHistory] = useState<any[]>([]);
+  // Auditoría BUSINESS (recomendación #3): antes esta tab tenía su propia lista de empresas
+  // para nada — createTransfer() en treasury.service.ts ni siquiera leía el campo `tipo`.
+  // Ahora que pasa por /transfers (TransfersService), sí necesita el listado real de
+  // empresas para armar el payload de una INTERCOMPAÑIA, igual que CreateTransferModal.tsx.
+  const [transferCompanies, setTransferCompanies] = useState<any[]>([]);
   const [alertForm, setAlertForm] = useState({
     saldoMinimo: "",
     diasAnticipacionAlerta: "",
@@ -71,10 +82,18 @@ export default function TreasuryPage() {
           setBankPosition(bankResponse.data);
           break;
         case "traslados":
+          // Auditoría BUSINESS (recomendación #3): antes leía /treasury/transfers, que
+          // nunca escribía en la tabla `transfer` — el historial de esta misma tab jamás
+          // reflejaba lo que su propio formulario creaba. Ahora usa /transfers, la misma
+          // fuente que TransfersPage.tsx.
           const banksRes = await api.get("/banks");
           setBanks(Array.isArray(banksRes.data) ? banksRes.data : []);
-          const historyRes = await api.get("/treasury/transfers?limit=20");
+          const historyRes = await api.get("/transfers");
           setTransferHistory(Array.isArray(historyRes.data) ? historyRes.data : []);
+          if (isAdminOrSoporte) {
+            const companiesRes = await api.get("/companies");
+            setTransferCompanies(Array.isArray(companiesRes.data) ? companiesRes.data : []);
+          }
           break;
         case "cxp":
           const cxpRes = await api.get("/treasury/accounts-payable");
@@ -126,15 +145,40 @@ export default function TreasuryPage() {
     return "bg-green-500";
   }
 
+  // Mismo patrón que TransfersPage.tsx::getAccountName() — el historial de esta tab debe
+  // mostrar los mismos datos que la página dedicada de Transferencias.
+  function getTransferAccountName(accountId: string): string {
+    const account = banks.find((b: any) => b.id === accountId);
+    return account?.name || accountId;
+  }
+
   async function handleTransferSubmit(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await api.post("/treasury/transfers", {
-        ...transferForm,
+      // Auditoría BUSINESS (recomendación #3): antes posteaba a /treasury/transfers, que
+      // ignoraba `tipo` por completo — un "Traslado Intercompañía" se ejecutaba de inmediato,
+      // igual que uno interno, sin el flujo de autorización real. Ahora usa /transfers
+      // (TransfersService), mismo payload y misma lógica que CreateTransferModal.tsx.
+      const payload: any = {
+        fromAccountId: transferForm.cuentaOrigenId,
+        toAccountId: transferForm.cuentaDestinoId,
         amount: Number(transferForm.amount),
-      });
+        concept: transferForm.concept,
+        tipo: transferForm.tipo,
+        referencia: transferForm.referencia,
+      };
+      if (transferForm.tipo === "INTERCOMPAÑIA") {
+        payload.empresaOrigenId = transferForm.empresaOrigenId;
+        payload.empresaDestinoId = transferForm.empresaDestinoId;
+        payload.motivo = transferForm.motivo;
+      }
+      await api.post("/transfers", payload);
       setError("");
-      alert("Traslado realizado exitosamente");
+      alert(
+        transferForm.tipo === "INTERCOMPAÑIA"
+          ? "Traslado intercompañía creado — queda pendiente de autorización"
+          : "Traslado realizado exitosamente",
+      );
       setTransferForm({
         tipo: "INTERNA",
         cuentaOrigenId: "",
@@ -142,6 +186,9 @@ export default function TreasuryPage() {
         amount: "",
         concept: "",
         referencia: "",
+        empresaOrigenId: "",
+        empresaDestinoId: "",
+        motivo: "",
       });
       loadData();
     } catch (err: any) {
@@ -510,23 +557,72 @@ export default function TreasuryPage() {
                 <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '24px' }}>
                   <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '16px' }}>Nuevo Traslado</h3>
                   <form onSubmit={handleTransferSubmit} className="space-y-4">
-                    <div>
-                      <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Tipo de Traslado</label>
-                      <select 
-                        value={transferForm.tipo}
-                        onChange={(e) => setTransferForm({ ...transferForm, tipo: e.target.value as any })}
-                        className="w-full" style={{
-                        backgroundColor: '#0F0F0F',
-                        color: '#F5F5F5',
-                        borderRadius: '4px',
-                        border: '1px solid #2D2D2D',
-                        padding: '10px 12px',
-                        fontSize: '13px',
-                      }}>
-                        <option value="INTERNA">Traslado Interno</option>
-                        <option value="INTERCOMPAÑIA">Traslado Intercompañía</option>
-                      </select>
-                    </div>
+                    {/* Mismo criterio que CreateTransferModal.tsx: solo ADMIN/SOPORTE puede
+                        siquiera elegir INTERCOMPAÑIA — el resto de los roles solo hace
+                        traslados internos. */}
+                    {isAdminOrSoporte && (
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Tipo de Traslado</label>
+                        <select
+                          value={transferForm.tipo}
+                          onChange={(e) => setTransferForm({ ...transferForm, tipo: e.target.value as any })}
+                          className="w-full" style={{
+                          backgroundColor: '#0F0F0F',
+                          color: '#F5F5F5',
+                          borderRadius: '4px',
+                          border: '1px solid #2D2D2D',
+                          padding: '10px 12px',
+                          fontSize: '13px',
+                        }}>
+                          <option value="INTERNA">Traslado Interno</option>
+                          <option value="INTERCOMPAÑIA">Traslado Intercompañía</option>
+                        </select>
+                      </div>
+                    )}
+                    {transferForm.tipo === "INTERCOMPAÑIA" && isAdminOrSoporte && (
+                      <>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Empresa Origen</label>
+                          <select
+                            value={transferForm.empresaOrigenId}
+                            onChange={(e) => setTransferForm({ ...transferForm, empresaOrigenId: e.target.value })}
+                            required
+                            className="w-full" style={{
+                            backgroundColor: '#0F0F0F',
+                            color: '#F5F5F5',
+                            borderRadius: '4px',
+                            border: '1px solid #2D2D2D',
+                            padding: '10px 12px',
+                            fontSize: '13px',
+                          }}>
+                            <option value="">Seleccionar empresa origen</option>
+                            {transferCompanies.map((comp: any) => (
+                              <option key={comp.id} value={comp.id}>{comp.legalName || comp.tradeName}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Empresa Destino</label>
+                          <select
+                            value={transferForm.empresaDestinoId}
+                            onChange={(e) => setTransferForm({ ...transferForm, empresaDestinoId: e.target.value })}
+                            required
+                            className="w-full" style={{
+                            backgroundColor: '#0F0F0F',
+                            color: '#F5F5F5',
+                            borderRadius: '4px',
+                            border: '1px solid #2D2D2D',
+                            padding: '10px 12px',
+                            fontSize: '13px',
+                          }}>
+                            <option value="">Seleccionar empresa destino</option>
+                            {transferCompanies.map((comp: any) => (
+                              <option key={comp.id} value={comp.id}>{comp.legalName || comp.tradeName}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </>
+                    )}
                     <div>
                       <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Cuenta Origen</label>
                       <select 
@@ -626,6 +722,26 @@ export default function TreasuryPage() {
                         }}
                       />
                     </div>
+                    {transferForm.tipo === "INTERCOMPAÑIA" && (
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Motivo del traslado (opcional)</label>
+                        <input
+                          type="text"
+                          value={transferForm.motivo}
+                          onChange={(e) => setTransferForm({ ...transferForm, motivo: e.target.value })}
+                          placeholder="Motivo del traslado intercompañía"
+                          style={{
+                            width: '100%',
+                            backgroundColor: '#0F0F0F',
+                            color: '#F5F5F5',
+                            borderRadius: '4px',
+                            border: '1px solid #2D2D2D',
+                            padding: '10px 12px',
+                            fontSize: '13px',
+                          }}
+                        />
+                      </div>
+                    )}
                     <button
                       type="submit"
                       style={{
@@ -672,6 +788,9 @@ export default function TreasuryPage() {
                             </span>
                           </div>
                           <p style={{ color: '#7E7E7E', fontSize: '12px', marginTop: '4px' }}>
+                            {getTransferAccountName(t.fromAccountId)} → {getTransferAccountName(t.toAccountId)}
+                          </p>
+                          <p style={{ color: '#7E7E7E', fontSize: '12px', marginTop: '2px' }}>
                             {t.concept || 'Sin concepto'} · {new Date(t.createdAt).toLocaleDateString('es-MX')}
                           </p>
                         </div>
