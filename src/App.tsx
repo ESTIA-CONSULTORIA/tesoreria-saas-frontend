@@ -35,6 +35,7 @@ import SolutionsCenter from "./pages/solutions/SolutionsCenter";
 import LoginPage from "./pages/Login/LoginPage";
 import ExecutivePage from "./pages/executive/ExecutivePage";
 import CorteCajaLite from "./pages/lite/CorteCajaLite";
+import NotasCocinaLite from "./pages/lite/NotasCocinaLite";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
 import DashboardLite from "./pages/Dashboard/DashboardLite";
 import LoginConfigPage from "./pages/settings/LoginConfigPage";
@@ -245,6 +246,7 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/executive" element={<ExecutivePage />} />
       <Route path="/corte" element={<CorteCajaLite />} />
+      <Route path="/cocina" element={<NotasCocinaLite />} />
       <Route path="/" element={
         <ProtectedRoute>
           <TopBar />
