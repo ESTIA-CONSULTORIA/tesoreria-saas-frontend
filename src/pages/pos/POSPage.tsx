@@ -1134,7 +1134,12 @@ export default function POSPage() {
     setReturningSale(true);
     setReturnSaleError("");
     try {
-      await api.post(`/pos/sales/${returnSaleId}/return`, { motivo: returnSaleReason.trim() });
+      // turnoId: la devolución se atribuye al turno de ESTA caja (si el POS tiene uno abierto en
+      // estado); sin él, el backend usa el turno abierto más reciente de la sucursal.
+      await api.post(`/pos/sales/${returnSaleId}/return`, {
+        motivo: returnSaleReason.trim(),
+        ...(shift?.id ? { turnoId: shift.id } : {}),
+      });
       setShowReturnSaleModal(false);
       setReturnSaleId(null);
       setReturnSaleReason("");

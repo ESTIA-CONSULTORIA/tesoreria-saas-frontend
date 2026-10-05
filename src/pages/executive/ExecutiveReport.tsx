@@ -229,7 +229,10 @@ export default function ExecutiveReport({
 
           if (giro === "restaurant") {
             const salesData = await eApi.get("/pos/sales").then((r) => r.data).catch(() => null);
-            const allSales = Array.isArray(salesData) ? salesData : [];
+            // Solo ventas PAGADA: GET /pos/sales trae también CANCELADA, ABIERTA y las devoluciones
+            // (DEVUELTA = la venta original ya devuelta; DEVOLUCION = su registro, con total positivo).
+            // Sumarlas todas inflaba la venta; con solo PAGADA una venta devuelta neta a 0.
+            const allSales = (Array.isArray(salesData) ? salesData : []).filter((s: { status?: string }) => s.status === "PAGADA");
             val = allSales.reduce((s: number, sale: any) => s + Number(sale.total || 0), 0);
             const ticketProm = allSales.length > 0 ? Math.round(val / allSales.length) : 0;
 
