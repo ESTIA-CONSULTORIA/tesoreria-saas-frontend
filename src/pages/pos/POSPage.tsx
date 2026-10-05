@@ -58,6 +58,9 @@ interface Shift {
   status: string;
 }
 
+// Forma mínima del error de axios que usamos para mostrar el mensaje real del backend.
+type ApiErrorLike = { response?: { data?: { message?: string | string[] } } };
+
 interface Sale {
   id: string;
   folio: string;
@@ -174,10 +177,19 @@ export default function POSPage() {
   const [courtesyReason, setCourtesyReason] = useState("");
   const [courtesyAuthorizedBy, setCourtesyAuthorizedBy] = useState("");
   const [cardValidationError, setCardValidationError] = useState("");
-  const [showCancelSaleModal, setShowCancelSaleModal] = useState(false);
-  const [cancelSaleId, setCancelSaleId] = useState<string | null>(null);
-  const [cancelSaleReason, setCancelSaleReason] = useState("");
-  
+  const [showReturnSaleModal, setShowReturnSaleModal] = useState(false);
+  const [returnSaleId, setReturnSaleId] = useState<string | null>(null);
+  const [returnSaleReason, setReturnSaleReason] = useState("");
+  const [returnSaleError, setReturnSaleError] = useState("");
+  const [returningSale, setReturningSale] = useState(false);
+  // Política de devoluciones del negocio (SOLO_GERENTE | CAJERO_LIBRE) y si ESTE usuario puede
+  // devolver. Solo decide si se muestra el botón: el backend vuelve a validar al devolver.
+  const [politicaDevoluciones, setPoliticaDevoluciones] = useState<"SOLO_GERENTE" | "CAJERO_LIBRE">("SOLO_GERENTE");
+  const [puedeDevolver, setPuedeDevolver] = useState(false);
+  const [savingPolitica, setSavingPolitica] = useState(false);
+  const [politicaGuardada, setPoliticaGuardada] = useState(false);
+  const [politicaError, setPoliticaError] = useState("");
+
   // Enhanced discount modal state
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
   const [customDiscountValue, setCustomDiscountValue] = useState<string>("");
@@ -1106,25 +1118,72 @@ export default function POSPage() {
     }
   }
 
-  function cancelSale(saleId: string) {
-    setCancelSaleId(saleId);
-    setCancelSaleReason("");
-    setShowCancelSaleModal(true);
+  function devolverVenta(saleId: string) {
+    setReturnSaleId(saleId);
+    setReturnSaleReason("");
+    setReturnSaleError("");
+    setShowReturnSaleModal(true);
   }
 
-  async function confirmCancelSale() {
-    if (!cancelSaleId || !cancelSaleReason.trim()) return;
+  // Devolución total de una venta cobrada (POST /pos/sales/:id/return, solo el motivo): el backend
+  // devuelve el stock, registra el reembolso en el turno abierto y decide quién puede hacerla según
+  // la política del negocio. Un rechazo (403 política, 400 sin turno abierto / ya devuelta...) se
+  // muestra con el mensaje real del backend.
+  async function confirmReturnSale() {
+    if (!returnSaleId || !returnSaleReason.trim() || returningSale) return;
+    setReturningSale(true);
+    setReturnSaleError("");
     try {
-      await api.put(`/pos/sales/${cancelSaleId}/cancel`, { motivo: cancelSaleReason });
-      setShowCancelSaleModal(false);
-      setCancelSaleId(null);
-      setCancelSaleReason("");
+      await api.post(`/pos/sales/${returnSaleId}/return`, { motivo: returnSaleReason.trim() });
+      setShowReturnSaleModal(false);
+      setReturnSaleId(null);
+      setReturnSaleReason("");
       loadSalesHistory();
     } catch (error) {
-      console.error("Error canceling sale:", error);
-      alert("Error al cancelar venta");
+      console.error("Error returning sale:", error);
+      const msg = (error as ApiErrorLike)?.response?.data?.message;
+      setReturnSaleError(
+        (Array.isArray(msg) ? msg.join(". ") : msg) || "No se pudo procesar la devolución. Intenta de nuevo.",
+      );
+    } finally {
+      setReturningSale(false);
     }
   }
+
+  // Política de devoluciones vigente y si este usuario puede devolver (solo para mostrar el botón).
+  function loadPoliticaDevoluciones() {
+    return api
+      .get("/pos/sales/politica-devoluciones")
+      .then((res) => {
+        setPoliticaDevoluciones(res.data?.politicaDevoluciones === "CAJERO_LIBRE" ? "CAJERO_LIBRE" : "SOLO_GERENTE");
+        setPuedeDevolver(res.data?.puedeDevolver === true);
+      })
+      .catch(() => setPuedeDevolver(false)); // sin dato, el botón se oculta; el backend sigue decidiendo
+  }
+
+  // Solo ADMIN (el backend también lo exige): cambia la política del negocio.
+  async function savePoliticaDevoluciones(value: "SOLO_GERENTE" | "CAJERO_LIBRE") {
+    const tid = localStorage.getItem("tenant_id");
+    if (!tid) return;
+    setSavingPolitica(true);
+    setPoliticaGuardada(false);
+    setPoliticaError("");
+    try {
+      await api.put(`/tenant-settings/${tid}/politica-devoluciones`, { politicaDevoluciones: value });
+      await loadPoliticaDevoluciones();
+      setPoliticaGuardada(true);
+    } catch (error) {
+      const msg = (error as ApiErrorLike)?.response?.data?.message;
+      setPoliticaError((Array.isArray(msg) ? msg.join(". ") : msg) || "No se pudo guardar la política.");
+    } finally {
+      setSavingPolitica(false);
+    }
+  }
+
+  useEffect(() => {
+    if (authChecked && user) loadPoliticaDevoluciones();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authChecked, user?.roleCode]);
 
   // CSV Import functions for POS
   function parsePOSCSV(text: string): string[] {
@@ -2331,6 +2390,51 @@ export default function POSPage() {
               </div>
             </div>
 
+            {user?.roleCode === "ADMIN" && (
+              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                <h3 className="text-lg font-semibold mb-3">Devoluciones de ventas</h3>
+                <p className="text-xs text-slate-500 mb-4">
+                  Define quién puede devolver una venta ya cobrada. Aplica a toda la empresa.
+                </p>
+
+                <label className="flex items-start gap-3 mb-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="politicaDevoluciones"
+                    checked={politicaDevoluciones === "SOLO_GERENTE"}
+                    onChange={() => savePoliticaDevoluciones("SOLO_GERENTE")}
+                    disabled={savingPolitica}
+                    className="mt-1"
+                  />
+                  <div>
+                    <div className="text-sm font-medium text-white">Solo gerente o administrador (recomendado)</div>
+                    <div className="text-xs text-slate-400">Un cajero no puede devolver; debe pedirle a un gerente que lo haga.</div>
+                  </div>
+                </label>
+
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="politicaDevoluciones"
+                    checked={politicaDevoluciones === "CAJERO_LIBRE"}
+                    onChange={() => savePoliticaDevoluciones("CAJERO_LIBRE")}
+                    disabled={savingPolitica}
+                    className="mt-1"
+                  />
+                  <div>
+                    <div className="text-sm font-medium text-white">Cualquier cajero</div>
+                    <div className="text-xs text-slate-400">Cualquier usuario del POS puede devolver una venta, sin autorización de un gerente.</div>
+                  </div>
+                </label>
+
+                <div className="mt-3 h-4 text-xs">
+                  {savingPolitica && <span className="text-slate-400">Guardando...</span>}
+                  {!savingPolitica && politicaGuardada && !politicaError && <span className="text-green-400">Guardado.</span>}
+                  {!savingPolitica && politicaError && <span className="text-red-400">{politicaError}</span>}
+                </div>
+              </div>
+            )}
+
             <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
               <h3 className="text-lg font-semibold mb-3">Impuestos</h3>
               <div>
@@ -2614,19 +2718,24 @@ export default function POSPage() {
                           className={`px-2 py-1 rounded text-xs ${
                             sale.status === "PAGADA"
                               ? "bg-green-900/40 text-green-300"
-                              : "bg-red-900/40 text-red-300"
+                              : sale.status === "DEVUELTA" || sale.status === "DEVOLUCION"
+                                ? "bg-amber-900/40 text-amber-300"
+                                : "bg-red-900/40 text-red-300"
                           }`}
                         >
                           {sale.status}
                         </span>
                       </td>
                       <td className="px-4 py-2 text-center">
-                        {sale.status === "PAGADA" && (
+                        {/* Solo ventas PAGADA reales (total > 0 y sin sufijo -DEV: las filas -DEV del
+                            esquema anterior no se pueden devolver) y solo si la política lo permite
+                            a este usuario. El backend decide de todos modos. */}
+                        {sale.status === "PAGADA" && sale.total > 0 && !sale.folio?.endsWith("-DEV") && puedeDevolver && (
                           <button
-                            onClick={() => cancelSale(sale.id)}
+                            onClick={() => devolverVenta(sale.id)}
                             className="px-2 py-1 rounded bg-red-600 text-xs hover:bg-red-700"
                           >
-                            Cancelar
+                            Devolver
                           </button>
                         )}
                       </td>
@@ -4241,37 +4350,45 @@ export default function POSPage() {
       )}
 
       {/* MODAL CANCELAR VENTA */}
-      {showCancelSaleModal && (
+      {showReturnSaleModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
             <div className="mb-6">
-              <h3 className="text-2xl font-bold text-white">Cancelar Venta</h3>
-              <p className="text-sm text-slate-400">Ingresa el motivo de la cancelación</p>
+              <h3 className="text-2xl font-bold text-white">Devolver Venta</h3>
+              <p className="text-sm text-slate-400">
+                Se devuelve la venta completa: el inventario regresa (salvo lo que ya salió a cocina o barra,
+                que se registra como merma) y el reembolso se descuenta en el turno abierto.
+              </p>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-slate-400 mb-2">Motivo de cancelación</label>
+                <label className="block text-sm text-slate-400 mb-2">Motivo de la devolución</label>
                 <textarea
-                  value={cancelSaleReason}
-                  onChange={(e) => setCancelSaleReason(e.target.value)}
+                  value={returnSaleReason}
+                  onChange={(e) => setReturnSaleReason(e.target.value)}
                   placeholder="Describe el motivo..."
                   rows={3}
                   className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
+              {returnSaleError && (
+                <div className="rounded-lg border border-red-800 bg-red-900/30 px-3 py-2 text-sm text-red-300">
+                  {returnSaleError}
+                </div>
+              )}
               <div className="flex gap-3 justify-end">
                 <button
-                  onClick={() => { setShowCancelSaleModal(false); setCancelSaleId(null); setCancelSaleReason(""); }}
+                  onClick={() => { setShowReturnSaleModal(false); setReturnSaleId(null); setReturnSaleReason(""); setReturnSaleError(""); }}
                   className="px-4 py-2 rounded-lg bg-slate-700 text-white font-medium hover:bg-slate-600"
                 >
-                  Cancelar
+                  Cerrar
                 </button>
                 <button
-                  onClick={confirmCancelSale}
-                  disabled={!cancelSaleReason.trim()}
+                  onClick={confirmReturnSale}
+                  disabled={!returnSaleReason.trim() || returningSale}
                   className="px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Confirmar Cancelación
+                  {returningSale ? "Devolviendo..." : "Confirmar Devolución"}
                 </button>
               </div>
             </div>
