@@ -335,7 +335,7 @@ export default function POSPage() {
     areaId: "",
     numero: "",
     capacidad: "",
-    status: "DISPONIBLE"
+    status: "AVAILABLE"
   });
   const [expandedArea, setExpandedArea] = useState<string | null>(null);
 
@@ -1057,7 +1057,7 @@ export default function POSPage() {
       cajero: selectedCashier || user?.id,
       turnoId: shift.id,
       sucursalId: user?.branchId || branchId,
-      mesaId: selectedTableForPOS?.id || undefined,
+      tableId: selectedTableForPOS?.id || undefined,
     };
 
     try {
@@ -1074,6 +1074,13 @@ export default function POSPage() {
       loadSalesHistory();
     } catch (error) {
       console.error("Error processing payment:", error);
+
+      // Una venta ligada a una mesa es una cuenta de mesa (el backend estampa mesero y turno y revisa saldo/roles):
+      // nunca entra a la cola offline, se rechaza con el mensaje de conexión.
+      if (saleData.tableId && isNetworkOrTimeoutError(error)) {
+        alert("Sin conexión: las cuentas de mesa no se pueden cobrar sin internet. Reintenta cuando vuelva la conexión.");
+        return;
+      }
 
       if (isNetworkOrTimeoutError(error)) {
         // Fase C2: sin red/timeout — encolar la venta y mostrar el ticket como si se
@@ -1989,7 +1996,7 @@ export default function POSPage() {
                         <button
                           onClick={() => {
                             setEditingMesa(null);
-                            setMesaForm({ areaId: area.id, numero: "", capacidad: "", status: "DISPONIBLE" });
+                            setMesaForm({ areaId: area.id, numero: "", capacidad: "", status: "AVAILABLE" });
                             setShowMesaModal(true);
                           }}
                           className="px-3 py-1 rounded bg-green-600 text-xs hover:bg-green-700"
@@ -2004,16 +2011,16 @@ export default function POSPage() {
                           area.tables.map((mesa: any) => (
                             <div key={mesa.id} className="p-3 rounded-lg bg-slate-900 border border-slate-700">
                               <div className="flex justify-between items-start mb-1">
-                                <span className="font-semibold">Mesa {mesa.numero}</span>
+                                <span className="font-semibold">Mesa {mesa.number}</span>
                                 <span className={`px-2 py-0.5 rounded text-xs ${
-                                  mesa.status === "DISPONIBLE" ? "bg-green-900/40 text-green-300" :
-                                  mesa.status === "OCUPADA" ? "bg-red-900/40 text-red-300" :
+                                  mesa.status === "AVAILABLE" ? "bg-green-900/40 text-green-300" :
+                                  mesa.status === "OCCUPIED" ? "bg-red-900/40 text-red-300" :
                                   "bg-yellow-900/40 text-yellow-300"
                                 }`}>
                                   {mesa.status}
                                 </span>
                               </div>
-                              <p className="text-xs text-slate-400">Capacidad: {mesa.capacidad}</p>
+                              <p className="text-xs text-slate-400">Capacidad: {mesa.capacity}</p>
                               <button
                                 onClick={() => {
                                   if (confirm("¿Eliminar esta mesa?")) {
@@ -4239,9 +4246,9 @@ export default function POSPage() {
                   onChange={(e) => setMesaForm({ ...mesaForm, status: e.target.value })}
                   className="w-full px-3 py-2 rounded bg-slate-900 text-white"
                 >
-                  <option value="DISPONIBLE">Disponible</option>
-                  <option value="OCUPADA">Ocupada</option>
-                  <option value="RESERVADA">Reservada</option>
+                  <option value="AVAILABLE">Disponible</option>
+                  <option value="OCCUPIED">Ocupada</option>
+                  <option value="RESERVED">Reservada</option>
                 </select>
               </div>
               <div className="flex gap-2">
