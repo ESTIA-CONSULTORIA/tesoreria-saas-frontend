@@ -16,6 +16,7 @@ import { OFFLINE_SYNC_COMPLETED_EVENT } from "../../core/offline/syncEngine";
 import PosChatPanel from "./PosChatPanel";
 import TableLayout from "./TableLayout";
 import CheckoutFast from "./CheckoutFast";
+import { OPCIONES_POLITICA_COBRO, OPCIONES_POLITICA_DIVISION, type PoliticaCobro, type PoliticaDivision } from "../mesas/mesasLogic";
 
 type TabType = "terminal" | "productos" | "categorias" | "areas" | "turnos" | "hardware" | "parametros";
 
@@ -189,6 +190,12 @@ export default function POSPage() {
   const [savingPolitica, setSavingPolitica] = useState(false);
   const [politicaGuardada, setPoliticaGuardada] = useState(false);
   const [politicaError, setPoliticaError] = useState("");
+  // Políticas de cuentas de mesa (solo ADMIN y solo con la capacidad mesas_cuenta_abierta).
+  const [mesasHabilitado, setMesasHabilitado] = useState(false);
+  const [politicaCobro, setPoliticaCobro] = useState<PoliticaCobro>("SOLO_CAJA");
+  const [politicaDivision, setPoliticaDivision] = useState<PoliticaDivision>("GERENTE_CAPITAN_CAJERO");
+  const [savingMesasPol, setSavingMesasPol] = useState(false);
+  const [mesasPolMsg, setMesasPolMsg] = useState<{ ok: boolean; texto: string } | null>(null);
 
   // Enhanced discount modal state
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
@@ -1191,6 +1198,50 @@ export default function POSPage() {
       setSavingPolitica(false);
     }
   }
+
+  // Capacidad mesas_cuenta_abierta (GET público de settings) y, si hay y eres ADMIN, las dos políticas de mesas.
+  async function loadPoliticasMesas() {
+    const tid = localStorage.getItem("tenant_id");
+    if (!tid) return;
+    try {
+      const s = await api.get(`/tenant-settings/${tid}`);
+      const habilitado = s.data?.posCapabilities?.mesas_cuenta_abierta === true;
+      setMesasHabilitado(habilitado);
+      if (!habilitado || user?.roleCode !== "ADMIN") return;
+      const [c, d] = await Promise.all([
+        api.get(`/tenant-settings/${tid}/politica-cobro`),
+        api.get(`/tenant-settings/${tid}/politica-division-cuentas`),
+      ]);
+      setPoliticaCobro(c.data?.politicaCobro ?? "SOLO_CAJA");
+      setPoliticaDivision(d.data?.politicaDivisionCuentas ?? "GERENTE_CAPITAN_CAJERO");
+    } catch {
+      setMesasHabilitado(false); // sin dato no se muestra; el backend sigue decidiendo
+    }
+  }
+
+  async function savePoliticaMesas(campo: "politicaCobro" | "politicaDivisionCuentas", valor: string) {
+    const tid = localStorage.getItem("tenant_id");
+    if (!tid) return;
+    setSavingMesasPol(true);
+    setMesasPolMsg(null);
+    try {
+      const ruta = campo === "politicaCobro" ? "politica-cobro" : "politica-division-cuentas";
+      const r = await api.put(`/tenant-settings/${tid}/${ruta}`, { [campo]: valor });
+      if (campo === "politicaCobro") setPoliticaCobro(r.data.politicaCobro);
+      else setPoliticaDivision(r.data.politicaDivisionCuentas);
+      setMesasPolMsg({ ok: true, texto: "Guardado." });
+    } catch (error) {
+      const msg = (error as ApiErrorLike)?.response?.data?.message;
+      setMesasPolMsg({ ok: false, texto: (Array.isArray(msg) ? msg.join(". ") : msg) || "No se pudo guardar la política." });
+    } finally {
+      setSavingMesasPol(false);
+    }
+  }
+
+  useEffect(() => {
+    if (authChecked && user) loadPoliticasMesas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authChecked, user?.roleCode]);
 
   useEffect(() => {
     if (authChecked && user) loadPoliticaDevoluciones();
@@ -2443,6 +2494,40 @@ export default function POSPage() {
                   {savingPolitica && <span className="text-slate-400">Guardando...</span>}
                   {!savingPolitica && politicaGuardada && !politicaError && <span className="text-green-400">Guardado.</span>}
                   {!savingPolitica && politicaError && <span className="text-red-400">{politicaError}</span>}
+                </div>
+              </div>
+            )}
+
+            {user?.roleCode === "ADMIN" && mesasHabilitado && (
+              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                <h3 className="text-lg font-semibold mb-3">Cuentas de mesa</h3>
+                <p className="text-xs text-slate-500 mb-4">Quién cobra y quién divide las cuentas abiertas en mesas. Aplica a toda la empresa; el sistema valida siempre.</p>
+
+                <h4 className="text-sm font-semibold text-slate-300 mb-2">¿Quién cobra una cuenta de mesa?</h4>
+                {OPCIONES_POLITICA_COBRO.map((o) => (
+                  <label key={o.value} className="flex items-start gap-3 mb-3 cursor-pointer">
+                    <input type="radio" name="politicaCobro" checked={politicaCobro === o.value} onChange={() => savePoliticaMesas("politicaCobro", o.value)} disabled={savingMesasPol} className="mt-1" />
+                    <div>
+                      <div className="text-sm font-medium text-white">{o.label}</div>
+                      <div className="text-xs text-slate-400">{o.linea}</div>
+                    </div>
+                  </label>
+                ))}
+
+                <h4 className="text-sm font-semibold text-slate-300 mt-4 mb-2">¿Quién puede dividir la cuenta?</h4>
+                {OPCIONES_POLITICA_DIVISION.map((o) => (
+                  <label key={o.value} className="flex items-start gap-3 mb-3 cursor-pointer">
+                    <input type="radio" name="politicaDivisionCuentas" checked={politicaDivision === o.value} onChange={() => savePoliticaMesas("politicaDivisionCuentas", o.value)} disabled={savingMesasPol} className="mt-1" />
+                    <div>
+                      <div className="text-sm font-medium text-white">{o.label}</div>
+                      <div className="text-xs text-slate-400">{o.linea}</div>
+                    </div>
+                  </label>
+                ))}
+
+                <div className="mt-3 h-4 text-xs">
+                  {savingMesasPol && <span className="text-slate-400">Guardando...</span>}
+                  {!savingMesasPol && mesasPolMsg && <span className={mesasPolMsg.ok ? "text-green-400" : "text-red-400"}>{mesasPolMsg.texto}</span>}
                 </div>
               </div>
             )}
