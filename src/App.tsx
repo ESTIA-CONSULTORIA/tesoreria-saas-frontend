@@ -36,6 +36,8 @@ import LoginPage from "./pages/Login/LoginPage";
 import ExecutivePage from "./pages/executive/ExecutivePage";
 import CorteCajaLite from "./pages/lite/CorteCajaLite";
 import NotasCocinaLite from "./pages/lite/NotasCocinaLite";
+import MesasPage from "./pages/mesas/MesasPage";
+import MeseroPage from "./pages/mesas/MeseroPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
 import DashboardLite from "./pages/Dashboard/DashboardLite";
 import LoginConfigPage from "./pages/settings/LoginConfigPage";
@@ -247,6 +249,7 @@ function App() {
       <Route path="/executive" element={<ExecutivePage />} />
       <Route path="/corte" element={<CorteCajaLite />} />
       <Route path="/cocina" element={<NotasCocinaLite />} />
+      <Route path="/mesero" element={<MeseroPage />} />
       <Route path="/" element={
         <ProtectedRoute>
           <TopBar />
@@ -442,6 +445,17 @@ function App() {
         element={
           <ProtectedRoute>
             <POSPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/mesas"
+        element={
+          <ProtectedRoute>
+            <ModuloRoute modulo="pos">
+              <MesasPage />
+            </ModuloRoute>
           </ProtectedRoute>
         }
       />
