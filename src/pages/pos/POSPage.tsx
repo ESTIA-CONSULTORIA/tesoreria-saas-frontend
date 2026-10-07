@@ -16,6 +16,7 @@ import { OFFLINE_SYNC_COMPLETED_EVENT } from "../../core/offline/syncEngine";
 import PosChatPanel from "./PosChatPanel";
 import TableLayout from "./TableLayout";
 import CheckoutFast from "./CheckoutFast";
+import { calcularIva } from "../../core/utils/iva";
 import { OPCIONES_POLITICA_COBRO, OPCIONES_POLITICA_DIVISION, type PoliticaCobro, type PoliticaDivision } from "../mesas/mesasLogic";
 
 type TabType = "terminal" | "productos" | "categorias" | "areas" | "turnos" | "hardware" | "parametros";
@@ -912,7 +913,7 @@ export default function POSPage() {
     [ticket]
   );
 
-  const taxesMemo = useMemo(() => (subtotalMemo - totalDiscountMemo) * 0.16, [subtotalMemo, totalDiscountMemo]);
+  const taxesMemo = useMemo(() => calcularIva(subtotalMemo - totalDiscountMemo), [subtotalMemo, totalDiscountMemo]);
 
   const totalMemo = useMemo(() => subtotalMemo - totalDiscountMemo + taxesMemo, [subtotalMemo, totalDiscountMemo, taxesMemo]);
 
@@ -1382,16 +1383,14 @@ export default function POSPage() {
               >
                 Categorías
               </button>
-              <button
-                onClick={() => setActiveTab("areas")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === "areas"
-                    ? "bg-blue-600 text-white"
-                    : "bg-slate-800 text-slate-400 hover:bg-slate-700"
-                }`}
-              >
-                Áreas y Mesas
-              </button>
+              {mesasHabilitado && (
+                <button
+                  onClick={() => navigate("/mesas")}
+                  className="px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-slate-800 text-slate-400 hover:bg-slate-700"
+                >
+                  Mesas ↗
+                </button>
+              )}
               <button
                 onClick={() => setActiveTab("turnos")}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${

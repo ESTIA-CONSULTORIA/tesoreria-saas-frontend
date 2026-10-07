@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  accionesVisibles, asegurarConexion, construirItem, cuentaDeMesa, indicesPorCobrar, mensajeError, MENSAJE_SIN_CONEXION,
+  accionesVisibles, asegurarConexion, desgloseIva, construirItem, cuentaDeMesa, indicesPorCobrar, mensajeError, MENSAJE_SIN_CONEXION,
   OPCIONES_POLITICA_COBRO, OPCIONES_POLITICA_DIVISION, totalItems, type Cuenta, type PoliticasMesas,
 } from './mesasLogic';
 
@@ -67,6 +67,18 @@ describe('cuentas, ítems y montos', () => {
     const it = construirItem({ id: 'p1', name: 'Agua', price: '33.333' }, 3);
     expect(it).toMatchObject({ productoId: 'p1', cantidad: 3, precioUnitario: 33.333, subtotal: 100 });
     expect(totalItems([it, construirItem({ id: 'p2', name: 'X', price: 10.5 }, 2)])).toBe(121);
+  });
+});
+
+describe('IVA: igual que el POS normal', () => {
+  it('neto × 16% a centavos, también con importes raros', () => {
+    expect(desgloseIva([construirItem({ id: 'a', name: 'A', price: 50 }, 2)])).toEqual({ subtotal: 100, iva: 16, total: 116 });
+    expect(desgloseIva([construirItem({ id: 'a', name: 'A', price: 33.33 }, 1), construirItem({ id: 'b', name: 'B', price: 33.34 }, 1)])).toEqual({ subtotal: 66.67, iva: 10.67, total: 77.34 });
+    expect(desgloseIva([])).toEqual({ subtotal: 0, iva: 0, total: 0 });
+  });
+  it('el cálculo compartido es el que usa el POS normal', async () => {
+    const { calcularIva } = await import('../../core/utils/iva');
+    expect(calcularIva(1234.57)).toBe(197.53);
   });
 });
 

@@ -92,7 +92,7 @@ const MODULE_PATHS: Record<ModKey, string[]> = {
   rh:            ["/hr", "/employee"],
   tesoreria:     ["/banks", "/movements", "/transfers", "/treasury", "/reconciliation"],
   corte_retroactivo: ["/pos/backfill"],
-  pos:           ["/pos"],
+  pos:           ["/pos", "/mesas"],
   compras:       ["/suppliers", "/purchases", "/ocr"],
   costos:        ["/costs"],
   reportes:      ["/reports"],
@@ -185,6 +185,15 @@ export default function TopBar() {
       })
       .catch(() => {});
   }, [isRestricted, activeCompany, userCompanyId]);
+
+  const [mesasOn, setMesasOn] = useState(false);
+  const tenantIdMesas = user?.tenantId || localStorage.getItem('tenant_id') || '';
+  useEffect(() => {
+    if (!user || !tenantIdMesas) { setMesasOn(false); return; }
+    api.get(`/tenant-settings/${tenantIdMesas}`)
+      .then((r) => setMesasOn(r.data?.posCapabilities?.mesas_cuenta_abierta === true))
+      .catch(() => setMesasOn(false));
+  }, [user, tenantIdMesas]);
 
   useEffect(() => {
     function onOut(e: MouseEvent) {
@@ -318,8 +327,12 @@ export default function TopBar() {
       ]
     : [];
 
+  // Mesas: el enlace aparece solo si el negocio tiene activa la capacidad mesas_cuenta_abierta.
+  const posSubItems = mesasOn ? [...SUBNAV.pos, { label: 'Mesas', path: '/mesas' }] : SUBNAV.pos;
+
   const subItems = activeKey === 'dashboard' && dashboardSubItems.length > 0
     ? dashboardSubItems
+    : activeKey === 'pos' ? posSubItems
     : activeKey ? (SUBNAV[activeKey] || []) : [];
 
   const userInitials = (() => {

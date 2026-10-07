@@ -1,3 +1,5 @@
+import { calcularIva, totalConIva } from '../../core/utils/iva';
+
 // Lógica pura de la pantalla de mesas (sin React ni HTTP) para poder probarla con specs.
 // OJO: lo que decide esta lógica es solo qué botones SE MUESTRAN. El backend decide siempre (política y rol) y su
 // mensaje de rechazo se muestra tal cual.
@@ -39,6 +41,8 @@ export interface PagoCuenta {
 
 export interface Cuenta {
   id: string;
+  subtotal?: number;
+  impuestos?: number;
   folio?: string;
   tableId: string;
   cajero?: string; // el servidor estampa aquí el mesero (email) desde el token
@@ -147,4 +151,11 @@ export function construirItem(p: { id: string; name: string; price: number | str
 
 export function totalItems(items: ItemCuenta[]): number {
   return Math.round(items.reduce((s, it) => s + it.subtotal, 0) * 100) / 100;
+}
+
+// Desglose con IVA: el mismo cálculo del POS normal (neto × 16%, a centavos). Es una vista previa: el servidor es quien
+// pone el precio de catálogo y el IVA de la cuenta.
+export function desgloseIva(items: ItemCuenta[]): { subtotal: number; iva: number; total: number } {
+  const subtotal = totalItems(items);
+  return { subtotal, iva: calcularIva(subtotal), total: totalConIva(subtotal) };
 }

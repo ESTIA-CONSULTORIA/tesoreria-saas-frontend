@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { FormaPago, MesasApi, Producto } from './mesasApi';
 import {
-  accionesVisibles, construirItem, dinero, indicesPorCobrar, itemsVivos, mensajeError, totalItems,
+  accionesVisibles, construirItem, desgloseIva, dinero, indicesPorCobrar, itemsVivos, mensajeError,
   type Cuenta, type ItemCuenta, type Mesa, type PoliticasMesas,
 } from './mesasLogic';
 
@@ -78,7 +78,7 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
 
   const abrir = () =>
     run(
-      () => api.abrirCuenta({ tableId: mesa.id, sucursalId: sucursalId ?? '', items: carrito, total: totalItems(carrito), cajero: usuario }),
+      () => api.abrirCuenta({ tableId: mesa.id, sucursalId: sucursalId ?? '', items: carrito, total: desgloseIva(carrito).total, cajero: usuario }),
       () => setCarrito([]),
     );
   const sumar = () => run(() => api.agregarItems(cuenta!.id, carrito), () => setCarrito([]));
@@ -162,6 +162,9 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
             )}
             {cuenta && (
               <div className="mb-3 rounded-lg bg-slate-900 p-3 text-sm">
+                {cuenta.impuestos !== undefined && (
+                  <div className="flex justify-between text-slate-400"><span>Subtotal + IVA</span><span>{dinero(cuenta.subtotal)} + {dinero(cuenta.impuestos)}</span></div>
+                )}
                 <div className="flex justify-between"><span>Total</span><b>{dinero(cuenta.total)}</b></div>
                 <div className="flex justify-between text-slate-400"><span>Pagado</span><span>{dinero(cuenta.pagado)}</span></div>
                 <div className="flex justify-between text-amber-300"><span>Saldo</span><b>{dinero(cuenta.saldoPendiente)}</b></div>
@@ -180,12 +183,15 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
                     </span>
                   </div>
                 ))}
+                <div className="mt-1 flex justify-between text-xs text-slate-300">
+                  <span>Subtotal {dinero(desgloseIva(carrito).subtotal)} + IVA 16% {dinero(desgloseIva(carrito).iva)}</span>
+                </div>
                 <button
                   disabled={ocupado || (sinCuenta && !sucursalId)}
                   className={`${btn} mt-2 w-full bg-blue-600 disabled:opacity-40`}
                   onClick={sinCuenta ? abrir : sumar}
                 >
-                  {sinCuenta ? `Abrir cuenta · ${dinero(totalItems(carrito))}` : `Agregar a la cuenta · ${dinero(totalItems(carrito))}`}
+                  {sinCuenta ? `Abrir cuenta · ${dinero(desgloseIva(carrito).total)}` : `Agregar a la cuenta · ${dinero(desgloseIva(carrito).total)}`}
                 </button>
                 {sinCuenta && !sucursalId && <p className="mt-1 text-xs text-amber-300">Falta la sucursal de la sesión.</p>}
               </div>
