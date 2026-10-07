@@ -11,6 +11,7 @@ import {
   getOperationShiftKey,
   type PendingOperation,
 } from './db';
+import { esVentaYaRegistrada, motivoDeRechazo } from './saleDuplicate';
 
 // Fase D: motor de sincronización de la cola de escrituras (Fase C2). Corre en segundo
 // plano, arrancado una sola vez a nivel de App.tsx — disparado por el evento 'online'
@@ -51,8 +52,8 @@ function buildRequest(op: PendingOperation): { method: 'post' | 'put'; url: stri
  * puntual (WITHDRAWAL/DEPOSIT/PRECUT/CLOSE_SHIFT/SALE) rechazada queda 'failed' sola;
  * el resto del turno sigue sincronizando normal.
  */
-async function failChain(op: PendingOperation): Promise<void> {
-  await markOperationFailed(op.id!);
+async function failChain(op: PendingOperation, error?: string): Promise<void> {
+  await markOperationFailed(op.id!, error);
   if (op.type === 'OPEN_SHIFT') {
     const localId = op.payload?.localId;
     if (localId) {
@@ -64,7 +65,7 @@ async function failChain(op: PendingOperation): Promise<void> {
   }
 }
 
-async function runSync(): Promise<void> {
+export async function runSync(): Promise<void> {
   if (syncing) return;
   syncing = true;
   let syncedCount = 0;
@@ -109,9 +110,16 @@ async function runSync(): Promise<void> {
           // fallaría igual. Se detiene todo el ciclo; el intervalo/evento 'online' reintentan.
           break;
         }
+        // Una venta cuyo folio el servidor ya tiene (el primer envío sí llegó y se perdió la respuesta) NO está fallida:
+        // ya quedó registrada. Se da por sincronizada, salvo que el servidor diga que ese folio es de OTRA venta.
+        if (current.type === 'SALE' && esVentaYaRegistrada(error)) {
+          await markOperationSynced(current.id!);
+          syncedCount += 1;
+          continue;
+        }
         // Rechazo real del servidor (400/409/etc.) — no es de red, no se reintenta solo.
         console.error(`Fase D: operación rechazada por el servidor (tipo ${current.type}, id ${current.id}):`, error);
-        await failChain(current);
+        await failChain(current, motivoDeRechazo(error));
       }
     }
   } finally {

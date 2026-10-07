@@ -18,7 +18,15 @@ export interface CachedRecord {
 }
 
 export type PendingOperationType = 'OPEN_SHIFT' | 'CLOSE_SHIFT' | 'SALE' | 'WITHDRAWAL' | 'DEPOSIT' | 'PRECUT';
-export type PendingOperationStatus = 'pending' | 'synced' | 'failed';
+// 'discarded': una venta fallida que un gerente/admin descartó con motivo (queda registrada en el servidor).
+export type PendingOperationStatus = 'pending' | 'synced' | 'failed' | 'discarded';
+
+export interface OperationResolution {
+  tipo: 'REGISTRADA' | 'DESCARTADA' | 'YA_REGISTRADA';
+  por?: string; // email de quien la resolvió
+  motivo?: string;
+  at: string; // ISO
+}
 
 export interface PendingOperation {
   id?: number; // PK autoincremental de Dexie
@@ -31,6 +39,10 @@ export interface PendingOperation {
   sequenceNumber: number; // monotónico local — orden de sincronización para Fase D
   status: PendingOperationStatus;
   attempts: number;
+  // Por qué el servidor la rechazó (mensaje real del backend) — para la pantalla de ventas fallidas.
+  error?: string;
+  failedAt?: string;
+  resolution?: OperationResolution;
 }
 
 class OfflineDb extends Dexie {
@@ -170,8 +182,19 @@ export async function markOperationSynced(id: number, updatedPayload?: any): Pro
   await offlineDb.pendingOperations.update(id, changes);
 }
 
-export async function markOperationFailed(id: number): Promise<void> {
-  await offlineDb.pendingOperations.update(id, { status: 'failed' });
+export async function markOperationFailed(id: number, error?: string): Promise<void> {
+  await offlineDb.pendingOperations.update(id, { status: 'failed', ...(error ? { error } : {}), failedAt: new Date().toISOString() });
+}
+
+/** Cierra una operación fallida tras resolverla a mano (registrada al precio vigente o descartada con motivo). */
+export async function markOperationResolved(id: number, status: 'synced' | 'discarded', resolution: OperationResolution): Promise<void> {
+  await offlineDb.pendingOperations.update(id, { status, resolution });
+}
+
+/** Ventas offline que el servidor rechazó (más recientes primero). */
+export async function getFailedSaleOperations(): Promise<PendingOperation[]> {
+  const failed = await offlineDb.pendingOperations.where('status').equals('failed').toArray();
+  return failed.filter((op) => op.type === 'SALE').sort((a, b) => b.sequenceNumber - a.sequenceNumber);
 }
 
 export async function incrementOperationAttempts(id: number, attempts: number): Promise<void> {
