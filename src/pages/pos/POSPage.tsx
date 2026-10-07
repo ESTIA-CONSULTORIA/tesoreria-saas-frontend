@@ -1479,6 +1479,9 @@ export default function POSPage() {
                   title="El servidor rechazó estas operaciones (no es un problema de conexión) — necesitan revisión manual, no se van a reintentar solas."
                 >
                   ✕ {failedOpsCount} necesita{failedOpsCount === 1 ? "" : "n"} revisión
+                  {(user?.roleCode === "ADMIN" || user?.roleCode === "GERENTE") && (
+                    <button className="ml-2 underline" onClick={() => navigate("/ventas-offline")}>Revisar</button>
+                  )}
                 </div>
               )}
               {showSyncedToast && (

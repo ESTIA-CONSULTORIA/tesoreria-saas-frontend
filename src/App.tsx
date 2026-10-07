@@ -37,6 +37,7 @@ import ExecutivePage from "./pages/executive/ExecutivePage";
 import CorteCajaLite from "./pages/lite/CorteCajaLite";
 import NotasCocinaLite from "./pages/lite/NotasCocinaLite";
 import MesasPage from "./pages/mesas/MesasPage";
+import VentasOfflineFallidas from "./pages/pos/VentasOfflineFallidas";
 import MeseroPage from "./pages/mesas/MeseroPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
 import DashboardLite from "./pages/Dashboard/DashboardLite";
@@ -445,6 +446,17 @@ function App() {
         element={
           <ProtectedRoute>
             <POSPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/ventas-offline"
+        element={
+          <ProtectedRoute>
+            <RoleRoute roles={['ADMIN', 'GERENTE']}>
+              <VentasOfflineFallidas />
+            </RoleRoute>
           </ProtectedRoute>
         }
       />
