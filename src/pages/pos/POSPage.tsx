@@ -1275,9 +1275,9 @@ export default function POSPage() {
   }
 
   function downloadPOSCSVTemplate() {
-    const content = "nombre,categoria,precio,impuesto,descripcion\n";
-    const content2 = "Hamburguesa Clásica,Comida,85.00,16,Hamburguesa con carne de res\n";
-    const content3 = "Refresco Cola,Bebidas,25.00,16,Refresco de cola 355ml\n";
+    const content = "nombre,categoria,precio,impuesto,descripcion,estacion\n";
+    const content2 = "Hamburguesa Clásica,Comida,85.00,16,Hamburguesa con carne de res,COCINA\n";
+    const content3 = "Refresco Cola,Bebidas,25.00,16,Refresco de cola 355ml,BARRA\n";
     const fullContent = content + content2 + content3;
     
     const blob = new Blob([fullContent], { type: "text/csv;charset=utf-8;" });
@@ -1327,7 +1327,7 @@ export default function POSPage() {
           return obj;
         });
         
-        const response = await api.post("/pos/products/import", { productos: data });
+        const response = await api.post("/pos/products/import", { productos: data, branchId: user?.branchId || branchId || undefined });
         setPosCsvImportResult(response.data);
         loadProducts(categories);
       };
@@ -4525,7 +4525,7 @@ export default function POSPage() {
                     Arrastra tu archivo CSV aquí o haz clic para seleccionar
                   </div>
                   <div className="text-sm text-slate-500">
-                    Formato: nombre, categoria, precio, impuesto, descripcion
+                    Formato: nombre, categoria, precio, impuesto, descripcion, estacion (COCINA o BARRA)
                   </div>
                 </label>
               </div>
