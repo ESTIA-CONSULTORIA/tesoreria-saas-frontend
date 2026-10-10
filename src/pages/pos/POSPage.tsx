@@ -122,6 +122,10 @@ export default function POSPage() {
   const { config } = useLoginConfigStore();
   const { activeCompany } = useCompanyStore();
   const isAdminOrSoporte = user?.roleCode === "ADMIN" || user?.roleCode === "SOPORTE";
+  // Su propia sesión ya es la identidad en caja (CAJERO y, en gimnasio, RECEPCION): no piden NIP aparte.
+  const esCajeroDeSesion = user?.roleCode === "CAJERO" || user?.roleCode === "RECEPCION";
+  // La cortesía (venta sin cobro) solo la registran GERENTE y ADMIN; el servidor responde 403 a cualquier otro rol.
+  const puedeCortesia = user?.roleCode === "GERENTE" || user?.roleCode === "ADMIN";
   // Auditoría de producto (GoodsHabits, Punto 1): mismo store que ya carga branding —
   // App.tsx lo dispara en cuanto hay `user` (ERP normal o cajero por NIP, ambos lo pueblan).
   const stockPolicy = useBrandingStore((state) => state.stockPolicy);
@@ -499,7 +503,7 @@ export default function POSPage() {
     loadPosCategories();
     loadAreas();
 
-    if (user?.roleCode === 'CAJERO') {
+    if (esCajeroDeSesion) {
       // El usuario ERP autenticado ya ES el cajero — no requiere PIN adicional.
       setShowLoginScreen(false);
       setSelectedCashier(user?.id || '');
@@ -516,7 +520,7 @@ export default function POSPage() {
 
   useEffect(() => {
     // Salvaguarda: si el usuario ERP es CAJERO, su propia sesión ya es la identidad.
-    if (user?.roleCode === 'CAJERO' && shift) {
+    if (esCajeroDeSesion && shift) {
       setSelectedCashier(user?.id || '');
     }
   }, [shift]);
@@ -1504,7 +1508,7 @@ export default function POSPage() {
                   if (shift && salesHistory.length > 0) {
                     setShowExitConfirmModal(true);
                   } else {
-                    if (user?.roleCode === 'CAJERO') {
+                    if (esCajeroDeSesion) {
                       logout();
                       navigate('/');
                     } else {
@@ -3274,21 +3278,23 @@ export default function POSPage() {
                   <span className="text-xl">⇄</span>
                   <span className="font-medium">SPEI</span>
                 </button>
-                <button
-                  onClick={() => {
-                    setSelectedPaymentForm("CORTESIA");
-                    setPaymentAmount("");
-                    setTimeout(() => paymentInputRef.current?.focus(), 0);
-                  }}
-                  className={`w-full h-12 rounded-lg flex items-center gap-3 px-4 transition-colors ${
-                    selectedPaymentForm === "CORTESIA" 
-                      ? "bg-blue-600 border-2 border-blue-400" 
-                      : "bg-slate-700 border border-slate-600 hover:bg-slate-600"
-                  }`}
-                >
-                  <span className="text-xl">✦</span>
-                  <span className="font-medium">Cortesía</span>
-                </button>
+                {puedeCortesia && (
+                  <button
+                    onClick={() => {
+                      setSelectedPaymentForm("CORTESIA");
+                      setPaymentAmount("");
+                      setTimeout(() => paymentInputRef.current?.focus(), 0);
+                    }}
+                    className={`w-full h-12 rounded-lg flex items-center gap-3 px-4 transition-colors ${
+                      selectedPaymentForm === "CORTESIA" 
+                        ? "bg-blue-600 border-2 border-blue-400" 
+                        : "bg-slate-700 border border-slate-600 hover:bg-slate-600"
+                    }`}
+                  >
+                    <span className="text-xl">✦</span>
+                    <span className="font-medium">Cortesía</span>
+                  </button>
+                )}
               </div>
 
               {/* Lista de pagos agregados */}
@@ -4275,7 +4281,7 @@ export default function POSPage() {
               </button>
               <button
                 onClick={() => {
-                  if (user?.roleCode === 'CAJERO') {
+                  if (esCajeroDeSesion) {
                     // logout() (useAuthStore) ya hace POST /auth/logout (limpia la cookie
                     // httpOnly server-side) + limpia todo el localStorage relevante +
                     // redirige a /login — la limpieza manual y el navigate('/') que vivían
