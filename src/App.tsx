@@ -37,6 +37,7 @@ import ExecutivePage from "./pages/executive/ExecutivePage";
 import CorteCajaLite from "./pages/lite/CorteCajaLite";
 import NotasCocinaLite from "./pages/lite/NotasCocinaLite";
 import MesasPage from "./pages/mesas/MesasPage";
+import MembresiasPage from "./pages/membresias/MembresiasPage";
 import VentasOfflineFallidas from "./pages/pos/VentasOfflineFallidas";
 import MeseroPage from "./pages/mesas/MeseroPage";
 import DashboardPage from "./pages/Dashboard/DashboardPage";
@@ -457,6 +458,17 @@ function App() {
             <RoleRoute roles={['ADMIN', 'GERENTE']}>
               <VentasOfflineFallidas />
             </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/membresias"
+        element={
+          <ProtectedRoute>
+            <ModuloRoute modulo="membresias">
+              <MembresiasPage />
+            </ModuloRoute>
           </ProtectedRoute>
         }
       />

@@ -26,6 +26,8 @@ interface BrandingState {
   // que el POS sin conexión muestre el mismo desglose; el servidor es quien manda al sincronizar.
   ivaTasaDefault: TasaIva;
   preciosIncluyenIva: boolean;
+  // Gimnasio: el negocio tiene activa la capacidad membresias (cobro de membresías y beneficio de socio en el POS).
+  membresiasOn: boolean;
   loaded: boolean;
 
   load: () => Promise<void>;
@@ -46,6 +48,7 @@ const defaults = {
   stockPolicy: 'PERMITIR_NEGATIVO' as const,
   ivaTasaDefault: (esTasaIva(lsGet("iva_tasa_default")) ? lsGet("iva_tasa_default") : '16') as TasaIva,
   preciosIncluyenIva: lsGet("iva_precios_incluyen") === "1",
+  membresiasOn: false,
   loaded: false,
 };
 
@@ -70,13 +73,14 @@ export const useBrandingStore = create<BrandingState>((set) => ({
         const caps = res.data.posCapabilities || {};
         const ivaTasaDefault: TasaIva = esTasaIva(caps.ivaTasaDefault) ? caps.ivaTasaDefault : '16';
         const preciosIncluyenIva = caps.preciosIncluyenIva === true;
+        const membresiasOn = caps.membresias === true;
         lsSet("iva_tasa_default", ivaTasaDefault);
         lsSet("iva_precios_incluyen", preciosIncluyenIva ? "1" : "0");
         lsSet("system_name", systemName);
         lsSet("system_logo", logoUrl);
         lsSet("system_accent", accentColor);
         lsSet("system_bg", backgroundImage);
-        set({ systemName, logoUrl, accentColor, backgroundImage, splashBg, fontFamily, theme, companyDisplayName, stockPolicy, ivaTasaDefault, preciosIncluyenIva, loaded: true });
+        set({ systemName, logoUrl, accentColor, backgroundImage, splashBg, fontFamily, theme, companyDisplayName, stockPolicy, ivaTasaDefault, preciosIncluyenIva, membresiasOn, loaded: true });
       }
     } catch {
       set((s) => ({ ...s, loaded: true }));

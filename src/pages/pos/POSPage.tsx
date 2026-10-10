@@ -133,6 +133,12 @@ export default function POSPage() {
   const ivaTasaDefault = useBrandingStore((state) => state.ivaTasaDefault);
   const preciosIncluyenIva = useBrandingStore((state) => state.preciosIncluyenIva);
   const ivaCfg: IvaConfig = useMemo(() => ({ ivaTasaDefault, preciosIncluyenIva }), [ivaTasaDefault, preciosIncluyenIva]);
+  // Gimnasio (capacidad membresias): socio al que se le aplica su beneficio en esta venta. El descuento lo vuelve a decidir
+  // el servidor, con los mismos topes por rol que cualquier descuento.
+  const membresiasOn = useBrandingStore((state) => state.membresiasOn);
+  const [socioPOS, setSocioPOS] = useState<{ id: string; numeroSocio: string; nombre: string; descuentoPct: number } | null>(null);
+  const [socioNumero, setSocioNumero] = useState("");
+  const [socioError, setSocioError] = useState("");
 
   // Giro detection
   const [giro, setGiro] = useState<string>("");
@@ -942,12 +948,41 @@ export default function POSPage() {
           nombre: product.name,
           cantidad: 1,
           precioUnitario: price,
-          descuento: 0,
-          subtotal: price,
+          descuento: socioPOS?.descuentoPct ?? 0,
+          subtotal: price * (1 - (socioPOS?.descuentoPct ?? 0) / 100),
           tasaIva: product.tasaIva ?? null,
         },
       ]);
     }
+  }
+
+  async function buscarSocioPOS() {
+    const n = socioNumero.trim();
+    if (!n) return;
+    setSocioError("");
+    try {
+      const r = await api.get(`/membresias/socios/numero/${encodeURIComponent(n)}`);
+      const d = r.data;
+      if (d.estado !== "ACTIVO") {
+        setSocioError("El socio está dado de baja.");
+        return;
+      }
+      const pct = Number(d.descuentoPct) || 0;
+      setSocioPOS({ id: d.id, numeroSocio: d.numeroSocio, nombre: `${d.nombre} ${d.apellidos ?? ""}`.trim(), descuentoPct: pct });
+      if (pct > 0) {
+        setTicket((t) => t.map((it) => ({ ...it, descuento: Math.max(Number(it.descuento) || 0, pct) })));
+      }
+    } catch (error) {
+      const e = error as ApiErrorLike;
+      const msg = e?.response?.data?.message;
+      setSocioError(Array.isArray(msg) ? msg.join(". ") : msg || "No se encontró al socio.");
+    }
+  }
+
+  function quitarSocioPOS() {
+    setSocioPOS(null);
+    setSocioNumero("");
+    setSocioError("");
   }
 
   function updateQuantity(productId: string, cantidad: number) {
@@ -1137,6 +1172,7 @@ export default function POSPage() {
       turnoId: shift.id,
       sucursalId: user?.branchId || branchId,
       tableId: selectedTableForPOS?.id || undefined,
+      ...(socioPOS ? { socioId: socioPOS.id } : {}),
     };
 
     try {
@@ -1150,6 +1186,7 @@ export default function POSPage() {
       setTicket([]);
       setPaymentForms([]);
       setSelectedTableForPOS(null);
+      quitarSocioPOS();
       loadSalesHistory();
     } catch (error) {
       console.error("Error processing payment:", error);
@@ -1192,6 +1229,7 @@ export default function POSPage() {
         setTicket([]);
         setPaymentForms([]);
         setSelectedTableForPOS(null);
+        quitarSocioPOS();
         return;
       }
 
@@ -1822,6 +1860,31 @@ export default function POSPage() {
                   )}
                 </div>
 
+                {membresiasOn && (
+                  <div className="px-4 py-2 border-t border-slate-700 bg-slate-800 text-sm flex-shrink-0">
+                    {socioPOS ? (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-green-300">
+                          Socio #{socioPOS.numeroSocio} · {socioPOS.nombre}
+                          {socioPOS.descuentoPct > 0 ? ` · ${socioPOS.descuentoPct}% de beneficio` : " · sin beneficio vigente"}
+                        </span>
+                        <button className="text-slate-400 hover:text-white" onClick={quitarSocioPOS}>Quitar</button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          value={socioNumero}
+                          onChange={(e) => setSocioNumero(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && buscarSocioPOS()}
+                          placeholder="N.º de socio (beneficio)"
+                          className="flex-1 rounded bg-slate-900 px-3 py-1 text-white"
+                        />
+                        <button className="rounded bg-slate-700 px-3 py-1 hover:bg-slate-600" onClick={buscarSocioPOS}>Aplicar</button>
+                      </div>
+                    )}
+                    {socioError && <div className="mt-1 text-xs text-red-400">{socioError}</div>}
+                  </div>
+                )}
                 <div className="p-4 border-t border-slate-700 space-y-2 bg-slate-800 flex-shrink-0">
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-400">Subtotal</span>
