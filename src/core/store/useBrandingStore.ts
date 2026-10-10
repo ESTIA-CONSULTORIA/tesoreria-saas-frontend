@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { api } from "../api/api";
+import { esTasaIva, type TasaIva } from "../utils/iva";
 
 function lsGet(key: string, fallback = "") {
   try { return localStorage.getItem(key) || fallback; } catch { return fallback; }
@@ -21,6 +22,10 @@ interface BrandingState {
   // vive en TenantSetting igual que el resto de estos campos — se reusa este store (ya se
   // carga temprano en App.tsx cuando hay sesión) en vez de crear un fetch aparte.
   stockPolicy: 'BLOQUEAR' | 'PERMITIR_NEGATIVO';
+  // IVA del negocio (tasa por defecto y si los precios del catálogo ya lo incluyen). Se guarda también en localStorage para
+  // que el POS sin conexión muestre el mismo desglose; el servidor es quien manda al sincronizar.
+  ivaTasaDefault: TasaIva;
+  preciosIncluyenIva: boolean;
   loaded: boolean;
 
   load: () => Promise<void>;
@@ -39,6 +44,8 @@ const defaults = {
   theme: 'dark' as const,
   companyDisplayName: '',
   stockPolicy: 'PERMITIR_NEGATIVO' as const,
+  ivaTasaDefault: (esTasaIva(lsGet("iva_tasa_default")) ? lsGet("iva_tasa_default") : '16') as TasaIva,
+  preciosIncluyenIva: lsGet("iva_precios_incluyen") === "1",
   loaded: false,
 };
 
@@ -60,11 +67,16 @@ export const useBrandingStore = create<BrandingState>((set) => ({
         const theme = res.data.theme || 'dark';
         const companyDisplayName = res.data.companyDisplayName || res.data.name || '';
         const stockPolicy = res.data.stockPolicy || 'PERMITIR_NEGATIVO';
+        const caps = res.data.posCapabilities || {};
+        const ivaTasaDefault: TasaIva = esTasaIva(caps.ivaTasaDefault) ? caps.ivaTasaDefault : '16';
+        const preciosIncluyenIva = caps.preciosIncluyenIva === true;
+        lsSet("iva_tasa_default", ivaTasaDefault);
+        lsSet("iva_precios_incluyen", preciosIncluyenIva ? "1" : "0");
         lsSet("system_name", systemName);
         lsSet("system_logo", logoUrl);
         lsSet("system_accent", accentColor);
         lsSet("system_bg", backgroundImage);
-        set({ systemName, logoUrl, accentColor, backgroundImage, splashBg, fontFamily, theme, companyDisplayName, stockPolicy, loaded: true });
+        set({ systemName, logoUrl, accentColor, backgroundImage, splashBg, fontFamily, theme, companyDisplayName, stockPolicy, ivaTasaDefault, preciosIncluyenIva, loaded: true });
       }
     } catch {
       set((s) => ({ ...s, loaded: true }));

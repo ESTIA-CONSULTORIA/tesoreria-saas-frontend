@@ -16,7 +16,7 @@ import { OFFLINE_SYNC_COMPLETED_EVENT } from "../../core/offline/syncEngine";
 import PosChatPanel from "./PosChatPanel";
 import TableLayout from "./TableLayout";
 import CheckoutFast from "./CheckoutFast";
-import { calcularIva } from "../../core/utils/iva";
+import { desgloseTicket, esTasaIva, etiquetaTasa, lineasDeIva, tasaEfectiva, TASAS_IVA, type IvaConfig, type TasaIva } from "../../core/utils/iva";
 import { OPCIONES_POLITICA_COBRO, OPCIONES_POLITICA_DIVISION, type PoliticaCobro, type PoliticaDivision } from "../mesas/mesasLogic";
 
 type TabType = "terminal" | "productos" | "categorias" | "areas" | "turnos" | "hardware" | "parametros";
@@ -28,12 +28,16 @@ interface TicketItem {
   precioUnitario: number;
   descuento: number;
   subtotal: number;
+  // IVA: tasa propia del producto (null = la del negocio) y, en una venta ya guardada, la tasa con que se vendió.
+  tasaIva?: string | null;
+  ivaIncluido?: boolean;
 }
 
 interface Product {
   id: string;
   name: string;
   price: number;
+  tasaIva?: string | null;
   category: string;
   imageUrl?: string;
   stock?: number | null;
@@ -121,6 +125,10 @@ export default function POSPage() {
   // Auditoría de producto (GoodsHabits, Punto 1): mismo store que ya carga branding —
   // App.tsx lo dispara en cuanto hay `user` (ERP normal o cajero por NIP, ambos lo pueblan).
   const stockPolicy = useBrandingStore((state) => state.stockPolicy);
+  // IVA del negocio (Parámetros del POS): tasa por defecto y si los precios del catálogo ya lo incluyen.
+  const ivaTasaDefault = useBrandingStore((state) => state.ivaTasaDefault);
+  const preciosIncluyenIva = useBrandingStore((state) => state.preciosIncluyenIva);
+  const ivaCfg: IvaConfig = useMemo(() => ({ ivaTasaDefault, preciosIncluyenIva }), [ivaTasaDefault, preciosIncluyenIva]);
 
   // Giro detection
   const [giro, setGiro] = useState<string>("");
@@ -305,7 +313,7 @@ export default function POSPage() {
     precio: "",
     categoria: "",
     imagenUrl: "",
-    impuesto: "16",
+    tasaIva: "",
     tipo: "SIMPLE",
     recipeId: "",
     insumoId: "",
@@ -371,7 +379,6 @@ export default function POSPage() {
     nombreNegocio: "",
     rfc: "",
     mensajePie: "",
-    ivaDefault: "16",
     propinaSugerida: { activo: false, tipo: "PORCENTAJE", valor: "10" },
     requerirTurno: true,
     imprimirAuto: true,
@@ -386,6 +393,69 @@ export default function POSPage() {
   // estado local, solo el feedback visual del guardado.
   const [savingStockPolicy, setSavingStockPolicy] = useState(false);
   const [stockPolicySaved, setStockPolicySaved] = useState(false);
+
+  // Guarda el producto en el servidor. El precio y la tasa de IVA que cobra el POS salen siempre de aquí, no del cliente.
+  const [guardandoProducto, setGuardandoProducto] = useState(false);
+  async function guardarProducto() {
+    const nombre = productForm.nombre.trim();
+    const precio = Number(productForm.precio);
+    if (!nombre || !Number.isFinite(precio) || precio < 0) {
+      alert("Escribe el nombre y un precio válido.");
+      return;
+    }
+    const categoria = categories.find((c: any) => c.name === productForm.categoria.trim());
+    const cuerpo: Record<string, unknown> = {
+      name: nombre,
+      price: precio,
+      imageUrl: productForm.imagenUrl || null,
+      isActive: productForm.activo,
+      tasaIva: productForm.tasaIva === "" ? null : productForm.tasaIva,
+      ...(categoria ? { categoryId: categoria.id } : {}),
+    };
+    setGuardandoProducto(true);
+    try {
+      if (editingProduct) {
+        await api.put(`/pos/products/${editingProduct.id}`, cuerpo);
+      } else {
+        await api.post("/pos/products", {
+          ...cuerpo,
+          type: productForm.tipo,
+          ...(productForm.tipo === "PREPARADO" && productForm.recipeId ? { recipeId: productForm.recipeId } : {}),
+          ...(productForm.tipo === "SIMPLE" && productForm.insumoId ? { insumoId: productForm.insumoId } : {}),
+          branchId: user?.branchId || branchId || undefined,
+        });
+      }
+      setShowProductModal(false);
+      await loadProducts(categories);
+    } catch (error) {
+      const e = error as ApiErrorLike;
+      const msg = e?.response?.data?.message;
+      alert(Array.isArray(msg) ? msg.join(". ") : msg || "No se pudo guardar el producto.");
+    } finally {
+      setGuardandoProducto(false);
+    }
+  }
+
+  // IVA del negocio (solo ADMIN). Aplica a las ventas nuevas: lo ya vendido conserva la tasa con que se vendió.
+  const [guardandoIva, setGuardandoIva] = useState(false);
+  const [ivaMsg, setIvaMsg] = useState<{ ok: boolean; texto: string } | null>(null);
+  async function guardarIva(cambio: Partial<IvaConfig>) {
+    const tid = localStorage.getItem("tenant_id");
+    if (!tid) return;
+    setGuardandoIva(true);
+    setIvaMsg(null);
+    try {
+      await api.put(`/tenant-settings/${tid}`, cambio);
+      await useBrandingStore.getState().load();
+      setIvaMsg({ ok: true, texto: "IVA guardado. Aplica a las ventas nuevas; las ya hechas conservan su tasa." });
+    } catch (error) {
+      const e = error as ApiErrorLike;
+      const msg = e?.response?.data?.message;
+      setIvaMsg({ ok: false, texto: Array.isArray(msg) ? msg.join(". ") : msg || "No se pudo guardar el IVA." });
+    } finally {
+      setGuardandoIva(false);
+    }
+  }
 
   async function saveStockPolicy(value: 'BLOQUEAR' | 'PERMITIR_NEGATIVO') {
     const tenantId = localStorage.getItem('tenant_id');
@@ -870,6 +940,7 @@ export default function POSPage() {
           precioUnitario: price,
           descuento: 0,
           subtotal: price,
+          tasaIva: product.tasaIva ?? null,
         },
       ]);
     }
@@ -903,19 +974,15 @@ export default function POSPage() {
     );
   }
 
-  const subtotalMemo = useMemo(
-    () => ticket.reduce((sum, item) => sum + item.cantidad * Number(item.precioUnitario), 0),
-    [ticket]
-  );
-
-  const totalDiscountMemo = useMemo(
-    () => ticket.reduce((sum, item) => sum + (item.cantidad * Number(item.precioUnitario) * Number(item.descuento)) / 100, 0),
-    [ticket]
-  );
-
-  const taxesMemo = useMemo(() => calcularIva(subtotalMemo - totalDiscountMemo), [subtotalMemo, totalDiscountMemo]);
-
-  const totalMemo = useMemo(() => subtotalMemo - totalDiscountMemo + taxesMemo, [subtotalMemo, totalDiscountMemo, taxesMemo]);
+  // Desglose del ticket con la tasa de cada producto (o la del negocio) y con precios con IVA incluido o sin él. Es la misma
+  // cuenta del servidor (config/iva.config.ts); el servidor vuelve a calcularla al cobrar y es el que manda.
+  const ivaTicket = useMemo(() => desgloseTicket(ticket, ivaCfg), [ticket, ivaCfg]);
+  const subtotalMemo = ivaTicket.subtotal;
+  const totalDiscountMemo = ivaTicket.descuento;
+  const taxesMemo = ivaTicket.impuestos;
+  const totalMemo = ivaTicket.total;
+  // Desglose del recibo: con la tasa con que se vendió cada línea (el servidor la guarda en la venta).
+  const reciboIva = useMemo(() => desgloseTicket(currentSale?.items ?? [], ivaCfg), [currentSale, ivaCfg]);
 
   const totalCoveredMemo = useMemo(() => paymentForms.reduce((sum, pf) => sum + pf.monto, 0), [paymentForms]);
 
@@ -1760,10 +1827,22 @@ export default function POSPage() {
                     <span className="text-slate-400">Descuento</span>
                     <span className="text-red-400">-${getTotalDiscount().toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">Impuestos (16%)</span>
-                    <span>${getTaxes().toFixed(2)}</span>
-                  </div>
+                  {lineasDeIva(ivaTicket).length === 0 ? (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-400">IVA ({etiquetaTasa(ivaCfg.ivaTasaDefault)})</span>
+                      <span>${getTaxes().toFixed(2)}</span>
+                    </div>
+                  ) : (
+                    lineasDeIva(ivaTicket).map((l) => (
+                      <div key={l.tasa} className="flex justify-between text-sm">
+                        <span className="text-slate-400">{l.tasa === "EXENTO" ? "Exento (base)" : `IVA ${l.etiqueta}`}</span>
+                        <span>${(l.tasa === "EXENTO" ? l.base : l.impuestos).toFixed(2)}</span>
+                      </div>
+                    ))
+                  )}
+                  {ivaCfg.preciosIncluyenIva && (
+                    <div className="text-xs text-slate-500">Los precios incluyen IVA.</div>
+                  )}
                   <div className="flex justify-between text-xl font-bold pt-2 border-t border-slate-700">
                     <span>TOTAL</span>
                     <span className="text-green-400">${getTotal().toFixed(2)}</span>
@@ -1825,7 +1904,7 @@ export default function POSPage() {
                     precio: "",
                     categoria: "",
                     imagenUrl: "",
-                    impuesto: "16",
+                    tasaIva: "",
                     tipo: "SIMPLE",
                     recipeId: "",
                     insumoId: "",
@@ -1889,7 +1968,7 @@ export default function POSPage() {
                               precio: String(product.price),
                               categoria: product.category || "",
                               imagenUrl: product.imageUrl || "",
-                              impuesto: "16",
+                              tasaIva: product.tasaIva ?? "",
                               tipo: "SIMPLE",
                               recipeId: "",
                               insumoId: "",
@@ -2537,16 +2616,39 @@ export default function POSPage() {
             <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
               <h3 className="text-lg font-semibold mb-3">Impuestos</h3>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">IVA por Defecto</label>
+                <label className="block text-sm text-slate-400 mb-1">IVA por defecto del negocio</label>
                 <select
-                  value={posParams.ivaDefault}
-                  onChange={(e) => setPosParams({ ...posParams, ivaDefault: e.target.value })}
-                  className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                  value={ivaTasaDefault}
+                  onChange={(e) => esTasaIva(e.target.value) && guardarIva({ ivaTasaDefault: e.target.value })}
+                  disabled={user?.roleCode !== "ADMIN" || guardandoIva}
+                  className="w-full px-3 py-2 rounded bg-slate-800 text-white disabled:opacity-60"
                 >
-                  <option value="0">0%</option>
-                  <option value="8">8%</option>
                   <option value="16">16%</option>
+                  <option value="8">8%</option>
+                  <option value="0">0%</option>
+                  <option value="EXENTO">Exento</option>
                 </select>
+                <p className="text-xs text-slate-500 mt-1">Cada producto puede tener su propia tasa; esta aplica a los que no la tienen.</p>
+              </div>
+              <label className="flex items-start gap-2 mt-4 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={preciosIncluyenIva}
+                  onChange={(e) => guardarIva({ preciosIncluyenIva: e.target.checked })}
+                  disabled={user?.roleCode !== "ADMIN" || guardandoIva}
+                  className="mt-1 rounded"
+                />
+                <span className="text-sm text-slate-300">
+                  Los precios de mis productos ya incluyen IVA
+                  <span className="block text-xs text-slate-500">
+                    Activado: el sistema desglosa el IVA del precio. Desactivado: lo suma al precio.
+                  </span>
+                </span>
+              </label>
+              <div className="mt-3 h-4 text-xs">
+                {guardandoIva && <span className="text-slate-400">Guardando...</span>}
+                {!guardandoIva && ivaMsg && <span className={ivaMsg.ok ? "text-green-400" : "text-red-400"}>{ivaMsg.texto}</span>}
+                {user?.roleCode !== "ADMIN" && <span className="text-slate-500">Solo un administrador puede cambiarlo.</span>}
               </div>
             </div>
 
@@ -3472,7 +3574,7 @@ export default function POSPage() {
             <div className="border-t border-slate-300 pt-2 mt-2 space-y-1 text-sm">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>${Number(currentSale.subtotal ?? Number(currentSale.total) / 1.16).toFixed(2)}</span>
+                <span>${Number(currentSale.subtotal ?? reciboIva.subtotal).toFixed(2)}</span>
               </div>
               {(currentSale.descuento ?? 0) > 0 && (
                 <div className="flex justify-between text-red-600">
@@ -3480,10 +3582,19 @@ export default function POSPage() {
                   <span>-${Number(currentSale.descuento).toFixed(2)}</span>
                 </div>
               )}
-              <div className="flex justify-between">
-                <span>IVA (16%)</span>
-                <span>${Number(currentSale.impuestos ?? (Number(currentSale.total) / 1.16) * 0.16).toFixed(2)}</span>
-              </div>
+              {lineasDeIva(reciboIva).length <= 1 ? (
+                <div className="flex justify-between">
+                  <span>{lineasDeIva(reciboIva)[0]?.tasa === "EXENTO" ? "IVA exento" : `IVA (${etiquetaTasa((lineasDeIva(reciboIva)[0]?.tasa ?? "16") as TasaIva)})`}</span>
+                  <span>${Number(currentSale.impuestos ?? reciboIva.impuestos).toFixed(2)}</span>
+                </div>
+              ) : (
+                lineasDeIva(reciboIva).map((l) => (
+                  <div key={l.tasa} className="flex justify-between">
+                    <span>{l.tasa === "EXENTO" ? "Exento (base)" : `IVA ${l.etiqueta} (base $${l.base.toFixed(2)})`}</span>
+                    <span>${(l.tasa === "EXENTO" ? l.base : l.impuestos).toFixed(2)}</span>
+                  </div>
+                ))
+              )}
               <div className="flex justify-between font-bold text-lg border-t border-slate-300 pt-2 mt-2">
                 <span>TOTAL</span>
                 <span>${Number(currentSale.total).toFixed(2)}</span>
@@ -3690,16 +3801,18 @@ export default function POSPage() {
                 </div>
               )}
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Impuesto (%)</label>
+                <label className="block text-sm text-slate-400 mb-1">IVA de este producto</label>
                 <select
-                  value={productForm.impuesto}
-                  onChange={(e) => setProductForm({ ...productForm, impuesto: e.target.value })}
+                  value={productForm.tasaIva}
+                  onChange={(e) => setProductForm({ ...productForm, tasaIva: e.target.value })}
                   className="w-full px-3 py-2 rounded bg-slate-900 text-white"
                 >
-                  <option value="0">0%</option>
-                  <option value="8">8%</option>
-                  <option value="16">16%</option>
+                  <option value="">Usar la del negocio ({etiquetaTasa(ivaTasaDefault)})</option>
+                  {TASAS_IVA.map((t) => (
+                    <option key={t} value={t}>{t === "EXENTO" ? "Exento" : `${t}%`}</option>
+                  ))}
                 </select>
+                <p className="text-xs text-slate-500 mt-1">Reemplaza la tasa del negocio solo para este producto.</p>
               </div>
               <div className="flex items-center gap-2">
                 <input
@@ -3718,17 +3831,11 @@ export default function POSPage() {
                   Cancelar
                 </button>
                 <button
-                  onClick={() => {
-                    if (editingProduct) {
-                      setPosProducts(posProducts.map(p => p.id === editingProduct.id ? { ...editingProduct, ...productForm } : p));
-                    } else {
-                      setPosProducts([...posProducts, { id: Date.now().toString(), ...productForm }]);
-                    }
-                    setShowProductModal(false);
-                  }}
-                  className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                  onClick={guardarProducto}
+                  disabled={guardandoProducto}
+                  className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
                 >
-                  Guardar
+                  {guardandoProducto ? "Guardando..." : "Guardar"}
                 </button>
               </div>
             </div>

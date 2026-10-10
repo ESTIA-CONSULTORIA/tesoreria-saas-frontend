@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  accionesVisibles, asegurarConexion, desgloseIva, construirItem, cuentaDeMesa, indicesPorCobrar, mensajeError, MENSAJE_SIN_CONEXION,
+  accionesVisibles, asegurarConexion, desgloseIva, etiquetaIva, construirItem, cuentaDeMesa, indicesPorCobrar, mensajeError, MENSAJE_SIN_CONEXION,
   OPCIONES_POLITICA_COBRO, OPCIONES_POLITICA_DIVISION, totalItems, type Cuenta, type PoliticasMesas,
 } from './mesasLogic';
 
@@ -70,15 +70,52 @@ describe('cuentas, ítems y montos', () => {
   });
 });
 
+describe('IVA configurable: mismos números que el servidor', () => {
+  const cfg = (ivaTasaDefault: any, preciosIncluyenIva = false) => ({ ivaTasaDefault, preciosIncluyenIva });
+  const taco = (cantidad = 2, tasaIva?: string) => construirItem({ id: 'a', name: 'A', price: 50, tasaIva }, cantidad, cfg('16'));
+
+  it.each([
+    ['16', 16, 116],
+    ['8', 8, 108],
+    ['0', 0, 100],
+    ['EXENTO', 0, 100],
+  ])('tasa del negocio %s: 2 × $50 → IVA %s, total %s', (tasa, iva, total) => {
+    const item = construirItem({ id: 'a', name: 'A', price: 50 }, 2, cfg(tasa));
+    expect(desgloseIva([item], cfg(tasa))).toEqual({ subtotal: 100, iva, total });
+  });
+
+  it('la tasa del producto reemplaza la del negocio y se mezclan: 16 % + 8 % + exento = IVA 24, total 324', () => {
+    const items = [taco(2), construirItem({ id: 'b', name: 'B', price: 100, tasaIva: '8' }, 1, cfg('16')), construirItem({ id: 'c', name: 'C', price: 100, tasaIva: 'EXENTO' }, 1, cfg('16'))];
+    expect(desgloseIva(items, cfg('16'))).toEqual({ subtotal: 300, iva: 24, total: 324 });
+  });
+
+  it('precios con IVA incluido: 2 × $50 al 16 % → el cliente paga 100; base 86.21, IVA 13.79', () => {
+    const c = cfg('16', true);
+    const item = construirItem({ id: 'a', name: 'A', price: 50 }, 2, c);
+    expect(desgloseIva([item], c)).toEqual({ subtotal: 86.21, iva: 13.79, total: 100 });
+  });
+
+  it('sin configuración (negocio existente): 16 % sin IVA incluido, como siempre', () => {
+    expect(desgloseIva([construirItem({ id: 'a', name: 'A', price: 50 }, 2)])).toEqual({ subtotal: 100, iva: 16, total: 116 });
+  });
+
+  it('etiqueta del renglón: una tasa, exento o varias', () => {
+    expect(etiquetaIva([taco()], cfg('16'))).toBe('IVA 16%');
+    expect(etiquetaIva([taco(1, '8')], cfg('16'))).toBe('IVA 8%');
+    expect(etiquetaIva([taco(1, 'EXENTO')], cfg('16'))).toBe('IVA exento');
+    expect(etiquetaIva([taco(1), taco(1, '8')].map((x, i) => ({ ...x, productoId: String(i) })), cfg('16'))).toBe('IVA');
+  });
+});
+
 describe('IVA: igual que el POS normal', () => {
   it('neto × 16% a centavos, también con importes raros', () => {
     expect(desgloseIva([construirItem({ id: 'a', name: 'A', price: 50 }, 2)])).toEqual({ subtotal: 100, iva: 16, total: 116 });
     expect(desgloseIva([construirItem({ id: 'a', name: 'A', price: 33.33 }, 1), construirItem({ id: 'b', name: 'B', price: 33.34 }, 1)])).toEqual({ subtotal: 66.67, iva: 10.67, total: 77.34 });
     expect(desgloseIva([])).toEqual({ subtotal: 0, iva: 0, total: 0 });
   });
-  it('el cálculo compartido es el que usa el POS normal', async () => {
-    const { calcularIva } = await import('../../core/utils/iva');
-    expect(calcularIva(1234.57)).toBe(197.53);
+  it('el cálculo compartido es el que usa el POS normal: neto 1234.57 → IVA 197.53', async () => {
+    const { desgloseTicket } = await import('../../core/utils/iva');
+    expect(desgloseTicket([{ cantidad: 1, precioUnitario: 1234.57 }]).impuestos).toBe(197.53);
   });
 });
 

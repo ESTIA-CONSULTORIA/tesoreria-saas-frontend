@@ -15,7 +15,7 @@ export const liteClient: AxiosInstance = axios.create({
 });
 export const erpClient: AxiosInstance = api;
 
-export interface Producto { id: string; name: string; price: number | string; isActive?: boolean; categoryId?: string }
+export interface Producto { id: string; name: string; price: number | string; isActive?: boolean; categoryId?: string; tasaIva?: string | null }
 export type FormaPago = 'EFECTIVO' | 'DEBITO' | 'CREDITO' | 'TRANSFERENCIA';
 
 // Ninguna de estas llamadas pasa por la cola offline (enqueueOperation): una cuenta abierta necesita al backend.

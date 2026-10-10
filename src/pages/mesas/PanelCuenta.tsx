@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
+import { useBrandingStore } from '../../core/store/useBrandingStore';
+import type { IvaConfig } from '../../core/utils/iva';
 import type { FormaPago, MesasApi, Producto } from './mesasApi';
 import {
-  accionesVisibles, construirItem, desgloseIva, dinero, indicesPorCobrar, itemsVivos, mensajeError,
+  accionesVisibles, construirItem, desgloseIva, dinero, etiquetaIva, indicesPorCobrar, itemsVivos, mensajeError,
   type Cuenta, type ItemCuenta, type Mesa, type PoliticasMesas,
 } from './mesasLogic';
 
@@ -28,6 +30,11 @@ type Modo = 'completo' | 'parcial' | 'items';
 
 export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, sucursalId, usuario, onCambio, onCerrar }: Props) {
   const [carrito, setCarrito] = useState<ItemCuenta[]>([]);
+  // IVA del negocio: la tasa de cada producto (o la del negocio) y si los precios ya lo incluyen. Es solo la vista previa;
+  // el servidor fija precio, IVA y total de la cuenta.
+  const ivaTasaDefault = useBrandingStore((s) => s.ivaTasaDefault);
+  const preciosIncluyenIva = useBrandingStore((s) => s.preciosIncluyenIva);
+  const ivaCfg: IvaConfig = useMemo(() => ({ ivaTasaDefault, preciosIncluyenIva }), [ivaTasaDefault, preciosIncluyenIva]);
   const [busca, setBusca] = useState('');
   const [error, setError] = useState('');
   const [ocupado, setOcupado] = useState(false);
@@ -63,22 +70,22 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
   const agregar = (p: Producto) => {
     setCarrito((c) => {
       const i = c.findIndex((x) => x.productoId === p.id);
-      if (i < 0) return [...c, construirItem(p, 1)];
+      if (i < 0) return [...c, construirItem(p, 1, ivaCfg)];
       const copia = [...c];
-      copia[i] = construirItem({ id: p.id, name: p.name, price: p.price }, copia[i].cantidad + 1);
+      copia[i] = construirItem({ id: p.id, name: p.name, price: p.price, tasaIva: p.tasaIva }, copia[i].cantidad + 1, ivaCfg);
       return copia;
     });
   };
   const restar = (id: string) =>
     setCarrito((c) =>
       c.flatMap((x) =>
-        x.productoId !== id ? [x] : x.cantidad <= 1 ? [] : [construirItem({ id, name: x.nombre, price: x.precioUnitario }, x.cantidad - 1)],
+        x.productoId !== id ? [x] : x.cantidad <= 1 ? [] : [construirItem({ id, name: x.nombre, price: x.precioUnitario, tasaIva: x.tasaIva }, x.cantidad - 1, ivaCfg)],
       ),
     );
 
   const abrir = () =>
     run(
-      () => api.abrirCuenta({ tableId: mesa.id, sucursalId: sucursalId ?? '', items: carrito, total: desgloseIva(carrito).total, cajero: usuario }),
+      () => api.abrirCuenta({ tableId: mesa.id, sucursalId: sucursalId ?? '', items: carrito, total: desgloseIva(carrito, ivaCfg).total, cajero: usuario }),
       () => setCarrito([]),
     );
   const sumar = () => run(() => api.agregarItems(cuenta!.id, carrito), () => setCarrito([]));
@@ -184,14 +191,17 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
                   </div>
                 ))}
                 <div className="mt-1 flex justify-between text-xs text-slate-300">
-                  <span>Subtotal {dinero(desgloseIva(carrito).subtotal)} + IVA 16% {dinero(desgloseIva(carrito).iva)}</span>
+                  <span>
+                    Subtotal {dinero(desgloseIva(carrito, ivaCfg).subtotal)} + {etiquetaIva(carrito, ivaCfg)} {dinero(desgloseIva(carrito, ivaCfg).iva)}
+                    {ivaCfg.preciosIncluyenIva ? ' (precios con IVA incluido)' : ''}
+                  </span>
                 </div>
                 <button
                   disabled={ocupado || (sinCuenta && !sucursalId)}
                   className={`${btn} mt-2 w-full bg-blue-600 disabled:opacity-40`}
                   onClick={sinCuenta ? abrir : sumar}
                 >
-                  {sinCuenta ? `Abrir cuenta · ${dinero(desgloseIva(carrito).total)}` : `Agregar a la cuenta · ${dinero(desgloseIva(carrito).total)}`}
+                  {sinCuenta ? `Abrir cuenta · ${dinero(desgloseIva(carrito, ivaCfg).total)}` : `Agregar a la cuenta · ${dinero(desgloseIva(carrito, ivaCfg).total)}`}
                 </button>
                 {sinCuenta && !sucursalId && <p className="mt-1 text-xs text-amber-300">Falta la sucursal de la sesión.</p>}
               </div>

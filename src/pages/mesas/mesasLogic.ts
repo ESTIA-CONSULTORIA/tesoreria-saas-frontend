@@ -1,4 +1,4 @@
-import { calcularIva, totalConIva } from '../../core/utils/iva';
+import { desgloseTicket, etiquetaTasa, IVA_DEFAULT, lineasDeIva, tasaEfectiva, type IvaConfig } from '../../core/utils/iva';
 
 // Lógica pura de la pantalla de mesas (sin React ni HTTP) para poder probarla con specs.
 // OJO: lo que decide esta lógica es solo qué botones SE MUESTRAN. El backend decide siempre (política y rol) y su
@@ -26,6 +26,9 @@ export interface ItemCuenta {
   precioUnitario: number;
   descuento: number;
   subtotal: number;
+  // Tasa con la que se vendió la línea (la pone el servidor); en el carrito, la del producto o la del negocio.
+  tasaIva?: string | null;
+  ivaIncluido?: boolean;
   notaCocinaId?: string;
   anulado?: boolean;
 }
@@ -144,18 +147,35 @@ export function asegurarConexion(online: boolean): void {
   if (!online) throw new Error(MENSAJE_SIN_CONEXION);
 }
 
-export function construirItem(p: { id: string; name: string; price: number | string }, cantidad: number): ItemCuenta {
+export function construirItem(
+  p: { id: string; name: string; price: number | string; tasaIva?: string | null },
+  cantidad: number,
+  cfg: IvaConfig = IVA_DEFAULT,
+): ItemCuenta {
   const precioUnitario = Number(p.price) || 0;
-  return { productoId: p.id, nombre: p.name, cantidad, precioUnitario, descuento: 0, subtotal: Math.round(precioUnitario * cantidad * 100) / 100 };
+  return {
+    productoId: p.id, nombre: p.name, cantidad, precioUnitario, descuento: 0,
+    subtotal: Math.round(precioUnitario * cantidad * 100) / 100,
+    tasaIva: tasaEfectiva(p.tasaIva, cfg), ivaIncluido: cfg.preciosIncluyenIva,
+  };
 }
 
 export function totalItems(items: ItemCuenta[]): number {
   return Math.round(items.reduce((s, it) => s + it.subtotal, 0) * 100) / 100;
 }
 
-// Desglose con IVA: el mismo cálculo del POS normal (neto × 16%, a centavos). Es una vista previa: el servidor es quien
-// pone el precio de catálogo y el IVA de la cuenta.
-export function desgloseIva(items: ItemCuenta[]): { subtotal: number; iva: number; total: number } {
-  const subtotal = totalItems(items);
-  return { subtotal, iva: calcularIva(subtotal), total: totalConIva(subtotal) };
+// Desglose con IVA: el mismo cálculo del POS normal (la tasa de cada producto o la del negocio, a centavos). Es una vista
+// previa: el servidor es quien pone el precio de catálogo y el IVA de la cuenta. Sin configuración: 16 % sin IVA incluido.
+export function desgloseIva(items: ItemCuenta[], cfg: IvaConfig = IVA_DEFAULT): { subtotal: number; iva: number; total: number } {
+  const d = desgloseTicket(items, cfg);
+  return { subtotal: d.subtotal, iva: d.impuestos, total: d.total };
+}
+
+// Etiqueta del renglón de IVA: 'IVA 16%', 'IVA 8%', 'IVA exento' o, si hay varias tasas, 'IVA' a secas.
+export function etiquetaIva(items: ItemCuenta[], cfg: IvaConfig = IVA_DEFAULT): string {
+  const d = desgloseTicket(items, cfg);
+  const usadas = lineasDeIva(d);
+  if (usadas.length === 0) return `IVA ${etiquetaTasa(tasaEfectiva(undefined, cfg))}`;
+  if (usadas.length > 1) return 'IVA';
+  return usadas[0].tasa === 'EXENTO' ? 'IVA exento' : `IVA ${usadas[0].etiqueta}`;
 }
