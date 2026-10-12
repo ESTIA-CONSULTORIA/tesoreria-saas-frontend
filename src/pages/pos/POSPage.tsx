@@ -315,6 +315,31 @@ export default function POSPage() {
   // Productos tab state
   const [posProducts, setPosProducts] = useState<any[]>([]);
   const [showProductModal, setShowProductModal] = useState(false);
+  // Insumos y recetas REALES del negocio para los selectores del modal de producto (GET /pos/products/opciones-stock).
+  // Nunca valores de prueba: el servidor rechaza con 400 un insumoId o recipeId que no sea un UUID del tenant.
+  const [opcionesStock, setOpcionesStock] = useState<{ insumos: { id: string; nombre: string }[]; recetas: { id: string; nombre: string }[] }>({ insumos: [], recetas: [] });
+  const [opcionesStockCargadas, setOpcionesStockCargadas] = useState(false);
+  useEffect(() => {
+    if (!showProductModal) return;
+    let cancelado = false;
+    setOpcionesStockCargadas(false);
+    api
+      .get("/pos/products/opciones-stock")
+      .then((res) => {
+        if (cancelado) return;
+        const d = res.data || {};
+        setOpcionesStock({ insumos: Array.isArray(d.insumos) ? d.insumos : [], recetas: Array.isArray(d.recetas) ? d.recetas : [] });
+      })
+      .catch(() => {
+        if (!cancelado) setOpcionesStock({ insumos: [], recetas: [] });
+      })
+      .finally(() => {
+        if (!cancelado) setOpcionesStockCargadas(true);
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [showProductModal]);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [productForm, setProductForm] = useState({
     codigo: "",
@@ -3846,10 +3871,10 @@ export default function POSPage() {
                     onChange={(e) => setProductForm({ ...productForm, recipeId: e.target.value })}
                     className="w-full px-3 py-2 rounded bg-slate-900 text-white"
                   >
-                    <option value="">Seleccionar receta</option>
-                    <option value="receta-1">Hamburguesa clásica</option>
-                    <option value="receta-2">Hot Dog</option>
-                    <option value="receta-3">Pizza personal</option>
+                    <option value="">{opcionesStockCargadas && opcionesStock.recetas.length === 0 ? "No hay recetas registradas" : "Seleccionar receta"}</option>
+                    {opcionesStock.recetas.map((r) => (
+                      <option key={r.id} value={r.id}>{r.nombre}</option>
+                    ))}
                   </select>
                 </div>
               )}
@@ -3861,11 +3886,10 @@ export default function POSPage() {
                     onChange={(e) => setProductForm({ ...productForm, insumoId: e.target.value })}
                     className="w-full px-3 py-2 rounded bg-slate-900 text-white"
                   >
-                    <option value="">Seleccionar insumo</option>
-                    <option value="insumo-1">Refresco lata</option>
-                    <option value="insumo-2">Agua embotellada</option>
-                    <option value="insumo-3">Cerveza</option>
-                    <option value="insumo-4">Jugo natural</option>
+                    <option value="">{opcionesStockCargadas && opcionesStock.insumos.length === 0 ? "No hay insumos registrados" : "Seleccionar insumo"}</option>
+                    {opcionesStock.insumos.map((i) => (
+                      <option key={i.id} value={i.id}>{i.nombre}</option>
+                    ))}
                   </select>
                 </div>
               )}
