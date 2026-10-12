@@ -113,3 +113,31 @@ describe('syncEngine — ventas', () => {
     expect(guardada.resolution).toMatchObject({ tipo: 'DESCARTADA', por: 'gerente@x.com' });
   });
 });
+
+describe('syncEngine — sucursal de la sesión', () => {
+  beforeEach(async () => {
+    post.mockReset();
+    await offlineDb.pendingOperations.clear();
+    memoria.clear();
+  });
+
+  it('una venta de OTRA sucursal queda pendiente (no se envía) hasta que entre un usuario de esa sucursal', async () => {
+    memoria.set('user_branch_id', 'suc-B');
+    await enqueueOperation('SALE', venta('F-S1'), '2026-10-05T12:00:00.000Z'); // venta() trae sucursalId 's1'
+    await runSync();
+    expect(post).not.toHaveBeenCalled();
+    expect(await estados()).toEqual([['F-S1', 'pending']]);
+
+    memoria.set('user_branch_id', 's1');
+    post.mockResolvedValueOnce({ data: { id: 'v1' } });
+    await runSync();
+    expect(await estados()).toEqual([['F-S1', 'synced']]);
+  });
+
+  it('sin sucursal en la sesión (ADMIN sin sucursal) o con la misma, sincroniza como siempre', async () => {
+    await enqueueOperation('SALE', venta('F-S2'), '2026-10-05T12:00:00.000Z');
+    post.mockResolvedValueOnce({ data: { id: 'v2' } });
+    await runSync();
+    expect(await estados()).toEqual([['F-S2', 'synced']]);
+  });
+});

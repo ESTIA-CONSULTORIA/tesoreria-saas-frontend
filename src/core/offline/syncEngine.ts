@@ -26,6 +26,17 @@ let started = false;
 let intervalHandle: ReturnType<typeof setInterval> | null = null;
 let onlineHandler: (() => void) | null = null;
 
+// Sucursal de la sesión actual (la que el servidor le asigna al usuario; el login la guarda). El servidor solo acepta que una
+// venta o un turno se registre en la sucursal del usuario que lo envía: una operación en cola de OTRA sucursal (equipo
+// compartido, otro usuario en sesión) se deja pendiente hasta que entre quien la creó, en vez de enviarla y recibir un 403.
+function sucursalDeLaSesion(): string | null {
+  try {
+    return localStorage.getItem('user_branch_id') || null;
+  } catch {
+    return null;
+  }
+}
+
 function buildRequest(op: PendingOperation): { method: 'post' | 'put'; url: string; body: any } {
   const { shiftId, localId, ...rest } = op.payload || {};
   switch (op.type) {
@@ -86,6 +97,10 @@ export async function runSync(): Promise<void> {
       if (current.type !== 'OPEN_SHIFT' && typeof shiftKey === 'string' && shiftKey.startsWith('local-')) {
         continue;
       }
+
+      const sucursalOp = current.payload?.sucursalId;
+      const sucursalSesion = sucursalDeLaSesion();
+      if (typeof sucursalOp === 'string' && sucursalOp && sucursalSesion && sucursalOp !== sucursalSesion) continue;
 
       const { method, url, body } = buildRequest(current);
 

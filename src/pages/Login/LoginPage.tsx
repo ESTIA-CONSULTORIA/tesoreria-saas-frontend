@@ -233,6 +233,9 @@ export default function LoginPage() {
         name: user.name || "Cajero",
         roleCode: user.roleCode,
         tenantId: user.tenantId,
+        // La sucursal del cajero (la devuelve el login por NIP): sin ella el POS mandaba el turno y la venta sin sucursal.
+        branchId: user.branchId ?? null,
+        companyId: user.companyId ?? null,
       }, modulosActivos);
 
       const planCode: string = response.data.planCode || '';
