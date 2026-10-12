@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { api } from '../../core/api/api';
 import { useAuthStore } from '../../core/store/useAuthStore';
+import { useDirectorioUsuarios } from '../../core/hooks/useDirectorioUsuarios';
+import { nombreUsuario } from '../../core/utils/nombreUsuario';
 import { getFailedSaleOperations, markOperationResolved, offlineDb, type PendingOperation } from '../../core/offline/db';
 import {
   accionRegistrar, cobradoDelPayload, dinero, esDelTenant, motivoDescarteValido, motivoVisible, MOTIVO_MIN,
@@ -23,6 +25,7 @@ const mensaje = (e: unknown, respaldo: string): string => {
 };
 
 export default function VentasOfflineFallidas() {
+  const directorioUsuarios = useDirectorioUsuarios(); // nombre del cajero en vez de su id (solo presentación)
   const user = useAuthStore((s) => s.user);
   const tenantId = useAuthStore((s) => s.tenantId) || user?.tenantId || localStorage.getItem('tenant_id');
   const fallidas = useLiveQuery(() => getFailedSaleOperations(), [], [] as PendingOperation[]);
@@ -114,7 +117,7 @@ export default function VentasOfflineFallidas() {
                 <div>
                   <div className="font-mono text-sm">{op.payload.folio}</div>
                   <div className="text-xs text-slate-400">
-                    {op.payload.clientTimestamp ? new Date(op.payload.clientTimestamp).toLocaleString('es-MX') : 'sin fecha'} · cajero {op.payload.cajero ?? '—'}
+                    {op.payload.clientTimestamp ? new Date(op.payload.clientTimestamp).toLocaleString('es-MX') : 'sin fecha'} · cajero {nombreUsuario(op.payload.cajero, directorioUsuarios)}
                   </div>
                 </div>
                 <div className="text-right text-sm">

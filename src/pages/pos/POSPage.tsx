@@ -7,6 +7,8 @@ import { useLoginConfigStore } from "../../core/store/useLoginConfigStore";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
 import { useBrandingStore } from "../../core/store/useBrandingStore";
 import { getDeviceId } from "../../core/device/deviceId";
+import { useDirectorioUsuarios } from "../../core/hooks/useDirectorioUsuarios";
+import { nombreUsuario } from "../../core/utils/nombreUsuario";
 import {
   offlineDb, replaceLocalCache, readLocalCache, isNetworkOrTimeoutError,
   enqueueOperation, getPendingSalesForShift, countPendingOperations,
@@ -115,6 +117,16 @@ export default function POSPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>("terminal");
   const user = useAuthStore((state) => state.user);
+  // Nombre del cajero para mostrar (solo presentación: el id sigue guardándose y enviándose igual). Sale del directorio del
+  // propio negocio; el usuario de la sesión y el cajero que entró por NIP tienen su nombre de respaldo.
+  const directorioUsuarios = useDirectorioUsuarios();
+  const [cajeroNip, setCajeroNip] = useState<{ id: string; nombre: string } | null>(null);
+  const nombreCajero = (id?: string | null) =>
+    nombreUsuario(
+      id,
+      directorioUsuarios,
+      id && cajeroNip && cajeroNip.id === id ? cajeroNip.nombre : id && id === user?.id ? user?.name || user?.email || "Usuario" : "Usuario",
+    );
   const logout = useAuthStore((state) => state.logout);
   const authChecked = useAuthStore((state) => state.authChecked);
   const branchId = useAuthStore((state) => state.branchId);
@@ -779,6 +791,7 @@ export default function POSPage() {
       const response = await api.post("/pos/cashiers/nip", { nip: cashierPin, tenantId });
       const cajeroId = response.data?.user?.id || '';
       setSelectedCashier(cajeroId);
+      setCajeroNip({ id: cajeroId, nombre: response.data?.user?.name || response.data?.user?.email || "Usuario" });
       setNipSessionActive(true);
       setShowLoginScreen(false);
       setCashierPin("");
@@ -1584,7 +1597,7 @@ export default function POSPage() {
                 ← Salir
               </button>
               <div className="text-sm text-slate-400">
-                Cajero: <span className="text-white">Usuario Demo</span>
+                Cajero: <span className="text-white">{nombreCajero(selectedCashier || user?.id)}</span>
               </div>
               {shift && (
                 <div className="text-sm text-slate-400">
@@ -2379,7 +2392,7 @@ export default function POSPage() {
                     salesHistory.slice(0, 10).map((sale) => (
                       <tr key={sale.id} className="hover:bg-slate-800/50">
                         <td className="px-4 py-3 text-sm">{sale.fecha}</td>
-                        <td className="px-4 py-3 text-sm">Usuario Demo</td>
+                        <td className="px-4 py-3 text-sm">{nombreCajero((sale as any).cajero || user?.id)}</td>
                         <td className="px-4 py-3 text-sm text-right">{sale.items?.length || 0}</td>
                         <td className="px-4 py-3 text-sm text-right">${Number(sale.total).toFixed(2)}</td>
                         <td className="px-4 py-3 text-center">
@@ -2855,7 +2868,7 @@ export default function POSPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm text-slate-400 mb-1">Cajero</label>
-                <div className="text-white font-medium">{selectedCashier || "Usuario Demo"}</div>
+                <div className="text-white font-medium">{nombreCajero(selectedCashier || user?.id)}</div>
               </div>
               <div>
                 <label className="block text-sm text-slate-400 mb-1">Fecha y Hora</label>

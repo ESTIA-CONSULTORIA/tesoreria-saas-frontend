@@ -4,6 +4,8 @@ import MainLayout from "../../core/layout/MainLayout";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import ExecutiveKPI from "../../components/ExecutiveKPI";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
+import { useDirectorioUsuarios } from "../../core/hooks/useDirectorioUsuarios";
+import { nombreUsuario } from "../../core/utils/nombreUsuario";
 import { useAuthStore } from "../../core/store/useAuthStore";
 
 
@@ -11,6 +13,7 @@ type TabType = "resumen" | "posicion" | "traslados" | "cxp" | "cxc" | "alertas" 
 type PeriodType = "week" | "month" | "quarter";
 
 export default function TreasuryPage() {
+  const directorioUsuarios = useDirectorioUsuarios(); // nombre del cajero en vez de su id (solo presentación)
   const { activeBranch, activeCompany } = useCompanyStore();
   const authUser = useAuthStore((state) => state.user);
   const isAdminOrSoporte = authUser?.roleCode === "ADMIN" || authUser?.roleCode === "SOPORTE";
@@ -1244,7 +1247,7 @@ export default function TreasuryPage() {
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <p style={{ fontWeight: 600, color: '#F5F5F5', fontSize: '13px' }}>{shift.cajero ?? shift.cashierName ?? 'Cajero'}</p>
+                            <p style={{ fontWeight: 600, color: '#F5F5F5', fontSize: '13px' }}>{nombreUsuario(shift.cajero, directorioUsuarios, shift.cashierName ?? 'Cajero')}</p>
                             <p style={{ fontSize: '12px', color: '#7E7E7E' }}>{shift.fecha ? new Date(shift.fecha).toLocaleDateString('es-MX') : '—'}</p>
                           </div>
                           <div style={{ textAlign: 'right' }}>
@@ -1271,7 +1274,7 @@ export default function TreasuryPage() {
                     {/* Arqueo */}
                     <div style={{ backgroundColor: '#0F0F0F', borderRadius: '6px', padding: '16px' }} className="space-y-2">
                       {[
-                        { label: "Cajero", value: selectedShift.cajero ?? selectedShift.cashierName ?? '—' },
+                        { label: "Cajero", value: nombreUsuario(selectedShift.cajero, directorioUsuarios, selectedShift.cashierName ?? '—') },
                         { label: "Fecha", value: selectedShift.fecha ? new Date(selectedShift.fecha).toLocaleDateString('es-MX') : '—' },
                         { label: "Fondo inicial", value: `$${Number(selectedShift.fondoInicial ?? 0).toFixed(2)}` },
                         { label: "Total ventas", value: `$${Number(selectedShift.totalVentas ?? 0).toFixed(2)}` },

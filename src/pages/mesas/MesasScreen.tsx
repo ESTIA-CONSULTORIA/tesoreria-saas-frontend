@@ -6,6 +6,8 @@ import {
   type Area, type Cuenta, type Mesa, type PoliticasMesas,
 } from './mesasLogic';
 import PanelCuenta from './PanelCuenta';
+import { useDirectorioUsuarios } from '../../core/hooks/useDirectorioUsuarios';
+import { nombreUsuario } from '../../core/utils/nombreUsuario';
 import ConfigMesas from './ConfigMesas';
 
 // Una sola pantalla para las dos rutas: /mesas (sesión ERP) y /mesero (POS Lite con NIP). Mapa por área con monto y
@@ -39,6 +41,7 @@ function useOnline(): boolean {
 
 export default function MesasScreen({ client, tenantId, sucursalId, usuario, puedeConfigurar, onSalir }: Props) {
   const api = useMemo(() => mesasApi(client), [client]);
+  const directorioUsuarios = useDirectorioUsuarios({ client, tenantId }); // nombre del mesero (solo presentación)
   const online = useOnline();
   const [habilitado, setHabilitado] = useState<boolean | null>(null);
   const [politicas, setPoliticas] = useState<PoliticasMesas | null>(null);
@@ -104,7 +107,12 @@ export default function MesasScreen({ client, tenantId, sucursalId, usuario, pue
     );
   }
 
-  const meseroDe = (c?: Cuenta) => (c?.cajero ? c.cajero.split('@')[0] : '');
+  // Nombre completo del directorio; sin él, el correo de la cuenta sin dominio (como antes).
+  const nombreMesero = (v?: string) => {
+    const n = nombreUsuario(v, directorioUsuarios, '');
+    return n.includes('@') ? n.split('@')[0] : n;
+  };
+  const meseroDe = (c?: Cuenta) => nombreMesero(c?.cajero);
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
@@ -211,6 +219,7 @@ export default function MesasScreen({ client, tenantId, sucursalId, usuario, pue
           api={api}
           sucursalId={sucursalId}
           usuario={usuario}
+          nombreMesero={meseroDe(cuentaDeMesa(cuentas, mesaActual.id))}
           onCambio={cargar}
           onCerrar={() => setMesaSel(null)}
         />

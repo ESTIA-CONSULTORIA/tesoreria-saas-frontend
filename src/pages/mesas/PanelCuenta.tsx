@@ -18,6 +18,7 @@ interface Props {
   api: MesasApi;
   sucursalId: string | null;
   usuario: string;
+  nombreMesero?: string; // nombre ya resuelto de quien atiende la cuenta (solo presentación)
   onCambio: () => Promise<void>;
   onCerrar: () => void;
 }
@@ -28,7 +29,7 @@ const FORMAS: Array<{ v: FormaPago; l: string }> = [
 ];
 type Modo = 'completo' | 'parcial' | 'items';
 
-export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, sucursalId, usuario, onCambio, onCerrar }: Props) {
+export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, sucursalId, usuario, nombreMesero, onCambio, onCerrar }: Props) {
   const [carrito, setCarrito] = useState<ItemCuenta[]>([]);
   // IVA del negocio: la tasa de cada producto (o la del negocio) y si los precios ya lo incluyen. Es solo la vista previa;
   // el servidor fija precio, IVA y total de la cuenta.
@@ -127,7 +128,7 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
               Mesa {mesa.number}
               {cuenta?.folio ? ` · ${cuenta.folio}` : ''}
             </h2>
-            <p className="text-xs text-slate-400">{sinCuenta ? 'Mesa libre: arma la cuenta y ábrela.' : `Atiende: ${cuenta?.cajero ?? '—'}`}</p>
+            <p className="text-xs text-slate-400">{sinCuenta ? 'Mesa libre: arma la cuenta y ábrela.' : `Atiende: ${nombreMesero || cuenta?.cajero || '—'}`}</p>
           </div>
           <button className={`${btn} bg-slate-800`} onClick={onCerrar}>Cerrar</button>
         </header>
