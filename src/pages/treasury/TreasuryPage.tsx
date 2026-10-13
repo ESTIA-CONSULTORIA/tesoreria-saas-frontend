@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { rutaPagarFactura } from "../purchases/pagarFactura";
 import { api } from "../../core/api/api";
 import MainLayout from "../../core/layout/MainLayout";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
@@ -13,6 +15,7 @@ type TabType = "resumen" | "posicion" | "traslados" | "cxp" | "cxc" | "alertas" 
 type PeriodType = "week" | "month" | "quarter";
 
 export default function TreasuryPage() {
+  const navigate = useNavigate();
   const directorioUsuarios = useDirectorioUsuarios(); // nombre del cajero en vez de su id (solo presentación)
   const { activeBranch, activeCompany } = useCompanyStore();
   const authUser = useAuthStore((state) => state.user);
@@ -898,22 +901,7 @@ export default function TreasuryPage() {
                                 }}>{cxp.status}</span>
                               </td>
                               <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                                <button 
-                                  style={{
-                                    padding: '4px 8px',
-                                    borderRadius: '4px',
-                                    fontSize: '11px',
-                                    fontWeight: 600,
-                                    backgroundColor: '#2D2D2D',
-                                    color: '#F5F5F5',
-                                    border: '1px solid #2D2D2D',
-                                    marginRight: '4px',
-                                  }}
-                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3D3D3D'}
-                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2D2D2D'}
-                                >
-                                  Programar pago
-                                </button>
+                                {/* "Programar pago" se quitó: no existe programación de pagos en el backend. */}
                                 <button 
                                   style={{
                                     padding: '4px 8px',
@@ -924,6 +912,7 @@ export default function TreasuryPage() {
                                     color: '#0A0A0A',
                                     border: '1px solid #C0C0C0',
                                   }}
+                                  onClick={() => navigate(rutaPagarFactura(cxp.id))}
                                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E8E8E8'}
                                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#C0C0C0'}
                                 >

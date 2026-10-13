@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { facturaAPagar, PARAM_PAGAR } from "./pagarFactura";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import CreateOrderModal from "./CreateOrderModal";
@@ -48,7 +50,10 @@ interface Supplier {
 
 export default function PurchasesPage() {
   const { activeBranch, activeCompany } = useCompanyStore();
-  const [activeTab, setActiveTab] = useState("ordenes");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const pagarId = searchParams.get(PARAM_PAGAR); // viene de Tesorería (CxP) → "Pagar ahora"
+  const [activeTab, setActiveTab] = useState(pagarId ? "facturas" : "ordenes");
+  const [facturasCargadas, setFacturasCargadas] = useState(false);
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [invoices, setInvoices] = useState<Purchase[]>([]);
   const [accountsPayable, setAccountsPayable] = useState<any[]>([]);
@@ -90,6 +95,18 @@ export default function PurchasesPage() {
     if (activeTab === "cuentas-pagar") loadAccountsPayable();
   }, [activeTab, activeBranch?.id, activeCompany?.id]);
 
+  // Una vez cargadas las facturas, abre el pago de la que pidió Tesorería (y limpia el parámetro).
+  useEffect(() => {
+    if (!pagarId || !facturasCargadas) return;
+    const factura = facturaAPagar(invoices, pagarId);
+    if (factura) handlePayment(factura);
+    else setError("No se encontró la factura a pagar en Compras");
+    const siguiente = new URLSearchParams(searchParams);
+    siguiente.delete(PARAM_PAGAR);
+    setSearchParams(siguiente, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagarId, facturasCargadas, invoices]);
+
   async function loadSuppliers() {
     try {
       const response = await api.get("/suppliers");
@@ -126,6 +143,7 @@ export default function PurchasesPage() {
       setLoading(true);
       const response = await api.get("/purchases/invoices");
       setInvoices(Array.isArray(response.data) ? response.data : []);
+      setFacturasCargadas(true);
     } catch (err: any) {
       setError(err.response?.data?.message || "No fue posible cargar facturas");
     } finally {
