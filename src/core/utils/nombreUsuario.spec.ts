@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { construirDirectorio, esUuid, nombreUsuario } from './nombreUsuario';
+import { construirDirectorio, esUuid, nombreUsuario, textoAtiende } from './nombreUsuario';
 
 const ANA = '1bd9bfdb-5a1c-4f0e-9f0b-0123456789ab';
 const SIN_NOMBRE = '2cd9bfdb-5a1c-4f0e-9f0b-0123456789ab';
@@ -44,5 +44,25 @@ describe('nombreUsuario', () => {
   it('esUuid distingue ids de texto', () => {
     expect(esUuid(ANA)).toBe(true);
     expect(esUuid('cajero1')).toBe(false);
+  });
+});
+
+describe('textoAtiende (encabezado de la cuenta de mesa)', () => {
+  it('con nombre resuelto lo muestra', () => {
+    expect(textoAtiende(false, 'Ana Pérez')).toBe('Atiende: Ana Pérez');
+  });
+
+  it('sin resolver muestra "—" y nunca el id crudo de la cuenta', () => {
+    const ajeno = '99999999-5a1c-4f0e-9f0b-0123456789ab';
+    // MesasScreen resuelve con nombreUsuario(..., '') → un id fuera del directorio llega vacío
+    const resuelto = nombreUsuario(ajeno, dir, '');
+    expect(resuelto).toBe('');
+    const texto = textoAtiende(false, resuelto);
+    expect(texto).toBe('Atiende: —');
+    expect(texto).not.toContain(ajeno);
+  });
+
+  it('mesa libre no muestra a nadie', () => {
+    expect(textoAtiende(true, 'Ana Pérez')).toBe('Mesa libre: arma la cuenta y ábrela.');
   });
 });

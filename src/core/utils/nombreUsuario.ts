@@ -47,3 +47,11 @@ export function nombreUsuario(valor: string | null | undefined, directorio?: Dir
   }
   return v; // texto libre de datos anteriores ('Usuario Demo'): se muestra tal cual
 }
+
+// Leyenda del encabezado de la cuenta de mesa. `nombreResuelto` ya pasó por nombreUsuario: si no se pudo resolver llega
+// vacío y se muestra "—"; nunca se cae al valor crudo de `cuenta.cajero` (puede ser un id interno).
+export function textoAtiende(sinCuenta: boolean, nombreResuelto?: string | null): string {
+  if (sinCuenta) return 'Mesa libre: arma la cuenta y ábrela.';
+  const n = typeof nombreResuelto === 'string' ? nombreResuelto.trim() : '';
+  return `Atiende: ${n || '—'}`;
+}

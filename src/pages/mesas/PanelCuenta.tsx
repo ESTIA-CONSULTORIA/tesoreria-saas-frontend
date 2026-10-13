@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useBrandingStore } from '../../core/store/useBrandingStore';
 import type { IvaConfig } from '../../core/utils/iva';
+import { textoAtiende } from '../../core/utils/nombreUsuario';
 import type { FormaPago, MesasApi, Producto } from './mesasApi';
 import {
   accionesVisibles, construirItem, desgloseIva, dinero, etiquetaIva, indicesPorCobrar, itemsVivos, mensajeError,
@@ -128,7 +129,7 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
               Mesa {mesa.number}
               {cuenta?.folio ? ` · ${cuenta.folio}` : ''}
             </h2>
-            <p className="text-xs text-slate-400">{sinCuenta ? 'Mesa libre: arma la cuenta y ábrela.' : `Atiende: ${nombreMesero || cuenta?.cajero || '—'}`}</p>
+            <p className="text-xs text-slate-400">{textoAtiende(sinCuenta, nombreMesero)}</p>
           </div>
           <button className={`${btn} bg-slate-800`} onClick={onCerrar}>Cerrar</button>
         </header>
