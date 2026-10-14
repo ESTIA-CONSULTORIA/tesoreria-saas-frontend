@@ -19,7 +19,8 @@ import PosChatPanel from "./PosChatPanel";
 import TableLayout from "./TableLayout";
 import CheckoutFast from "./CheckoutFast";
 import { desgloseTicket, esTasaIva, etiquetaTasa, lineasDeIva, tasaEfectiva, TASAS_IVA, type IvaConfig, type TasaIva, etiquetaIvaUnica } from "../../core/utils/iva";
-import { propsBusqueda, propsTextoLibre } from "../../core/utils/inputBusqueda";
+import { propsTextoLibre } from "../../core/utils/inputBusqueda";
+import { InputBusqueda } from "../../core/components/InputBusqueda";
 import { OPCIONES_POLITICA_COBRO, OPCIONES_POLITICA_DIVISION, type PoliticaCobro, type PoliticaDivision } from "../mesas/mesasLogic";
 
 type TabType = "terminal" | "productos" | "categorias" | "areas" | "turnos" | "hardware" | "parametros";
@@ -1767,8 +1768,8 @@ export default function POSPage() {
             {/* ZONA IZQUIERDA - PRODUCTOS (75%) */}
             <div className="w-[75%] flex flex-col border-r border-slate-700">
               <div className="p-4 border-b border-slate-700 space-y-3">
-                <input
-                  {...propsBusqueda("pos-buscar-producto")}
+                <InputBusqueda
+                  name="pos-buscar-producto"
                   placeholder="Buscar producto..."
                   aria-label="Buscar producto"
                   value={searchTerm}
@@ -1912,8 +1913,8 @@ export default function POSPage() {
                       </div>
                     ) : (
                       <div className="flex gap-2">
-                        <input
-                          {...propsBusqueda("pos-numero-socio")}
+                        <InputBusqueda
+                          name="pos-numero-socio"
                           value={socioNumero}
                           onChange={(e) => setSocioNumero(e.target.value)}
                           onKeyDown={(e) => e.key === "Enter" && buscarSocioPOS()}

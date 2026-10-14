@@ -1,6 +1,7 @@
 // Atributos para campos de BÚSQUEDA y de nombre libre del POS. El navegador (y los gestores de contraseñas) rellenan con el
-// correo del login cualquier <input type="text"> que ve cerca de un formulario de acceso; con type="search", un `name` que no
-// sugiere usuario/correo y autoComplete="off" se desactivan el autocompletado y el filtro silencioso del catálogo.
+// correo del login cualquier <input type="text"> que ve cerca de un formulario de acceso. Defensa en capas:
+//   1. type="search", `name` que no sugiere usuario/correo, autoComplete="off" y marcas para LastPass/1Password/otros;
+//   2. `readOnly` inicial que se quita al enfocar (Chrome no autorrellena un campo de solo lectura al cargar la página).
 export interface PropsBusqueda {
   type: 'search';
   name: string;
@@ -10,6 +11,7 @@ export interface PropsBusqueda {
   spellCheck: false;
   'data-lpignore': 'true';
   'data-1p-ignore': 'true';
+  'data-form-type': 'other';
 }
 
 export function propsBusqueda(name: string): PropsBusqueda {
@@ -22,6 +24,7 @@ export function propsBusqueda(name: string): PropsBusqueda {
     spellCheck: false,
     'data-lpignore': 'true', // LastPass
     'data-1p-ignore': 'true', // 1Password
+    'data-form-type': 'other', // Dashlane y otros
   };
 }
 
@@ -33,7 +36,17 @@ export function propsTextoLibre(name: string) {
     autoComplete: 'off' as const,
     'data-lpignore': 'true' as const,
     'data-1p-ignore': 'true' as const,
+    'data-form-type': 'other' as const,
   };
+}
+
+// Estado inicial de solo lectura: el campo nace readOnly y se libera la primera vez que el usuario lo toca. Una vez liberado
+// no vuelve a bloquearse (si no, no podría teclear). Lógica pura para poder probarla sin DOM.
+export function soloLecturaInicial(): boolean {
+  return true;
+}
+export function soloLecturaTrasFoco(_actual: boolean): boolean {
+  return false;
 }
 
 // `name` que los navegadores asocian con la cuenta del usuario: nunca deben usarse en campos del POS.

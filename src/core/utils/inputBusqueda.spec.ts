@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NOMBRES_PROHIBIDOS, propsBusqueda, propsTextoLibre } from './inputBusqueda';
+import { NOMBRES_PROHIBIDOS, propsBusqueda, propsTextoLibre, soloLecturaInicial, soloLecturaTrasFoco } from './inputBusqueda';
 import { desgloseTicket, etiquetaIvaUnica, lineasDeIva, type IvaConfig } from './iva';
 
 describe('propsBusqueda / propsTextoLibre', () => {
@@ -18,6 +18,15 @@ describe('propsBusqueda / propsTextoLibre', () => {
     }
     expect(NOMBRES_PROHIBIDOS.test('email')).toBe(true);
     expect(NOMBRES_PROHIBIDOS.test('username')).toBe(true);
+  });
+
+  it('data-form-type=other y readOnly inicial que se libera al enfocar y no vuelve a bloquearse', () => {
+    expect(propsBusqueda('pos-buscar-producto')['data-form-type']).toBe('other');
+    expect(propsTextoLibre('x')['data-form-type']).toBe('other');
+    expect(soloLecturaInicial()).toBe(true);
+    const tras = soloLecturaTrasFoco(true);
+    expect(tras).toBe(false);
+    expect(soloLecturaTrasFoco(tras)).toBe(false);
   });
 
   it('texto libre: autoComplete=off y type=text', () => {

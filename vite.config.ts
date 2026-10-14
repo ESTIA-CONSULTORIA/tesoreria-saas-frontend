@@ -11,6 +11,9 @@ export default defineConfig({
       // actualizar (no se actualiza solo, no interrumpe un turno a medias). Requiere
       // consumir el hook virtual:pwa-register/react en la app — ver src/App.tsx.
       registerType: 'prompt',
+      // clientsClaim: sin esto el worker nuevo se activa pero no toma control de la pestaña, el evento 'controlling' no llega
+      // y el botón "Actualizar" no recarga. skipWaiting NO va aquí: en modo prompt solo se activa cuando el usuario pulsa.
+      workbox: { clientsClaim: true },
       // Fase B: solo "instalable" (manifest + precache del shell: HTML/CSS/JS/íconos).
       // Sin runtimeCaching de llamadas API ni cola offline — eso es Fase C/D, aparte.
       includeAssets: ['apple-touch-icon.png', 'favicon.svg'],

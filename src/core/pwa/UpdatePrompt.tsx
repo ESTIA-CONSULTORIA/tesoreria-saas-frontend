@@ -1,4 +1,7 @@
 import { useRegisterSW } from 'virtual:pwa-register/react';
+import { useState } from 'react';
+import { countFailedOperations, countPendingOperations } from '../offline/db';
+import { aplicarActualizacion } from './actualizacion';
 
 // Fase B (PWA instalable): registerType: 'prompt' en vite.config.ts, por sí solo, no
 // muestra nada — solo expone el estado a través de este hook. Sin consumirlo, una
@@ -33,7 +36,23 @@ export function UpdatePrompt() {
     },
   });
 
+  const [actualizando, setActualizando] = useState(false);
+
   if (!needRefresh) return null;
+
+  const actualizar = async () => {
+    setActualizando(true);
+    const r = await aplicarActualizacion({
+      contarPendientes: async () => ({
+        pendientes: await countPendingOperations(),
+        fallidas: await countFailedOperations(),
+      }),
+      confirmar: (m) => window.confirm(m),
+      activarWorker: () => updateServiceWorker(true),
+      recargar: () => window.location.reload(),
+    });
+    if (r === 'cancelado') setActualizando(false);
+  };
 
   return (
     <div
@@ -60,7 +79,8 @@ export function UpdatePrompt() {
           puede tirar un formulario abierto o una venta a medio capturar. */}
       <span>Hay una versión nueva disponible. Guarda tu trabajo antes de actualizar — la página se recargará.</span>
       <button
-        onClick={() => updateServiceWorker(true)}
+        onClick={actualizar}
+        disabled={actualizando}
         style={{
           background: '#fff',
           color: '#050B1A',
@@ -71,7 +91,7 @@ export function UpdatePrompt() {
           cursor: 'pointer',
         }}
       >
-        Actualizar
+        {actualizando ? 'Actualizando…' : 'Actualizar'}
       </button>
     </div>
   );

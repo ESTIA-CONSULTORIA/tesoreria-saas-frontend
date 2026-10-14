@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { propsBusqueda } from '../../core/utils/inputBusqueda';
+import { InputBusqueda } from '../../core/components/InputBusqueda';
 import { api } from '../../core/api/api';
 import { useAuthStore } from '../../core/store/useAuthStore';
 import { useBrandingStore } from '../../core/store/useBrandingStore';
@@ -120,7 +120,7 @@ function SociosTab({ cfg, gestion, setMsg, sucursalId, userId }: { cfg: IvaConfi
   return (
     <div>
       <div className="mb-3 flex gap-2">
-        <input {...propsBusqueda('membresias-buscar-socio')} aria-label="Buscar socio" className={inp} placeholder="Buscar por número, nombre o teléfono" value={q} onChange={(e) => setQ(e.target.value)} />
+        <InputBusqueda name="membresias-buscar-socio" aria-label="Buscar socio" className={inp} placeholder="Buscar por número, nombre o teléfono" value={q} onChange={(e) => setQ(e.target.value)} />
         <button className={`${btn} whitespace-nowrap bg-blue-600`} onClick={() => setNuevo({ nombre: '', apellidos: '', telefono: '', email: '', numeroSocio: '', nip: '' })}>+ Nuevo socio</button>
       </div>
 
