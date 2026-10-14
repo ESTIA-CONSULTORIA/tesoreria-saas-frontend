@@ -668,6 +668,8 @@ export default function CorteCajaLite() {
                     </select>
                   ) : (
                     <input
+                      name="corte-insumo-nombre"
+                      autoComplete="off"
                       placeholder="Nombre del insumo o producto"
                       value={newInsumo.nombre}
                       onChange={e => setNewInsumo(p => ({ ...p, nombre: e.target.value }))}

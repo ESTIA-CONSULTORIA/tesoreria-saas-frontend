@@ -610,6 +610,7 @@ export default function DashboardPage() {
                             cursor: 'pointer',
                             letterSpacing: '0.01em',
                           }}
+                          onClick={() => navigate('/reports')}
                           onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.color = '#F5F5F5'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.color = '#BDBDBD'; }}
                         >

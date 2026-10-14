@@ -84,3 +84,11 @@ export function lineasDeIva(d: DesgloseIva): Array<{ tasa: TasaIva; etiqueta: st
     impuestos: d.porTasa[t].impuestos,
   }));
 }
+
+// Leyenda de IVA cuando el ticket tiene UNA sola tasa (o ninguna): con ítems es la tasa de esos ítems; con el ticket vacío
+// es la tasa por defecto del NEGOCIO (nunca una fija ni la del último producto). Con tasas mixtas el recibo imprime una
+// línea por tasa (lineasDeIva) y esta leyenda no se usa.
+export function etiquetaIvaUnica(d: DesgloseIva, cfg: IvaConfig = IVA_DEFAULT): string {
+  const tasa = lineasDeIva(d)[0]?.tasa ?? cfg.ivaTasaDefault;
+  return tasa === 'EXENTO' ? 'IVA exento' : `IVA (${etiquetaTasa(tasa)})`;
+}

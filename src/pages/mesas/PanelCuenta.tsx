@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useBrandingStore } from '../../core/store/useBrandingStore';
 import type { IvaConfig } from '../../core/utils/iva';
 import { textoAtiende } from '../../core/utils/nombreUsuario';
+import { propsBusqueda } from '../../core/utils/inputBusqueda';
 import type { FormaPago, MesasApi, Producto } from './mesasApi';
 import {
   accionesVisibles, construirItem, desgloseIva, dinero, etiquetaIva, indicesPorCobrar, itemsVivos, mensajeError,
@@ -234,6 +235,8 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
           <section>
             <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">Productos</h3>
             <input
+              {...propsBusqueda('mesas-buscar-producto')}
+              aria-label="Buscar producto"
               className="mb-2 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-3 text-base"
               placeholder="Buscar producto"
               value={busca}

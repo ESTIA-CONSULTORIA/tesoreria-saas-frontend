@@ -18,7 +18,8 @@ import { OFFLINE_SYNC_COMPLETED_EVENT } from "../../core/offline/syncEngine";
 import PosChatPanel from "./PosChatPanel";
 import TableLayout from "./TableLayout";
 import CheckoutFast from "./CheckoutFast";
-import { desgloseTicket, esTasaIva, etiquetaTasa, lineasDeIva, tasaEfectiva, TASAS_IVA, type IvaConfig, type TasaIva } from "../../core/utils/iva";
+import { desgloseTicket, esTasaIva, etiquetaTasa, lineasDeIva, tasaEfectiva, TASAS_IVA, type IvaConfig, type TasaIva, etiquetaIvaUnica } from "../../core/utils/iva";
+import { propsBusqueda, propsTextoLibre } from "../../core/utils/inputBusqueda";
 import { OPCIONES_POLITICA_COBRO, OPCIONES_POLITICA_DIVISION, type PoliticaCobro, type PoliticaDivision } from "../mesas/mesasLogic";
 
 type TabType = "terminal" | "productos" | "categorias" | "areas" | "turnos" | "hardware" | "parametros";
@@ -1767,8 +1768,9 @@ export default function POSPage() {
             <div className="w-[75%] flex flex-col border-r border-slate-700">
               <div className="p-4 border-b border-slate-700 space-y-3">
                 <input
-                  type="text"
+                  {...propsBusqueda("pos-buscar-producto")}
                   placeholder="Buscar producto..."
+                  aria-label="Buscar producto"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full px-4 py-2 rounded-lg border border-slate-600 bg-slate-800 text-white"
@@ -1911,6 +1913,7 @@ export default function POSPage() {
                     ) : (
                       <div className="flex gap-2">
                         <input
+                          {...propsBusqueda("pos-numero-socio")}
                           value={socioNumero}
                           onChange={(e) => setSocioNumero(e.target.value)}
                           onKeyDown={(e) => e.key === "Enter" && buscarSocioPOS()}
@@ -1934,7 +1937,7 @@ export default function POSPage() {
                   </div>
                   {lineasDeIva(ivaTicket).length === 0 ? (
                     <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">IVA ({etiquetaTasa(ivaCfg.ivaTasaDefault)})</span>
+                      <span className="text-slate-400">{etiquetaIvaUnica(ivaTicket, ivaCfg)}</span>
                       <span>${getTaxes().toFixed(2)}</span>
                     </div>
                   ) : (
@@ -3691,7 +3694,7 @@ export default function POSPage() {
               )}
               {lineasDeIva(reciboIva).length <= 1 ? (
                 <div className="flex justify-between">
-                  <span>{lineasDeIva(reciboIva)[0]?.tasa === "EXENTO" ? "IVA exento" : `IVA (${etiquetaTasa((lineasDeIva(reciboIva)[0]?.tasa ?? "16") as TasaIva)})`}</span>
+                  <span>{etiquetaIvaUnica(reciboIva, ivaCfg)}</span>
                   <span>${Number(currentSale.impuestos ?? reciboIva.impuestos).toFixed(2)}</span>
                 </div>
               ) : (
@@ -3807,7 +3810,7 @@ export default function POSPage() {
               <div>
                 <label className="block text-sm text-slate-400 mb-1">Nombre *</label>
                 <input
-                  type="text"
+                  {...propsTextoLibre("pos-producto-nombre")}
                   value={productForm.nombre}
                   onChange={(e) => setProductForm({ ...productForm, nombre: e.target.value })}
                   placeholder="Nombre del producto"
@@ -4409,7 +4412,7 @@ export default function POSPage() {
               <div>
                 <label className="block text-sm text-slate-400 mb-1">Nombre *</label>
                 <input
-                  type="text"
+                  {...propsTextoLibre("pos-categoria-nombre")}
                   value={categoryForm.nombre}
                   onChange={(e) => setCategoryForm({ ...categoryForm, nombre: e.target.value })}
                   placeholder="Nombre de la categoría"
@@ -4470,7 +4473,7 @@ export default function POSPage() {
               <div>
                 <label className="block text-sm text-slate-400 mb-1">Nombre *</label>
                 <input
-                  type="text"
+                  {...propsTextoLibre("pos-area-nombre")}
                   value={areaForm.nombre}
                   onChange={(e) => setAreaForm({ ...areaForm, nombre: e.target.value })}
                   placeholder="Nombre del área"
