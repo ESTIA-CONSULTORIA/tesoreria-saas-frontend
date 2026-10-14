@@ -20,6 +20,9 @@ import TableLayout from "./TableLayout";
 import CheckoutFast from "./CheckoutFast";
 import { desgloseTicket, esTasaIva, etiquetaTasa, lineasDeIva, tasaEfectiva, TASAS_IVA, type IvaConfig, type TasaIva, etiquetaIvaUnica } from "../../core/utils/iva";
 import { propsTextoLibre } from "../../core/utils/inputBusqueda";
+import { ModalPOS } from "../../core/components/ModalPOS";
+import { AperturaTurnoModal, CierreTurnoModal, CobroModal, MovimientoEfectivoModal, PrecorteModal, efectivoEsperado } from "./ModalesCaja";
+import { totalContado } from "./cajaTurno";
 import { InputBusqueda } from "../../core/components/InputBusqueda";
 import { OPCIONES_POLITICA_COBRO, OPCIONES_POLITICA_DIVISION, type PoliticaCobro, type PoliticaDivision } from "../mesas/mesasLogic";
 
@@ -970,9 +973,19 @@ export default function POSPage() {
     }
   }
 
+  function cerrarCobro() {
+    setShowPaymentModal(false);
+    setSelectedPaymentForm(null);
+    setPaymentAmount("");
+    setCardLast4("");
+    setCardBank("");
+    setSpeiKey("");
+    setCourtesyReason("");
+    setCourtesyAuthUser("");
+  }
+
   function calculateTotalCash() {
-    const denominations = [1000, 500, 200, 100, 50, 20, 10, 5, 2, 1];
-    return denominations.reduce((sum, denom) => sum + (cashCounts[denom] || 0) * denom, 0);
+    return totalContado(cashCounts);
   }
 
   function addToTicket(product: Product) {
@@ -2866,56 +2879,15 @@ export default function POSPage() {
 
       {/* MODAL ABRIR TURNO */}
       {showOpenShiftModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-xl p-6 w-96">
-            <h3 className="text-lg font-semibold mb-4">Apertura de Turno</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-slate-400 mb-1">Cajero</label>
-                <div className="text-white font-medium">{nombreCajero(selectedCashier || user?.id)}</div>
-              </div>
-              <div>
-                <label className="block text-sm text-slate-400 mb-1">Fecha y Hora</label>
-                <div className="text-white">{new Date().toLocaleString()}</div>
-              </div>
-              <div>
-                <label className="block text-sm text-slate-400 mb-1">Fondo de Caja *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={initialFund}
-                  onChange={(e) => setInitialFund(e.target.value)}
-                  placeholder="0.00"
-                  className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-slate-400 mb-1">Notas (opcional)</label>
-                <textarea
-                  value={shiftNotes}
-                  onChange={(e) => setShiftNotes(e.target.value)}
-                  placeholder="Notas del turno..."
-                  className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white"
-                  rows={2}
-                />
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowOpenShiftModal(false)}
-                  className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={openShift}
-                  className="flex-1 py-2 rounded bg-green-600 text-white hover:bg-green-700"
-                >
-                  Abrir Turno
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <AperturaTurnoModal
+          cajero={nombreCajero(selectedCashier || user?.id)}
+          fondo={initialFund}
+          setFondo={setInitialFund}
+          notas={shiftNotes}
+          setNotas={setShiftNotes}
+          onCancel={() => setShowOpenShiftModal(false)}
+          onOpen={openShift}
+        />
       )}
 
       {/* PANTALLA LOGIN CAJERO */}
@@ -3060,9 +3032,7 @@ export default function POSPage() {
 
       {/* MODAL DESCUENTO */}
       {showDiscountModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-xl p-6 w-[500px] max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">Aplicar Descuento</h3>
+        <ModalPOS size="md" title={"Aplicar Descuento"}>
             <div className="space-y-4">
               {/* Sección 1: Descuentos predefinidos */}
               <div>
@@ -3185,15 +3155,12 @@ export default function POSPage() {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+        </ModalPOS>
       )}
 
       {/* MODAL CORTESÍA */}
       {showCourtesyModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-xl p-6 w-[500px] max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">Cortesía</h3>
+        <ModalPOS size="md" title={"Cortesía"}>
             <div className="space-y-4">
               {/* Sección 1: Selección de productos */}
               <div>
@@ -3294,358 +3261,52 @@ export default function POSPage() {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+        </ModalPOS>
       )}
 
       {/* MODAL DE COBRO PREMIUM */}
       {showPaymentModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-xl p-6 w-[800px] max-h-[90vh] overflow-hidden flex">
-            {/* COLUMNA IZQUIERDA (40%) */}
-            <div className="w-[40%] pr-4 flex flex-col border-r border-slate-700">
-              {/* Header */}
-              <div className="mb-4">
-                <p className="text-xs text-slate-400 mb-1">TOTAL</p>
-                <p className="text-4xl font-bold text-green-400">${getTotal().toFixed(2)}</p>
-                {paymentForms.length > 0 && (
-                  <div className="mt-2 space-y-1 text-sm">
-                    <div className="text-green-400">Pagado: ${getTotalCovered().toFixed(2)}</div>
-                    {getPending() > 0 && (
-                      <div className="text-red-400">Pendiente: ${getPending().toFixed(2)}</div>
-                    )}
-                    {getChange() > 0 && (
-                      <div className="text-green-400">Cambio: ${getChange().toFixed(2)}</div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Botones de forma de pago */}
-              <div className="space-y-2 mb-4">
-                <button
-                  onClick={() => {
-                    setSelectedPaymentForm("EFECTIVO");
-                    setPaymentAmount("");
-                    setTimeout(() => paymentInputRef.current?.focus(), 0);
-                  }}
-                  className={`w-full h-12 rounded-lg flex items-center gap-3 px-4 transition-colors ${
-                    selectedPaymentForm === "EFECTIVO" 
-                      ? "bg-blue-600 border-2 border-blue-400" 
-                      : "bg-slate-700 border border-slate-600 hover:bg-slate-600"
-                  }`}
-                >
-                  <span className="text-xl">◈</span>
-                  <span className="font-medium">Efectivo</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedPaymentForm("DEBITO");
-                    setPaymentAmount("");
-                    setTimeout(() => paymentInputRef.current?.focus(), 0);
-                  }}
-                  className={`w-full h-12 rounded-lg flex items-center gap-3 px-4 transition-colors ${
-                    selectedPaymentForm === "DEBITO" 
-                      ? "bg-blue-600 border-2 border-blue-400" 
-                      : "bg-slate-700 border border-slate-600 hover:bg-slate-600"
-                  }`}
-                >
-                  <span className="text-xl">▣</span>
-                  <span className="font-medium">Tarjeta Débito</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedPaymentForm("CREDITO");
-                    setPaymentAmount("");
-                    setTimeout(() => paymentInputRef.current?.focus(), 0);
-                  }}
-                  className={`w-full h-12 rounded-lg flex items-center gap-3 px-4 transition-colors ${
-                    selectedPaymentForm === "CREDITO" 
-                      ? "bg-blue-600 border-2 border-blue-400" 
-                      : "bg-slate-700 border border-slate-600 hover:bg-slate-600"
-                  }`}
-                >
-                  <span className="text-xl">◉</span>
-                  <span className="font-medium">Tarjeta Crédito</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedPaymentForm("TRANSFERENCIA");
-                    setPaymentAmount("");
-                    setTimeout(() => paymentInputRef.current?.focus(), 0);
-                  }}
-                  className={`w-full h-12 rounded-lg flex items-center gap-3 px-4 transition-colors ${
-                    selectedPaymentForm === "TRANSFERENCIA" 
-                      ? "bg-blue-600 border-2 border-blue-400" 
-                      : "bg-slate-700 border border-slate-600 hover:bg-slate-600"
-                  }`}
-                >
-                  <span className="text-xl">⇄</span>
-                  <span className="font-medium">SPEI</span>
-                </button>
-                {puedeCortesia && (
-                  <button
-                    onClick={() => {
-                      setSelectedPaymentForm("CORTESIA");
-                      setPaymentAmount("");
-                      setTimeout(() => paymentInputRef.current?.focus(), 0);
-                    }}
-                    className={`w-full h-12 rounded-lg flex items-center gap-3 px-4 transition-colors ${
-                      selectedPaymentForm === "CORTESIA" 
-                        ? "bg-blue-600 border-2 border-blue-400" 
-                        : "bg-slate-700 border border-slate-600 hover:bg-slate-600"
-                    }`}
-                  >
-                    <span className="text-xl">✦</span>
-                    <span className="font-medium">Cortesía</span>
-                  </button>
-                )}
-              </div>
-
-              {/* Lista de pagos agregados */}
-              <div className="flex-1 overflow-y-auto space-y-2 mb-4">
-                {paymentForms.map((pf) => (
-                  <div key={pf.id} className="flex items-center justify-between p-2 rounded bg-slate-900 border border-slate-700">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">
-                        {pf.forma === "EFECTIVO" ? "◈" : 
-                         pf.forma === "DEBITO" ? "▣" : 
-                         pf.forma === "CREDITO" ? "◉" : 
-                         pf.forma === "TRANSFERENCIA" ? "⇄" : "✦"}
-                      </span>
-                      <span className="text-sm">${pf.monto.toFixed(2)}</span>
-                    </div>
-                    <button
-                      onClick={() => removePaymentForm(pf.id)}
-                      className="text-red-400 hover:text-red-300 text-lg"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              {/* Botón confirmar */}
-              <button
-                onClick={processPayment}
-                disabled={getTotalCovered() < getTotal()}
-                className="w-full py-3 rounded-lg bg-green-700 text-white font-bold hover:bg-green-600 disabled:bg-slate-700 disabled:text-slate-500"
-              >
-                CONFIRMAR COBRO →
-              </button>
-            </div>
-
-            {/* COLUMNA DERECHA (60%) */}
-            <div className="w-[60%] pl-4 flex flex-col">
-              {/* Campo monto activo */}
-              <div className="mb-4">
-                <p className="text-sm text-slate-400 mb-2">
-                  {selectedPaymentForm || "Seleccionar forma de pago"}
-                </p>
-                <div className="bg-slate-900 rounded-lg p-4 border border-slate-700">
-                  <input
-                    ref={paymentInputRef}
-                    type="text"
-                    value={paymentAmount}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      // Solo permitir dígitos y un punto decimal
-                      if (/^\d*\.?\d*$/.test(value)) {
-                        setPaymentAmount(value);
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        if (selectedPaymentForm && Number(paymentAmount) > 0) {
-                          addPaymentForm(selectedPaymentForm, Number(paymentAmount));
-                          setPaymentAmount("");
-                          setTimeout(() => paymentInputRef.current?.focus(), 0);
-                        }
-                      } else if (e.key === 'Backspace') {
-                        setPaymentAmount(paymentAmount.slice(0, -1));
-                      }
-                    }}
-                    placeholder="0.00"
-                    className="w-full bg-transparent text-4xl font-bold text-white text-right outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Teclado numérico */}
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                {["7", "8", "9", "4", "5", "6", "1", "2", "3", ".", "0", "⌫"].map((key) => (
-                  <button
-                    key={key}
-                    onClick={() => {
-                      if (key === "⌫") {
-                        setPaymentAmount(paymentAmount.slice(0, -1));
-                      } else {
-                        let newAmount = paymentAmount + key;
-                        // Eliminar cero a la izquierda si no es decimal
-                        if (newAmount.startsWith('0') && newAmount.length > 1 && newAmount[1] !== '.') {
-                          newAmount = newAmount.slice(1);
-                        }
-                        setPaymentAmount(newAmount);
-                      }
-                    }}
-                    className="h-16 rounded-lg bg-slate-700 hover:bg-slate-600 text-2xl font-medium transition-colors"
-                  >
-                    {key}
-                  </button>
-                ))}
-              </div>
-
-              {/* Botón Exacto */}
-              <button
-                onClick={() => {
-                  if (!selectedPaymentForm) {
-                    setSelectedPaymentForm("EFECTIVO");
-                  }
-                  setPaymentAmount(getPending().toFixed(2));
-                }}
-                className="w-full py-3 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 mb-4"
-              >
-                Exacto ${getPending().toFixed(2)}
-              </button>
-
-              {/* Botón agregar pago */}
-              <button
-                onClick={() => {
-                  if (selectedPaymentForm && Number(paymentAmount) > 0) {
-                    addPaymentForm(selectedPaymentForm, Number(paymentAmount));
-                    setPaymentAmount("");
-                  }
-                }}
-                disabled={!selectedPaymentForm || Number(paymentAmount) <= 0}
-                className="w-full py-3 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 mb-4"
-              >
-                + Agregar pago
-              </button>
-
-              {/* Campos adicionales según forma de pago */}
-              {selectedPaymentForm === "DEBITO" && (
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm text-slate-400 mb-1 block">Últimos 4 dígitos o folio voucher *</label>
-                    <input
-                      type="text"
-                      value={cardLast4}
-                      onChange={(e) => setCardLast4(e.target.value)}
-                      placeholder="****"
-                      className="w-full px-3 py-2 rounded bg-slate-900 text-white border border-slate-700"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-slate-400 mb-1 block">Banco emisor</label>
-                    <input
-                      type="text"
-                      value={cardBank}
-                      onChange={(e) => setCardBank(e.target.value)}
-                      placeholder="Banco"
-                      className="w-full px-3 py-2 rounded bg-slate-900 text-white border border-slate-700"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {selectedPaymentForm === "CREDITO" && (
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm text-slate-400 mb-1 block">Últimos 4 dígitos o folio voucher *</label>
-                    <input
-                      type="text"
-                      value={cardLast4}
-                      onChange={(e) => setCardLast4(e.target.value)}
-                      placeholder="****"
-                      className="w-full px-3 py-2 rounded bg-slate-900 text-white border border-slate-700"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-slate-400 mb-1 block">Banco emisor</label>
-                    <input
-                      type="text"
-                      value={cardBank}
-                      onChange={(e) => setCardBank(e.target.value)}
-                      placeholder="Banco"
-                      className="w-full px-3 py-2 rounded bg-slate-900 text-white border border-slate-700"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {selectedPaymentForm === "TRANSFERENCIA" && (
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm text-slate-400 mb-1 block">Clave de rastreo SPEI *</label>
-                    <input
-                      type="text"
-                      value={speiKey}
-                      onChange={(e) => setSpeiKey(e.target.value)}
-                      placeholder="Clave de rastreo"
-                      className="w-full px-3 py-2 rounded bg-slate-900 text-white border border-slate-700"
-                    />
-                  </div>
-                  <button
-                    onClick={() => window.open("https://www.banxico.org.mx/cep/", "_blank")}
-                    className="w-full py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
-                  >
-                    Verificar en BANXICO →
-                  </button>
-                </div>
-              )}
-
-              {selectedPaymentForm === "CORTESIA" && (
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm text-slate-400 mb-1 block">Motivo *</label>
-                    <select
-                      value={courtesyReason}
-                      onChange={(e) => setCourtesyReason(e.target.value)}
-                      className="w-full px-3 py-2 rounded bg-slate-900 text-white border border-slate-700"
-                    >
-                      <option value="">Seleccionar motivo...</option>
-                      <option value="cortesia_ejecutiva">Cortesía ejecutiva</option>
-                      <option value="error_pedido">Error en pedido</option>
-                      <option value="cliente_vip">Cliente VIP</option>
-                      <option value="cumpleanos">Cumpleaños</option>
-                      <option value="compensacion_queja">Compensación por queja</option>
-                      <option value="otro">Otro</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-sm text-slate-400 mb-1 block">Autorizado por *</label>
-                    <select
-                      value={courtesyAuthUser}
-                      onChange={(e) => setCourtesyAuthUser(e.target.value)}
-                      className="w-full px-3 py-2 rounded bg-slate-900 text-white border border-slate-700"
-                    >
-                      <option value="">Seleccionar autorizador...</option>
-                      <option value="admin">Administrador</option>
-                      <option value="soporte">Soporte</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {/* Botón cerrar */}
-              <button
-                onClick={() => {
-                  setShowPaymentModal(false);
-                  setSelectedPaymentForm(null);
-                  setPaymentAmount("");
-                  setCardLast4("");
-                  setCardBank("");
-                  setSpeiKey("");
-                  setCourtesyReason("");
-                  setCourtesyAuthUser("");
-                }}
-                className="mt-auto py-2 text-slate-400 hover:text-white"
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
+        <CobroModal
+          total={getTotal()}
+          pagado={getTotalCovered()}
+          pendiente={getPending()}
+          cambio={getChange()}
+          puedeCortesia={puedeCortesia}
+          pagos={paymentForms}
+          formaActiva={selectedPaymentForm}
+          onElegirForma={(f) => {
+            setSelectedPaymentForm(f);
+            setPaymentAmount("");
+            setTimeout(() => paymentInputRef.current?.focus(), 0);
+          }}
+          monto={paymentAmount}
+          setMonto={setPaymentAmount}
+          inputRef={paymentInputRef}
+          onAgregar={() => {
+            if (selectedPaymentForm && Number(paymentAmount) > 0) {
+              addPaymentForm(selectedPaymentForm, Number(paymentAmount));
+              setPaymentAmount("");
+              setTimeout(() => paymentInputRef.current?.focus(), 0);
+            }
+          }}
+          onExacto={() => {
+            if (!selectedPaymentForm) setSelectedPaymentForm("EFECTIVO");
+            setPaymentAmount(getPending().toFixed(2));
+          }}
+          onQuitar={removePaymentForm}
+          cardLast4={cardLast4}
+          setCardLast4={setCardLast4}
+          cardBank={cardBank}
+          setCardBank={setCardBank}
+          speiKey={speiKey}
+          setSpeiKey={setSpeiKey}
+          courtesyReason={courtesyReason}
+          setCourtesyReason={setCourtesyReason}
+          courtesyAuthUser={courtesyAuthUser}
+          setCourtesyAuthUser={setCourtesyAuthUser}
+          onCancel={cerrarCobro}
+          onConfirm={processPayment}
+        />
       )}
 
       {/* MODAL TICKET DE VENTA */}
@@ -3794,9 +3455,7 @@ export default function POSPage() {
 
       {/* MODAL PRODUCTO */}
       {showProductModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-xl p-6 w-[500px] max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">{editingProduct ? "Editar Producto" : "Nuevo Producto"}</h3>
+        <ModalPOS size="md" title={editingProduct ? "Editar Producto" : "Nuevo Producto"}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm text-slate-400 mb-1">Código</label>
@@ -3949,430 +3608,74 @@ export default function POSPage() {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+        </ModalPOS>
       )}
 
       {/* MODAL RETIRO */}
       {showWithdrawalModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-xl p-6 w-96">
-            <h3 className="text-lg font-semibold mb-4">💰 Retiro de Efectivo</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-slate-400 mb-1">Monto *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={withdrawalAmount}
-                  onChange={(e) => setWithdrawalAmount(e.target.value)}
-                  placeholder="0.00"
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-slate-400 mb-1">Motivo *</label>
-                <input
-                  type="text"
-                  value={withdrawalReason}
-                  onChange={(e) => setWithdrawalReason(e.target.value)}
-                  placeholder="Motivo del retiro"
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-slate-400 mb-1">Autorizado por *</label>
-                <select
-                  value={withdrawalAuthorizedBy}
-                  onChange={(e) => setWithdrawalAuthorizedBy(e.target.value)}
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
-                >
-                  <option value="">Seleccionar autorizador</option>
-                  <option value="admin">Administrador</option>
-                  <option value="soporte">Soporte</option>
-                </select>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowWithdrawalModal(false)}
-                  className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleWithdrawal}
-                  className="flex-1 py-2 rounded bg-yellow-600 text-white hover:bg-yellow-700"
-                >
-                  Retirar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <MovimientoEfectivoModal
+          tipo="RETIRO"
+          esperado={shift ? efectivoEsperado(shift as any) : undefined}
+          monto={withdrawalAmount}
+          setMonto={setWithdrawalAmount}
+          concepto={withdrawalReason}
+          setConcepto={setWithdrawalReason}
+          autorizadoPor={withdrawalAuthorizedBy}
+          setAutorizadoPor={setWithdrawalAuthorizedBy}
+          onCancel={() => setShowWithdrawalModal(false)}
+          onConfirm={handleWithdrawal}
+        />
       )}
 
       {/* MODAL DEPÓSITO */}
       {showDepositModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-xl p-6 w-96">
-            <h3 className="text-lg font-semibold mb-4">💵 Depósito de Efectivo</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-slate-400 mb-1">Monto *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={depositAmount}
-                  onChange={(e) => setDepositAmount(e.target.value)}
-                  placeholder="0.00"
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-slate-400 mb-1">Origen *</label>
-                <input
-                  type="text"
-                  value={depositOrigin}
-                  onChange={(e) => setDepositOrigin(e.target.value)}
-                  placeholder="Origen del depósito"
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-slate-400 mb-1">Autorizado por *</label>
-                <select
-                  value={depositAuthorizedBy}
-                  onChange={(e) => setDepositAuthorizedBy(e.target.value)}
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
-                >
-                  <option value="">Seleccionar autorizador</option>
-                  <option value="admin">Administrador</option>
-                  <option value="soporte">Soporte</option>
-                </select>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowDepositModal(false)}
-                  className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleDeposit}
-                  className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
-                >
-                  Depositar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <MovimientoEfectivoModal
+          tipo="DEPOSITO"
+          esperado={shift ? efectivoEsperado(shift as any) : undefined}
+          monto={depositAmount}
+          setMonto={setDepositAmount}
+          concepto={depositOrigin}
+          setConcepto={setDepositOrigin}
+          autorizadoPor={depositAuthorizedBy}
+          setAutorizadoPor={setDepositAuthorizedBy}
+          onCancel={() => setShowDepositModal(false)}
+          onConfirm={handleDeposit}
+        />
       )}
 
       {/* MODAL PRECORTE X */}
       {showPrecutModal && shift && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-xl p-6 w-[600px] max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-semibold mb-4">📊 Precorte X — Turno #{shift.id.slice(0, 8)}</h3>
-            <div className="space-y-4">
-              {/* Resumen de ventas (solo lectura) */}
-              <div className="bg-slate-900 rounded-lg p-4">
-                <h4 className="font-semibold mb-2">Resumen de Ventas</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>Total Ventas: ${Number(shift.totalVentas).toFixed(2)}</div>
-                  <div>Tickets: {salesHistory.length}</div>
-                  <div>Efectivo: ${Number(shift.totalEfectivo).toFixed(2)}</div>
-                  <div>Tarjeta (Débito/Crédito): ${Number(shift.totalTarjeta).toFixed(2)}</div>
-                  <div>Transferencia SPEI: ${Number(shift.totalTransferencia).toFixed(2)}</div>
-                  <div>Cortesía: ${Number(shift.totalCortesia).toFixed(2)}</div>
-                </div>
-              </div>
-
-              {/* Conteo de efectivo */}
-              <div className="bg-slate-900 rounded-lg p-4">
-                <h4 className="font-semibold mb-2">Conteo de Efectivo</h4>
-                {[1000, 500, 200, 100, 50, 20, 10, 5, 2, 1].map(denom => (
-                  <div key={denom} className="flex items-center gap-2 mb-2">
-                    <span className="w-20 text-sm">${denom} ×</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={cashCounts[denom] || 0}
-                      onChange={(e) => {
-                        let val = e.target.value.replace(/[^0-9]/g, '');
-                        if (val.startsWith('0') && val.length > 1) {
-                          val = val.slice(1);
-                        }
-                        setCashCounts({ ...cashCounts, [denom]: Number(val) || 0 });
-                      }}
-                      className="w-20 px-2 py-1 rounded bg-slate-700 text-white text-sm"
-                    />
-                    <span className="text-sm text-slate-400">= ${(cashCounts[denom] || 0) * denom}</span>
-                  </div>
-                ))}
-                <div className="mt-3 pt-3 border-t border-slate-700 font-semibold">
-                  TOTAL EFECTIVO: ${calculateTotalCash().toFixed(2)}
-                </div>
-              </div>
-
-              {/* Otras formas de pago (declaración) */}
-              <div className="bg-slate-900 rounded-lg p-4">
-                <h4 className="font-semibold mb-2">Otras Formas de Pago (Declaración)</h4>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="w-32 text-sm">Terminal débito:</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={debitoDeclarado}
-                      onChange={(e) => {
-                        let val = e.target.value.replace(/[^0-9.]/g, '');
-                        if (val.startsWith('0') && val.length > 1 && val[1] !== '.') {
-                          val = val.slice(1);
-                        }
-                        setDebitoDeclarado(val);
-                      }}
-                      placeholder="0.00"
-                      className="flex-1 px-2 py-1 rounded bg-slate-700 text-white text-sm"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-32 text-sm">Terminal crédito:</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={creditoDeclarado}
-                      onChange={(e) => {
-                        let val = e.target.value.replace(/[^0-9.]/g, '');
-                        if (val.startsWith('0') && val.length > 1 && val[1] !== '.') {
-                          val = val.slice(1);
-                        }
-                        setCreditoDeclarado(val);
-                      }}
-                      placeholder="0.00"
-                      className="flex-1 px-2 py-1 rounded bg-slate-700 text-white text-sm"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-32 text-sm">Transferencias:</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={transferenciaDeclarada}
-                      onChange={(e) => {
-                        let val = e.target.value.replace(/[^0-9.]/g, '');
-                        if (val.startsWith('0') && val.length > 1 && val[1] !== '.') {
-                          val = val.slice(1);
-                        }
-                        setTransferenciaDeclarada(val);
-                      }}
-                      placeholder="0.00"
-                      className="flex-1 px-2 py-1 rounded bg-slate-700 text-white text-sm"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-32 text-sm">Vales/Cupones:</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={valesDeclarados}
-                      onChange={(e) => {
-                        let val = e.target.value.replace(/[^0-9.]/g, '');
-                        if (val.startsWith('0') && val.length > 1 && val[1] !== '.') {
-                          val = val.slice(1);
-                        }
-                        setValesDeclarados(val);
-                      }}
-                      placeholder="0.00"
-                      className="flex-1 px-2 py-1 rounded bg-slate-700 text-white text-sm"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowPrecutModal(false)}
-                  className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handlePrecut}
-                  className="flex-1 py-2 rounded bg-purple-600 text-white hover:bg-purple-700"
-                >
-                  Guardar Precorte
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PrecorteModal
+          turno={shift as any}
+          tickets={salesHistory.length}
+          cashCounts={cashCounts}
+          setCashCounts={setCashCounts}
+          debito={debitoDeclarado}
+          setDebito={setDebitoDeclarado}
+          credito={creditoDeclarado}
+          setCredito={setCreditoDeclarado}
+          transferencia={transferenciaDeclarada}
+          setTransferencia={setTransferenciaDeclarada}
+          vales={valesDeclarados}
+          setVales={setValesDeclarados}
+          onCancel={() => setShowPrecutModal(false)}
+          onSave={handlePrecut}
+        />
       )}
 
       {/* MODAL CORTE Z */}
       {showCloseShiftModal && shift && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-xl p-6 w-[700px] max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-semibold mb-4">🔒 Corte de Caja — Turno #{shift.id.slice(0, 8)}</h3>
-            <div className="space-y-4">
-              {/* Resumen del turno (solo lectura) */}
-              <div className="bg-slate-900 rounded-lg p-4">
-                <h4 className="font-semibold mb-2">Resumen del Turno</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>Hora Apertura: {shift.horaApertura}</div>
-                  <div>Hora Cierre: {new Date().toLocaleTimeString()}</div>
-                  <div>Fondo Inicial: ${Number(shift.fondoInicial).toFixed(2)}</div>
-                  <div>Total Ventas: ${Number(shift.totalVentas).toFixed(2)}</div>
-                  <div>Total Retiros: ${Number(shift.totalRetiros || 0).toFixed(2)}</div>
-                  <div>Total Depósitos: ${Number(shift.totalDepositos || 0).toFixed(2)}</div>
-                </div>
-              </div>
-
-              {/* Tabla de conciliación */}
-              <div className="bg-slate-900 rounded-lg p-4">
-                <h4 className="font-semibold mb-2">Conciliación — Sistema vs Declarado</h4>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-slate-700">
-                      <th className="text-left py-2">Forma de Pago</th>
-                      <th className="text-right py-2">Sistema</th>
-                      <th className="text-right py-2">Declarado</th>
-                      <th className="text-right py-2">Diferencia</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(() => {
-                      const declaracion = shift.precorteDeclaracion || {};
-                      const totals = shiftSummary?.calculatedTotals || {};
-                      
-                      const efectivoSistema = totals.efectivoEsperado || (Number(shift.fondoInicial) + Number(shift.totalEfectivo) + Number(shift.totalDepositos || 0) - Number(shift.totalRetiros || 0));
-                      const efectivoDeclarado = Number(declaracion.efectivoContado) || 0;
-                      const efectivoDif = efectivoSistema - efectivoDeclarado;
-                      
-                      const debitoSistema = totals.totalVentasDebito || 0;
-                      const debitoDeclarado = Number(declaracion.debitoDeclarado) || 0;
-                      const debitoDif = debitoSistema - debitoDeclarado;
-                      
-                      const creditoSistema = totals.totalVentasCredito || 0;
-                      const creditoDeclarado = Number(declaracion.creditoDeclarado) || 0;
-                      const creditoDif = creditoSistema - creditoDeclarado;
-                      
-                      const transferenciaSistema = totals.totalVentasSPEI || Number(shift.totalTransferencia);
-                      const transferenciaDeclarada = Number(declaracion.transferenciaDeclarada) || 0;
-                      const transferenciaDif = transferenciaSistema - transferenciaDeclarada;
-                      
-                      const cortesiaSistema = totals.totalVentasCortesia || Number(shift.totalCortesia);
-                      
-                      const rows = [
-                        { name: 'Efectivo', sistema: efectivoSistema, declarado: efectivoDeclarado, dif: efectivoDif },
-                        { name: 'Tarjeta Débito', sistema: debitoSistema, declarado: debitoDeclarado, dif: debitoDif },
-                        { name: 'Tarjeta Crédito', sistema: creditoSistema, declarado: creditoDeclarado, dif: creditoDif },
-                        { name: 'SPEI', sistema: transferenciaSistema, declarado: transferenciaDeclarada, dif: transferenciaDif },
-                        { name: 'Cortesía', sistema: cortesiaSistema, declarado: 0, dif: 0, noDeclarado: true },
-                      ];
-                      
-                      return rows.map((row, i) => (
-                        <tr key={i} className="border-b border-slate-800">
-                          <td className="py-2">{row.name}</td>
-                          <td className="text-right py-2">${row.sistema.toFixed(2)}</td>
-                          <td className="text-right py-2">{row.noDeclarado ? '-' : `$${row.declarado.toFixed(2)}`}</td>
-                          <td className={`text-right py-2 font-semibold ${
-                            row.dif === 0 ? '' : row.dif < 0 ? 'text-red-400' : 'text-green-400'
-                          }`}>
-                            {row.noDeclarado ? '-' : `$${row.dif.toFixed(2)}`}
-                          </td>
-                        </tr>
-                      ));
-                    })()}
-                    <tr className="border-t border-slate-700 font-bold">
-                      <td className="py-2">TOTAL</td>
-                      <td className="text-right py-2">${(() => {
-                        const totals = shiftSummary?.calculatedTotals || {};
-                        const efectivoSistema = totals.efectivoEsperado || (Number(shift.fondoInicial) + Number(shift.totalEfectivo) + Number(shift.totalDepositos || 0) - Number(shift.totalRetiros || 0));
-                        const debitoSistema = totals.totalVentasDebito || 0;
-                        const creditoSistema = totals.totalVentasCredito || 0;
-                        const transferenciaSistema = totals.totalVentasSPEI || Number(shift.totalTransferencia);
-                        const cortesiaSistema = totals.totalVentasCortesia || Number(shift.totalCortesia);
-                        return (efectivoSistema + debitoSistema + creditoSistema + transferenciaSistema + cortesiaSistema).toFixed(2);
-                      })()}</td>
-                      <td className="text-right py-2">${(() => {
-                        const declaracion = shift.precorteDeclaracion || {};
-                        const efectivoDeclarado = Number(declaracion.efectivoContado) || 0;
-                        const debitoDeclarado = Number(declaracion.debitoDeclarado) || 0;
-                        const creditoDeclarado = Number(declaracion.creditoDeclarado) || 0;
-                        const transferenciaDeclarada = Number(declaracion.transferenciaDeclarada) || 0;
-                        return (efectivoDeclarado + debitoDeclarado + creditoDeclarado + transferenciaDeclarada).toFixed(2);
-                      })()}</td>
-                      <td className={`text-right py-2 ${
-                        (() => {
-                          const totals = shiftSummary?.calculatedTotals || {};
-                          const efectivoSistema = totals.efectivoEsperado || (Number(shift.fondoInicial) + Number(shift.totalEfectivo) + Number(shift.totalDepositos || 0) - Number(shift.totalRetiros || 0));
-                          const debitoSistema = totals.totalVentasDebito || 0;
-                          const creditoSistema = totals.totalVentasCredito || 0;
-                          const transferenciaSistema = totals.totalVentasSPEI || Number(shift.totalTransferencia);
-                          const cortesiaSistema = totals.totalVentasCortesia || Number(shift.totalCortesia);
-                          const totalSistema = efectivoSistema + debitoSistema + creditoSistema + transferenciaSistema + cortesiaSistema;
-                          
-                          const declaracion = shift.precorteDeclaracion || {};
-                          const efectivoDeclarado = Number(declaracion.efectivoContado) || 0;
-                          const debitoDeclarado = Number(declaracion.debitoDeclarado) || 0;
-                          const creditoDeclarado = Number(declaracion.creditoDeclarado) || 0;
-                          const transferenciaDeclarada = Number(declaracion.transferenciaDeclarada) || 0;
-                          const totalDeclarado = efectivoDeclarado + debitoDeclarado + creditoDeclarado + transferenciaDeclarada;
-                          const totalDif = totalSistema - totalDeclarado;
-                          
-                          return totalDif === 0 ? '' : totalDif < 0 ? 'text-red-400' : 'text-green-400';
-                        })()
-                      }`}>
-                        ${(() => {
-                          const totals = shiftSummary?.calculatedTotals || {};
-                          const efectivoSistema = totals.efectivoEsperado || (Number(shift.fondoInicial) + Number(shift.totalEfectivo) + Number(shift.totalDepositos || 0) - Number(shift.totalRetiros || 0));
-                          const debitoSistema = totals.totalVentasDebito || 0;
-                          const creditoSistema = totals.totalVentasCredito || 0;
-                          const transferenciaSistema = totals.totalVentasSPEI || Number(shift.totalTransferencia);
-                          const cortesiaSistema = totals.totalVentasCortesia || Number(shift.totalCortesia);
-                          const totalSistema = efectivoSistema + debitoSistema + creditoSistema + transferenciaSistema + cortesiaSistema;
-                          
-                          const declaracion = shift.precorteDeclaracion || {};
-                          const efectivoDeclarado = Number(declaracion.efectivoContado) || 0;
-                          const debitoDeclarado = Number(declaracion.debitoDeclarado) || 0;
-                          const creditoDeclarado = Number(declaracion.creditoDeclarado) || 0;
-                          const transferenciaDeclarada = Number(declaracion.transferenciaDeclarada) || 0;
-                          const totalDeclarado = efectivoDeclarado + debitoDeclarado + creditoDeclarado + transferenciaDeclarada;
-                          const totalDif = totalSistema - totalDeclarado;
-                          
-                          return totalDif.toFixed(2);
-                        })()}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowCloseShiftModal(false)}
-                  className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={closeShift}
-                  className="flex-1 py-2 rounded bg-red-600 text-white hover:bg-red-700"
-                >
-                  Cerrar Turno Definitivamente
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <CierreTurnoModal
+          turno={shift as any}
+          totalesServidor={shiftSummary?.calculatedTotals}
+          onCancel={() => setShowCloseShiftModal(false)}
+          onClose={closeShift}
+        />
       )}
 
       {/* MODAL CONFIRMACIÓN SALIR */}
       {showExitConfirmModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-xl p-6 w-96">
-            <h3 className="text-lg font-semibold mb-4">¿Salir del POS?</h3>
+        <ModalPOS size="sm" title={"¿Salir del POS?"}>
             <p className="text-sm text-slate-400 mb-6">
               ¿Seguro que deseas salir? El turno quedará activo y podrás continuar después.
             </p>
@@ -4400,15 +3703,12 @@ export default function POSPage() {
                 Salir
               </button>
             </div>
-          </div>
-        </div>
+        </ModalPOS>
       )}
 
       {/* MODAL CATEGORÍA */}
       {showCategoryModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-xl p-6 w-96">
-            <h3 className="text-lg font-semibold mb-4">{editingCategory ? "Editar Categoría" : "Nueva Categoría"}</h3>
+        <ModalPOS size="sm" title={editingCategory ? "Editar Categoría" : "Nueva Categoría"}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm text-slate-400 mb-1">Nombre *</label>
@@ -4461,15 +3761,12 @@ export default function POSPage() {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+        </ModalPOS>
       )}
 
       {/* MODAL ÁREA */}
       {showAreaModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-xl p-6 w-96">
-            <h3 className="text-lg font-semibold mb-4">{editingArea ? "Editar Área" : "Nueva Área"}</h3>
+        <ModalPOS size="sm" title={editingArea ? "Editar Área" : "Nueva Área"}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm text-slate-400 mb-1">Nombre *</label>
@@ -4513,15 +3810,12 @@ export default function POSPage() {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+        </ModalPOS>
       )}
 
       {/* MODAL MESA */}
       {showMesaModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-xl p-6 w-96">
-            <h3 className="text-lg font-semibold mb-4">{editingMesa ? "Editar Mesa" : "Nueva Mesa"}</h3>
+        <ModalPOS size="sm" title={editingMesa ? "Editar Mesa" : "Nueva Mesa"}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm text-slate-400 mb-1">Número *</label>
@@ -4578,15 +3872,12 @@ export default function POSPage() {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+        </ModalPOS>
       )}
 
       {/* MODAL CONFIGURACIÓN TURNO */}
       {showShiftConfigModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-xl p-6 w-96">
-            <h3 className="text-lg font-semibold mb-4">{editingShiftConfig ? "Editar Turno" : "Nuevo Turno"}</h3>
+        <ModalPOS size="sm" title={editingShiftConfig ? "Editar Turno" : "Nuevo Turno"}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm text-slate-400 mb-1">Nombre *</label>
@@ -4661,8 +3952,7 @@ export default function POSPage() {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+        </ModalPOS>
       )}
 
       {/* MODAL CANCELAR VENTA */}
@@ -4714,9 +4004,7 @@ export default function POSPage() {
 
       {/* MODAL IMPORTACIÓN CSV PRODUCTOS POS */}
       {posProductImportModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-xl p-6 w-[500px] max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">Importar Productos desde CSV</h3>
+        <ModalPOS size="md" title={"Importar Productos desde CSV"}>
             
             <div className="space-y-4">
               <button
@@ -4812,8 +4100,7 @@ export default function POSPage() {
                 {isPosImporting ? "Importando..." : "Importar"}
               </button>
             </div>
-          </div>
-        </div>
+        </ModalPOS>
       )}
 
       {/* Chat de aprobación de corte */}

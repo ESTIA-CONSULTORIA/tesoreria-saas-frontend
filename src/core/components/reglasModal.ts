@@ -1,0 +1,39 @@
+// Reglas de las ventanas del POS (y del ERP). Una sola fuente para que ninguna ventana vuelva a nacer "en vertical":
+//  - ancho hasta 90vw y alto hasta 90vh (a 1366×768 son 1229×691 px);
+//  - a 1366×768 NINGUNA ventana de caja requiere desplazamiento: el contenido se reparte en columnas (el scroll interno del
+//    cuerpo es solo la red de seguridad para contenido dinámico, como listas largas);
+//  - encabezado y botones de acción FIJOS: nunca salen de pantalla por mucho contenido que haya.
+export type TamanoModal = 'sm' | 'md' | 'lg' | 'xl';
+
+/** Tope de ancho por tamaño (px). Siempre además limitado a 90vw. */
+export const ANCHO_MAX_PX: Record<TamanoModal, number> = { sm: 480, md: 760, lg: 1000, xl: 1240 };
+
+// Clases literales (Tailwind no resuelve nombres armados dinámicamente).
+export const CLASE_ANCHO: Record<TamanoModal, string> = {
+  sm: 'max-w-[480px]',
+  md: 'max-w-[760px]',
+  lg: 'max-w-[1000px]',
+  xl: 'max-w-[1240px]',
+};
+
+export const CLASES_MODAL = {
+  overlay: 'fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3',
+  panel: 'flex max-h-[90vh] w-[90vw] flex-col overflow-hidden rounded-xl border border-slate-700 bg-slate-800 text-white shadow-2xl',
+  header: 'shrink-0 border-b border-slate-700 px-5 py-3',
+  body: 'min-h-0 flex-1 overflow-y-auto px-5 py-3',
+  footer: 'flex shrink-0 gap-2 border-t border-slate-700 bg-slate-800 px-5 py-3',
+} as const;
+
+export function clasePanel(size: TamanoModal): string {
+  return `${CLASES_MODAL.panel} ${CLASE_ANCHO[size]}`;
+}
+
+/** Ancho real que ocupa una ventana en un viewport dado: min(90vw, tope del tamaño). */
+export function anchoEfectivo(size: TamanoModal, viewportAncho: number): number {
+  return Math.min(Math.floor(viewportAncho * 0.9), ANCHO_MAX_PX[size]);
+}
+
+/** Alto máximo de una ventana en un viewport dado (90vh). */
+export function altoMaximo(viewportAlto: number): number {
+  return Math.floor(viewportAlto * 0.9);
+}
