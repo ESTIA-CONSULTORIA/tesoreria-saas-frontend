@@ -576,6 +576,52 @@ export default function POSPage() {
     }
   }, [shift]);
 
+  // Teclado de la Terminal (mouse + teclado + lector): F2 buscar producto, F4 cobrar, Esc limpia la búsqueda. Con cualquier
+  // ventana abierta no actúa (cada ventana atiende su propio teclado). Los overlays propios (historial, recibo, devolución)
+  // se cierran con Escape; en la devolución, Ctrl+Enter confirma.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (showSalesHistory || showReceipt || showReturnSaleModal) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          if (showReturnSaleModal) { setShowReturnSaleModal(false); setReturnSaleId(null); setReturnSaleReason(""); setReturnSaleError(""); }
+          else if (showReceipt) setShowReceipt(false);
+          else setShowSalesHistory(false);
+        } else if (e.key === 'Enter' && e.ctrlKey && showReturnSaleModal) {
+          e.preventDefault();
+          void confirmReturnSale();
+        }
+        return;
+      }
+      if (activeTab !== 'terminal' || !shift || document.querySelector('[role="dialog"]')) return;
+      const buscador = document.querySelector<HTMLInputElement>('input[name="pos-buscar-producto"]');
+      if (e.key === 'F2') {
+        e.preventDefault();
+        buscador?.focus();
+        buscador?.select();
+      } else if (e.key === 'F4') {
+        e.preventDefault();
+        abrirCobro();
+      } else if (e.key === 'Escape' && searchTerm) {
+        e.preventDefault();
+        setSearchTerm("");
+        buscador?.focus();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+
+  // Foco inicial de la Terminal: el buscador (para teclear o para que un lector escriba ahí).
+  useEffect(() => {
+    if (activeTab !== 'terminal' || !shift) return;
+    const t = setTimeout(() => {
+      if (document.querySelector('[role="dialog"]')) return;
+      document.querySelector<HTMLInputElement>('input[name="pos-buscar-producto"]')?.focus();
+    }, 0);
+    return () => clearTimeout(t);
+  }, [activeTab, !!shift]);
+
   // Auto-focus payment input when modal opens
   useEffect(() => {
     if (showPaymentModal && paymentInputRef.current) {
@@ -1096,6 +1142,14 @@ export default function POSPage() {
   function getTotalCovered() { return totalCoveredMemo; }
   function getPending() { return pendingMemo; }
   function getChange() { return changeMemo; }
+
+  function abrirCobro() {
+    if (ticket.length > 0) {
+      setCardValidationError("");
+      setShowPaymentModal(true);
+      setPaymentForms([]);
+    }
+  }
 
   function addPaymentForm(forma: "EFECTIVO" | "TARJETA" | "DEBITO" | "CREDITO" | "TRANSFERENCIA" | "CORTESIA", monto?: number, ultimos4Digitos?: string) {
     const newForm: PaymentForm = {
@@ -1800,6 +1854,9 @@ export default function POSPage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full px-4 py-2 rounded-lg border border-slate-600 bg-slate-800 text-white"
                 />
+                <p className="text-[11px] text-slate-500" aria-label="Atajos de teclado">
+                  <kbd className="font-sans">F2</kbd> Buscar producto · <kbd className="font-sans">F4</kbd> Cobrar · <kbd className="font-sans">Esc</kbd> Limpiar búsqueda
+                </p>
                 <div className="flex gap-2 overflow-x-auto pb-1">
                   <button
                     onClick={() => setSelectedCategory("all")}
@@ -2003,14 +2060,8 @@ export default function POSPage() {
                 </div>
 
                 <button
-                  onClick={() => {
-                    if (ticket.length > 0) {
-                      setCardValidationError("");
-                      setShowPaymentModal(true);
-                      setPaymentForms([]);
-                      setCardValidationError("");
-                    }
-                  }}
+                  onClick={abrirCobro}
+                  title="Cobrar (F4)"
                   disabled={!ticket || ticket.length === 0}
                   className="w-full py-4 rounded-lg bg-green-600 text-white font-bold text-xl hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500"
                 >
@@ -2951,7 +3002,7 @@ export default function POSPage() {
 
       {/* MODAL HISTORIAL DE VENTAS */}
       {showSalesHistory && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-slate-800 rounded-xl p-6 w-[800px] max-h-[80vh] overflow-hidden flex flex-col">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Historial de Ventas</h3>
@@ -3044,7 +3095,7 @@ export default function POSPage() {
 
       {/* MODAL DESCUENTO */}
       {showDiscountModal && (
-        <ModalPOS size="md" title={"Aplicar Descuento"}>
+        <ModalPOS size="md" title={"Aplicar Descuento"} onClose={() => setShowDiscountModal(false)} etiquetaEnter="Aplicar">
             <div className="space-y-4">
               {/* Sección 1: Descuentos predefinidos */}
               <div>
@@ -3161,6 +3212,7 @@ export default function POSPage() {
                 </button>
                 <button
                   onClick={applyGlobalDiscount}
+                  data-primary
                   className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
                 >
                   Aplicar descuento
@@ -3172,7 +3224,7 @@ export default function POSPage() {
 
       {/* MODAL CORTESÍA */}
       {showCourtesyModal && (
-        <ModalPOS size="md" title={"Cortesía"}>
+        <ModalPOS size="md" title={"Cortesía"} onClose={() => setShowCourtesyModal(false)} etiquetaEnter="Aplicar">
             <div className="space-y-4">
               {/* Sección 1: Selección de productos */}
               <div>
@@ -3266,6 +3318,7 @@ export default function POSPage() {
                 </button>
                 <button
                   onClick={applyCourtesy}
+                  data-primary
                   disabled={!courtesyReason || !courtesyAuthUser || !courtesyAuthPin}
                   className="flex-1 py-2 rounded bg-purple-600 text-white hover:bg-purple-700 disabled:bg-slate-700 disabled:text-slate-500"
                 >
@@ -3451,6 +3504,7 @@ export default function POSPage() {
             <div className="flex gap-2 mt-4">
               <button
                 onClick={() => setShowReceipt(false)}
+                autoFocus
                 className="flex-1 py-2 rounded bg-slate-200 text-black hover:bg-slate-300"
               >
                 Cerrar
@@ -3471,7 +3525,7 @@ export default function POSPage() {
 
       {/* MODAL PRODUCTO */}
       {showProductModal && (
-        <ModalPOS size="md" title={editingProduct ? "Editar Producto" : "Nuevo Producto"}>
+        <ModalPOS size="md" title={editingProduct ? "Editar Producto" : "Nuevo Producto"} onClose={() => setShowProductModal(false)}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm text-slate-400 mb-1">Código</label>
@@ -3691,7 +3745,7 @@ export default function POSPage() {
 
       {/* MODAL CONFIRMACIÓN SALIR */}
       {showExitConfirmModal && (
-        <ModalPOS size="sm" title={"¿Salir del POS?"}>
+        <ModalPOS size="sm" title={"¿Salir del POS?"} onClose={() => setShowExitConfirmModal(false)}>
             <p className="text-sm text-slate-400 mb-6">
               ¿Seguro que deseas salir? El turno quedará activo y podrás continuar después.
             </p>
@@ -3724,7 +3778,7 @@ export default function POSPage() {
 
       {/* MODAL CATEGORÍA */}
       {showCategoryModal && (
-        <ModalPOS size="sm" title={editingCategory ? "Editar Categoría" : "Nueva Categoría"}>
+        <ModalPOS size="sm" title={editingCategory ? "Editar Categoría" : "Nueva Categoría"} onClose={() => setShowCategoryModal(false)}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm text-slate-400 mb-1">Nombre *</label>
@@ -3782,7 +3836,7 @@ export default function POSPage() {
 
       {/* MODAL ÁREA */}
       {showAreaModal && (
-        <ModalPOS size="sm" title={editingArea ? "Editar Área" : "Nueva Área"}>
+        <ModalPOS size="sm" title={editingArea ? "Editar Área" : "Nueva Área"} onClose={() => setShowAreaModal(false)}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm text-slate-400 mb-1">Nombre *</label>
@@ -3831,7 +3885,7 @@ export default function POSPage() {
 
       {/* MODAL MESA */}
       {showMesaModal && (
-        <ModalPOS size="sm" title={editingMesa ? "Editar Mesa" : "Nueva Mesa"}>
+        <ModalPOS size="sm" title={editingMesa ? "Editar Mesa" : "Nueva Mesa"} onClose={() => setShowMesaModal(false)}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm text-slate-400 mb-1">Número *</label>
@@ -3893,7 +3947,7 @@ export default function POSPage() {
 
       {/* MODAL CONFIGURACIÓN TURNO */}
       {showShiftConfigModal && (
-        <ModalPOS size="sm" title={editingShiftConfig ? "Editar Turno" : "Nuevo Turno"}>
+        <ModalPOS size="sm" title={editingShiftConfig ? "Editar Turno" : "Nuevo Turno"} onClose={() => setShowShiftConfigModal(false)}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm text-slate-400 mb-1">Nombre *</label>
@@ -3973,7 +4027,7 @@ export default function POSPage() {
 
       {/* MODAL CANCELAR VENTA */}
       {showReturnSaleModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
             <div className="mb-6">
               <h3 className="text-2xl font-bold text-white">Devolver Venta</h3>
@@ -3988,6 +4042,7 @@ export default function POSPage() {
                 <textarea
                   value={returnSaleReason}
                   onChange={(e) => setReturnSaleReason(e.target.value)}
+                  autoFocus
                   placeholder="Describe el motivo..."
                   rows={3}
                   className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
@@ -4020,7 +4075,7 @@ export default function POSPage() {
 
       {/* MODAL IMPORTACIÓN CSV PRODUCTOS POS */}
       {posProductImportModalOpen && (
-        <ModalPOS size="md" title={"Importar Productos desde CSV"}>
+        <ModalPOS size="md" title={"Importar Productos desde CSV"} onClose={() => setPosProductImportModalOpen(false)}>
             
             <div className="space-y-4">
               <button

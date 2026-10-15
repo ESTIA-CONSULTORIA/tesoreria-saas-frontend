@@ -26,6 +26,8 @@ export function AperturaTurnoModal(p: {
       size="md"
       title="Apertura de Turno"
       onClose={p.onCancel}
+      etiquetaEnter="Abrir turno"
+      atajos={[{ tecla: 'F4', etiqueta: 'Abrir turno', accion: p.onOpen }]}
       footer={
         <>
           <button onClick={p.onCancel} className={`flex-1 ${btnCancelar}`}>Cancelar</button>
@@ -94,6 +96,8 @@ export function MovimientoEfectivoModal(p: {
       title={retiro ? '💰 Retiro de Efectivo' : '💵 Depósito de Efectivo'}
       subtitle={p.esperado !== undefined ? `Efectivo esperado en caja: ${money(p.esperado)}` : undefined}
       onClose={p.onCancel}
+      enterModo="siguiente"
+      atajos={[{ tecla: 'F4', etiqueta: retiro ? 'Registrar retiro' : 'Registrar depósito', accion: p.onConfirm }]}
       footer={
         <>
           <button onClick={p.onCancel} className={`flex-1 ${btnCancelar}`}>Cancelar</button>
@@ -188,6 +192,8 @@ export function PrecorteModal(p: {
       size="xl"
       title={`📊 Precorte X — Turno #${p.turno.id.slice(0, 8)}`}
       onClose={p.onCancel}
+      enterModo="siguiente"
+      atajos={[{ tecla: 'F4', etiqueta: 'Guardar precorte', accion: p.onSave }]}
       footer={
         <>
           <div className="flex flex-1 flex-wrap items-center gap-x-6 gap-y-1 text-sm" data-testid="precorte-diferencia">
@@ -312,6 +318,8 @@ export function CierreTurnoModal(p: {
       size="lg"
       title={`🔒 Corte de Caja — Turno #${t.id.slice(0, 8)}`}
       onClose={p.onCancel}
+      enterModo="avanzar"
+      atajos={[{ tecla: 'F10', etiqueta: 'Cerrar turno', accion: p.onClose }]}
       footer={
         <>
           <div className={`flex flex-1 items-center text-base font-bold ${dif(conc.totalDif) || 'text-slate-300'}`} data-testid="cierre-diferencia">
@@ -436,6 +444,14 @@ export function CobroModal(p: {
       title="Cobro"
       subtitle={`Total a cobrar ${money(p.total)}`}
       onClose={p.onCancel}
+      etiquetaEnter="Agregar pago"
+      atajos={[
+        { tecla: 'F2', etiqueta: 'Efectivo', accion: () => p.onElegirForma('EFECTIVO') },
+        { tecla: 'F3', etiqueta: 'Tarjeta', accion: () => p.onElegirForma(p.formaActiva === 'DEBITO' ? 'CREDITO' : 'DEBITO') },
+        { tecla: 'F6', etiqueta: 'SPEI', accion: () => p.onElegirForma('TRANSFERENCIA') },
+        { tecla: 'F8', etiqueta: 'Exacto', accion: p.onExacto },
+        { tecla: 'F4', etiqueta: 'Cobrar', accion: p.onConfirm, deshabilitado: !!motivoConfirmar },
+      ]}
       footer={
         <>
           <button onClick={p.onCancel} className="px-6 py-3 rounded-lg bg-slate-700 text-slate-200 hover:bg-slate-600">Cancelar</button>
