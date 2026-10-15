@@ -1,4 +1,5 @@
-import type { ChangeEvent, RefObject } from 'react';
+import { useEffect, type ChangeEvent, type RefObject } from 'react';
+import { normalizarMonto } from '../../core/utils/monto';
 import { esFormaTarjeta, motivoBloqueoCobro, motivoFaltaTarjeta, soloUltimos4 } from '../../core/utils/tarjeta';
 import { ModalPOS } from '../../core/components/ModalPOS';
 import { DENOMINACIONES, conciliacionTurno, diferenciasPrecorte, efectivoEsperado, totalContado, type TurnoCaja } from './cajaTurno';
@@ -405,9 +406,20 @@ export function CobroModal(p: {
   setCourtesyReason: (v: string) => void;
   courtesyAuthUser: string;
   setCourtesyAuthUser: (v: string) => void;
+  /** Motivo real con el que el servidor (o la validación local) rechazó el cobro. */
+  error?: string;
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  // Foco en el campo de monto al abrir y cada vez que cambia la forma de pago: el cajero teclea sin tocar la pantalla.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      p.inputRef.current?.focus();
+      p.inputRef.current?.select();
+    }, 0);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [p.formaActiva]);
   const formas: [FormaPago, string][] = [
     ['EFECTIVO', 'Efectivo'],
     ['DEBITO', 'Tarjeta Débito'],
@@ -444,6 +456,7 @@ export function CobroModal(p: {
           {formas.map(([forma, etiqueta]) => (
             <button
               key={forma}
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => p.onElegirForma(forma)}
               className={`w-full h-11 rounded-lg flex items-center gap-3 px-4 transition-colors ${
                 p.formaActiva === forma ? 'bg-blue-600 border-2 border-blue-400' : 'bg-slate-700 border border-slate-600 hover:bg-slate-600'
@@ -476,12 +489,20 @@ export function CobroModal(p: {
               ref={p.inputRef}
               type="text"
               value={p.monto}
-              onChange={(e) => {
-                if (/^\d*\.?\d*$/.test(e.target.value)) p.setMonto(e.target.value);
-              }}
+              inputMode="decimal"
+              autoComplete="off"
+              aria-label="Monto del pago"
+              onChange={(e) => p.setMonto(normalizarMonto(e.target.value))}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') p.onAgregar();
-                else if (e.key === 'Backspace') p.setMonto(p.monto.slice(0, -1));
+                // Enter confirma: con un monto lo agrega como pago; sin monto y con todo cubierto, confirma el cobro.
+                // Escape lo atiende ModalPOS (cancela). Backspace y dígitos los maneja el propio input.
+                if (e.key !== 'Enter') return;
+                e.preventDefault();
+                if (Number(p.monto) > 0) {
+                  if (!motivoTarjeta) p.onAgregar();
+                } else if (!motivoConfirmar) {
+                  p.onConfirm();
+                }
               }}
               placeholder="0.00"
               className="w-full bg-transparent text-4xl font-bold text-white text-right outline-none"
@@ -491,11 +512,11 @@ export function CobroModal(p: {
             {['7', '8', '9', '4', '5', '6', '1', '2', '3', '.', '0', '⌫'].map((key) => (
               <button
                 key={key}
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => {
                   if (key === '⌫') return p.setMonto(p.monto.slice(0, -1));
-                  let nuevo = p.monto + key;
-                  if (nuevo.startsWith('0') && nuevo.length > 1 && nuevo[1] !== '.') nuevo = nuevo.slice(1);
-                  p.setMonto(nuevo);
+                  p.setMonto(normalizarMonto(p.monto + key));
+                  p.inputRef.current?.focus();
                 }}
                 className="h-12 rounded-lg bg-slate-700 hover:bg-slate-600 text-xl font-medium transition-colors"
               >
@@ -528,6 +549,10 @@ export function CobroModal(p: {
               <div className={p.cambio > 0 ? 'text-green-400' : 'text-slate-500'}>Cambio: {money(p.cambio)}</div>
             </div>
           </div>
+
+          {p.error ? (
+            <div role="alert" className="rounded-lg border border-red-700 bg-red-950 p-2 text-sm text-red-200">{p.error}</div>
+          ) : null}
 
           {esFormaTarjeta(p.formaActiva) && (
             <div className="space-y-3">

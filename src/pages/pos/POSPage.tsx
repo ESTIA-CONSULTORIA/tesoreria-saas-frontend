@@ -21,6 +21,8 @@ import CheckoutFast from "./CheckoutFast";
 import { desgloseTicket, esTasaIva, etiquetaTasa, lineasDeIva, tasaEfectiva, TASAS_IVA, type IvaConfig, type TasaIva, etiquetaIvaUnica } from "../../core/utils/iva";
 import { propsTextoLibre } from "../../core/utils/inputBusqueda";
 import { esFormaTarjeta, ultimos4Validos } from '../../core/utils/tarjeta';
+import { esReintentable } from '../../core/utils/monto';
+import { motivoDeRechazo } from '../../core/offline/saleDuplicate';
 import { ModalPOS } from "../../core/components/ModalPOS";
 import { AperturaTurnoModal, CierreTurnoModal, CobroModal, MovimientoEfectivoModal, PrecorteModal, efectivoEsperado } from "./ModalesCaja";
 import { totalContado } from "./cajaTurno";
@@ -1288,11 +1290,18 @@ export default function POSPage() {
         return;
       }
 
+      // El servidor rechazó el cobro (4xx): se muestra su motivo real en el modal y NO se reintenta nada solo; el cajero
+      // corrige (dígitos, forma de pago, monto) y vuelve a confirmar. Un 5xx sí se puede reintentar a mano, sin cobrar dos veces:
+      // la venta no queda guardada si el servidor falla.
+      const motivo = motivoDeRechazo(error);
+      if (!esReintentable(error)) {
+        setCardValidationError(`El servidor rechazó el cobro: ${motivo}`);
+        return;
+      }
       paymentFailureCountRef.current += 1;
+      setCardValidationError(`El servidor tuvo un problema (${motivo}). Reintenta el cobro; no se registró ninguna venta.`);
       if (paymentFailureCountRef.current >= 2) {
         alert("No se pudo procesar la venta después de varios intentos. Reporta esto a soporte antes de continuar — no se realizó ningún cobro.");
-      } else {
-        alert("No se pudo procesar la venta, intenta de nuevo.");
       }
     }
   }
@@ -1996,6 +2005,7 @@ export default function POSPage() {
                 <button
                   onClick={() => {
                     if (ticket.length > 0) {
+                      setCardValidationError("");
                       setShowPaymentModal(true);
                       setPaymentForms([]);
                       setCardValidationError("");
@@ -3309,6 +3319,7 @@ export default function POSPage() {
           setCourtesyReason={setCourtesyReason}
           courtesyAuthUser={courtesyAuthUser}
           setCourtesyAuthUser={setCourtesyAuthUser}
+          error={cardValidationError}
           onCancel={cerrarCobro}
           onConfirm={processPayment}
         />

@@ -44,6 +44,18 @@ describe('syncEngine — ventas', () => {
     expect(await estados()).toEqual([['F-1', 'synced']]);
   });
 
+  it('un 500 NO la marca fallida: queda pendiente y se reintenta; un 400 no se reintenta', async () => {
+    await enqueueOperation('SALE', venta('F-5XX'), '2026-10-05T12:00:00.000Z');
+    post.mockRejectedValueOnce(rechazo(503, { message: 'Service Unavailable' }));
+    await runSync();
+    expect(await estados()).toEqual([['F-5XX', 'pending']]);
+    post.mockRejectedValueOnce(rechazo(400, { message: 'Forma de pago 1 (DEBITO) requiere los últimos 4 dígitos de la tarjeta (ultimos4Digitos).' }));
+    await runSync();
+    expect(await estados()).toEqual([['F-5XX', 'failed']]);
+    await runSync();
+    expect(post).toHaveBeenCalledTimes(2); // el 400 no vuelve a enviarse
+  });
+
   it('venta en cola con tarjeta sin 4 dígitos: el servidor la rechaza, queda FALLIDA con el motivo claro y su contenido intacto (no se pierde)', async () => {
     const sinDigitos = { ...venta('F-T1'), formasPago: [{ forma: 'DEBITO', monto: 116 }] };
     await enqueueOperation('SALE', sinDigitos, '2026-10-05T12:00:00.000Z');

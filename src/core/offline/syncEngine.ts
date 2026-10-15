@@ -12,6 +12,7 @@ import {
   type PendingOperation,
 } from './db';
 import { esVentaYaRegistrada, motivoDeRechazo } from './saleDuplicate';
+import { esReintentable } from '../utils/monto';
 
 // Fase D: motor de sincronización de la cola de escrituras (Fase C2). Corre en segundo
 // plano, arrancado una sola vez a nivel de App.tsx — disparado por el evento 'online'
@@ -119,9 +120,11 @@ export async function runSync(): Promise<void> {
         }
         syncedCount += 1;
       } catch (error) {
-        if (isNetworkOrTimeoutError(error)) {
+        // Solo red/timeout o 5xx se reintentan solos (el servidor no pudo, no rechazó). Un 4xx (400, 403, 409…) es un rechazo
+        // real: no se reintenta, queda fallida con el motivo del servidor para revisarla.
+        if (isNetworkOrTimeoutError(error) || esReintentable(error)) {
           await incrementOperationAttempts(current.id!, current.attempts);
-          // Sin red: seguir con el resto de la cola no tiene sentido, probablemente
+          // Sin red o servidor caído: seguir con el resto de la cola no tiene sentido, probablemente
           // fallaría igual. Se detiene todo el ciclo; el intervalo/evento 'online' reintentan.
           break;
         }
