@@ -4,6 +4,7 @@ import { api } from '../../core/api/api';
 import { useAuthStore } from '../../core/store/useAuthStore';
 import { useBrandingStore } from '../../core/store/useBrandingStore';
 import { dinero, mensajeError } from '../mesas/mesasLogic';
+import { esFormaTarjeta, motivoFaltaTarjeta, soloUltimos4 } from '../../core/utils/tarjeta';
 import { etiquetaTasa, TASAS_IVA, type IvaConfig } from '../../core/utils/iva';
 import {
   armarCobro, CLASE_SITUACION, ETIQUETA_SITUACION, fechaCorta, pestanasVisibles, PLAN_FORM_VACIO, planAForm, periodoTexto,
@@ -239,13 +240,15 @@ function CobrarModal({ socio, planes, cfg, sucursalId, userId, setMsg, onCerrar,
 }) {
   const [planId, setPlanId] = useState(planes[0]?.id ?? '');
   const [forma, setForma] = useState<FormaPagoMembresia>('EFECTIVO');
+  const [ultimos4, setUltimos4] = useState('');
+  const motivoTarjeta = motivoFaltaTarjeta(forma, ultimos4);
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState('');
   const plan = planes.find((p) => p.id === planId);
   const precio = plan ? precioDelPlan(plan, cfg) : null;
 
   async function cobrar() {
-    if (!plan) return;
+    if (!plan || motivoTarjeta) return;
     setOcupado(true);
     setError('');
     try {
@@ -253,7 +256,7 @@ function CobrarModal({ socio, planes, cfg, sucursalId, userId, setMsg, onCerrar,
       const t = await api.get('/pos/shifts/open', { params: { cajero: userId, sucursalId } });
       const turno = t.data && typeof t.data === 'object' && t.data.id ? t.data : null;
       if (!turno) { setError('No hay turno abierto: abre turno en el POS antes de cobrar.'); return; }
-      const cuerpo = armarCobro({ plan, socioId: socio.id, forma, turnoId: turno.id, sucursalId: sucursalId || turno.sucursalId, cajero: userId, cfg });
+      const cuerpo = armarCobro({ plan, socioId: socio.id, forma, ultimos4Digitos: ultimos4, turnoId: turno.id, sucursalId: sucursalId || turno.sucursalId, cajero: userId, cfg });
       const r = await api.post('/pos/sales', cuerpo);
       setMsg({ ok: true, texto: `Cobrado ${dinero(r.data?.total)} · folio ${r.data?.folio}. La membresía de ${socio.nombre} quedó registrada.` });
       await onListo();
@@ -284,13 +287,19 @@ function CobrarModal({ socio, planes, cfg, sucursalId, userId, setMsg, onCerrar,
             </div>
           )}
           <label className="mb-3 block text-sm text-slate-300">Forma de pago
-            <select className={`${inp} mt-1`} value={forma} onChange={(e) => setForma(e.target.value as FormaPagoMembresia)}>
+            <select className={`${inp} mt-1`} value={forma} onChange={(e) => { setForma(e.target.value as FormaPagoMembresia); setUltimos4(''); }}>
               <option value="EFECTIVO">Efectivo</option><option value="DEBITO">Tarjeta de débito</option>
               <option value="CREDITO">Tarjeta de crédito</option><option value="TRANSFERENCIA">Transferencia</option>
             </select>
           </label>
+          {esFormaTarjeta(forma) && (
+            <label className="mb-3 block text-sm text-slate-300">Últimos 4 dígitos de la tarjeta *
+              <input className={`${inp} mt-1`} inputMode="numeric" autoComplete="off" maxLength={4} placeholder="1234" value={ultimos4} onChange={(e) => setUltimos4(soloUltimos4(e.target.value))} />
+              {motivoTarjeta && <span className="mt-1 block text-xs text-amber-300">{motivoTarjeta}</span>}
+            </label>
+          )}
           {error && <p className="mb-2 text-sm text-red-400">{error}</p>}
-          <button className={`${btn} w-full bg-green-700 disabled:opacity-40`} disabled={ocupado || !plan} onClick={cobrar}>
+          <button className={`${btn} w-full bg-green-700 disabled:opacity-40`} disabled={ocupado || !plan || !!motivoTarjeta} onClick={cobrar}>
             {ocupado ? 'Cobrando…' : `Cobrar ${precio ? dinero(precio.total) : ''}`}
           </button>
         </>

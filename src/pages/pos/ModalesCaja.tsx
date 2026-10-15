@@ -1,4 +1,5 @@
 import type { ChangeEvent, RefObject } from 'react';
+import { esFormaTarjeta, motivoBloqueoCobro, motivoFaltaTarjeta, soloUltimos4 } from '../../core/utils/tarjeta';
 import { ModalPOS } from '../../core/components/ModalPOS';
 import { DENOMINACIONES, conciliacionTurno, diferenciasPrecorte, efectivoEsperado, totalContado, type TurnoCaja } from './cajaTurno';
 
@@ -385,7 +386,7 @@ export function CobroModal(p: {
   pendiente: number;
   cambio: number;
   puedeCortesia: boolean;
-  pagos: { id: string; forma: string; monto: number }[];
+  pagos: { id: string; forma: string; monto: number; ultimos4Digitos?: string }[];
   formaActiva: FormaPago | null;
   onElegirForma: (f: FormaPago) => void;
   monto: string;
@@ -415,6 +416,8 @@ export function CobroModal(p: {
     ...(p.puedeCortesia ? ([['CORTESIA', 'Cortesía']] as [FormaPago, string][]) : []),
   ];
   const campo = 'w-full px-3 py-2 rounded bg-slate-900 text-white border border-slate-700';
+  const motivoTarjeta = motivoFaltaTarjeta(p.formaActiva, p.cardLast4);
+  const motivoConfirmar = motivoBloqueoCobro({ pagado: p.pagado, total: p.total, pagos: p.pagos, formaActiva: p.formaActiva, ultimos4Activo: p.cardLast4 });
   return (
     <ModalPOS
       size="xl"
@@ -424,9 +427,10 @@ export function CobroModal(p: {
       footer={
         <>
           <button onClick={p.onCancel} className="px-6 py-3 rounded-lg bg-slate-700 text-slate-200 hover:bg-slate-600">Cancelar</button>
+          {motivoConfirmar ? <span role="status" className="self-center text-xs text-amber-300">{motivoConfirmar}</span> : null}
           <button
             onClick={p.onConfirm}
-            disabled={p.pagado < p.total}
+            disabled={!!motivoConfirmar}
             className="flex-1 py-3 rounded-lg bg-green-700 text-white font-bold hover:bg-green-600 disabled:bg-slate-700 disabled:text-slate-500"
           >
             CONFIRMAR COBRO →
@@ -457,6 +461,7 @@ export function CobroModal(p: {
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{ICONO[pf.forma] ?? '✦'}</span>
                   <span className="text-sm">{money(pf.monto)}</span>
+                  {pf.ultimos4Digitos ? <span className="text-xs text-slate-400">****{pf.ultimos4Digitos}</span> : null}
                 </div>
                 <button onClick={() => p.onQuitar(pf.id)} className="text-red-400 hover:text-red-300 text-lg">×</button>
               </div>
@@ -504,7 +509,8 @@ export function CobroModal(p: {
             </button>
             <button
               onClick={p.onAgregar}
-              disabled={!p.formaActiva || Number(p.monto) <= 0}
+              disabled={!p.formaActiva || Number(p.monto) <= 0 || !!motivoTarjeta}
+              title={motivoTarjeta ?? undefined}
               className="py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500"
             >
               + Agregar pago
@@ -523,11 +529,22 @@ export function CobroModal(p: {
             </div>
           </div>
 
-          {(p.formaActiva === 'DEBITO' || p.formaActiva === 'CREDITO') && (
+          {esFormaTarjeta(p.formaActiva) && (
             <div className="space-y-3">
               <div>
-                <label className="text-sm text-slate-400 mb-1 block">Últimos 4 dígitos o folio voucher *</label>
-                <input type="text" value={p.cardLast4} onChange={(e) => p.setCardLast4(e.target.value)} placeholder="****" className={campo} />
+                <label className="text-sm text-slate-400 mb-1 block">Últimos 4 dígitos de la tarjeta *</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  maxLength={4}
+                  value={p.cardLast4}
+                  onChange={(e) => p.setCardLast4(soloUltimos4(e.target.value))}
+                  placeholder="1234"
+                  aria-invalid={!!motivoTarjeta}
+                  className={campo}
+                />
+                {motivoTarjeta ? <p className="mt-1 text-xs text-amber-300">{motivoTarjeta}</p> : null}
               </div>
               <div>
                 <label className="text-sm text-slate-400 mb-1 block">Banco emisor</label>

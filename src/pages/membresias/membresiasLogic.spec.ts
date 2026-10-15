@@ -32,6 +32,11 @@ describe('armarCobro: una venta normal del POS con el producto del plan', () => 
     expect(c.formasPago).toEqual([{ forma: 'EFECTIVO', monto: 580 }]);
   });
 
+  it('con tarjeta manda los 4 dígitos en la línea de pago; con efectivo no manda nada', () => {
+    expect(armarCobro({ ...base, forma: 'DEBITO' as any, ultimos4Digitos: '4242' }).formasPago).toEqual([{ forma: 'DEBITO', monto: 580, ultimos4Digitos: '4242' }]);
+    expect(armarCobro({ ...base, ultimos4Digitos: '4242' }).formasPago).toEqual([{ forma: 'EFECTIVO', monto: 580 }]);
+  });
+
   it('con IVA incluido el pago es por 500', () => {
     expect(armarCobro({ ...base, cfg: { ivaTasaDefault: '16', preciosIncluyenIva: true } }).formasPago[0].monto).toBe(500);
   });

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useBrandingStore } from '../../core/store/useBrandingStore';
+import { esFormaTarjeta, motivoFaltaTarjeta, soloUltimos4 } from '../../core/utils/tarjeta';
 import type { IvaConfig } from '../../core/utils/iva';
 import { textoAtiende } from '../../core/utils/nombreUsuario';
 import { InputBusqueda } from '../../core/components/InputBusqueda';
@@ -46,6 +47,7 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
   const [forma, setForma] = useState<FormaPago>('EFECTIVO');
   const [monto, setMonto] = useState('');
   const [recibido, setRecibido] = useState('');
+  const [ultimos4, setUltimos4] = useState('');
   const [sel, setSel] = useState<number[]>([]);
   const [cancelando, setCancelando] = useState(false);
   const [motivo, setMotivo] = useState('');
@@ -100,10 +102,13 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
   const cambio =
     forma === 'EFECTIVO' && montoACobrar && recibidoNum > montoACobrar ? Math.round((recibidoNum - montoACobrar) * 100) / 100 : 0;
 
+  const motivoTarjeta = motivoFaltaTarjeta(forma, ultimos4);
   const cobrar = () => {
+    if (motivoTarjeta) return Promise.resolve();
     const body: Parameters<MesasApi['cobrar']>[1] = { formaPago: forma };
     if (modo === 'parcial') body.monto = montoNum;
     if (modo === 'items') body.itemIndexes = sel;
+    if (esFormaTarjeta(forma)) body.ultimos4Digitos = ultimos4;
     if (forma === 'EFECTIVO' && recibidoNum > 0 && modo !== 'items') {
       body.montoRecibido = recibidoNum;
       body.cambio = cambio;
@@ -114,6 +119,7 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
         setCobrando(false);
         setMonto('');
         setRecibido('');
+        setUltimos4('');
         setSel([]);
       },
     );
@@ -285,9 +291,23 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
               )}
               <div className="grid grid-cols-2 gap-2">
                 {FORMAS.map((f) => (
-                  <button key={f.v} className={`${btn} ${forma === f.v ? 'bg-blue-600' : 'bg-slate-800'}`} onClick={() => setForma(f.v)}>{f.l}</button>
+                  <button key={f.v} className={`${btn} ${forma === f.v ? 'bg-blue-600' : 'bg-slate-800'}`} onClick={() => { setForma(f.v); setUltimos4(''); }}>{f.l}</button>
                 ))}
               </div>
+              {esFormaTarjeta(forma) && (
+                <div>
+                  <input
+                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 text-base"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    maxLength={4}
+                    placeholder="Últimos 4 dígitos de la tarjeta *"
+                    value={ultimos4}
+                    onChange={(e) => setUltimos4(soloUltimos4(e.target.value))}
+                  />
+                  {motivoTarjeta && <p className="mt-1 text-sm text-amber-300">{motivoTarjeta}</p>}
+                </div>
+              )}
               {forma === 'EFECTIVO' && modo !== 'items' && (
                 <div>
                   <input className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 text-base" inputMode="decimal" placeholder="Recibido (opcional)" value={recibido} onChange={(e) => setRecibido(e.target.value)} />
@@ -297,7 +317,7 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
               <div className="flex gap-2">
                 <button className={`${btn} flex-1 bg-slate-800`} onClick={() => { setCobrando(false); setError(''); }}>Volver</button>
                 <button
-                  disabled={ocupado || (modo === 'parcial' && !(montoNum > 0)) || (modo === 'items' && sel.length === 0)}
+                  disabled={ocupado || !!motivoTarjeta || (modo === 'parcial' && !(montoNum > 0)) || (modo === 'items' && sel.length === 0)}
                   className={`${btn} flex-1 bg-green-700 disabled:opacity-40`}
                   onClick={cobrar}
                 >

@@ -20,6 +20,7 @@ import TableLayout from "./TableLayout";
 import CheckoutFast from "./CheckoutFast";
 import { desgloseTicket, esTasaIva, etiquetaTasa, lineasDeIva, tasaEfectiva, TASAS_IVA, type IvaConfig, type TasaIva, etiquetaIvaUnica } from "../../core/utils/iva";
 import { propsTextoLibre } from "../../core/utils/inputBusqueda";
+import { esFormaTarjeta, ultimos4Validos } from '../../core/utils/tarjeta';
 import { ModalPOS } from "../../core/components/ModalPOS";
 import { AperturaTurnoModal, CierreTurnoModal, CobroModal, MovimientoEfectivoModal, PrecorteModal, efectivoEsperado } from "./ModalesCaja";
 import { totalContado } from "./cajaTurno";
@@ -1094,11 +1095,12 @@ export default function POSPage() {
   function getPending() { return pendingMemo; }
   function getChange() { return changeMemo; }
 
-  function addPaymentForm(forma: "EFECTIVO" | "TARJETA" | "DEBITO" | "CREDITO" | "TRANSFERENCIA" | "CORTESIA", monto?: number) {
+  function addPaymentForm(forma: "EFECTIVO" | "TARJETA" | "DEBITO" | "CREDITO" | "TRANSFERENCIA" | "CORTESIA", monto?: number, ultimos4Digitos?: string) {
     const newForm: PaymentForm = {
       id: Date.now().toString(),
       forma,
       monto: monto || (forma === "CORTESIA" ? getTotal() : getPending()),
+      ...(esFormaTarjeta(forma) && ultimos4Digitos ? { ultimos4Digitos } : {}),
     };
     setPaymentForms([...paymentForms, newForm]);
   }
@@ -1187,10 +1189,10 @@ export default function POSPage() {
 
   function validateCardPayments(): boolean {
     setCardValidationError("");
-    const cardPayments = paymentForms.filter(pf => pf.forma === "TARJETA");
-    for (const card of cardPayments) {
-      if (!card.ultimos4Digitos && !card.folioVoucher) {
-        setCardValidationError("Ingresa los últimos 4 dígitos o el folio del voucher");
+    // El servidor exige exactamente 4 dígitos en DEBITO, CREDITO y TARJETA: el cobro no sale sin ellos.
+    for (const card of paymentForms.filter(pf => esFormaTarjeta(pf.forma))) {
+      if (!ultimos4Validos(card.ultimos4Digitos)) {
+        setCardValidationError("Ingresa los 4 últimos dígitos de la tarjeta");
         return false;
       }
     }
@@ -3276,6 +3278,7 @@ export default function POSPage() {
           formaActiva={selectedPaymentForm}
           onElegirForma={(f) => {
             setSelectedPaymentForm(f);
+            setCardLast4("");
             setPaymentAmount("");
             setTimeout(() => paymentInputRef.current?.focus(), 0);
           }}
@@ -3284,7 +3287,9 @@ export default function POSPage() {
           inputRef={paymentInputRef}
           onAgregar={() => {
             if (selectedPaymentForm && Number(paymentAmount) > 0) {
-              addPaymentForm(selectedPaymentForm, Number(paymentAmount));
+              if (esFormaTarjeta(selectedPaymentForm) && !ultimos4Validos(cardLast4)) return;
+              addPaymentForm(selectedPaymentForm, Number(paymentAmount), cardLast4);
+              setCardLast4("");
               setPaymentAmount("");
               setTimeout(() => paymentInputRef.current?.focus(), 0);
             }

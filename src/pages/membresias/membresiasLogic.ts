@@ -1,3 +1,4 @@
+import { esFormaTarjeta } from '../../core/utils/tarjeta';
 import { desgloseTicket, esTasaIva, IVA_DEFAULT, type IvaConfig } from '../../core/utils/iva';
 
 // Lógica pura de la pantalla de membresías (sin React ni HTTP) para poder probarla con specs. El precio, el IVA y las fechas
@@ -75,6 +76,8 @@ export function armarCobro(p: {
   plan: Plan;
   socioId: string;
   forma: FormaPagoMembresia;
+  /** Últimos 4 dígitos: obligatorios con DEBITO o CREDITO (el servidor los exige). */
+  ultimos4Digitos?: string;
   turnoId: string;
   sucursalId: string;
   cajero: string;
@@ -88,7 +91,7 @@ export function armarCobro(p: {
       precioUnitario: Number(p.plan.precio), descuento: 0, subtotal: d.base,
     }],
     subtotal: d.subtotal, descuento: 0, impuestos: d.impuestos, total: d.total,
-    formasPago: [{ forma: p.forma, monto: d.total }],
+    formasPago: [{ forma: p.forma, monto: d.total, ...(esFormaTarjeta(p.forma) ? { ultimos4Digitos: p.ultimos4Digitos } : {}) }],
     cajero: p.cajero, turnoId: p.turnoId, sucursalId: p.sucursalId, socioId: p.socioId,
   };
 }

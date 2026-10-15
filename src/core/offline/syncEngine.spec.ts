@@ -44,6 +44,19 @@ describe('syncEngine — ventas', () => {
     expect(await estados()).toEqual([['F-1', 'synced']]);
   });
 
+  it('venta en cola con tarjeta sin 4 dígitos: el servidor la rechaza, queda FALLIDA con el motivo claro y su contenido intacto (no se pierde)', async () => {
+    const sinDigitos = { ...venta('F-T1'), formasPago: [{ forma: 'DEBITO', monto: 116 }] };
+    await enqueueOperation('SALE', sinDigitos, '2026-10-05T12:00:00.000Z');
+    post.mockRejectedValueOnce(rechazo(400, { message: 'Forma de pago 1 (DEBITO) requiere los últimos 4 dígitos de la tarjeta (ultimos4Digitos).' }));
+    await runSync();
+    expect(await estados()).toEqual([['F-T1', 'failed']]);
+    const fallidas = await getFailedSaleOperations();
+    expect(fallidas).toHaveLength(1);
+    expect(fallidas[0].error).toMatch(/últimos 4 dígitos/);
+    expect(fallidas[0].payload.formasPago).toEqual([{ forma: 'DEBITO', monto: 116 }]);
+    expect(fallidas[0].payload.items).toHaveLength(1);
+  });
+
   it('400 "ya existe" (el primer envío sí llegó): queda SINCRONIZADA, no fallida, y no se reintenta', async () => {
     await enqueueOperation('SALE', venta('F-2'), '2026-10-05T12:00:00.000Z');
     post.mockRejectedValueOnce(rechazo(400, { message: "El folio 'F-2' ya existe, no se pudo registrar la venta.", code: 'FOLIO_DUPLICADO', mismoRegistro: true }));

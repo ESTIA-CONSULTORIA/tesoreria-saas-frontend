@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { esFormaTarjeta, motivoFaltaTarjeta, soloUltimos4 } from "../../core/utils/tarjeta";
 
 interface TicketItem {
   productoId: string;
@@ -14,7 +15,7 @@ interface Props {
   total: number;
   tableId?: string | null;
   tableNumber?: number | null;
-  onPay: (formasPago: { forma: string; monto: number }[]) => void;
+  onPay: (formasPago: { forma: string; monto: number; ultimos4Digitos?: string }[]) => void;
   onCancel: () => void;
 }
 
@@ -29,15 +30,17 @@ export default function CheckoutFast({ items, total, tableId, tableNumber, onPay
   const [selectedMethod, setSelectedMethod] = useState("EFECTIVO");
   const [cash, setCash] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [ultimos4, setUltimos4] = useState("");
+  const motivoTarjeta = motivoFaltaTarjeta(selectedMethod, ultimos4);
 
   const parsedCash = parseFloat(cash) || 0;
   const change = selectedMethod === "EFECTIVO" ? Math.max(0, parsedCash - total) : 0;
 
   async function handlePay() {
-    if (processing) return;
+    if (processing || motivoTarjeta) return;
     setProcessing(true);
     const monto = selectedMethod === "EFECTIVO" ? Math.min(parsedCash, total) || total : total;
-    onPay([{ forma: selectedMethod, monto }]);
+    onPay([{ forma: selectedMethod, monto, ...(esFormaTarjeta(selectedMethod) ? { ultimos4Digitos: ultimos4 } : {}) }]);
   }
 
   const quickAmounts = [50, 100, 200, 500].filter((a) => a >= total).slice(0, 4);
@@ -124,10 +127,28 @@ export default function CheckoutFast({ items, total, tableId, tableNumber, onPay
           </div>
         )}
 
+        {esFormaTarjeta(selectedMethod) && (
+          <div>
+            <label className="text-xs mb-1 block" style={{ color: "#9A9A9A" }}>Últimos 4 dígitos de la tarjeta *</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              maxLength={4}
+              value={ultimos4}
+              onChange={(e) => setUltimos4(soloUltimos4(e.target.value))}
+              placeholder="1234"
+              className="w-full text-lg px-3 py-3 rounded-lg"
+              style={{ backgroundColor: "#0A0A0A", border: "1px solid #2D2D2D", color: "#F5F5F5" }}
+            />
+            {motivoTarjeta && <p className="mt-1 text-xs" style={{ color: "#F59E0B" }}>{motivoTarjeta}</p>}
+          </div>
+        )}
+
         {/* Pay button */}
         <button
           onClick={handlePay}
-          disabled={processing || (selectedMethod === "EFECTIVO" && parsedCash < total && parsedCash > 0)}
+          disabled={processing || !!motivoTarjeta || (selectedMethod === "EFECTIVO" && parsedCash < total && parsedCash > 0)}
           className="w-full py-3 rounded-xl font-semibold text-base"
           style={{
             backgroundColor: processing ? "#2D2D2D" : "#F5F5F5",

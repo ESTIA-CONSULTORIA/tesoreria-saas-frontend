@@ -42,7 +42,7 @@ export function mesasApi(c: AxiosInstance) {
       (await c.post('/pos/sales', { items: p.items, subtotal: p.total, descuento: 0, impuestos: 0, total: p.total, cajero: p.cajero, sucursalId: p.sucursalId, tableId: p.tableId })).data,
     agregarItems: async (id: string, items: ItemCuenta[]) => (await c.post(`/pos/sales/${id}/items`, { items })).data,
     quitarItem: async (id: string, indice: number) => (await c.delete(`/pos/sales/${id}/items/${indice}`)).data,
-    cobrar: async (id: string, body: { formaPago: FormaPago; monto?: number; itemIndexes?: number[]; montoRecibido?: number; cambio?: number }) =>
+    cobrar: async (id: string, body: { formaPago: FormaPago; monto?: number; itemIndexes?: number[]; montoRecibido?: number; cambio?: number; ultimos4Digitos?: string }) =>
       (await c.post(`/pos/sales/${id}/pagos`, body)).data,
     cancelar: async (id: string, motivo: string) => (await c.put(`/pos/sales/${id}/cancel`, { motivo })).data,
     // Alta mínima de áreas y mesas
