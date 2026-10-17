@@ -69,7 +69,7 @@ export default function DatosFiscalesPage() {
     <MainLayout>
       <div className="mx-auto flex w-full max-w-[1366px] flex-col gap-2 overflow-hidden px-4 py-2 text-white" style={{ height: 'calc(100vh - 96px)' }}>
         <div className="flex items-baseline justify-between gap-4">
-          <h1 className="text-xl font-bold">Datos fiscales</h1>
+          <h1 className="text-lg font-bold leading-tight">Datos fiscales</h1>
           <p className="truncate text-xs text-slate-400">Los datos deben coincidir con tu Constancia de Situación Fiscal. Confírmalos con tu contador.</p>
         </div>
 
@@ -99,13 +99,13 @@ export default function DatosFiscalesPage() {
                 aria-controls="fiscal-panel"
                 tabIndex={tab === p ? 0 : -1}
                 onClick={() => setTab(p)}
-                className={`rounded px-3 py-1 text-sm font-semibold ${tab === p ? 'bg-blue-600' : 'bg-slate-800 hover:bg-slate-700'}`}
+                className={`whitespace-nowrap rounded px-3 py-1 text-sm font-semibold ${tab === p ? 'bg-blue-600' : 'bg-slate-800 hover:bg-slate-700'}`}
               >
-                {ETIQUETA_PESTANA[p]} <span className="text-xs font-normal text-slate-300">Alt+⇧+{i + 1}</span>
+                {ETIQUETA_PESTANA[p]} <span className="ml-1 text-[10px] font-normal text-slate-300">Alt+⇧+{i + 1}</span>
               </button>
             ))}
           </div>
-          <ul className="flex min-w-0 flex-wrap justify-end gap-x-3 text-xs" aria-label="Preparación para facturar">
+          <ul className="flex min-w-0 flex-wrap justify-end gap-x-3 text-xs leading-tight" aria-label="Preparación para facturar">
             {pasos.map((p) => (
               <li key={p.clave} className={COLOR_PASO[p.estado]}>
                 {p.pestana ? (
@@ -113,7 +113,7 @@ export default function DatosFiscalesPage() {
                     {ICONO_PASO[p.estado]} {p.texto}
                   </button>
                 ) : (
-                  <span>{ICONO_PASO[p.estado]} {p.texto} · próximamente</span>
+                  <span title="Llega en una fase posterior">{ICONO_PASO[p.estado]} {p.texto} (próx.)</span>
                 )}
               </li>
             ))}

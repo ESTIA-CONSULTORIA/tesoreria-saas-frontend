@@ -151,7 +151,7 @@ export default function ReceptoresTab({ regimenes, usos, alGuardar }: { regimene
       </div>
 
       <div className="grid min-h-0 flex-1 grid-cols-12 gap-3">
-        <div ref={tabla} tabIndex={0} onKeyDown={teclaTabla} role="grid" aria-label="Receptores fiscales" className="col-span-8 min-h-0 overflow-hidden rounded border border-slate-800 outline-none focus:border-blue-500">
+        <div ref={tabla} tabIndex={0} onKeyDown={teclaTabla} role="grid" aria-label="Receptores fiscales" className="col-span-8 min-h-0 overflow-y-auto rounded border border-slate-800 outline-none focus:border-blue-500">
           <table className="w-full table-fixed text-sm">
             <thead className="text-left text-xs text-slate-400">
               <tr className="h-8 border-b border-slate-800">
@@ -168,7 +168,7 @@ export default function ReceptoresTab({ regimenes, usos, alGuardar }: { regimene
                   key={r.id}
                   role="row"
                   aria-selected={i === cursor}
-                  className={`h-[30px] cursor-pointer border-b border-slate-900 ${i === cursor ? 'bg-blue-900/40' : 'hover:bg-slate-800/50'}`}
+                  className={`h-[30px] cursor-pointer whitespace-nowrap border-b border-slate-900 ${i === cursor ? 'bg-blue-900/40' : 'hover:bg-slate-800/50'}`}
                   onClick={() => (setCursor(i), abrir(r))}
                 >
                   <td className="truncate px-2">{r.nombreFiscal}</td>

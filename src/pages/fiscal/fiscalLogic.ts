@@ -131,14 +131,14 @@ export function pasosPreparacion(r: ResumenFiscal | null): PasoPreparacion[] {
   return [
     {
       clave: 'emisor',
-      texto: !empresas.length ? 'Emisor: no hay empresas' : sinEmisor.length ? `Emisor: falta en ${sinEmisor.map((e) => e.empresa).join(', ')}` : 'Emisor completo',
+      texto: !empresas.length ? 'Emisor: no hay empresas' : sinEmisor.length ? (sinEmisor.length <= 2 ? `Emisor: falta en ${sinEmisor.map((e) => e.empresa).join(', ')}` : `Emisor: falta en ${sinEmisor.length} empresas`) : 'Emisor completo',
       estado: empresas.length && !sinEmisor.length ? 'listo' : 'pendiente',
       pestana: 'emisor',
     },
-    { clave: 'sucursales', texto: `Sucursales con código postal: ${sucCp} de ${sucTotal}`, estado: sucTotal > 0 && sucCp === sucTotal ? 'listo' : 'pendiente', pestana: 'sucursales' },
+    { clave: 'sucursales', texto: `Sucursales con CP: ${sucCp} de ${sucTotal}`, estado: sucTotal > 0 && sucCp === sucTotal ? 'listo' : 'pendiente', pestana: 'sucursales' },
     { clave: 'productos', texto: `Productos con claves SAT: ${p.conClaves} de ${p.total}`, estado: p.total > 0 && p.pendientes === 0 ? 'listo' : 'pendiente', pestana: 'productos' },
-    { clave: 'csd', texto: 'Certificado (CSD)', estado: 'proximamente' },
-    { clave: 'proveedor', texto: 'Proveedor de timbrado', estado: 'proximamente' },
+    { clave: 'csd', texto: 'CSD', estado: 'proximamente' },
+    { clave: 'proveedor', texto: 'Proveedor', estado: 'proximamente' },
   ];
 }
 
@@ -201,7 +201,7 @@ export function formDeSugerencia(s: SugerenciaCategoria): FormProducto {
 }
 
 export const textoObjetoImp = (catalogo: Record<string, string>, codigo: string | null) => (codigo ? `${codigo} · ${catalogo[codigo] ?? 'Desconocido'}` : '—');
-export const textoIva = (tasa: string | null) => (tasa === null ? 'Del negocio' : tasa === 'EXENTO' ? 'Exento' : `${tasa} %`);
+export const textoIva = (tasa: string | null) => (tasa === null ? 'Negocio' : tasa === 'EXENTO' ? 'Exento' : `${tasa} %`);
 
 export function textoPagina(page: number, paginas: number, total: number, singular = 'producto', plural = 'productos'): string {
   return total === 0 ? 'Sin resultados' : `Pág. ${page} de ${paginas} · ${total} ${total === 1 ? singular : plural}`;

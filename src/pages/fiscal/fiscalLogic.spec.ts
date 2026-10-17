@@ -101,7 +101,7 @@ describe('preparación para facturar', () => {
   it('cuenta sucursales y productos y deja CSD y proveedor como "próximamente"', () => {
     const pasos = pasosPreparacion(completo);
     expect(pasos.map((p) => p.estado)).toEqual(['listo', 'listo', 'listo', 'proximamente', 'proximamente']);
-    expect(pasos[1].texto).toBe('Sucursales con código postal: 2 de 2');
+    expect(pasos[1].texto).toBe('Sucursales con CP: 2 de 2');
     expect(pasos[2].texto).toBe('Productos con claves SAT: 10 de 10');
   });
   it('P-03: aun con los pasos 1–3 listos NO se puede activar sin CSD y proveedor', () => {

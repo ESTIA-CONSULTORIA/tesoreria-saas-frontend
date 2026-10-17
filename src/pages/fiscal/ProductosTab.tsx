@@ -218,9 +218,9 @@ export default function ProductosTab({ objetos, alGuardar }: { objetos: Record<s
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
-      <div className="flex items-end gap-3">
+      <div className="flex items-center gap-3">
         <div>
-          <label htmlFor="fiscal-prod-q" className={etiqueta}>Buscar producto</label>
+          <label htmlFor="fiscal-prod-q" className="sr-only">Buscar producto</label>
           <InputBusqueda
             id="fiscal-prod-q"
             name="fiscal-productos-q"
@@ -232,25 +232,25 @@ export default function ProductosTab({ objetos, alGuardar }: { objetos: Record<s
           />
         </div>
         <div>
-          <label htmlFor="fiscal-prod-cat" className={etiqueta}>Categoría</label>
+          <label htmlFor="fiscal-prod-cat" className="sr-only">Categoría</label>
           <select id="fiscal-prod-cat" className={`${inp} w-44`} value={categoria} onChange={(e) => (setCategoria(e.target.value), setPage(1), setCursor(0))}>
-            <option value="">Todas</option>
+            <option value="">Todas las categorías</option>
             {categoriasFiltro.map((c) => (<option key={c.id} value={c.id}>{c.nombre}</option>))}
           </select>
         </div>
         <div>
-          <label htmlFor="fiscal-prod-estado" className={etiqueta}>Mostrar</label>
+          <label htmlFor="fiscal-prod-estado" className="sr-only">Mostrar</label>
           <select id="fiscal-prod-estado" className={`${inp} w-36`} value={estado} onChange={(e) => (setEstado(e.target.value), setPage(1), setCursor(0))}>
-            <option value="PENDIENTES">Pendientes</option>
-            <option value="TODOS">Todos</option>
-            <option value="COMPLETOS">Completos</option>
+            <option value="PENDIENTES">Mostrar: pendientes</option>
+            <option value="TODOS">Mostrar: todos</option>
+            <option value="COMPLETOS">Mostrar: completos</option>
           </select>
         </div>
         <span className="pb-1 text-xs text-slate-400">{marcados.size ? `${marcados.size} marcado${marcados.size === 1 ? '' : 's'}` : ''}</span>
       </div>
 
       <div className="grid min-h-0 flex-1 grid-cols-12 gap-3">
-        <div ref={tabla} tabIndex={0} onKeyDown={teclaTabla} role="grid" aria-label="Productos y sus claves SAT" className="col-span-8 min-h-0 overflow-hidden rounded border border-slate-800 outline-none focus:border-blue-500">
+        <div ref={tabla} tabIndex={0} onKeyDown={teclaTabla} role="grid" aria-label="Productos y sus claves SAT" className="col-span-8 min-h-0 overflow-y-auto rounded border border-slate-800 outline-none focus:border-blue-500">
           <table className="w-full table-fixed text-sm">
             <thead className="text-left text-xs text-slate-400">
               <tr className="h-8 border-b border-slate-800">
@@ -266,7 +266,7 @@ export default function ProductosTab({ objetos, alGuardar }: { objetos: Record<s
             <tbody>
               {datos.items.map((i, idx) => (
                 <tr key={i.productId} role="row" aria-selected={idx === cursor} onClick={() => setCursor(idx)}
-                  className={`h-[30px] cursor-pointer border-b border-slate-900 ${idx === cursor ? 'bg-blue-900/40' : 'hover:bg-slate-800/50'}`}>
+                  className={`h-[30px] cursor-pointer whitespace-nowrap border-b border-slate-900 ${idx === cursor ? 'bg-blue-900/40' : 'hover:bg-slate-800/50'}`}>
                   <td className="px-1 text-center" aria-label={marcados.has(i.productId) ? 'Marcado' : 'Sin marcar'}>{marcados.has(i.productId) ? '☑' : '☐'}</td>
                   <td className="truncate px-2" title={i.producto}>{i.producto}</td>
                   <td className="truncate px-2 text-slate-300">{i.categoria}</td>

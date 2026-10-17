@@ -119,7 +119,7 @@ export default function SucursalesTab({ alGuardar }: { alGuardar: () => void }) 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
       <p className="text-xs text-slate-400">Código postal del lugar donde se expiden las facturas de cada sucursal. Por ahora solo se valida el formato (5 dígitos).</p>
-      <div ref={tabla} tabIndex={0} onKeyDown={teclaTabla} role="grid" aria-label="Sucursales y código postal de expedición" className="min-h-0 flex-1 rounded border border-slate-800 outline-none focus:border-blue-500">
+      <div ref={tabla} tabIndex={0} onKeyDown={teclaTabla} role="grid" aria-label="Sucursales y código postal de expedición" className="min-h-0 flex-1 overflow-y-auto rounded border border-slate-800 outline-none focus:border-blue-500">
         <table className="w-full text-sm">
           <thead className="text-left text-xs text-slate-400">
             <tr className="h-8 border-b border-slate-800">
@@ -134,7 +134,7 @@ export default function SucursalesTab({ alGuardar }: { alGuardar: () => void }) 
               const idx = pagina * POR_PAGINA + i;
               const sel = idx === cursor;
               return (
-                <tr key={f.branchId} role="row" aria-selected={sel} className={`h-[30px] cursor-pointer border-b border-slate-900 ${sel ? 'bg-blue-900/40' : 'hover:bg-slate-800/50'}`} onClick={() => setCursor(idx)}>
+                <tr key={f.branchId} role="row" aria-selected={sel} className={`h-[30px] cursor-pointer whitespace-nowrap border-b border-slate-900 ${sel ? 'bg-blue-900/40' : 'hover:bg-slate-800/50'}`} onClick={() => setCursor(idx)}>
                   <td className="px-3">{f.empresa}</td>
                   <td className="px-3">{f.sucursal}</td>
                   <td className="px-3">
