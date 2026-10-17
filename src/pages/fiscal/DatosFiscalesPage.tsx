@@ -101,7 +101,7 @@ export default function DatosFiscalesPage() {
                 onClick={() => setTab(p)}
                 className={`whitespace-nowrap rounded px-3 py-1 text-sm font-semibold ${tab === p ? 'bg-blue-600' : 'bg-slate-800 hover:bg-slate-700'}`}
               >
-                {ETIQUETA_PESTANA[p]} <span className="ml-1 text-[10px] font-normal text-slate-300">Alt+⇧+{i + 1}</span>
+                {ETIQUETA_PESTANA[p]} <span className="ml-1 text-[10px] font-normal text-slate-300">Alt+Shift+{i + 1}</span>
               </button>
             ))}
           </div>

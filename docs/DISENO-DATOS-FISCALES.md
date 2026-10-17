@@ -16,7 +16,7 @@ Presupuesto vertical a 1366×768 (px): barra superior del ERP 56 · título 40 �
 ## 1. Dónde vive y quién entra
 
 - Ruta `Configuración → Datos fiscales` (`/settings/fiscal`). Visible solo para **ADMIN y GERENTE** (igual que el backend; el menú no lo muestra a otros roles y la ruta responde 403 si se teclea).
-- Una sola pantalla con **4 pestañas**: `1 Emisor` · `2 Sucursales` · `3 Productos` · `4 Receptores`. Se cambia con **Alt+1…4** o con ← → sobre la lista de pestañas.
+- Una sola pantalla con **4 pestañas**: `1 Emisor` · `2 Sucursales` · `3 Productos` · `4 Receptores`. Se cambia con **Alt+Shift+1…4** (Alt+1…4 ya navega entre módulos del ERP) o con ← → sobre la lista de pestañas.
 - Arriba, a la derecha, un indicador de **estado de preparación** por empresa: "Listo para facturar" / "Faltan 3 pasos" (ver §7). Solo informa; en F0 no hay timbrado.
 - Aviso permanente, discreto: *"Los datos deben coincidir con tu Constancia de Situación Fiscal. Confírmalos con tu contador."* **[VALIDAR]**
 
@@ -137,7 +137,7 @@ El módulo de **datos del frontend** se apoya en `GET /facturacion/catalogos` (y
 
 ## 9. Pruebas previstas
 
-- **Teclado:** Tab sin escape, F2/F4/F5/F6/F7/Esc/Alt+1…4 en cada pestaña, foco devuelto, Enter avanza en la tabla de sucursales.
+- **Teclado:** Tab sin escape, F2/F4/F5/F6/F7/Esc/Alt+Shift+1…4 en cada pestaña, foco devuelto, Enter avanza en la tabla de sucursales.
 - **1366×768:** captura de las cuatro pestañas con datos de 15+ filas; verificación automática de que no hay scroll de página ni horizontal.
 - **Nombres:** ninguna cadena visible con forma de UUID.
 - **RFC:** los mismos casos del backend (válidos, dígito incorrecto, fecha imposible, genérico) en el navegador, más "el servidor tiene la última palabra".
@@ -163,3 +163,16 @@ El módulo de **datos del frontend** se apoya en `GET /facturacion/catalogos` (y
 | P-02 | ¿Quién puede editar: solo ADMIN, o también GERENTE (como en el backend)? | ADMIN y GERENTE, como el backend; las claves SAT las suele capturar quien lleva el catálogo. |
 | P-03 | ¿Se permite activar "Facturación activa" antes de tener CSD y PAC? | No: se habilita solo con los pasos 1–3 completos y no hace nada hasta F2. |
 | P-04 | ¿Quién entrega la lista corta de claves SAT por giro? | Tu contador, antes de la fase D (D-12). |
+
+## 12. Estado de la implementación (2026-10-17)
+
+Implementado: las 5 lecturas del §8, las 4 pestañas y la ruta `/settings/fiscal` (ADMIN y GERENTE; el GERENTE ve en "Auditoría" solo Datos fiscales). Medido en Chrome a 1366×768 contra producción: sin desplazamiento de página ni horizontal en ninguna pestaña, 15 filas de 30 px caben en Productos y Sucursales, ningún UUID visible.
+
+Diferencias respecto al diseño, y por qué:
+
+| Diseño | Implementado | Motivo |
+|---|---|---|
+| Alt+1…4 cambia de pestaña | **Alt+Shift+1…4** (y ← →) | Alt+1…4 ya navega entre módulos del ERP (`MainLayout`). |
+| Guardar unidad y objeto sin la clave SAT | **No se puede**: guardar exige la clave de 8 dígitos | La tabla `fiscal_productos` define `claveProdServ NOT NULL`. La sugerencia por giro rellena unidad y objeto en pantalla pero no guarda nada hasta capturar la clave (la entrega el contador, P-04). Permitir guardar sin clave requiere un `ALTER` de esa tabla (vacía) y se decide aparte. |
+| Filtro de categoría con todas las categorías | Solo categorías con productos **pendientes** (+ "Sin categoría") | El endpoint de sugerencias ya las agrupa; listar todas requeriría otro endpoint. |
+| "Facturación activa" se habilita con los pasos 1–3 | **Nunca en F0** (P-03: exige CSD y proveedor) | Casilla siempre deshabilitada, con el motivo a la vista. |
