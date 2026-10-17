@@ -44,6 +44,9 @@ const NAV: { label: string; key: ModKey; path: string; modulo: string }[] = [
   { label: "Soporte",       key: "soporte",            path: "/soporte/clientes",  modulo: "soporte" },
 ];
 
+// Datos fiscales es lo único de Configuración que también ve el GERENTE (el backend permite ADMIN y GERENTE).
+const PATH_DATOS_FISCALES = "/settings/fiscal";
+
 const SUBNAV: Record<ModKey, { label: string; path: string }[]> = {
   dashboard: [],
   rh: [
@@ -75,6 +78,7 @@ const SUBNAV: Record<ModKey, { label: string; path: string }[]> = {
     { label: "Config. Login",  path: "/settings/login-config" },
     { label: "Apariencia",     path: "/settings/appearance" },
     { label: "Campos del Corte", path: "/settings/corte-fields" },
+    { label: "Datos fiscales", path: PATH_DATOS_FISCALES },
   ],
   pacientes: [],
   membresias: [],
@@ -145,7 +149,8 @@ export default function TopBar() {
   const aC  = useModulo('compras');
   const aRe = useModulo('reportes');
   const aI  = useModulo('integraciones');
-  const aA  = useModulo('configuracion') && isAdmin;
+  const esGerente = user?.roleCode === 'GERENTE';
+  const aA  = useModulo('configuracion') && (isAdmin || esGerente);
   const aPac = useModulo('pacientes');
   const aCR = useModulo('corte_retroactivo') && isAdmin;
   const aCos = useModulo('costos');
@@ -344,6 +349,7 @@ export default function TopBar() {
   const subItems = activeKey === 'dashboard' && dashboardSubItems.length > 0
     ? dashboardSubItems
     : activeKey === 'pos' ? posSubItems
+    : activeKey === 'auditoria' && !isAdmin ? SUBNAV.auditoria.filter(i => i.path === PATH_DATOS_FISCALES)
     : activeKey ? (SUBNAV[activeKey] || []) : [];
 
   const userInitials = (() => {
@@ -400,7 +406,7 @@ export default function TopBar() {
             }
 
             return (
-              <Link key={m.key} to={m.path} style={{
+              <Link key={m.key} to={m.key === "auditoria" && !isAdmin ? PATH_DATOS_FISCALES : m.path} style={{
                 display: 'flex', alignItems: 'center', gap: 5,
                 padding: '5px 12px',
                 borderRadius: 6,

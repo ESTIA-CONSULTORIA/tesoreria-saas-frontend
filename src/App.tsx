@@ -45,6 +45,7 @@ import DashboardLite from "./pages/Dashboard/DashboardLite";
 import LoginConfigPage from "./pages/settings/LoginConfigPage";
 import AppearancePage from "./pages/settings/AppearancePage";
 import CorteFieldsConfig from "./pages/settings/CorteFieldsConfig";
+import DatosFiscalesPage from "./pages/fiscal/DatosFiscalesPage";
 import ProtectedRoute from "./core/router/ProtectedRoute";
 import ModuloRoute from "./core/router/ModuloRoute";
 import RoleRoute from "./core/router/RoleRoute";
@@ -417,6 +418,20 @@ function App() {
           <ProtectedRoute>
             <ModuloRoute modulo="configuracion">
               <LoginConfigPage />
+            </ModuloRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Datos fiscales (CFDI 4.0, fase 0): el backend exige ADMIN o GERENTE; la puerta del frontend coincide. */}
+      <Route
+        path="/settings/fiscal"
+        element={
+          <ProtectedRoute>
+            <ModuloRoute modulo="configuracion">
+              <RoleRoute roles={['ADMIN', 'GERENTE']}>
+                <DatosFiscalesPage />
+              </RoleRoute>
             </ModuloRoute>
           </ProtectedRoute>
         }
