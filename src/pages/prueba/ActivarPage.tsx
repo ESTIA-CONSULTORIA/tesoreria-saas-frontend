@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../core/api/api';
 import { CONFIG_PRUEBA, PruebaLayout, PruebaNoDisponible, cls } from './PruebaLayout';
-import { DIAS_PRUEBA, PASOS_PRUEBA, fechaLarga, leerTokenDeHash, mensajeDeError, validarActivacion } from './pruebaLogic';
+import { DIAS_PRUEBA, PASOS_PRUEBA, esNipValido, fechaLarga, guardarNipSesion, leerTokenDeHash, mensajeDeError, validarActivacion } from './pruebaLogic';
 
 // /prueba/activar#token=… — la persona elige su contraseña y se crea su negocio de prueba. El token se lee del fragmento y se BORRA
 // de la barra de direcciones en cuanto se lee (no queda en el historial ni se comparte por accidente). Si la prueba está apagada,
@@ -12,7 +12,7 @@ export default function ActivarPage() {
   return <Activacion />;
 }
 
-type Estado = { tipo: 'sin-token' } | { tipo: 'formulario' } | { tipo: 'listo'; slug: string; venceEn: string } | { tipo: 'fallo'; mensaje: string };
+type Estado = { tipo: 'sin-token' } | { tipo: 'formulario' } | { tipo: 'listo'; slug: string; venceEn: string; socioNip: string; socioNumero: string } | { tipo: 'fallo'; mensaje: string };
 
 function Activacion() {
   const navigate = useNavigate();
@@ -54,7 +54,11 @@ function Activacion() {
       const r = await api.post('/prueba/activar', { token, password });
       setPassword(''); setConfirmacion('');
       setToken(null); // de un solo uso: ya no sirve
-      setEstado({ tipo: 'listo', slug: String(r.data?.slug ?? ''), venceEn: String(r.data?.venceEn ?? '') });
+      const socioNip = esNipValido(r.data?.socioNip) ? r.data.socioNip : '';
+      const socioNumero = String(r.data?.socioNumero ?? '1');
+      // El servidor lo muestra una sola vez y no lo guarda en claro; aquí solo se conserva en esta pestaña (sessionStorage) para la guía.
+      try { guardarNipSesion(sessionStorage, { numero: socioNumero, nip: socioNip }); } catch { /* sin almacenamiento */ }
+      setEstado({ tipo: 'listo', slug: String(r.data?.slug ?? ''), venceEn: String(r.data?.venceEn ?? ''), socioNip, socioNumero });
     } catch (err: any) {
       const status = err?.response?.status;
       const msg = mensajeDeError(err);
@@ -112,6 +116,13 @@ function Activacion() {
               <p className="text-sm text-content-2 mt-1">
                 Dura hasta el <strong className="text-content-1">{estado.venceEn ? fechaLarga(estado.venceEn) : `${DIAS_PRUEBA} días`}</strong>. Entra con tu correo y la contraseña que acabas de elegir.
               </p>
+              {estado.socioNip && (
+                <div className="mt-4 rounded-lg border border-line-field bg-surface-2 px-4 py-3" role="note">
+                  <p className="text-xs text-content-2">NIP del socio de ejemplo (n.º {estado.socioNumero}) — para el check-in</p>
+                  <p className="text-2xl font-semibold tracking-[0.3em] tabular-nums" aria-label={`NIP ${estado.socioNip.split('').join(' ')}`}>{estado.socioNip}</p>
+                  <p className="text-xs text-content-3 mt-1">Anótalo: no lo guardamos y no se vuelve a mostrar. En la guía lo verás mientras no cierres esta pestaña; después puedes cambiarlo en Membresías → Socios.</p>
+                </div>
+              )}
               <h2 className="text-xs font-semibold text-content-2 uppercase tracking-wider mt-4 mb-2">Al entrar te guiaremos en 5 pasos</h2>
               <ol className="space-y-1 mb-4">
                 {PASOS_PRUEBA.map((p, i) => <li key={p.id} className="text-sm flex gap-2"><span className="text-content-3 w-4">{i + 1}.</span>{p.titulo}</li>)}

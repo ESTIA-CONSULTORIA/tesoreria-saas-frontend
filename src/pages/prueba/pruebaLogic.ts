@@ -137,14 +137,63 @@ export interface PasoPrueba {
   ruta: string;
 }
 
-// Las cifras salen de la plantilla del gimnasio del backend (plan $500 + IVA 16 % = $580; 2 aguas = $46.40; NIP del socio 4321).
+// Las cifras salen de la plantilla del gimnasio del backend (plan $500 + IVA 16 % = $580; 2 aguas = $46.40). El NIP del socio de ejemplo
+// ya NO es fijo: lo genera el servidor al azar para cada prueba y se muestra una vez (ver NIP_SOCIO más abajo).
 export const PASOS_PRUEBA: readonly PasoPrueba[] = [
   { id: 'turno', titulo: 'Abre tu turno', detalle: 'En POS abre el turno con un fondo de caja, por ejemplo $500.', ruta: '/pos' },
   { id: 'barra', titulo: 'Vende una bebida', detalle: 'Agrega 2 aguas y cobra en efectivo: el total debe ser $46.40.', ruta: '/pos' },
   { id: 'membresia', titulo: 'Cobra una membresía', detalle: 'En Membresías cobra el plan Mensual al socio de ejemplo: $580.00 con IVA.', ruta: '/membresias' },
-  { id: 'checkin', titulo: 'Registra una entrada', detalle: 'En Check-in escribe el n.º de socio 1 o su NIP 4321: debe salir en verde.', ruta: '/membresias' },
+  { id: 'checkin', titulo: 'Registra una entrada', detalle: 'En Check-in escribe el n.º de socio 1 (o su NIP): debe salir en verde.', ruta: '/membresias' },
   { id: 'corte', titulo: 'Haz el corte', detalle: 'Precorte y corte Z: la venta y la membresía aparecen en el total de caja.', ruta: '/pos' },
 ] as const;
+
+// ── NIP del socio de ejemplo ──
+// El servidor lo devuelve UNA vez al activar y NO lo guarda en claro (en la base solo queda su HMAC). Para poder mostrarlo en la guía durante
+// el primer uso se conserva únicamente en sessionStorage: solo esa pestaña, desaparece al cerrarla y se borra al marcar el check-in como hecho.
+export const CLAVE_NIP_SOCIO = 'prueba_socio_nip';
+type AlmacenSesion = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
+export interface NipSocio { numero: string; nip: string }
+
+export const esNipValido = (n: unknown): n is string => typeof n === 'string' && /^\d{4}$/.test(n);
+
+export function guardarNipSesion(a: AlmacenSesion | null, d: { numero?: unknown; nip?: unknown }) {
+  try { if (esNipValido(d.nip)) a?.setItem(CLAVE_NIP_SOCIO, JSON.stringify({ numero: String(d.numero ?? '1').slice(0, 10), nip: d.nip })); } catch { /* sin almacenamiento: la guía mostrará el texto sin NIP */ }
+}
+export function leerNipSesion(a: AlmacenSesion | null): NipSocio | null {
+  try {
+    const j = JSON.parse(a?.getItem(CLAVE_NIP_SOCIO) ?? 'null');
+    return j && esNipValido(j.nip) ? { numero: String(j.numero ?? '1'), nip: j.nip } : null;
+  } catch { return null; }
+}
+export function borrarNipSesion(a: AlmacenSesion | null) {
+  try { a?.removeItem(CLAVE_NIP_SOCIO); } catch { /* nada */ }
+}
+
+/** Texto de un paso; el de check-in incluye el NIP del socio de ejemplo solo si se conoce en esta pestaña. */
+export function detallePaso(p: PasoPrueba, nip: NipSocio | null): string {
+  if (p.id !== 'checkin') return p.detalle;
+  return nip
+    ? `En Check-in escribe el n.º de socio ${nip.numero} o su NIP ${nip.nip}: debe salir en verde.`
+    : 'En Check-in escribe el n.º de socio 1. Su NIP es el que viste al activar tu prueba (si lo olvidaste, cámbialo en Membresías → Socios).';
+}
+
+// ── estado de la prueba (GET /prueba/estado) ──
+export interface EstadoPrueba { esPrueba: true; estado: string; venceEn: string; diasRestantes: number; vencida: boolean; extendida: boolean }
+
+export function esEstadoPrueba(x: any): x is EstadoPrueba {
+  return !!x && x.esPrueba === true && typeof x.diasRestantes === 'number' && typeof x.venceEn === 'string' && typeof x.vencida === 'boolean';
+}
+
+export function textoDias(e: EstadoPrueba | null): string {
+  if (!e) return '';
+  const hasta = fechaLarga(e.venceEn);
+  if (e.vencida) return `Tu prueba terminó el ${hasta}. Escríbenos para continuar.`;
+  if (e.diasRestantes <= 1) return `Último día de tu prueba (hasta el ${hasta}).`;
+  return `Te quedan ${e.diasRestantes} días de prueba (hasta el ${hasta}).`;
+}
+
+/** Texto corto para el botón flotante. */
+export const etiquetaDias = (e: EstadoPrueba | null): string => (!e ? '' : e.vencida ? 'terminó' : e.diasRestantes <= 1 ? 'último día' : `${e.diasRestantes} d`);
 
 export type Progreso = Record<string, boolean>;
 type Almacen = Pick<Storage, 'getItem' | 'setItem'>;
