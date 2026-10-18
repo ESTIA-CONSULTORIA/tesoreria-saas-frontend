@@ -1,9 +1,14 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import { useCompanyStore } from "../store/useCompanyStore";
 import { useModulo } from "../hooks/useModulo";
 import { api } from "../api/api";
+import { itemsConfiguracion, rutaConfiguracion, SUBNAV_CONFIGURACION, veConfiguracion } from "./navConfiguracion";
+import { repartirNav } from "./navOverflow";
+
+// Espacio entre módulos de la barra principal (compacto, para que quepan más a 1366 px).
+const SEPARACION_NAV = 4;
 
 interface Company { id: string; legalName: string; tradeName: string; }
 interface Branch  { id: string; name: string; }
@@ -40,12 +45,9 @@ const NAV: { label: string; key: ModKey; path: string; modulo: string }[] = [
   { label: "Integraciones", key: "integraciones", path: "/integrations", modulo: "integraciones" },
   { label: "Pacientes",     key: "pacientes",          path: "/patients",          modulo: "pacientes" },
   { label: "Soluciones",    key: "centro_soluciones",  path: "/solutions",         modulo: "centro_soluciones" },
-  { label: "Auditoría",     key: "auditoria",          path: "/settings",          modulo: "configuracion" },
+  { label: "Configuración", key: "auditoria",          path: "/settings",          modulo: "configuracion" },
   { label: "Soporte",       key: "soporte",            path: "/soporte/clientes",  modulo: "soporte" },
 ];
-
-// Datos fiscales es lo único de Configuración que también ve el GERENTE (el backend permite ADMIN y GERENTE).
-const PATH_DATOS_FISCALES = "/settings/fiscal";
 
 const SUBNAV: Record<ModKey, { label: string; path: string }[]> = {
   dashboard: [],
@@ -72,14 +74,8 @@ const SUBNAV: Record<ModKey, { label: string; path: string }[]> = {
   ],
   reportes:      [{ label: "Reportes",      path: "/reports" }],
   integraciones: [{ label: "Integraciones", path: "/integrations" }],
-  auditoria: [
-    { label: "Usuarios",       path: "/users" },
-    { label: "Configuración",  path: "/settings" },
-    { label: "Config. Login",  path: "/settings/login-config" },
-    { label: "Apariencia",     path: "/settings/appearance" },
-    { label: "Campos del Corte", path: "/settings/corte-fields" },
-    { label: "Datos fiscales", path: PATH_DATOS_FISCALES },
-  ],
+  // El módulo «Configuración» (clave interna «auditoria»): el submenú depende del rol, ver navConfiguracion.ts.
+  auditoria: SUBNAV_CONFIGURACION,
   pacientes: [],
   membresias: [],
   centro_soluciones: [],
@@ -122,6 +118,8 @@ function getActiveKey(pathname: string): ModKey | null {
 function isSubActive(item: { path: string }, loc: { pathname: string; search: string }): boolean {
   const qi = item.path.indexOf('?');
   if (qi === -1) {
+    // «General» (/settings) es la raíz de Configuración: sin esto se vería marcado también en /settings/fiscal y demás.
+    if (item.path === '/settings') return loc.pathname === '/settings';
     return loc.pathname === item.path || loc.pathname.startsWith(item.path + '/');
   }
   const iPath = item.path.slice(0, qi);
@@ -149,8 +147,7 @@ export default function TopBar() {
   const aC  = useModulo('compras');
   const aRe = useModulo('reportes');
   const aI  = useModulo('integraciones');
-  const esGerente = user?.roleCode === 'GERENTE';
-  const aA  = useModulo('configuracion') && (isAdmin || esGerente);
+  const aA  = useModulo('configuracion') && veConfiguracion(user?.roleCode);
   const aPac = useModulo('pacientes');
   const aCR = useModulo('corte_retroactivo') && isAdmin;
   const aCos = useModulo('costos');
@@ -349,8 +346,127 @@ export default function TopBar() {
   const subItems = activeKey === 'dashboard' && dashboardSubItems.length > 0
     ? dashboardSubItems
     : activeKey === 'pos' ? posSubItems
-    : activeKey === 'auditoria' && !isAdmin ? SUBNAV.auditoria.filter(i => i.path === PATH_DATOS_FISCALES)
+    : activeKey === 'auditoria' ? itemsConfiguracion(user?.roleCode)
     : activeKey ? (SUBNAV[activeKey] || []) : [];
+
+  // ── Barra de módulos: lo que no cabe va al menú «Más» ──
+  const navRef = useRef<HTMLElement>(null);
+  const medidorRef = useRef<HTMLDivElement>(null);
+  const masBtnRef = useRef<HTMLButtonElement>(null);
+  const masMenuRef = useRef<HTMLDivElement>(null);
+  const [anchosNav, setAnchosNav] = useState<number[]>([]);
+  const [anchoMas, setAnchoMas] = useState(60);
+  const [anchoDisponible, setAnchoDisponible] = useState(0);
+  const [masAbierto, setMasAbierto] = useState(false);
+  const huellaNav = visibleNav.map(m => m.key).join(',');
+
+  useLayoutEffect(() => {
+    const medir = () => {
+      const hijos = medidorRef.current ? Array.from(medidorRef.current.children) as HTMLElement[] : [];
+      if (!hijos.length) return;
+      setAnchosNav(hijos.slice(0, -1).map(h => Math.ceil(h.getBoundingClientRect().width)));
+      setAnchoMas(Math.ceil(hijos[hijos.length - 1].getBoundingClientRect().width));
+    };
+    medir();
+    void document.fonts?.ready.then(medir);
+  }, [huellaNav]);
+
+  useLayoutEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const leer = () => setAnchoDisponible(el.clientWidth - 8);
+    leer();
+    const ro = new ResizeObserver(leer);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const idxActivo = visibleNav.findIndex(m => m.key === activeKey);
+  const reparto = (anchosNav.length === visibleNav.length && anchoDisponible > 0)
+    ? repartirNav(anchosNav, anchoDisponible, anchoMas, SEPARACION_NAV, idxActivo)
+    : { visibles: visibleNav.map((_, i) => i), enMas: [] as number[] };
+  const masActivo = reparto.enMas.some(i => visibleNav[i]?.key === activeKey);
+
+  const abrirMas = () => {
+    setMasAbierto(true);
+    requestAnimationFrame(() => masMenuRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus());
+  };
+  const cerrarMas = (devolverFoco = false) => {
+    setMasAbierto(false);
+    if (devolverFoco) masBtnRef.current?.focus();
+  };
+  const teclaMenuMas = (e: React.KeyboardEvent) => {
+    const items = Array.from(masMenuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
+    const i = items.indexOf(document.activeElement as HTMLElement);
+    if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length]?.focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i - 1 + items.length) % items.length]?.focus(); }
+    else if (e.key === 'Home') { e.preventDefault(); items[0]?.focus(); }
+    else if (e.key === 'End') { e.preventDefault(); items[items.length - 1]?.focus(); }
+    else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cerrarMas(true); }
+    else if (e.key === 'Tab') cerrarMas();
+  };
+  // Clic fuera cierra el menú; Alt+M lo abre desde cualquier pantalla (Alt+1…4 ya navega entre módulos).
+  useEffect(() => {
+    const fuera = (e: MouseEvent) => {
+      if (masAbierto && !masMenuRef.current?.contains(e.target as Node) && !masBtnRef.current?.contains(e.target as Node)) setMasAbierto(false);
+    };
+    const atajo = (e: KeyboardEvent) => {
+      if (e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyM' && reparto.enMas.length > 0) {
+        e.preventDefault();
+        if (masAbierto) cerrarMas(true); else { masBtnRef.current?.focus(); abrirMas(); }
+      }
+    };
+    document.addEventListener('mousedown', fuera);
+    window.addEventListener('keydown', atajo);
+    return () => { document.removeEventListener('mousedown', fuera); window.removeEventListener('keydown', atajo); };
+  });
+  useEffect(() => { setMasAbierto(false); }, [loc.pathname]);
+
+  // Un módulo de la barra (o del menú «Más»): enlace, o texto atenuado si falta elegir empresa.
+  const estiloItem = (activo: boolean): React.CSSProperties => ({
+    display: 'flex', alignItems: 'center', gap: 5,
+    padding: '5px 10px', borderRadius: 6, fontSize: 13,
+    border: activo ? '1px solid rgba(123,156,204,0.4)' : '1px solid rgba(255,255,255,0.08)',
+    background: activo ? 'rgba(123,156,204,0.15)' : 'rgba(255,255,255,0.04)',
+    color: activo ? '#8fafd4' : '#c8cdd8',
+    whiteSpace: 'nowrap', flexShrink: 0, textDecoration: 'none',
+  });
+  const itemNav = (m: typeof NAV[number], enMenu: boolean) => {
+    const active = activeKey === m.key;
+    const isDisabled = !activeCompany && operationalModules.includes(m.key);
+    if (isDisabled) {
+      return (
+        <span key={m.key} role={enMenu ? 'menuitem' : undefined} aria-disabled="true" title="Elige una empresa para usar este módulo" style={{
+          ...estiloItem(false),
+          border: '1px solid rgba(255,255,255,0.03)', background: 'rgba(255,255,255,0.02)', color: 'rgba(255,255,255,0.18)',
+          cursor: 'not-allowed', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.5)', userSelect: 'none',
+        }}>
+          <span style={{ opacity: 0.3, display: 'flex' }}>{IC[m.key]}</span>
+          {m.label}
+        </span>
+      );
+    }
+    return (
+      <Link key={m.key} to={m.key === 'auditoria' ? rutaConfiguracion(user?.roleCode) : m.path}
+        role={enMenu ? 'menuitem' : undefined} tabIndex={enMenu ? -1 : undefined}
+        aria-current={active ? 'page' : undefined}
+        onClick={() => setMasAbierto(false)}
+        style={{
+          ...estiloItem(active), cursor: 'pointer', transition: 'all 0.15s ease',
+          boxShadow: active
+            ? '0 1px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(123,156,204,0.15)'
+            : '0 1px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
+        }}
+        onMouseEnter={e => { if (!active) { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.08)'; el.style.color = '#e8ecf0'; } }}
+        onMouseLeave={e => { if (!active) { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.04)'; el.style.color = '#c8cdd8'; } }}
+        onFocus={e => { if (enMenu) (e.currentTarget as HTMLElement).style.outline = '2px solid #7b9ccc'; }}
+        onBlur={e => { (e.currentTarget as HTMLElement).style.outline = ''; }}
+      >
+        <span style={{ opacity: active ? 0.9 : 0.55, display: 'flex' }}>{IC[m.key]}</span>
+        {m.label}
+      </Link>
+    );
+  };
 
   const userInitials = (() => {
     const n = user?.name || user?.email || '';
@@ -378,70 +494,54 @@ export default function TopBar() {
           <span style={{ fontSize: 13.5, fontWeight: 700, color: '#7b9ccc', letterSpacing: '0.1em' }}>ERP</span>
         </div>
 
-        {/* Nav */}
-        <nav style={{ display: 'flex', alignItems: 'center', flex: 1, height: '100%', overflowX: 'auto', gap: 6, padding: '0 4px' }}>
-          {visibleNav.map(m => {
-            const active = activeKey === m.key;
-            const isDisabled = !activeCompany && operationalModules.includes(m.key);
-
-            if (isDisabled) {
-              return (
-                <span key={m.key} style={{
-                  display: 'flex', alignItems: 'center', gap: 5,
-                  padding: '5px 12px',
-                  borderRadius: 6,
-                  border: '1px solid rgba(255,255,255,0.03)',
-                  background: 'rgba(255,255,255,0.02)',
-                  color: 'rgba(255,255,255,0.18)',
-                  fontSize: 13,
-                  cursor: 'not-allowed',
-                  boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.5)',
-                  userSelect: 'none',
-                  whiteSpace: 'nowrap', flexShrink: 0,
-                }}>
-                  <span style={{ opacity: 0.3, display: 'flex' }}>{IC[m.key]}</span>
-                  {m.label}
-                </span>
-              );
-            }
-
-            return (
-              <Link key={m.key} to={m.key === "auditoria" && !isAdmin ? PATH_DATOS_FISCALES : m.path} style={{
-                display: 'flex', alignItems: 'center', gap: 5,
-                padding: '5px 12px',
-                borderRadius: 6,
-                border: active ? '1px solid rgba(123,156,204,0.4)' : '1px solid rgba(255,255,255,0.08)',
-                background: active ? 'rgba(123,156,204,0.15)' : 'rgba(255,255,255,0.04)',
-                color: active ? '#8fafd4' : '#c8cdd8',
-                fontSize: 13,
-                cursor: 'pointer',
-                boxShadow: active
-                  ? '0 1px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(123,156,204,0.15)'
-                  : '0 1px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
-                transition: 'all 0.15s ease',
-                textDecoration: 'none',
-                whiteSpace: 'nowrap', flexShrink: 0,
-              }}
-              onMouseEnter={e => {
-                if (!active) {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.background = 'rgba(255,255,255,0.08)';
-                  el.style.color = '#e8ecf0';
-                }
-              }}
-              onMouseLeave={e => {
-                if (!active) {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.background = 'rgba(255,255,255,0.04)';
-                  el.style.color = '#c8cdd8';
-                }
-              }}
+        {/* Nav: lo que no cabe va al menú «Más» (se mide el ancho real de cada módulo, ver navOverflow.ts) */}
+        <nav aria-label="Módulos" style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0, height: '100%', gap: SEPARACION_NAV, padding: '0 4px', position: 'relative' }} ref={navRef}>
+          {reparto.visibles.map(i => itemNav(visibleNav[i], false))}
+          {reparto.enMas.length > 0 && (
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <button
+                ref={masBtnRef}
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded={masAbierto}
+                aria-controls="nav-mas-menu"
+                title="Más módulos (Alt+M)"
+                onClick={() => setMasAbierto(v => !v)}
+                onKeyDown={e => {
+                  if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirMas(); }
+                }}
+                style={{ ...estiloItem(masActivo), cursor: 'pointer', font: 'inherit', fontSize: 13 }}
               >
-                <span style={{ opacity: active ? 0.9 : 0.55, display: 'flex' }}>{IC[m.key]}</span>
-                {m.label}
-              </Link>
-            );
-          })}
+                Más
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d={masAbierto ? 'M18 15l-6-6-6 6' : 'M6 9l6 6 6-6'}/></svg>
+              </button>
+              {masAbierto && (
+                <div
+                  id="nav-mas-menu"
+                  ref={masMenuRef}
+                  role="menu"
+                  aria-label="Más módulos"
+                  onKeyDown={teclaMenuMas}
+                  style={{
+                    position: 'absolute', top: 'calc(100% + 2px)', left: 0, minWidth: 190, zIndex: 1000,
+                    background: '#1a1f2e', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 8,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.5)', padding: 4, display: 'flex', flexDirection: 'column', gap: 2,
+                  }}
+                >
+                  {reparto.enMas.map(i => itemNav(visibleNav[i], true))}
+                </div>
+              )}
+            </div>
+          )}
+          {/* Medidor invisible: ancho natural de cada módulo y del botón «Más» */}
+          <div ref={medidorRef} aria-hidden="true" style={{ position: 'absolute', left: 0, top: 0, visibility: 'hidden', pointerEvents: 'none', height: 0, overflow: 'hidden', display: 'flex', gap: SEPARACION_NAV, width: 'max-content' }}>
+            {visibleNav.map(m => (
+              <span key={m.key} style={estiloItem(false)}>
+                <span style={{ display: 'flex' }}>{IC[m.key]}</span>{m.label}
+              </span>
+            ))}
+            <span style={estiloItem(false)}>Más<svg width="9" height="9" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>
+          </div>
         </nav>
 
         {/* Right section */}
