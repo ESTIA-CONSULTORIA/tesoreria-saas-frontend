@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
+import { limpiarSesionNip, marcarSesionNip } from "../../core/api/sesionNip";
 import { useLoginConfigStore } from "../../core/store/useLoginConfigStore";
 import { useBrandingStore } from "../../core/store/useBrandingStore";
 
@@ -158,6 +159,7 @@ export default function LoginPage() {
       setLoading(true);
       setError("");
 
+      limpiarSesionNip(); // entrar por correo anula cualquier sesión NIP anterior de este equipo
       const response = await api.post("/auth/login", {
         email,
         password,
@@ -226,6 +228,7 @@ export default function LoginPage() {
 
       const modulosActivos = response.data.modulosActivos || [];
       const user = response.data.user || {};
+      marcarSesionNip(); // el POS completo necesita x-session-scope: pos-lite (ver core/api/sesionNip.ts)
 
       login({
         id: user.id || "1",

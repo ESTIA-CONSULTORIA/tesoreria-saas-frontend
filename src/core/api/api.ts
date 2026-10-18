@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useAuthStore } from "../store/useAuthStore";
+import { encabezadosSesionNip } from "./sesionNip";
 
 const baseURL = (import.meta.env.VITE_API_URL ||
   (window.location.hostname === 'localhost'
@@ -27,6 +28,11 @@ api.interceptors.request.use((config) => {
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  // Sesión por NIP de «Punto de Venta»: su identidad vive en la cookie pos_access_token y solo se lee con este ámbito.
+  for (const [k, v] of Object.entries(encabezadosSesionNip(config.headers as unknown as Record<string, unknown>))) {
+    config.headers[k] = v;
   }
 
   if (tenantId && tenantId !== '') {

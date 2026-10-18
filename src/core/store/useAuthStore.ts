@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { useCompanyStore } from "./useCompanyStore";
 import { api } from "../api/api";
+import { limpiarSesionNip } from "../api/sesionNip";
 
 interface User {
   id: string;
@@ -104,6 +105,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     // que el navegador procese el Set-Cookie de limpieza — confirmado con evidencia real
     // (repro aislado: sin await, las cookies sobrevivían al logout; con await, no).
     await api.post('/auth/logout').catch(() => {});
+    limpiarSesionNip();
 
     // access_token: ya no hay campo `token` en el store ni ningún flujo que lo escriba
     // (ver Pendiente 2) — este removeItem se deja como limpieza defensiva de un residuo de
@@ -135,6 +137,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   clearSession: () => {
+    limpiarSesionNip();
     localStorage.removeItem("access_token");
     localStorage.removeItem("tenant_id");
     localStorage.removeItem("user");
