@@ -1,0 +1,57 @@
+/* GENERADO desde src/core/theme/skins.ts — no editar a mano. Para regenerar: npm run skins:css */
+:root, [data-skin="estia"] {
+  --bg: 10 10 10;
+  --nav: 16 16 16;
+  --surface-1: 22 22 22;
+  --field: 27 27 27;
+  --surface-2: 34 34 34;
+  --surface-3: 45 45 45;
+  --surface-4: 58 58 58;
+  --border: 45 45 45;
+  --border-field: 115 115 115;
+  --text-1: 245 245 245;
+  --text-2: 189 189 189;
+  --text-3: 154 154 154;
+  --accent: 143 175 212;
+  --on-accent: 10 10 10;
+  --link: 189 189 189;
+  --btn: 45 45 45;
+  --btn-hover: 58 58 58;
+  --ok: 76 175 122;
+  --danger: 229 115 111;
+  --warn: 217 164 65;
+  --ok-solid: 59 122 87;
+  --danger-solid: 155 58 58;
+  --warn-solid: 138 106 58;
+  --ok-soft: 26 46 34;
+  --danger-soft: 46 26 26;
+  --focus: 189 189 189;
+}
+[data-skin="oscuro"] {
+  --bg: 15 17 23;
+  --nav: 18 21 28;
+  --surface-1: 23 26 34;
+  --field: 27 31 40;
+  --surface-2: 31 35 45;
+  --surface-3: 43 48 64;
+  --surface-4: 56 62 82;
+  --border: 43 48 64;
+  --border-field: 107 115 136;
+  --text-1: 230 232 238;
+  --text-2: 180 186 200;
+  --text-3: 141 149 166;
+  --accent: 110 168 254;
+  --on-accent: 15 17 23;
+  --link: 110 168 254;
+  --btn: 47 95 181;
+  --btn-hover: 42 86 168;
+  --ok: 63 185 80;
+  --danger: 248 113 113;
+  --warn: 251 191 36;
+  --ok-solid: 39 112 74;
+  --danger-solid: 176 58 58;
+  --warn-solid: 122 92 24;
+  --ok-soft: 20 40 28;
+  --danger-soft: 46 26 30;
+  --focus: 110 168 254;
+}

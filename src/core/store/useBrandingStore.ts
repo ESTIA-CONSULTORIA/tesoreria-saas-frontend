@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { api } from "../api/api";
+import { fijarSkinNegocio } from "../theme/aplicarSkin";
 import { esTasaIva, type TasaIva } from "../utils/iva";
 
 function lsGet(key: string, fallback = "") {
@@ -16,7 +17,7 @@ interface BrandingState {
   backgroundImage: string;
   splashBg: string;
   fontFamily: string;
-  theme: 'dark' | 'light';
+  theme: string; // skin del negocio: 'estia' | 'oscuro' (valores viejos 'dark'/'light' = ESTIA)
   companyDisplayName: string;
   // Auditoría de producto (GoodsHabits, Punto 1): política de stock insuficiente en POS,
   // vive en TenantSetting igual que el resto de estos campos — se reusa este store (ya se
@@ -43,7 +44,7 @@ const defaults = {
   backgroundImage: lsGet("system_bg"),
   splashBg: '#0f1117',
   fontFamily: 'Inter',
-  theme: 'dark' as const,
+  theme: 'estia' as string,
   companyDisplayName: '',
   stockPolicy: 'PERMITIR_NEGATIVO' as const,
   ivaTasaDefault: (esTasaIva(lsGet("iva_tasa_default")) ? lsGet("iva_tasa_default") : '16') as TasaIva,
@@ -80,6 +81,7 @@ export const useBrandingStore = create<BrandingState>((set) => ({
         lsSet("system_logo", logoUrl);
         lsSet("system_accent", accentColor);
         lsSet("system_bg", backgroundImage);
+        fijarSkinNegocio(theme);
         set({ systemName, logoUrl, accentColor, backgroundImage, splashBg, fontFamily, theme, companyDisplayName, stockPolicy, ivaTasaDefault, preciosIncluyenIva, membresiasOn, loaded: true });
       }
     } catch {

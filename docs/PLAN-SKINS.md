@@ -189,3 +189,12 @@ El acceso para cambiar la skin de **todo el negocio** es de ADMIN; el cambio per
 | S-05 | ¿El módulo ejecutivo entra en las skins o conserva su paleta propia? |
 | S-06 | ¿Se mantiene `customCSS` libre para el negocio o se restringe? |
 | S-07 | ¿Prioridad: salir primero con ESTIA + Oscuro + Claro (F1) o esperar a F3 para no ofrecer Claro a medias? |
+
+## 10. Estado de la implementación (rama `feat/skins-f0-f1`)
+
+Hecho: **F0** (`src/core/theme/skins.ts`, `contraste.ts`, `aplicarSkin.ts`; prueba `skins.spec.ts` que rompe el build si una paleta no cumple contraste; tokens en `tailwind.config.js`) y **F1** (`index.css` sobre variables, `skins.generated.css` generado con `npm run skins:css`, `data-skin` aplicado desde `index.html` sin parpadeo, skins **ESTIA** y **Oscuro**, selector en Apariencia: tema del negocio y «solo en este equipo»).
+- **Claro y Alto contraste no existen todavía** (decisión S-07): no están definidos ni se ofrecen. Los valores viejos del negocio (`dark`, `light`, vacío) y cualquier desconocido se ven como ESTIA.
+- Para el negocio se reutiliza `tenant_setting.theme` con los valores `estia` / `oscuro` (sin DDL). La preferencia **por usuario** (`uiPrefs`) no está: requiere el `ALTER` de la sección 4, que no se ejecutó.
+- ESTIA: los textos de estado (éxito, error, aviso) ahora pasan 4.5:1 (S-01) y el borde de los campos pasa 3:1; fondos, tarjetas y botones conservan los mismos grises.
+- Medido en Chrome a 1366×768 (caja: apertura de turno, terminal, cobro; Apariencia, Datos fiscales, Usuarios): sin desborde horizontal en ninguna de las dos skins.
+- Pendiente (F2/F3): los colores fijos en línea de las pantallas (2,158 hex y 2,105 `style`) siguen sin migrar; con dos skins oscuras no hay texto ilegible, pero p. ej. los botones de Retiro/Precorte conservan su color propio y varios elementos de la barra superior usan transparencias fijas.

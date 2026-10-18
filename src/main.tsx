@@ -4,6 +4,9 @@ import { BrowserRouter } from 'react-router-dom';
 
 import './index.css';
 import App from './App';
+import { aplicarSkin } from './core/theme/aplicarSkin';
+
+aplicarSkin();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

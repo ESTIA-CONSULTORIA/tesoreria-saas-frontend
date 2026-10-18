@@ -3,6 +3,8 @@ import MainLayout from '../../core/layout/MainLayout';
 import { api } from '../../core/api/api';
 import { useBrandingStore } from '../../core/store/useBrandingStore';
 import { SplashScreen } from '../../components/SplashScreen';
+import { SKINS, SKINS_VISIBLES, resolverSkin, type SkinId } from '../../core/theme/skins';
+import { fijarSkinDispositivo, fijarSkinNegocio, skinDispositivo } from '../../core/theme/aplicarSkin';
 
 const COLOR_PALETTE = [
   // Azules y grises
@@ -32,7 +34,7 @@ interface Form {
   logoUrl: string;
   accentColor: string;
   fontFamily: string;
-  theme: 'dark' | 'light';
+  theme: string; // skin del negocio: 'estia' | 'oscuro'
 }
 
 export default function AppearancePage() {
@@ -44,12 +46,13 @@ export default function AppearancePage() {
     logoUrl: store.logoUrl || '',
     accentColor: store.accentColor || '#8fafd4',
     fontFamily: store.fontFamily || 'Inter',
-    theme: store.theme || 'dark',
+    theme: resolverSkin(null, store.theme),
   });
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
   const [previewSplash, setPreviewSplash] = useState(false);
+  const [esteEquipo, setEsteEquipo] = useState<string>(() => skinDispositivo() ?? '');
   const logoFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -64,7 +67,7 @@ export default function AppearancePage() {
           logoUrl: res.data.logoUrl || '',
           accentColor: res.data.accentColor || '#8fafd4',
           fontFamily: res.data.fontFamily || 'Inter',
-          theme: res.data.theme || 'dark',
+          theme: resolverSkin(null, res.data.theme),
         });
       }
     } catch { /* ignore */ }
@@ -203,20 +206,30 @@ export default function AppearancePage() {
         {/* Tema */}
         <div style={s.section}>
           <div style={s.card}>
-            <label style={s.label}>Tema</label>
-            <div style={{ display: 'flex', gap: 10 }}>
-              {(['dark', 'light'] as const).map(t => (
-                <button key={t} onClick={() => setForm(f => ({ ...f, theme: t }))}
+            <label style={s.label} htmlFor="tema-negocio">Tema del negocio</label>
+            <div id="tema-negocio" role="radiogroup" aria-label="Tema del negocio" style={{ display: 'flex', gap: 10 }}>
+              {SKINS_VISIBLES.map(t => (
+                <button key={t} type="button" role="radio" aria-checked={form.theme === t} onClick={() => setForm(f => ({ ...f, theme: t }))}
                   style={{
                     flex: 1, padding: '10px 0', borderRadius: 8,
-                    border: form.theme === t ? `1px solid ${form.accentColor}` : '1px solid rgba(255,255,255,0.1)',
-                    background: form.theme === t ? `${form.accentColor}18` : 'transparent',
-                    color: form.theme === t ? form.accentColor : 'rgba(255,255,255,0.4)',
+                    border: form.theme === t ? "2px solid rgb(var(--focus))" : "1px solid rgb(var(--border-field))",
+                    background: form.theme === t ? "rgb(var(--surface-2))" : "transparent",
+                    color: form.theme === t ? "rgb(var(--text-1))" : "rgb(var(--text-2))",
                     fontSize: 13, cursor: 'pointer', fontWeight: form.theme === t ? 500 : 400,
                   }}>
-                  {t === 'dark' ? '🌙 Oscuro' : '☀️ Claro'}
+                  {SKINS[t].nombre} <span style={{ color: 'rgb(var(--text-3))', fontWeight: 400 }}>· {SKINS[t].descripcion}</span>
                 </button>
               ))}
+            </div>
+            <label style={{ ...s.label, marginTop: 16 }} htmlFor="tema-equipo">Solo en este equipo</label>
+            <select id="tema-equipo" value={esteEquipo}
+              onChange={(e) => { const v = e.target.value; setEsteEquipo(v); fijarSkinDispositivo(v ? (v as SkinId) : null); }}
+              style={s.input}>
+              <option value="">Igual que el negocio</option>
+              {SKINS_VISIBLES.map(t => <option key={t} value={t}>{SKINS[t].nombre}</option>)}
+            </select>
+            <div style={{ marginTop: 8, fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+              El tema del negocio se guarda con «Guardar». La elección de este equipo se aplica al instante y solo vale aquí (útil en una caja que debe verse siempre igual).
             </div>
           </div>
         </div>
