@@ -29,6 +29,9 @@ import EmployeeDocuments from "./pages/employee/EmployeeDocuments";
 import EmployeeProfile from "./pages/employee/EmployeeProfile";
 import EmployeeSignContract from "./pages/employee/EmployeeSignContract";
 import OnboardingWizard from "./components/OnboardingWizard";
+import SolicitudPage from "./pages/prueba/SolicitudPage";
+import ActivarPage from "./pages/prueba/ActivarPage";
+import PruebaWizard from "./pages/prueba/PruebaWizard";
 import PatientsPage from "./pages/patients/PatientsPage";
 import SolutionsCenter from "./pages/solutions/SolutionsCenter";
 
@@ -75,6 +78,8 @@ function DashboardRouter() {
 function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showWizard, setShowWizard] = useState(false);
+  // Negocio con plan PRUEBA (prueba pública): se le muestra la guía de inicio de la prueba, no el asistente de alta.
+  const [esPrueba, setEsPrueba] = useState(false);
   const [showSplash, setShowSplash] = useState(false);
   const [showOutroSplash, setShowOutroSplash] = useState(false);
   const user = useAuthStore((state) => state.user);
@@ -170,7 +175,8 @@ function App() {
       if (user.roleCode === 'SOPORTE') return;
       try {
         const res = await api.get(`/tenants/${tenantId}`);
-        if (res.data && res.data.isOnboarded === false) {
+        setEsPrueba(res.data?.plan === 'PRUEBA');
+        if (res.data && res.data.isOnboarded === false && res.data.plan !== 'PRUEBA') {
           const companiesRes = await api.get(`/companies`);
           const companies = companiesRes.data ?? [];
           if (companies.length === 0) {
@@ -247,8 +253,12 @@ function App() {
     {showWizard && (
       <OnboardingWizard onComplete={() => setShowWizard(false)} />
     )}
+    {esPrueba && user && tenantId && <PruebaWizard tenantId={tenantId} />}
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      {/* Prueba pública (PP2): apagada salvo que se compile con VITE_PRUEBA_PUBLICA_ACTIVA=true */}
+      <Route path="/prueba" element={<SolicitudPage />} />
+      <Route path="/prueba/activar" element={<ActivarPage />} />
       <Route path="/executive" element={<ExecutivePage />} />
       <Route path="/corte" element={<CorteCajaLite />} />
       <Route path="/cocina" element={<NotasCocinaLite />} />
