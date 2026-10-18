@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../../core/api/api';
 import {
-  PASOS_PRUEBA, alternarPaso, cargarProgreso, guardarProgreso, marcarGuiaVista, moverSeleccion, pasoActual, pasosHechos, yaVioLaGuia, type Progreso,
+  PASOS_PRUEBA, alternarPaso, borrarNipSesion, cargarProgreso, detallePaso, esEstadoPrueba, etiquetaDias, guardarProgreso, leerNipSesion, marcarGuiaVista, moverSeleccion, pasoActual,
+  pasosHechos, textoDias, yaVioLaGuia, type EstadoPrueba, type NipSocio, type Progreso,
 } from './pruebaLogic';
 
 const almacen = (): Storage | null => { try { return localStorage; } catch { return null; } };
+const sesion = (): Storage | null => { try { return sessionStorage; } catch { return null; } };
 
 // Guía de inicio de la prueba: se abre sola la primera vez que entra el ADMIN de un negocio con plan PRUEBA y se puede reabrir con
 // Alt+G o con el botón. Teclado: ↑/↓ mueven, Enter va al paso, Espacio lo marca como hecho, 1–5 saltan, Esc cierra.
@@ -15,10 +18,25 @@ export default function PruebaWizard({ tenantId }: { tenantId: string }) {
   const [progreso, setProgreso] = useState<Progreso>(() => cargarProgreso(almacen(), tenantId));
   const [sel, setSel] = useState(() => pasoActual(cargarProgreso(almacen(), tenantId)));
   const dialogo = useRef<HTMLDivElement>(null);
+  const [estadoPrueba, setEstadoPrueba] = useState<EstadoPrueba | null>(null);
+  const [nip, setNip] = useState<NipSocio | null>(() => leerNipSesion(sesion()));
+
+  // Días restantes (GET /prueba/estado: solo la prueba del negocio de esta sesión). Si falla o no es una prueba, la guía funciona igual sin ese dato.
+  useEffect(() => {
+    let vivo = true;
+    api.get('/prueba/estado').then((r) => { if (vivo && esEstadoPrueba(r.data)) setEstadoPrueba(r.data); }).catch(() => undefined);
+    return () => { vivo = false; };
+  }, [tenantId]);
 
   const cerrar = useCallback(() => { setAbierto(false); marcarGuiaVista(almacen(), tenantId); }, [tenantId]);
   const alternar = useCallback((id: string) => {
-    setProgreso((p) => { const n = alternarPaso(p, id); guardarProgreso(almacen(), tenantId, n); return n; });
+    setProgreso((p) => {
+      const n = alternarPaso(p, id);
+      guardarProgreso(almacen(), tenantId, n);
+      // Hecho el check-in, el NIP ya no hace falta en pantalla: se borra de la pestaña.
+      if (id === 'checkin' && n[id]) { borrarNipSesion(sesion()); setNip(null); }
+      return n;
+    });
   }, [tenantId]);
 
   const ir = useCallback((i: number) => {
@@ -49,7 +67,7 @@ export default function PruebaWizard({ tenantId }: { tenantId: string }) {
     return (
       <button type="button" onClick={() => setAbierto(true)} title="Guía de la prueba (Alt+G)"
         className="fixed bottom-4 right-4 z-40 h-9 px-3 rounded-full text-xs font-semibold border border-line-field bg-surface-2 text-content-1 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--focus))]">
-        Guía de la prueba · {hechos}/{PASOS_PRUEBA.length}
+        Guía de la prueba · {hechos}/{PASOS_PRUEBA.length}{estadoPrueba ? ` · ${etiquetaDias(estadoPrueba)}` : ''}
       </button>
     );
   }
@@ -61,6 +79,7 @@ export default function PruebaWizard({ tenantId }: { tenantId: string }) {
         <div className="px-6 pt-5 pb-3 border-b border-line">
           <h2 id="guia-titulo" className="text-lg font-semibold">Bienvenido a tu prueba de ESTIA</h2>
           <p className="text-sm text-content-2 mt-0.5">5 pasos para ver el sistema funcionando con los datos de ejemplo. Llevas {hechos} de {PASOS_PRUEBA.length}.</p>
+          {estadoPrueba && <p className="text-sm mt-1" role="status" style={{ color: estadoPrueba.vencida || estadoPrueba.diasRestantes <= 3 ? 'rgb(var(--warn))' : 'rgb(var(--text-2))' }}>{textoDias(estadoPrueba)}</p>}
           <div className="mt-2 h-1.5 rounded-full bg-surface-3" role="progressbar" aria-valuemin={0} aria-valuemax={PASOS_PRUEBA.length} aria-valuenow={hechos}>
             <div className="h-full rounded-full bg-accent" style={{ width: `${(hechos / PASOS_PRUEBA.length) * 100}%` }} />
           </div>
@@ -77,7 +96,7 @@ export default function PruebaWizard({ tenantId }: { tenantId: string }) {
                   style={{ background: hecho ? 'rgb(var(--ok-solid))' : 'transparent' }}>{hecho ? '✓' : i + 1}</span>
                 <span className="min-w-0">
                   <span className="block text-sm font-semibold">{p.titulo}{hecho && <span className="sr-only"> (hecho)</span>}</span>
-                  <span className="block text-xs text-content-2">{p.detalle}</span>
+                  <span className="block text-xs text-content-2">{detallePaso(p, nip)}</span>
                 </span>
               </li>
             );

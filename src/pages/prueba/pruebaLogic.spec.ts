@@ -96,7 +96,7 @@ describe('guía de inicio', () => {
   it('5 pasos con las cifras de la plantilla del gimnasio', () => {
     expect(PASOS_PRUEBA.map((p) => p.id)).toEqual(['turno', 'barra', 'membresia', 'checkin', 'corte']);
     const texto = PASOS_PRUEBA.map((p) => p.detalle).join(' ');
-    for (const cifra of ['$46.40', '$580.00', '4321']) expect(texto).toContain(cifra);
+    for (const cifra of ['$46.40', '$580.00']) expect(texto).toContain(cifra);
     expect(PASOS_PRUEBA.every((p) => p.ruta.startsWith('/'))).toBe(true);
   });
   it('progreso: alternar, contar, paso actual y persistir por tenant', () => {
@@ -138,5 +138,73 @@ describe('guía de inicio', () => {
     expect(moverSeleccion(0, -1)).toBe(0);
     expect(moverSeleccion(4, 1)).toBe(4);
     expect(moverSeleccion(1, 1)).toBe(2);
+  });
+});
+
+import { CLAVE_NIP_SOCIO, borrarNipSesion, detallePaso, esEstadoPrueba, esNipValido, etiquetaDias, guardarNipSesion, leerNipSesion, textoDias, type EstadoPrueba } from './pruebaLogic';
+
+const almacen2 = () => {
+  const m = new Map<string, string>();
+  return { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v), removeItem: (k: string) => void m.delete(k), _m: m };
+};
+
+describe('NIP del socio de ejemplo (aleatorio, mostrado una vez)', () => {
+  it('ninguna guía trae un NIP fijo: el paso de check-in no contiene dígitos de NIP sin el dato del servidor', () => {
+    const checkin = PASOS_PRUEBA.find((p) => p.id === 'checkin')!;
+    expect(PASOS_PRUEBA.map((p) => p.detalle).join(' ')).not.toContain('4321');
+    expect(detallePaso(checkin, null)).not.toMatch(/\b\d{4}\b/);
+    expect(detallePaso(checkin, null)).toMatch(/viste al activar/);
+  });
+  it('con el NIP conocido, el paso de check-in lo muestra junto con el n.º de socio; los demás pasos no cambian', () => {
+    const checkin = PASOS_PRUEBA.find((p) => p.id === 'checkin')!;
+    expect(detallePaso(checkin, { numero: '1', nip: '7391' })).toBe('En Check-in escribe el n.º de socio 1 o su NIP 7391: debe salir en verde.');
+    for (const p of PASOS_PRUEBA.filter((x) => x.id !== 'checkin')) expect(detallePaso(p, { numero: '1', nip: '7391' })).toBe(p.detalle);
+  });
+  it('solo se acepta un NIP de 4 dígitos', () => {
+    for (const ok of ['0007', '7391']) expect(esNipValido(ok)).toBe(true);
+    for (const mal of ['123', '12345', 'abcd', '12 4', 7391, null, undefined]) expect(esNipValido(mal)).toBe(false);
+    const a = almacen2();
+    guardarNipSesion(a, { numero: '1', nip: 'xx' });
+    expect(a._m.size).toBe(0);
+  });
+  it('se guarda solo en el almacén de sesión que se le pase, se lee y se borra', () => {
+    const a = almacen2();
+    guardarNipSesion(a, { numero: '1', nip: '7391' });
+    expect(a.getItem(CLAVE_NIP_SOCIO)).toContain('7391');
+    expect(leerNipSesion(a)).toEqual({ numero: '1', nip: '7391' });
+    borrarNipSesion(a);
+    expect(leerNipSesion(a)).toBeNull();
+  });
+  it('datos corruptos o un almacén roto no rompen nada', () => {
+    const a = almacen2();
+    a.setItem(CLAVE_NIP_SOCIO, '{roto');
+    expect(leerNipSesion(a)).toBeNull();
+    a.setItem(CLAVE_NIP_SOCIO, JSON.stringify({ numero: '1', nip: 'no' }));
+    expect(leerNipSesion(a)).toBeNull();
+    const roto = { getItem: () => { throw new Error('x'); }, setItem: () => { throw new Error('x'); }, removeItem: () => { throw new Error('x'); } };
+    expect(() => guardarNipSesion(roto, { nip: '7391' })).not.toThrow();
+    expect(leerNipSesion(roto)).toBeNull();
+    expect(() => borrarNipSesion(roto)).not.toThrow();
+    expect(leerNipSesion(null)).toBeNull();
+  });
+});
+
+describe('estado de la prueba (días restantes)', () => {
+  const e = (o: Partial<EstadoPrueba> = {}): EstadoPrueba => ({ esPrueba: true, estado: 'ACTIVA', venceEn: '2026-11-01T12:00:00.000Z', diasRestantes: 14, vencida: false, extendida: false, ...o });
+  it('reconoce la forma del servidor y rechaza lo demás', () => {
+    expect(esEstadoPrueba(e())).toBe(true);
+    for (const mal of [null, {}, { esPrueba: false }, { ...e(), diasRestantes: '14' }, { ...e(), venceEn: 5 }, { ...e(), vencida: undefined }]) expect(esEstadoPrueba(mal)).toBe(false);
+  });
+  it('textos: varios días, último día, vencida y sin dato', () => {
+    expect(textoDias(e())).toBe('Te quedan 14 días de prueba (hasta el 1 de noviembre de 2026).');
+    expect(textoDias(e({ diasRestantes: 1 }))).toMatch(/^Último día de tu prueba/);
+    expect(textoDias(e({ diasRestantes: 0, vencida: true }))).toMatch(/^Tu prueba terminó el 1 de noviembre de 2026/);
+    expect(textoDias(null)).toBe('');
+  });
+  it('etiqueta corta del botón', () => {
+    expect(etiquetaDias(e())).toBe('14 d');
+    expect(etiquetaDias(e({ diasRestantes: 1 }))).toBe('último día');
+    expect(etiquetaDias(e({ vencida: true, diasRestantes: 0 }))).toBe('terminó');
+    expect(etiquetaDias(null)).toBe('');
   });
 });
