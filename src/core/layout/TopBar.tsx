@@ -510,7 +510,7 @@ export default function TopBar() {
                 onKeyDown={e => {
                   if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirMas(); }
                 }}
-                style={{ ...estiloItem(masActivo), cursor: 'pointer', font: 'inherit', fontSize: 13 }}
+                style={{ ...estiloItem(masActivo), cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 Más
                 <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d={masAbierto ? 'M18 15l-6-6-6 6' : 'M6 9l6 6 6-6'}/></svg>
