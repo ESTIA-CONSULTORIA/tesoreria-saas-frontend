@@ -65,8 +65,7 @@ function Formulario() {
     <PruebaLayout>
       <div className="h-full grid grid-cols-[minmax(0,540px)_minmax(0,1fr)] gap-8 max-w-[1180px] mx-auto">
         <section aria-labelledby="titulo-prueba" className="min-h-0">
-          <h1 id="titulo-prueba" className="text-xl font-semibold leading-tight">Prueba ESTIA gratis por {DIAS_PRUEBA} días</h1>
-          <p className="text-sm text-content-2 mt-1 mb-3">Un negocio de gimnasio de ejemplo, solo tuyo. Sin tarjeta.</p>
+          <h1 id="titulo-prueba" className="text-xl font-semibold leading-tight mb-3">Prueba ESTIA gratis por {DIAS_PRUEBA} días</h1>
 
           {listo ? (
             <div role="status" className="rounded-xl border border-line bg-surface-1 p-5">
@@ -128,7 +127,6 @@ function Formulario() {
 
               <div className="mt-3 flex items-center gap-3">
                 <button type="submit" className={cls.primario} disabled={enviando}>{enviando ? 'Enviando…' : 'Pedir mi prueba'}</button>
-                <span className="text-xs text-content-3">Tab: moverte · Espacio: casilla · Enter: enviar</span>
               </div>
             </form>
           )}

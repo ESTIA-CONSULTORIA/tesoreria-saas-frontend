@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
+import { DIAS_PRUEBA, INCLUYE,
   GIROS_FORM, LIMITES, PASOS_PRUEBA, alternarPaso, cargarProgreso, cuerpoSolicitud, guardarProgreso, leerConfigPrueba, leerTokenDeHash, marcarGuiaVista,
   mensajeDeError, moverSeleccion, pasoActual, pasosHechos, primerCampoConError, validarActivacion, validarPassword, validarSolicitud, yaVioLaGuia, type SolicitudForm,
 } from './pruebaLogic';
@@ -206,5 +206,12 @@ describe('estado de la prueba (días restantes)', () => {
     expect(etiquetaDias(e({ diasRestantes: 1 }))).toBe('último día');
     expect(etiquetaDias(e({ vencida: true, diasRestantes: 0 }))).toBe('terminó');
     expect(etiquetaDias(null)).toBe('');
+  });
+});
+
+describe('duración de la prueba (un solo lugar)', () => {
+  it('son 30 días y los textos salen de la constante, sin un número fijo', () => {
+    expect(DIAS_PRUEBA).toBe(30);
+    expect(INCLUYE[0]).toBe(`${DIAS_PRUEBA} días con tu propio negocio de prueba`);
   });
 });
