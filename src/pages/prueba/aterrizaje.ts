@@ -1,6 +1,6 @@
 // Contenido y lógica pura de la página de aterrizaje de /prueba (sin React): textos, bloques, pasos, aviso de «Próximamente» y qué NO incluye
 // la prueba según el giro. Se prueba con vitest; la página solo lo dibuja.
-import { DIAS_PRUEBA, GIROS_FORM, LIMITES, esCorreoValido, normalizarCorreo } from './pruebaLogic';
+import { DIAS_PRUEBA, GIROS_FORM, LIMITES } from './pruebaLogic';
 
 /** Correo de contacto público (el mismo que aparece en estiaconsultoria.com). */
 export const CORREO_CONTACTO = 'contacto@estiaconsultoria.com';
@@ -38,43 +38,23 @@ export const PASOS_COMO_FUNCIONA = [
 export const TEXTO_PRUEBA_GRATIS = `Prueba ESTIA ${DIAS_PRUEBA} días sin tarjeta.`;
 
 // ── qué NO incluye, por giro ──
+export interface LimiteGiro { id: string; titulo: string; detalle: string }
+
+const CFDI_Y_TARJETA: readonly LimiteGiro[] = LIMITES.filter((l) => l.id !== 'reservas');
+
 /**
- * Lo que la prueba no tiene. CFDI y tarjeta aplican a toda prueba; «Sin reservas» (canchas en Playtomic) es del gimnasio.
- * Los giros sin plantilla muestran solo lo común: no se promete ni se descarta nada de lo que todavía no existe.
+ * Lo que la prueba no tiene, por giro. CFDI y tarjeta aplican a toda prueba; el resto sale de lo que el plan PRUEBA realmente no incluye
+ * (módulos fuera del plan: Costos, Compras y Proveedores, Tesorería, Nómina) o de cómo funciona el giro («Sin reservas»: las canchas se reservan en Playtomic).
  */
-export function limitesDeGiro(giro: string): readonly (typeof LIMITES)[number][] {
-  if (giro === 'gimnasio') return LIMITES;
-  return LIMITES.filter((l) => l.id !== 'reservas');
+export const LIMITES_POR_GIRO: Record<string, readonly LimiteGiro[]> = {
+  gimnasio: LIMITES,
+  restaurante: [...CFDI_Y_TARJETA, { id: 'costeo', titulo: 'Sin costeo de recetas', detalle: 'La prueba no incluye el módulo de Costos: no hay insumos ni recetas. Las mesas y la cocina sí.' }],
+  retail: [...CFDI_Y_TARJETA, { id: 'compras', titulo: 'Sin compras a proveedores', detalle: 'La prueba no incluye Compras ni Proveedores. La caja y los reportes sí.' }],
+  generico: [...CFDI_Y_TARJETA, { id: 'modulos', titulo: 'Sin tesorería ni nómina', detalle: 'La prueba incluye caja, usuarios y reportes; tesorería, bancos y nómina no.' }],
+};
+
+export function limitesDeGiro(giro: string): readonly LimiteGiro[] {
+  return LIMITES_POR_GIRO[giro] ?? LIMITES_POR_GIRO.generico;
 }
 
-// ── giros: tarjetas y «Próximamente» ──
-export const giroDisponible = (giro: string): boolean => GIROS_FORM.some((g) => g.valor === giro && g.disponible);
 export const etiquetaGiro = (giro: string): string => GIROS_FORM.find((g) => g.valor === giro)?.etiqueta ?? giro;
-
-export interface AvisoForm { correo: string; giro: string; aceptaAviso: boolean; captcha: string }
-export type CampoAviso = 'giro' | 'correo' | 'aceptaAviso' | 'captcha';
-export const ORDEN_CAMPOS_AVISO: CampoAviso[] = ['giro', 'correo', 'aceptaAviso', 'captcha'];
-
-/** Solo giros sin plantilla pueden pedir aviso (el gimnasio pide la prueba, no el aviso). */
-export function validarAviso(f: AvisoForm): Partial<Record<CampoAviso, string>> {
-  const e: Partial<Record<CampoAviso, string>> = {};
-  const g = GIROS_FORM.find((x) => x.valor === f.giro);
-  if (!g || g.disponible) e.giro = 'Elige un giro para avisarte.';
-  if (!f.correo.trim()) e.correo = 'Escribe tu correo.';
-  else if (!esCorreoValido(normalizarCorreo(f.correo))) e.correo = 'Escribe un correo válido (nombre@dominio.com).';
-  if (!f.aceptaAviso) e.aceptaAviso = 'Debes aceptar el aviso de privacidad para continuar.';
-  if (!f.captcha) e.captcha = 'Confirma que eres una persona.';
-  return e;
-}
-
-/** Cuerpo exacto que espera POST /prueba/avisame. */
-export const cuerpoAviso = (f: AvisoForm) => ({
-  correo: normalizarCorreo(f.correo),
-  giro: f.giro,
-  captcha: f.captcha,
-  aceptaAviso: f.aceptaAviso === true,
-});
-
-export const primerCampoAviso = (e: Partial<Record<CampoAviso, string>>): CampoAviso | null => ORDEN_CAMPOS_AVISO.find((c) => e[c]) ?? null;
-
-export const MENSAJE_AVISO_OK = (giro: string): string => `Listo: te avisaremos por correo cuando la prueba para «${etiquetaGiro(giro)}» esté disponible.`;

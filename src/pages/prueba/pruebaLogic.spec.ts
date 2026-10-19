@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DIAS_PRUEBA, INCLUYE,
-  GIROS_FORM, LIMITES, PASOS_PRUEBA, alternarPaso, cargarProgreso, cuerpoSolicitud, guardarProgreso, leerConfigPrueba, leerTokenDeHash, marcarGuiaVista,
+  GIROS_FORM, GIROS_OTROS, GIROS_TARJETA, LIMITES, alternarPaso, cargarProgreso, cuerpoSolicitud, guardarProgreso, leerConfigPrueba, leerTokenDeHash, marcarGuiaVista,
   mensajeDeError, moverSeleccion, pasoActual, pasosHechos, primerCampoConError, validarActivacion, validarPassword, validarSolicitud, yaVioLaGuia, type SolicitudForm,
 } from './pruebaLogic';
 
@@ -39,13 +39,16 @@ describe('solicitud', () => {
     expect(cuerpoSolicitud(buena)).toEqual({ correo: 'ana@gym.mx', nombre: 'Ana', negocio: 'Gym Ana', giro: 'gimnasio', captcha: 'tok', aceptaAviso: true });
   });
   it('cada campo obligatorio, la casilla del aviso y el captcha', () => {
-    const e = validarSolicitud({ nombre: '', correo: 'no', negocio: '', giro: 'restaurante', aceptaAviso: false, captcha: '' });
+    const e = validarSolicitud({ nombre: '', correo: 'no', negocio: '', giro: 'medico_dental', aceptaAviso: false, captcha: '' });
     expect(Object.keys(e)).toEqual(['nombre', 'correo', 'negocio', 'giro', 'aceptaAviso', 'captcha']);
     expect(e.aceptaAviso).toMatch(/aviso de privacidad/);
   });
-  it('solo gimnasio está disponible', () => {
-    expect(GIROS_FORM.filter((g) => g.disponible).map((g) => g.valor)).toEqual(['gimnasio']);
-    expect(validarSolicitud({ ...buena, giro: 'retail' }).giro).toBeDefined();
+  it('giros: tres tarjetas + la lista de «Otro giro»; los médicos y los inventados no pasan', () => {
+    expect(GIROS_TARJETA.map((g) => g.valor)).toEqual(['gimnasio', 'restaurante', 'retail']);
+    expect(GIROS_OTROS.map((g) => g.valor)).toEqual(['generico']);
+    expect(GIROS_FORM.map((g) => g.valor)).toEqual(['gimnasio', 'restaurante', 'retail', 'generico']);
+    for (const g of GIROS_FORM) expect(validarSolicitud({ ...buena, giro: g.valor }).giro).toBeUndefined();
+    for (const g of ['medico_dental', 'medico_general', 'inventado', '', '__otro']) expect(validarSolicitud({ ...buena, giro: g }).giro).toBeDefined();
   });
   it('el foco va al primer campo con error, en orden visual', () => {
     expect(primerCampoConError(validarSolicitud({ ...buena, negocio: '', captcha: '' }))).toBe('negocio');
@@ -92,31 +95,27 @@ describe('mensajes de error', () => {
   });
 });
 
-describe('guía de inicio', () => {
-  it('5 pasos con las cifras de la plantilla del gimnasio', () => {
-    expect(PASOS_PRUEBA.map((p) => p.id)).toEqual(['turno', 'barra', 'membresia', 'checkin', 'corte']);
-    const texto = PASOS_PRUEBA.map((p) => p.detalle).join(' ');
-    for (const cifra of ['$46.40', '$580.00']) expect(texto).toContain(cifra);
-    expect(PASOS_PRUEBA.every((p) => p.ruta.startsWith('/'))).toBe(true);
-  });
+describe('guía de inicio: avance guardado', () => {
+  const pasos = [{ id: 'categoria' }, { id: 'productos' }, { id: 'turno' }, { id: 'venta' }];
   it('progreso: alternar, contar, paso actual y persistir por tenant', () => {
     const a = almacen();
     let p = cargarProgreso(a, 't1');
     expect(p).toEqual({});
-    expect(pasoActual(p)).toBe(0);
-    p = alternarPaso(alternarPaso(p, 'turno'), 'barra');
-    expect(pasosHechos(p)).toBe(2);
-    expect(pasoActual(p)).toBe(2);
+    expect(pasoActual(p, pasos)).toBe(0);
+    p = alternarPaso(alternarPaso(p, 'categoria'), 'productos');
+    expect(pasosHechos(p, pasos)).toBe(2);
+    expect(pasoActual(p, pasos)).toBe(2);
     guardarProgreso(a, 't1', p);
-    expect(cargarProgreso(a, 't1')).toEqual({ turno: true, barra: true });
+    expect(cargarProgreso(a, 't1')).toEqual({ categoria: true, productos: true });
     expect(cargarProgreso(a, 't2')).toEqual({}); // otro negocio, otro avance
-    expect(alternarPaso(p, 'turno')).toEqual({ barra: true }); // desmarcar
+    expect(alternarPaso(p, 'categoria')).toEqual({ productos: true }); // desmarcar
   });
-  it('todo hecho: el paso actual es el último; ignora ids desconocidos y JSON roto', () => {
-    const todo = Object.fromEntries(PASOS_PRUEBA.map((x) => [x.id, true]));
-    expect(pasoActual(todo)).toBe(PASOS_PRUEBA.length - 1);
+  it('todo hecho: el paso actual es el último; ignora claves raras y JSON roto', () => {
+    const todo = Object.fromEntries(pasos.map((x) => [x.id, true]));
+    expect(pasoActual(todo, pasos)).toBe(pasos.length - 1);
+    expect(pasoActual({}, [])).toBe(0);
     const a = almacen();
-    a.setItem('prueba_guia_t', '{"turno":true,"inventado":true}');
+    a.setItem('prueba_guia_t', '{"turno":true,"X-raro":true,"__proto__x":true,"venta":"si"}');
     expect(cargarProgreso(a, 't')).toEqual({ turno: true });
     a.setItem('prueba_guia_t', '{roto');
     expect(cargarProgreso(a, 't')).toEqual({});
@@ -134,14 +133,15 @@ describe('guía de inicio', () => {
     expect(cargarProgreso(roto, 't')).toEqual({});
     expect(() => guardarProgreso(roto, 't', {})).not.toThrow();
   });
-  it('flechas: la selección no se sale de la lista', () => {
-    expect(moverSeleccion(0, -1)).toBe(0);
-    expect(moverSeleccion(4, 1)).toBe(4);
-    expect(moverSeleccion(1, 1)).toBe(2);
+  it('las flechas no se salen de la lista', () => {
+    expect(moverSeleccion(0, -1, 5)).toBe(0);
+    expect(moverSeleccion(4, 1, 5)).toBe(4);
+    expect(moverSeleccion(1, 1, 5)).toBe(2);
+    expect(moverSeleccion(1, 1, 9)).toBe(2);
   });
 });
 
-import { CLAVE_NIP_SOCIO, borrarNipSesion, detallePaso, esEstadoPrueba, esNipValido, etiquetaDias, guardarNipSesion, leerNipSesion, textoDias, type EstadoPrueba } from './pruebaLogic';
+import { CLAVE_NIP_SOCIO, borrarNipSesion, esEstadoPrueba, esNipValido, etiquetaDias, guardarNipSesion, leerNipSesion, textoDias, type EstadoPrueba } from './pruebaLogic';
 
 const almacen2 = () => {
   const m = new Map<string, string>();
@@ -149,17 +149,6 @@ const almacen2 = () => {
 };
 
 describe('NIP del socio de ejemplo (aleatorio, mostrado una vez)', () => {
-  it('ninguna guía trae un NIP fijo: el paso de check-in no contiene dígitos de NIP sin el dato del servidor', () => {
-    const checkin = PASOS_PRUEBA.find((p) => p.id === 'checkin')!;
-    expect(PASOS_PRUEBA.map((p) => p.detalle).join(' ')).not.toContain('4321');
-    expect(detallePaso(checkin, null)).not.toMatch(/\b\d{4}\b/);
-    expect(detallePaso(checkin, null)).toMatch(/viste al activar/);
-  });
-  it('con el NIP conocido, el paso de check-in lo muestra junto con el n.º de socio; los demás pasos no cambian', () => {
-    const checkin = PASOS_PRUEBA.find((p) => p.id === 'checkin')!;
-    expect(detallePaso(checkin, { numero: '1', nip: '7391' })).toBe('En Check-in escribe el n.º de socio 1 o su NIP 7391: debe salir en verde.');
-    for (const p of PASOS_PRUEBA.filter((x) => x.id !== 'checkin')) expect(detallePaso(p, { numero: '1', nip: '7391' })).toBe(p.detalle);
-  });
   it('solo se acepta un NIP de 4 dígitos', () => {
     for (const ok of ['0007', '7391']) expect(esNipValido(ok)).toBe(true);
     for (const mal of ['123', '12345', 'abcd', '12 4', 7391, null, undefined]) expect(esNipValido(mal)).toBe(false);
