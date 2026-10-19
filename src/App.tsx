@@ -80,6 +80,7 @@ function App() {
   const [showWizard, setShowWizard] = useState(false);
   // Negocio con plan PRUEBA (prueba pública): se le muestra la guía de inicio de la prueba, no el asistente de alta.
   const [esPrueba, setEsPrueba] = useState(false);
+  const [giroPrueba, setGiroPrueba] = useState<string | null>(null);
   const [showSplash, setShowSplash] = useState(false);
   const [showOutroSplash, setShowOutroSplash] = useState(false);
   const user = useAuthStore((state) => state.user);
@@ -176,6 +177,7 @@ function App() {
       try {
         const res = await api.get(`/tenants/${tenantId}`);
         setEsPrueba(res.data?.plan === 'PRUEBA');
+        setGiroPrueba(typeof res.data?.giro === 'string' ? res.data.giro : null);
         if (res.data && res.data.isOnboarded === false && res.data.plan !== 'PRUEBA') {
           const companiesRes = await api.get(`/companies`);
           const companies = companiesRes.data ?? [];
@@ -253,7 +255,7 @@ function App() {
     {showWizard && (
       <OnboardingWizard onComplete={() => setShowWizard(false)} />
     )}
-    {esPrueba && user && tenantId && <PruebaWizard tenantId={tenantId} />}
+    {esPrueba && user && tenantId && <PruebaWizard tenantId={tenantId} giro={giroPrueba} />}
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       {/* Prueba pública (PP2): apagada salvo que se compile con VITE_PRUEBA_PUBLICA_ACTIVA=true */}

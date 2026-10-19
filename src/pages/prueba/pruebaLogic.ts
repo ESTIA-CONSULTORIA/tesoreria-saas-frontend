@@ -42,13 +42,19 @@ export const INCLUYE = [
 /** La línea de valor bajo el título (sale de INCLUYE para que no haya dos redacciones). */
 export const LINEA_VALOR = `${INCLUYE[1]}. Sin tarjeta de crédito.`;
 
-/** Giros que se ofrecen en el selector. `disponible` = ya hay plantilla (se puede pedir la prueba); el resto es «Próximamente» (solo aviso por correo). */
-export const GIROS_FORM = [
-  { valor: 'gimnasio', etiqueta: 'Gimnasio / club deportivo', disponible: true },
-  { valor: 'restaurante', etiqueta: 'Restaurante', disponible: false },
-  { valor: 'retail', etiqueta: 'Tienda', disponible: false },
-  { valor: 'otro', etiqueta: 'Otro giro', disponible: false },
+/**
+ * Giros que se ofrecen en el formulario: los que tienen alta de punta a punta en el backend (giros-prueba.ts). Tres tarjetas propias y «Otro giro»,
+ * que despliega la lista de los demás giros de giros.config que sí funcionan (hoy solo el genérico). Los médicos se excluyen (ver el backend).
+ */
+export const GIROS_TARJETA = [
+  { valor: 'gimnasio', etiqueta: 'Gimnasio / club deportivo' },
+  { valor: 'restaurante', etiqueta: 'Restaurante' },
+  { valor: 'retail', etiqueta: 'Tienda' },
 ] as const;
+export const GIROS_OTROS = [{ valor: 'generico', etiqueta: 'Otro tipo de negocio (genérico)' }] as const;
+/** Valor de la tarjeta «Otro giro» (no es un giro: abre la lista). */
+export const TARJETA_OTRO = '__otro';
+export const GIROS_FORM = [...GIROS_TARJETA, ...GIROS_OTROS] as const;
 
 // ── solicitud ──
 export interface SolicitudForm {
@@ -75,8 +81,7 @@ export function validarSolicitud(f: SolicitudForm): Partial<Record<CampoSolicitu
   else if (!esCorreoValido(normalizarCorreo(f.correo))) e.correo = 'Escribe un correo válido (nombre@dominio.com).';
   if (!f.negocio.trim()) e.negocio = 'Escribe el nombre de tu negocio.';
   else if (f.negocio.trim().length > 120) e.negocio = 'Máximo 120 caracteres.';
-  const giro = GIROS_FORM.find((g) => g.valor === f.giro);
-  if (!giro || !giro.disponible) e.giro = 'Por ahora la prueba solo está disponible para gimnasio.';
+  if (!GIROS_FORM.some((g) => g.valor === f.giro)) e.giro = 'Elige el giro de tu negocio.';
   if (!f.aceptaAviso) e.aceptaAviso = 'Debes aceptar el aviso de privacidad para continuar.';
   if (!f.captcha) e.captcha = 'Confirma que eres una persona.';
   return e;
@@ -135,23 +140,7 @@ export function mensajeDeError(err: any): string {
 export const fechaLarga = (iso: string | Date): string =>
   new Date(iso).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
 
-// ── guía de inicio (wizard) ──
-export interface PasoPrueba {
-  id: string;
-  titulo: string;
-  detalle: string;
-  ruta: string;
-}
-
-// Las cifras salen de la plantilla del gimnasio del backend (plan $500 + IVA 16 % = $580; 2 aguas = $46.40). El NIP del socio de ejemplo
-// ya NO es fijo: lo genera el servidor al azar para cada prueba y se muestra una vez (ver NIP_SOCIO más abajo).
-export const PASOS_PRUEBA: readonly PasoPrueba[] = [
-  { id: 'turno', titulo: 'Abre tu turno', detalle: 'En POS abre el turno con un fondo de caja, por ejemplo $500.', ruta: '/pos' },
-  { id: 'barra', titulo: 'Vende una bebida', detalle: 'Agrega 2 aguas y cobra en efectivo: el total debe ser $46.40.', ruta: '/pos' },
-  { id: 'membresia', titulo: 'Cobra una membresía', detalle: 'En Membresías cobra el plan Mensual al socio de ejemplo: $580.00 con IVA.', ruta: '/membresias' },
-  { id: 'checkin', titulo: 'Registra una entrada', detalle: 'En Check-in escribe el n.º de socio 1 (o su NIP): debe salir en verde.', ruta: '/membresias' },
-  { id: 'corte', titulo: 'Haz el corte', detalle: 'Precorte y corte Z: la venta y la membresía aparecen en el total de caja.', ruta: '/pos' },
-] as const;
+// ── guía de inicio (wizard): los pasos por giro viven en guia.ts; aquí el avance guardado y el NIP ──
 
 // ── NIP del socio de ejemplo ──
 // El servidor lo devuelve UNA vez al activar y NO lo guarda en claro (en la base solo queda su HMAC). Para poder mostrarlo en la guía durante
@@ -173,14 +162,6 @@ export function leerNipSesion(a: AlmacenSesion | null): NipSocio | null {
 }
 export function borrarNipSesion(a: AlmacenSesion | null) {
   try { a?.removeItem(CLAVE_NIP_SOCIO); } catch { /* nada */ }
-}
-
-/** Texto de un paso; el de check-in incluye el NIP del socio de ejemplo solo si se conoce en esta pestaña. */
-export function detallePaso(p: PasoPrueba, nip: NipSocio | null): string {
-  if (p.id !== 'checkin') return p.detalle;
-  return nip
-    ? `En Check-in escribe el n.º de socio ${nip.numero} o su NIP ${nip.nip}: debe salir en verde.`
-    : 'En Check-in escribe el n.º de socio 1. Su NIP es el que viste al activar tu prueba (si lo olvidaste, cámbialo en Membresías → Socios).';
 }
 
 // ── estado de la prueba (GET /prueba/estado) ──
@@ -212,7 +193,7 @@ export function cargarProgreso(a: Almacen | null, tenantId: string): Progreso {
     const raw = a?.getItem(claveProgreso(tenantId));
     const j = raw ? JSON.parse(raw) : {};
     const out: Progreso = {};
-    for (const p of PASOS_PRUEBA) if (j && j[p.id] === true) out[p.id] = true;
+    if (j && typeof j === 'object') for (const k of Object.keys(j)) if (j[k] === true && /^[a-z][a-z_]{1,29}$/.test(k)) out[k] = true;
     return out;
   } catch {
     return {};
@@ -229,12 +210,12 @@ export const alternarPaso = (p: Progreso, id: string): Progreso => {
   return n;
 };
 
-export const pasosHechos = (p: Progreso): number => PASOS_PRUEBA.filter((x) => p[x.id]).length;
+export const pasosHechos = (p: Progreso, pasos: ReadonlyArray<{ id: string }>): number => pasos.filter((x) => p[x.id]).length;
 
 /** Índice del primer paso pendiente (o el último si todo está hecho). */
-export const pasoActual = (p: Progreso): number => {
-  const i = PASOS_PRUEBA.findIndex((x) => !p[x.id]);
-  return i === -1 ? PASOS_PRUEBA.length - 1 : i;
+export const pasoActual = (p: Progreso, pasos: ReadonlyArray<{ id: string }>): number => {
+  const i = pasos.findIndex((x) => !p[x.id]);
+  return i === -1 ? Math.max(0, pasos.length - 1) : i;
 };
 
 export function yaVioLaGuia(a: Almacen | null, tenantId: string): boolean {
@@ -245,4 +226,4 @@ export function marcarGuiaVista(a: Almacen | null, tenantId: string) {
 }
 
 /** Mueve la selección con las flechas, sin salirse de la lista. */
-export const moverSeleccion = (actual: number, delta: number, total = PASOS_PRUEBA.length): number => Math.max(0, Math.min(total - 1, actual + delta));
+export const moverSeleccion = (actual: number, delta: number, total: number): number => Math.max(0, Math.min(total - 1, actual + delta));
