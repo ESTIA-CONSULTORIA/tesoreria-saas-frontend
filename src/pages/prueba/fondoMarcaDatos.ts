@@ -46,3 +46,6 @@ export function estiloMarca(m: Marca): Record<string, string | number> {
 
 /** ¿La marca se sale por algún borde (su caja, sin contar el giro, cruza 0 o 100 %)? Solo para comprobar que algunas quedan recortadas. */
 export const estaRecortada = (m: Marca): boolean => m.x < 0 || m.x > 100 || m.y < 0 || m.y > 100;
+
+/** Fondo de la página de aterrizaje: UN solo isotipo grande y sutil, a la derecha, recortado por el borde. */
+export const MARCA_UNICA: readonly Marca[] = [{ tam: 'grande', x: 92, y: 34, giro: 12 }];
