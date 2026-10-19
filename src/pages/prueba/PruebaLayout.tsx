@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { leerConfigPrueba } from './pruebaLogic';
 import FondoMarca from './FondoMarca';
+import { MARCAS_FONDO, MARCA_UNICA } from './fondoMarcaDatos';
 import './prueba.css';
 
 // Configuración leída UNA vez al compilar. Sin las variables VITE_PRUEBA_* la prueba pública está apagada.
@@ -17,10 +18,11 @@ export const cls = {
 
 // Caja de la prueba pública: con espacio (≥1024×700) es una sola pantalla sin scroll de página; en móvil fluye con scroll normal. Funciona sin sesión.
 // Fondo de marca decorativo detrás (FondoMarca); el contenido va por encima (z-index 1) y nunca depende de él.
-export function PruebaLayout({ children }: { children: ReactNode }) {
+// `pagina`: página de aterrizaje con scroll normal y un solo isotipo de fondo; sin ella, la pantalla única de la activación (16 isotipos).
+export function PruebaLayout({ children, pagina = false }: { children: ReactNode; pagina?: boolean }) {
   return (
-    <div className="prueba-marca bg-bg text-content-1">
-      <FondoMarca />
+    <div className={`prueba-marca bg-bg text-content-1${pagina ? ' prueba-pagina' : ''}`}>
+      <FondoMarca marcas={pagina ? MARCA_UNICA : MARCAS_FONDO} />
       <header className="prueba-contenido h-14 shrink-0 flex items-center justify-between gap-3 px-4 sm:px-8 border-b border-line">
         <span className="flex items-center gap-2.5 text-sm font-semibold tracking-[0.2em]">
           <img src="/logo-estia-isotipo.png" alt="" aria-hidden="true" className="h-7 w-auto" />

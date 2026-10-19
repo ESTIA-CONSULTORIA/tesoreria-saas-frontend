@@ -42,10 +42,12 @@ export const INCLUYE = [
 /** La línea de valor bajo el título (sale de INCLUYE para que no haya dos redacciones). */
 export const LINEA_VALOR = `${INCLUYE[1]}. Sin tarjeta de crédito.`;
 
+/** Giros que se ofrecen en el selector. `disponible` = ya hay plantilla (se puede pedir la prueba); el resto es «Próximamente» (solo aviso por correo). */
 export const GIROS_FORM = [
   { valor: 'gimnasio', etiqueta: 'Gimnasio / club deportivo', disponible: true },
-  { valor: 'restaurante', etiqueta: 'Restaurante (próximamente)', disponible: false },
-  { valor: 'retail', etiqueta: 'Tienda (próximamente)', disponible: false },
+  { valor: 'restaurante', etiqueta: 'Restaurante', disponible: false },
+  { valor: 'retail', etiqueta: 'Tienda', disponible: false },
+  { valor: 'otro', etiqueta: 'Otro giro', disponible: false },
 ] as const;
 
 // ── solicitud ──
