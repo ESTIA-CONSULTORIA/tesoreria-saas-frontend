@@ -24,7 +24,8 @@ export function leerConfigPrueba(env: Record<string, string | undefined>): Confi
 }
 
 // ── lo que se le dice a la persona ──
-export const DIAS_PRUEBA = 14;
+/** Única fuente de la duración que se le dice a la persona (título, activación, guía). Debe coincidir con DIAS_PRUEBA del backend. */
+export const DIAS_PRUEBA = 30;
 
 export const LIMITES = [
   { id: 'cfdi', titulo: 'Sin CFDI timbrado', detalle: 'Los comprobantes son de prueba y no tienen validez fiscal.' },
