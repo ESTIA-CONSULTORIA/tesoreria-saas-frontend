@@ -1,4 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+/* Montserrat: solo la usan /prueba y /prueba/activar (src/pages/prueba/prueba.css). */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 /* Variables de las skins (ESTIA, Oscuro). Generado desde src/core/theme/skins.ts: npm run skins:css */
 @import './core/theme/skins.generated.css';
 
