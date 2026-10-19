@@ -74,7 +74,7 @@ function Activacion() {
 
   return (
     <PruebaLayout>
-      <div className="h-full flex items-start justify-center pt-6">
+      <div className="min-h-full flex items-start lg:items-center justify-center pt-2 lg:pt-0">
         <div className="w-full max-w-[560px]">
           {estado.tipo === 'sin-token' && (
             <Aviso titulo="Este enlace no está completo" texto="Abre el enlace del correo tal como llegó, o pide uno nuevo." />
@@ -82,8 +82,8 @@ function Activacion() {
           {estado.tipo === 'fallo' && <Aviso titulo="No pudimos activar tu prueba" texto={estado.mensaje} />}
 
           {estado.tipo === 'formulario' && (
-            <form onSubmit={activar} noValidate className="rounded-xl border border-line bg-surface-1 p-6">
-              <h1 className="text-xl font-semibold">Elige tu contraseña</h1>
+            <form onSubmit={activar} noValidate className="rounded-2xl border border-line bg-surface-1 p-6 shadow-[0_8px_30px_rgba(0,0,0,0.25)]">
+              <h1 className="text-2xl font-bold tracking-tight">Elige tu contraseña</h1>
               <p className="text-sm text-content-2 mt-1 mb-4">Con ella entrarás a tu prueba de {DIAS_PRUEBA} días. Mínimo 10 caracteres, con letras y números.</p>
               <div className="mb-3">
                 <label htmlFor="campo-password" className={cls.label}>Contraseña</label>
@@ -111,8 +111,8 @@ function Activacion() {
           )}
 
           {estado.tipo === 'listo' && (
-            <section className="rounded-xl border border-line bg-surface-1 p-6" aria-labelledby="titulo-listo">
-              <h1 id="titulo-listo" className="text-xl font-semibold">¡Tu prueba está lista!</h1>
+            <section className="rounded-2xl border border-line bg-surface-1 p-6 shadow-[0_8px_30px_rgba(0,0,0,0.25)]" aria-labelledby="titulo-listo">
+              <h1 id="titulo-listo" className="text-2xl font-bold tracking-tight">¡Tu prueba está lista!</h1>
               <p className="text-sm text-content-2 mt-1">
                 Dura hasta el <strong className="text-content-1">{estado.venceEn ? fechaLarga(estado.venceEn) : `${DIAS_PRUEBA} días`}</strong>. Entra con tu correo y la contraseña que acabas de elegir.
               </p>
@@ -143,8 +143,8 @@ function Aviso({ titulo, texto }: { titulo: string; texto: string }) {
   const ref = useRef<HTMLAnchorElement>(null);
   useEffect(() => { ref.current?.focus(); }, []);
   return (
-    <div role="alert" className="rounded-xl border border-line bg-surface-1 p-6">
-      <h1 className="text-lg font-semibold mb-1">{titulo}</h1>
+    <div role="alert" className="rounded-2xl border border-line bg-surface-1 p-6 shadow-[0_8px_30px_rgba(0,0,0,0.25)]">
+      <h1 className="text-xl font-bold tracking-tight mb-1">{titulo}</h1>
       <p className="text-sm text-content-2 mb-4">{texto}</p>
       <Link ref={ref} to="/prueba" className={`${cls.primario} inline-flex items-center`}>Pedir un enlace nuevo</Link>
     </div>

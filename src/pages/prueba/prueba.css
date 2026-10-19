@@ -1,0 +1,19 @@
+/* Diseño de /prueba y /prueba/activar. Los colores salen de las variables de las skins (nada de hex nuevos: lo vigila skins.spec.ts). */
+
+/* Montserrat (tipografía de la marca) solo en estas pantallas; el resto del ERP sigue con Inter. `*` global de index.css obliga a repetir el selector. */
+.prueba-marca, .prueba-marca * { font-family: 'Montserrat', 'Inter', system-ui, sans-serif; }
+
+/* Una sola pantalla sin scroll cuando hay espacio (≥1024×700, p. ej. 1366×768 y 1920×1080); en móvil y ventanas bajas la página fluye y hace scroll normal. */
+.prueba-marca { min-height: 100vh; display: flex; flex-direction: column; position: relative; }
+@media (min-width: 1024px) and (min-height: 700px) {
+  .prueba-marca { height: 100vh; min-height: 0; overflow: hidden; }
+}
+
+.fondo-marca { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.fondo-marca-isotipo {
+  position: absolute; display: block; pointer-events: none;
+  background-color: rgb(var(--accent));
+  -webkit-mask: url('/marca/isotipo-plano.svg') center / contain no-repeat;
+  mask: url('/marca/isotipo-plano.svg') center / contain no-repeat;
+}
+.prueba-contenido { position: relative; z-index: 1; }

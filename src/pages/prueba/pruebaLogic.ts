@@ -39,6 +39,9 @@ export const INCLUYE = [
   'Hasta 5 usuarios, sin tarjeta de crédito',
 ] as const;
 
+/** La línea de valor bajo el título (sale de INCLUYE para que no haya dos redacciones). */
+export const LINEA_VALOR = `${INCLUYE[1]}. Sin tarjeta de crédito.`;
+
 export const GIROS_FORM = [
   { valor: 'gimnasio', etiqueta: 'Gimnasio / club deportivo', disponible: true },
   { valor: 'restaurante', etiqueta: 'Restaurante (próximamente)', disponible: false },
