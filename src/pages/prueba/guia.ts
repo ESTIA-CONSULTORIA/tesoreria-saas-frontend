@@ -2,6 +2,7 @@
 // del negocio (GET /prueba/progreso), el texto de «estado vacío» de cada paso y sus accesos directos. Los giros sin pasos propios usan el genérico.
 // Las rutas son las del ERP (App.tsx); no se inventa ninguna pantalla.
 import type { NipSocio, Progreso } from './pruebaLogic';
+import { modulosDeGiro } from './modulosPrueba';
 
 /** Avance real del negocio (conteos de SU tenant; lo calcula el servidor). */
 export interface ProgresoNegocio {
@@ -103,6 +104,21 @@ const PASOS: Record<string, Fabrica> = {
     detalle: 'En Check-in escribe el n.º de socio. Con los datos de ejemplo es el 1 y su NIP se muestra al cargarlos.',
     ruta: '/membresias', accesos: [{ texto: 'Ir a Check-in', ruta: '/membresias' }],
   }),
+  existencias: () => ({
+    id: 'existencias', titulo: 'Registra tus existencias',
+    detalle: 'En Costos, sección de inventario, da de alta tus productos o insumos con su cantidad: el sistema descuenta al vender.',
+    ruta: '/costs', accesos: [{ texto: 'Ir a Costos', ruta: '/costs' }],
+  }),
+  compra: () => ({
+    id: 'compra', titulo: 'Registra una compra a un proveedor',
+    detalle: 'En Proveedores da de alta uno y en Compras captura la orden o la factura; las cuentas por pagar salen de ahí.',
+    ruta: '/purchases', accesos: [{ texto: 'Ir a Compras', ruta: '/purchases' }, { texto: 'Ir a Proveedores', ruta: '/suppliers' }],
+  }),
+  banco: () => ({
+    id: 'banco', titulo: 'Da de alta tu cuenta bancaria',
+    detalle: 'En Bancos registra una cuenta con su saldo inicial; luego captura movimientos y transferencias, y revisa Tesorería. No se conecta a ningún banco.',
+    ruta: '/banks', accesos: [{ texto: 'Ir a Bancos', ruta: '/banks' }, { texto: 'Ir a Tesorería', ruta: '/treasury' }],
+  }),
   corte: () => ({
     id: 'corte', titulo: 'Haz el corte',
     detalle: 'Precorte y cierre de turno (corte Z): tus ventas aparecen en el total de caja.',
@@ -111,21 +127,26 @@ const PASOS: Record<string, Fabrica> = {
   }),
 };
 
-/** Orden de los pasos por giro. «insumos» y «recetas» entran solo si el negocio tiene el módulo de Costos (el plan PRUEBA hoy no lo trae). */
+/** Orden de los pasos por giro. */
 const ORDEN: Record<string, string[]> = {
-  gimnasio: ['categoria', 'productos', 'planes', 'usuarios', 'turno', 'venta', 'membresia', 'checkin', 'corte'],
-  restaurante: ['categoria', 'productos', 'insumos', 'recetas', 'usuarios', 'turno', 'mesa', 'venta', 'corte'],
-  retail: ['categoria', 'productos', 'usuarios', 'turno', 'venta', 'corte'],
-  generico: ['categoria', 'productos', 'usuarios', 'turno', 'venta', 'corte'],
+  gimnasio: ['categoria', 'productos', 'planes', 'usuarios', 'turno', 'venta', 'membresia', 'checkin', 'corte', 'banco'],
+  restaurante: ['categoria', 'productos', 'insumos', 'recetas', 'usuarios', 'turno', 'mesa', 'venta', 'corte', 'compra', 'banco'],
+  retail: ['categoria', 'productos', 'existencias', 'usuarios', 'turno', 'venta', 'corte', 'compra', 'banco'],
+  generico: ['categoria', 'productos', 'usuarios', 'turno', 'venta', 'corte', 'banco'],
 };
-const SOLO_CON_COSTOS = ['insumos', 'recetas'];
+/** Módulo que cada paso necesita: el paso solo entra si el giro lo recibe (modulosPrueba.ts, espejo de la tabla giro → módulos del backend). */
+const REQUIERE: Record<string, string> = {
+  insumos: 'costos', recetas: 'costos', existencias: 'costos', compra: 'compras', banco: 'tesoreria',
+  planes: 'membresias', membresia: 'membresias', checkin: 'membresias',
+};
 
 /** Giros con pasos propios; cualquier otro usa el genérico. */
 export const GIROS_CON_GUIA = Object.keys(ORDEN);
 
-export function pasosDeGiro(giro: string | null | undefined, opts: { costos?: boolean } = {}): PasoGuia[] {
+export function pasosDeGiro(giro: string | null | undefined, opts: { modulos?: readonly string[] } = {}): PasoGuia[] {
   const g = giro && ORDEN[giro] ? giro : 'generico';
-  return ORDEN[g].filter((id) => opts.costos === true || !SOLO_CON_COSTOS.includes(id)).map((id) => PASOS[id](g));
+  const modulos = opts.modulos ?? modulosDeGiro(g);
+  return ORDEN[g].filter((id) => !REQUIERE[id] || modulos.includes(REQUIERE[id])).map((id) => PASOS[id](g));
 }
 
 /** ¿Hecho? A mano, o solo porque el avance real del negocio ya lo cumple. */

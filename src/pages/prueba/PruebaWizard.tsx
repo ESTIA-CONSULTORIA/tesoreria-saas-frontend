@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../core/api/api';
-import { useModulo } from '../../core/hooks/useModulo';
 import { useAuthStore } from '../../core/store/useAuthStore';
 import {
   alternarPaso, borrarNipSesion, cargarProgreso, esEstadoPrueba, etiquetaDias, guardarNipSesion, guardarProgreso, leerNipSesion, marcarGuiaVista,
@@ -20,8 +19,7 @@ const sesion = (): Storage | null => { try { return sessionStorage; } catch { re
 export default function PruebaWizard({ tenantId, giro }: { tenantId: string; giro?: string | null }) {
   const navigate = useNavigate();
   const esAdmin = useAuthStore((s) => s.user?.roleCode === 'ADMIN');
-  const conCostos = useModulo('costos');
-  const pasos = useMemo(() => pasosDeGiro(giro, { costos: conCostos }), [giro, conCostos]);
+  const pasos = useMemo(() => pasosDeGiro(giro), [giro]); // salen de la misma tabla giro → módulos que activa el servidor
 
   const [abierto, setAbierto] = useState(() => !yaVioLaGuia(almacen(), tenantId));
   const [manual, setManual] = useState<Progreso>(() => cargarProgreso(almacen(), tenantId));

@@ -28,11 +28,11 @@ describe('hero y textos de la página', () => {
 });
 
 describe('«lo que no incluye» por giro', () => {
-  it('gimnasio: los tres de siempre (textos intactos); el resto de giros: CFDI y tarjeta más lo que su plan realmente no trae', () => {
-    expect(limitesDeGiro('gimnasio').map((l) => l.titulo)).toEqual(['Sin CFDI timbrado', 'Sin tarjeta integrada', 'Sin reservas']);
-    expect(limitesDeGiro('restaurante').map((l) => l.titulo)).toEqual(['Sin CFDI timbrado', 'Sin tarjeta integrada', 'Sin costeo de recetas']);
-    expect(limitesDeGiro('retail').map((l) => l.titulo)).toEqual(['Sin CFDI timbrado', 'Sin tarjeta integrada', 'Sin compras a proveedores']);
-    expect(limitesDeGiro('generico').map((l) => l.titulo)).toEqual(['Sin CFDI timbrado', 'Sin tarjeta integrada', 'Sin tesorería ni nómina']);
+  it('derivado de la tabla giro → módulos: CFDI y tarjeta para todos; reservas solo gimnasio; «sin compras ni inventario» solo quien no recibe Compras; sin nómina para todos', () => {
+    expect(limitesDeGiro('gimnasio').map((l) => l.titulo)).toEqual(['Sin CFDI timbrado', 'Sin tarjeta integrada', 'Sin reservas', 'Sin compras ni inventario', 'Sin nómina']);
+    expect(limitesDeGiro('restaurante').map((l) => l.titulo)).toEqual(['Sin CFDI timbrado', 'Sin tarjeta integrada', 'Sin nómina']);
+    expect(limitesDeGiro('retail').map((l) => l.titulo)).toEqual(['Sin CFDI timbrado', 'Sin tarjeta integrada', 'Sin nómina']);
+    expect(limitesDeGiro('generico').map((l) => l.titulo)).toEqual(['Sin CFDI timbrado', 'Sin tarjeta integrada', 'Sin compras ni inventario', 'Sin nómina']);
   });
   it('«Sin reservas» (Playtomic) es solo del gimnasio; un giro desconocido cae en el genérico', () => {
     for (const g of ['restaurante', 'retail', 'generico']) expect(limitesDeGiro(g).some((l) => l.id === 'reservas')).toBe(false);
@@ -49,7 +49,7 @@ describe('«lo que no incluye» por giro', () => {
 describe('giros del formulario', () => {
   it('etiquetas; el aviso «Próximamente» y la lista de espera ya NO se usan desde la pantalla', () => {
     expect(etiquetaGiro('retail')).toBe('Tienda');
-    expect(etiquetaGiro('generico')).toBe('Otro tipo de negocio (genérico)');
+    expect(etiquetaGiro('generico')).toBe('Otro giro');
     const src = readFileSync(resolve(__dirname, 'SolicitudPage.tsx'), 'utf8');
     expect(src).not.toMatch(/Próximamente|avisame|lista de espera/i);
     expect(readFileSync(resolve(__dirname, 'aterrizaje.ts'), 'utf8')).not.toMatch(/validarAviso|cuerpoAviso/);
