@@ -1,6 +1,7 @@
 // Contenido y lógica pura de la página de aterrizaje de /prueba (sin React): textos, bloques, pasos, aviso de «Próximamente» y qué NO incluye
 // la prueba según el giro. Se prueba con vitest; la página solo lo dibuja.
 import { DIAS_PRUEBA, GIROS_FORM, LIMITES } from './pruebaLogic';
+import { MODULOS_POR_GIRO, tieneModulo } from './modulosPrueba';
 
 /** Correo de contacto público (el mismo que aparece en estiaconsultoria.com). */
 export const CORREO_CONTACTO = 'contacto@estiaconsultoria.com';
@@ -41,20 +42,19 @@ export const TEXTO_PRUEBA_GRATIS = `Prueba ESTIA ${DIAS_PRUEBA} días sin tarjet
 export interface LimiteGiro { id: string; titulo: string; detalle: string }
 
 const CFDI_Y_TARJETA: readonly LimiteGiro[] = LIMITES.filter((l) => l.id !== 'reservas');
+const SIN_COMPRAS: LimiteGiro = { id: 'compras', titulo: 'Sin compras ni inventario', detalle: 'La prueba de este giro no incluye Compras, Proveedores ni Costos. La caja, la tesorería y los reportes sí.' };
+const SIN_NOMINA: LimiteGiro = { id: 'nomina', titulo: 'Sin nómina', detalle: 'La prueba no incluye Recursos Humanos ni nómina.' };
 
 /**
- * Lo que la prueba no tiene, por giro. CFDI y tarjeta aplican a toda prueba; el resto sale de lo que el plan PRUEBA realmente no incluye
- * (módulos fuera del plan: Costos, Compras y Proveedores, Tesorería, Nómina) o de cómo funciona el giro («Sin reservas»: las canchas se reservan en Playtomic).
+ * Lo que la prueba no tiene, por giro, DERIVADO de la misma tabla giro → módulos que activa el servidor (modulosPrueba.ts): CFDI y tarjeta aplican
+ * a toda prueba; «Sin reservas» es del gimnasio (las canchas se reservan en Playtomic); «Sin compras ni inventario» sale solo si el giro no recibe
+ * Compras; la nómina (RH) queda fuera del techo del plan PRUEBA para todos.
  */
-export const LIMITES_POR_GIRO: Record<string, readonly LimiteGiro[]> = {
-  gimnasio: LIMITES,
-  restaurante: [...CFDI_Y_TARJETA, { id: 'costeo', titulo: 'Sin costeo de recetas', detalle: 'La prueba no incluye el módulo de Costos: no hay insumos ni recetas. Las mesas y la cocina sí.' }],
-  retail: [...CFDI_Y_TARJETA, { id: 'compras', titulo: 'Sin compras a proveedores', detalle: 'La prueba no incluye Compras ni Proveedores. La caja y los reportes sí.' }],
-  generico: [...CFDI_Y_TARJETA, { id: 'modulos', titulo: 'Sin tesorería ni nómina', detalle: 'La prueba incluye caja, usuarios y reportes; tesorería, bancos y nómina no.' }],
-};
-
 export function limitesDeGiro(giro: string): readonly LimiteGiro[] {
-  return LIMITES_POR_GIRO[giro] ?? LIMITES_POR_GIRO.generico;
+  const g = MODULOS_POR_GIRO[giro] ? giro : 'generico';
+  return [...(g === 'gimnasio' ? LIMITES : CFDI_Y_TARJETA), ...(tieneModulo(g, 'compras') ? [] : [SIN_COMPRAS]), SIN_NOMINA];
 }
+
+export const LIMITES_POR_GIRO: Record<string, readonly LimiteGiro[]> = Object.fromEntries(Object.keys(MODULOS_POR_GIRO).map((g) => [g, limitesDeGiro(g)]));
 
 export const etiquetaGiro = (giro: string): string => GIROS_FORM.find((g) => g.valor === giro)?.etiqueta ?? giro;

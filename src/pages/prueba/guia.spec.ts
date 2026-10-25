@@ -8,14 +8,14 @@ import {
 import { GIROS_FORM } from './pruebaLogic';
 
 const vacio: ProgresoNegocio = { categorias: 0, productos: 0, usuarios: 1, turnos: 0, turnosCerrados: 0, ventas: 0, puedeCargarEjemplo: true };
-const ids = (g: string | null | undefined, costos = false) => pasosDeGiro(g, { costos }).map((p) => p.id);
+const ids = (g: string | null | undefined) => pasosDeGiro(g).map((p) => p.id);
 
 describe('wizard por giro', () => {
   it('cada giro tiene su recorrido; los que no tienen pasos propios usan el genérico', () => {
-    expect(ids('gimnasio')).toEqual(['categoria', 'productos', 'planes', 'usuarios', 'turno', 'venta', 'membresia', 'checkin', 'corte']);
-    expect(ids('restaurante')).toEqual(['categoria', 'productos', 'usuarios', 'turno', 'mesa', 'venta', 'corte']);
-    expect(ids('retail')).toEqual(['categoria', 'productos', 'usuarios', 'turno', 'venta', 'corte']);
-    expect(ids('generico')).toEqual(['categoria', 'productos', 'usuarios', 'turno', 'venta', 'corte']);
+    expect(ids('gimnasio')).toEqual(['categoria', 'productos', 'planes', 'usuarios', 'turno', 'venta', 'membresia', 'checkin', 'corte', 'banco']);
+    expect(ids('restaurante')).toEqual(['categoria', 'productos', 'insumos', 'recetas', 'usuarios', 'turno', 'mesa', 'venta', 'corte', 'compra', 'banco']);
+    expect(ids('retail')).toEqual(['categoria', 'productos', 'existencias', 'usuarios', 'turno', 'venta', 'corte', 'compra', 'banco']);
+    expect(ids('generico')).toEqual(['categoria', 'productos', 'usuarios', 'turno', 'venta', 'corte', 'banco']);
     for (const g of ['medico_dental', 'inventado', '', null, undefined]) expect(ids(g)).toEqual(ids('generico'));
   });
 
@@ -27,10 +27,13 @@ describe('wizard por giro', () => {
     }
   });
 
-  it('insumos y recetas solo aparecen si el negocio tiene el módulo de Costos (el plan PRUEBA no lo trae)', () => {
-    expect(ids('restaurante', true)).toEqual(['categoria', 'productos', 'insumos', 'recetas', 'usuarios', 'turno', 'mesa', 'venta', 'corte']);
-    expect(ids('restaurante', false)).not.toContain('insumos');
-    for (const g of ['gimnasio', 'retail', 'generico']) expect(ids(g, true)).not.toContain('insumos');
+  it('los pasos salen de la tabla giro → módulos: costos (insumos, recetas, existencias) y compras solo en restaurante y tienda; banco (tesorería) en todos', () => {
+    for (const g of ['gimnasio', 'generico']) for (const p of ['insumos', 'recetas', 'existencias', 'compra']) expect(ids(g)).not.toContain(p);
+    for (const g of GIROS_CON_GUIA) expect(ids(g)).toContain('banco');
+    expect(ids('retail')).not.toContain('recetas');
+    // si el servidor entregara menos módulos que la tabla, la guía los omite
+    expect(pasosDeGiro('restaurante', { modulos: ['pos', 'tesoreria'] }).map((p) => p.id)).not.toContain('insumos');
+    expect(pasosDeGiro('restaurante', { modulos: ['pos'] }).map((p) => p.id)).not.toContain('banco');
   });
 
   it('membresías y check-in solo en el gimnasio; mesas solo en el restaurante', () => {
@@ -39,9 +42,9 @@ describe('wizard por giro', () => {
   });
 
   it('cada paso tiene título, detalle, ruta del ERP y acceso directo; sin IDs repetidos', () => {
-    const rutas = ['/pos', '/users', '/roles', '/costs', '/membresias', '/mesas', '/cocina'];
+    const rutas = ['/pos', '/users', '/roles', '/costs', '/membresias', '/mesas', '/cocina', '/purchases', '/suppliers', '/banks', '/treasury'];
     for (const g of GIROS_CON_GUIA) {
-      const pasos = pasosDeGiro(g, { costos: true });
+      const pasos = pasosDeGiro(g);
       expect(new Set(pasos.map((p) => p.id)).size).toBe(pasos.length);
       for (const p of pasos) {
         expect(p.titulo.length).toBeGreaterThan(5);
@@ -85,7 +88,7 @@ describe('avance real y estados vacíos', () => {
     expect(textoVacio(por('productos'), r)).toBeNull();
     expect(textoVacio(por('corte'), r)).toMatch(/cierra el turno/);
     expect(hechosGuia(pasos, {}, r)).toBe(5);
-    expect(pasoActualGuia(pasos, {}, r)).toBe(5);
+    expect(pasoActualGuia(pasos, {}, r)).toBe(pasos.findIndex((p) => p.id === 'existencias')); // el primer paso pendiente: «existencias» (manual) de la tienda
   });
 
   it('«usuarios» exige más que el propio ADMIN', () => {

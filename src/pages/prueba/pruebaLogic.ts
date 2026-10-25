@@ -35,7 +35,7 @@ export const LIMITES = [
 
 export const INCLUYE = [
   `${DIAS_PRUEBA} días con tu propio negocio de prueba`,
-  'Caja, membresías, check-in y reportes con datos de ejemplo',
+  'Caja, tesorería y reportes, más los módulos de tu giro, con datos de ejemplo',
   'Hasta 5 usuarios, sin tarjeta de crédito',
 ] as const;
 
@@ -51,7 +51,7 @@ export const GIROS_TARJETA = [
   { valor: 'restaurante', etiqueta: 'Restaurante' },
   { valor: 'retail', etiqueta: 'Tienda' },
 ] as const;
-export const GIROS_OTROS = [{ valor: 'generico', etiqueta: 'Otro tipo de negocio (genérico)' }] as const;
+export const GIROS_OTROS = [{ valor: 'generico', etiqueta: 'Otro giro' }] as const;
 /** Valor de la tarjeta «Otro giro» (no es un giro: abre la lista). */
 export const TARJETA_OTRO = '__otro';
 export const GIROS_FORM = [...GIROS_TARJETA, ...GIROS_OTROS] as const;
