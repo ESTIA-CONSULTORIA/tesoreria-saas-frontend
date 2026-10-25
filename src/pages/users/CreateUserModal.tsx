@@ -157,6 +157,12 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
         return;
       }
 
+      if (isExecRole && executivePin && !/^[0-9]{6,12}$/.test(executivePin)) {
+        setError("El PIN ejecutivo debe tener entre 6 y 12 dígitos numéricos.");
+        setLoading(false);
+        return;
+      }
+
       if (user) {
         const payload: Record<string, any> = {
           name: fullName,
@@ -381,18 +387,18 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
 
             {(roleCode === "ADMIN" || roleCode === "GERENTE") && (
               <div>
-                <label className="block text-xs text-slate-400 mb-1">PIN Ejecutivo (4 dígitos)</label>
+                <label className="block text-xs text-slate-400 mb-1">PIN Ejecutivo (6 a 12 dígitos)</label>
                 <input
                   type="text"
                   inputMode="numeric"
-                  pattern="[0-9]{4}"
-                  maxLength={4}
+                  pattern="[0-9]{6,12}"
+                  maxLength={12}
                   value={executivePin}
-                  onChange={(e) => setExecutivePin(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                  placeholder="1234"
+                  onChange={(e) => setExecutivePin(e.target.value.replace(/\D/g, "").slice(0, 12))}
+                  placeholder="••••••"
                   className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
                 />
-                <p className="text-xs text-slate-500 mt-1">Se usa para acceder a la vista ejecutiva móvil</p>
+                <p className="text-xs text-slate-500 mt-1">Se usa para acceder a la vista ejecutiva móvil. Debe ser distinto al de otros usuarios; si lo dejas vacío no cambia.</p>
               </div>
             )}
 

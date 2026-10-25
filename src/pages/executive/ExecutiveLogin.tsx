@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { execPublicApi } from "./execApi";
 import type { ExecConfig } from "./ExecutivePage";
 import { getTheme } from "./theme";
+import { puedeEnviar, puntosVisibles, siguientePin } from "./pinEjecutivo";
 
 interface Props {
   onLogin: (name?: string, tenantId?: string) => void;
@@ -103,9 +104,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
   function press(k: string) {
     if (loading || resolving) return;
     if (k === "del") { setPin((p) => p.slice(0, -1)); return; }
-    const next = pin + k;
-    setPin(next);
-    if (next.length === 4) submit(next);
+    setPin((p) => siguientePin(p, k));
   }
 
   return (
@@ -195,7 +194,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
 
         {/* PIN dots */}
         <div style={{ display: "flex", gap: 24 }}>
-          {[0, 1, 2, 3].map((i) => (
+          {Array.from({ length: puntosVisibles(pin.length) }, (_, i) => i).map((i) => (
             <div
               key={i}
               style={{
@@ -209,6 +208,25 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
             />
           ))}
         </div>
+
+        <button
+          onClick={() => submit(pin)}
+          disabled={!puedeEnviar(pin) || loading || resolving}
+          style={{
+            background: "none",
+            border: `1px solid ${t.secondary}`,
+            borderRadius: 999,
+            color: t.text,
+            fontSize: "0.8rem",
+            letterSpacing: "0.2em",
+            textTransform: "uppercase",
+            padding: "6px 28px",
+            cursor: !puedeEnviar(pin) || loading || resolving ? "default" : "pointer",
+            opacity: puedeEnviar(pin) && !loading && !resolving ? 1 : 0.35,
+          }}
+        >
+          Entrar
+        </button>
 
         {(error || resolveError) && (
           <p
