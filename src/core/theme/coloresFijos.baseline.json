@@ -1,0 +1,716 @@
+{
+ "App.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 3,
+  "nombrados": 0
+ },
+ "assets/css/basketball-theme.css": {
+  "hex": 12,
+  "rgb": 41,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "components/ExecutiveKPI.tsx": {
+  "hex": 12,
+  "rgb": 0,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "components/ExecutiveTable.tsx": {
+  "hex": 19,
+  "rgb": 0,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "components/OnboardingWizard.tsx": {
+  "hex": 23,
+  "rgb": 1,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "components/OutroSplash.tsx": {
+  "hex": 3,
+  "rgb": 3,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "components/SplashScreen.tsx": {
+  "hex": 12,
+  "rgb": 12,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "core/components/GlobalSearchModal.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 18,
+  "nombrados": 0
+ },
+ "core/components/ModalPOS.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 6,
+  "nombrados": 0
+ },
+ "core/components/NoContextBanner.tsx": {
+  "hex": 1,
+  "rgb": 0,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "core/components/reglasModal.ts": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 7,
+  "nombrados": 0
+ },
+ "core/layout/Header.tsx": {
+  "hex": 11,
+  "rgb": 0,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "core/layout/MainLayout.tsx": {
+  "hex": 3,
+  "rgb": 1,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "core/layout/TopBar.tsx": {
+  "hex": 18,
+  "rgb": 45,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "core/pwa/UpdatePrompt.tsx": {
+  "hex": 4,
+  "rgb": 1,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "core/store/useBrandingStore.ts": {
+  "hex": 4,
+  "rgb": 0,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "core/store/useLoginConfigStore.ts": {
+  "hex": 6,
+  "rgb": 0,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "core/store/useThemeStore.ts": {
+  "hex": 2,
+  "rgb": 0,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "core/theme/theme.ts": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 11,
+  "nombrados": 0
+ },
+ "index.css": {
+  "hex": 0,
+  "rgb": 1,
+  "tw": 101,
+  "nombrados": 0
+ },
+ "pages/administration/ActiveSessionsPage.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 32,
+  "nombrados": 0
+ },
+ "pages/administration/AdministrationPage.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 82,
+  "nombrados": 0
+ },
+ "pages/administration/GlobalConfigPage.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 50,
+  "nombrados": 0
+ },
+ "pages/administration/LogsPage.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 74,
+  "nombrados": 0
+ },
+ "pages/banks/BanksPage.tsx": {
+  "hex": 3,
+  "rgb": 0,
+  "tw": 24,
+  "nombrados": 0
+ },
+ "pages/banks/CreateBankModal.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 46,
+  "nombrados": 0
+ },
+ "pages/branches/BranchesPage.tsx": {
+  "hex": 49,
+  "rgb": 1,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/branches/CreateBranchModal.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 38,
+  "nombrados": 0
+ },
+ "pages/companies/CompaniesPage.tsx": {
+  "hex": 51,
+  "rgb": 1,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/companies/CreateCompanyModal.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 34,
+  "nombrados": 0
+ },
+ "pages/costs/CostsPage.tsx": {
+  "hex": 5,
+  "rgb": 0,
+  "tw": 527,
+  "nombrados": 0
+ },
+ "pages/costs/CreateInsumoModal.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 109,
+  "nombrados": 0
+ },
+ "pages/costs/CreateRecipeModal.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 90,
+  "nombrados": 0
+ },
+ "pages/costs/ReplaceInsumoModal.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 22,
+  "nombrados": 0
+ },
+ "pages/Dashboard/DashboardInfoModal.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 13,
+  "nombrados": 0
+ },
+ "pages/Dashboard/DashboardLite.tsx": {
+  "hex": 23,
+  "rgb": 47,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/Dashboard/DashboardPage.tsx": {
+  "hex": 167,
+  "rgb": 0,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/employee/EmployeeDocuments.tsx": {
+  "hex": 15,
+  "rgb": 0,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/employee/EmployeeHome.tsx": {
+  "hex": 73,
+  "rgb": 0,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/employee/EmployeeLayout.tsx": {
+  "hex": 7,
+  "rgb": 0,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/employee/EmployeeLogin.tsx": {
+  "hex": 26,
+  "rgb": 0,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/employee/EmployeeProfile.tsx": {
+  "hex": 15,
+  "rgb": 0,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/employee/EmployeeRequests.tsx": {
+  "hex": 47,
+  "rgb": 1,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/employee/EmployeeSignContract.tsx": {
+  "hex": 41,
+  "rgb": 0,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/executive/ExecutiveConfig.tsx": {
+  "hex": 1,
+  "rgb": 0,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/executive/ExecutiveDashboard.tsx": {
+  "hex": 3,
+  "rgb": 9,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/executive/ExecutiveHome.tsx": {
+  "hex": 0,
+  "rgb": 2,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/executive/ExecutiveLogin.tsx": {
+  "hex": 2,
+  "rgb": 0,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/executive/ExecutivePage.tsx": {
+  "hex": 6,
+  "rgb": 0,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/executive/ExecutiveReport.tsx": {
+  "hex": 6,
+  "rgb": 13,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/executive/theme.ts": {
+  "hex": 24,
+  "rgb": 8,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/fiscal/DatosFiscalesPage.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 13,
+  "nombrados": 0
+ },
+ "pages/fiscal/EmisorTab.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 10,
+  "nombrados": 0
+ },
+ "pages/fiscal/ProductosTab.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 28,
+  "nombrados": 0
+ },
+ "pages/fiscal/ReceptoresTab.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 18,
+  "nombrados": 0
+ },
+ "pages/fiscal/SucursalesTab.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 11,
+  "nombrados": 0
+ },
+ "pages/fiscal/ui.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 20,
+  "nombrados": 0
+ },
+ "pages/hr/ConceptsEditor.tsx": {
+  "hex": 8,
+  "rgb": 14,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/hr/ContractsTab.tsx": {
+  "hex": 23,
+  "rgb": 42,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/hr/HRPage.tsx": {
+  "hex": 178,
+  "rgb": 293,
+  "tw": 45,
+  "nombrados": 0
+ },
+ "pages/hr/IncidenceInput.tsx": {
+  "hex": 13,
+  "rgb": 13,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/hr/PayrollPrint.tsx": {
+  "hex": 11,
+  "rgb": 2,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/hr/SolicitudesTab.tsx": {
+  "hex": 6,
+  "rgb": 11,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/integrations/IntegrationsPage.tsx": {
+  "hex": 30,
+  "rgb": 16,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/lite/CorteCajaLite.tsx": {
+  "hex": 137,
+  "rgb": 6,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/lite/NotasCocinaLite.tsx": {
+  "hex": 29,
+  "rgb": 7,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/Login/LoginPage.tsx": {
+  "hex": 41,
+  "rgb": 68,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/membresias/membresiasLogic.ts": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 10,
+  "nombrados": 0
+ },
+ "pages/membresias/MembresiasPage.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 122,
+  "nombrados": 0
+ },
+ "pages/mesas/ConfigMesas.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 26,
+  "nombrados": 0
+ },
+ "pages/mesas/mesasLogic.ts": {
+  "hex": 4,
+  "rgb": 0,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/mesas/MesasPage.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 1,
+  "nombrados": 0
+ },
+ "pages/mesas/MesasScreen.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 31,
+  "nombrados": 0
+ },
+ "pages/mesas/MeseroPage.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 8,
+  "nombrados": 0
+ },
+ "pages/mesas/PanelCuenta.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 69,
+  "nombrados": 0
+ },
+ "pages/mobile-analytics/MobileAnalyticsApp.tsx": {
+  "hex": 81,
+  "rgb": 0,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/movements/CreateMovementModal.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 37,
+  "nombrados": 0
+ },
+ "pages/movements/MovementsPage.tsx": {
+  "hex": 6,
+  "rgb": 0,
+  "tw": 67,
+  "nombrados": 0
+ },
+ "pages/ocr/OCRPage.tsx": {
+  "hex": 66,
+  "rgb": 1,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/patients/PatientsPage.tsx": {
+  "hex": 23,
+  "rgb": 34,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/pos/BackfillCortePage.tsx": {
+  "hex": 14,
+  "rgb": 14,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/pos/CheckoutFast.tsx": {
+  "hex": 30,
+  "rgb": 1,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/pos/ModalesCaja.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 127,
+  "nombrados": 0
+ },
+ "pages/pos/PosChatPanel.tsx": {
+  "hex": 51,
+  "rgb": 1,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/pos/POSPage.tsx": {
+  "hex": 3,
+  "rgb": 0,
+  "tw": 629,
+  "nombrados": 0
+ },
+ "pages/pos/TableLayout.tsx": {
+  "hex": 16,
+  "rgb": 0,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/pos/VentasOfflineFallidas.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 50,
+  "nombrados": 0
+ },
+ "pages/prueba/prueba.css": {
+  "hex": 0,
+  "rgb": 1,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/prueba/PruebaWizard.tsx": {
+  "hex": 0,
+  "rgb": 1,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/purchases/CreateInvoiceModal.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 102,
+  "nombrados": 0
+ },
+ "pages/purchases/CreateOrderModal.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 85,
+  "nombrados": 0
+ },
+ "pages/purchases/InsumoSearchModal.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 25,
+  "nombrados": 0
+ },
+ "pages/purchases/PurchasesPage.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 245,
+  "nombrados": 0
+ },
+ "pages/purchases/ReceiveOrderModal.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 28,
+  "nombrados": 0
+ },
+ "pages/reconciliation/ImportModal.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 86,
+  "nombrados": 0
+ },
+ "pages/reconciliation/ReconciliationPage.tsx": {
+  "hex": 205,
+  "rgb": 2,
+  "tw": 2,
+  "nombrados": 0
+ },
+ "pages/reports/ReportsFiltersModal.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 20,
+  "nombrados": 0
+ },
+ "pages/reports/ReportsPage.tsx": {
+  "hex": 37,
+  "rgb": 0,
+  "tw": 122,
+  "nombrados": 0
+ },
+ "pages/roles/CreateRoleModal.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 29,
+  "nombrados": 0
+ },
+ "pages/roles/RolesPage.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 24,
+  "nombrados": 0
+ },
+ "pages/settings/AppearancePage.tsx": {
+  "hex": 55,
+  "rgb": 21,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/settings/CorteFieldsConfig.tsx": {
+  "hex": 5,
+  "rgb": 8,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/settings/LoginConfigPage.tsx": {
+  "hex": 101,
+  "rgb": 1,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/settings/SettingsPage.tsx": {
+  "hex": 16,
+  "rgb": 0,
+  "tw": 130,
+  "nombrados": 0
+ },
+ "pages/settings/SettingsPreviewModal.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 13,
+  "nombrados": 0
+ },
+ "pages/solutions/SolutionsCenter.tsx": {
+  "hex": 7,
+  "rgb": 21,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "pages/soporte/ConfiguracionGlobal.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 34,
+  "nombrados": 0
+ },
+ "pages/soporte/GestionClientes.tsx": {
+  "hex": 34,
+  "rgb": 77,
+  "tw": 152,
+  "nombrados": 0
+ },
+ "pages/soporte/Monitoreo.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 77,
+  "nombrados": 0
+ },
+ "pages/soporte/PlanesModulos.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 53,
+  "nombrados": 0
+ },
+ "pages/soporte/SoporteDashboard.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 42,
+  "nombrados": 0
+ },
+ "pages/suppliers/CreateSupplierModal.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 88,
+  "nombrados": 0
+ },
+ "pages/suppliers/SuppliersPage.tsx": {
+  "hex": 3,
+  "rgb": 0,
+  "tw": 82,
+  "nombrados": 0
+ },
+ "pages/transfers/CreateTransferModal.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 47,
+  "nombrados": 0
+ },
+ "pages/transfers/TransfersPage.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 66,
+  "nombrados": 0
+ },
+ "pages/treasury/TreasuryPage.tsx": {
+  "hex": 348,
+  "rgb": 0,
+  "tw": 6,
+  "nombrados": 0
+ },
+ "pages/users/CreateUserModal.tsx": {
+  "hex": 0,
+  "rgb": 0,
+  "tw": 69,
+  "nombrados": 0
+ },
+ "pages/users/UsersPage.tsx": {
+  "hex": 25,
+  "rgb": 52,
+  "tw": 0,
+  "nombrados": 0
+ },
+ "styles/executive-graphite.ts": {
+  "hex": 66,
+  "rgb": 3,
+  "tw": 0,
+  "nombrados": 0
+ }
+}
