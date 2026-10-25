@@ -10,6 +10,7 @@ import { ConceptsEditor } from './ConceptsEditor';
 import { IncidenceInput } from './IncidenceInput';
 import { PayrollPrint } from './PayrollPrint';
 import { ContractsTab } from './ContractsTab';
+import { SolicitudesTab } from './SolicitudesTab';
 
 type Tab = "empleados" | "expedientes" | "nomina" | "asistencia" | "turnos" | "solicitudes" | "cumpleanos";
 
@@ -181,8 +182,6 @@ export default function HRPage() {
   const [shiftForm, setShiftForm]       = useState({ name: "", startTime: "09:00", endTime: "18:00" });
 
   // Solicitudes pendientes
-  const [pendingRequests, setPendingRequests] = useState<{ vacaciones: any[]; permisos: any[] }>({ vacaciones: [], permisos: [] });
-  const [loadingPending, setLoadingPending]   = useState(false);
   const [vacacionesCount, setVacacionesCount] = useState(0);
 
   // Cumpleaños
@@ -245,7 +244,6 @@ export default function HRPage() {
 
   useEffect(() => {
     if (tab === "asistencia") loadPeriodAttendance();
-    if (tab === "solicitudes") loadPending();
     if (tab === "cumpleanos") loadBirthdays();
   }, [tab]);
 
@@ -404,11 +402,11 @@ export default function HRPage() {
     try {
       const [aRes, rRes] = await Promise.all([
         api.get("/hr/attendance/today", { headers }),
-        api.get("/hr/requests/pending", { headers }),
+        api.get("/hr/requests/pending", { headers, params: { estado: "PENDIENTE", limit: 1 } }),
       ]);
       setAttendanceCount(Array.isArray(aRes.data) ? aRes.data.length : 0);
-      const p = rRes.data ?? { vacaciones: [], permisos: [] };
-      setVacacionesCount((p.vacaciones?.length || 0) + (p.permisos?.length || 0));
+      const p = rRes.data ?? {};
+      setVacacionesCount(p.total ?? ((p.vacaciones?.length || 0) + (p.permisos?.length || 0)));
     } catch {}
   }
 
@@ -419,15 +417,6 @@ export default function HRPage() {
       setBirthdays(Array.isArray(res.data) ? res.data : []);
     } catch { setBirthdays([]); }
     finally { setLoadingBirthdays(false); }
-  }
-
-  async function loadPending() {
-    setLoadingPending(true);
-    try {
-      const res = await api.get("/hr/requests/pending", { headers });
-      setPendingRequests(res.data ?? { vacaciones: [], permisos: [] });
-    } catch { setPendingRequests({ vacaciones: [], permisos: [] }); }
-    finally { setLoadingPending(false); }
   }
 
   // ── Payroll functions ──
@@ -557,18 +546,6 @@ export default function HRPage() {
     if (!confirm("¿Eliminar turno?")) return;
     await api.delete(`/hr/shifts/${id}`, { headers });
     loadShifts();
-  }
-
-  async function approveRequest(type: "vacation" | "permission", id: string) {
-    await api.put(`/hr/requests/${type === "vacation" ? "vacation" : "permission"}/${id}/approve`, {}, { headers });
-    loadPending();
-  }
-
-  async function rejectRequest(type: "vacation" | "permission", id: string) {
-    const note = prompt("Motivo del rechazo:");
-    if (note === null) return;
-    await api.put(`/hr/requests/${type === "vacation" ? "vacation" : "permission"}/${id}/reject`, { responseNote: note }, { headers });
-    loadPending();
   }
 
   async function loadDocs(empId: string) {
@@ -1737,56 +1714,7 @@ export default function HRPage() {
 
         {/* ── TAB: Solicitudes ── */}
         {tab === "solicitudes" && (
-          <div>
-            <h2 style={{ fontSize: 14, fontWeight: 500, marginBottom: 16, color: '#c8cdd8' }}>Solicitudes pendientes</h2>
-            {loadingPending ? (
-              <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13 }}>Cargando...</div>
-            ) : (
-              <>
-                {pendingRequests.vacaciones.length === 0 && pendingRequests.permisos.length === 0 && (
-                  <div style={{ padding: 24, borderRadius: 10, background: '#141820', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.25)', fontSize: 13 }}>Sin solicitudes pendientes</div>
-                )}
-                {pendingRequests.vacaciones.length > 0 && (
-                  <div style={{ marginBottom: 20 }}>
-                    <h3 style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.25)', marginBottom: 10 }}>Vacaciones</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {pendingRequests.vacaciones.map((v: any) => (
-                        <div key={v.id} style={{ padding: 14, borderRadius: 10, background: '#141820', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div>
-                            <p style={{ fontSize: 13, fontWeight: 500, margin: '0 0 3px', color: '#c8cdd8' }}>{v.employeeId}</p>
-                            <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.35)', margin: 0 }}>{new Date(v.startDate).toLocaleDateString("es-MX")} — {new Date(v.endDate).toLocaleDateString("es-MX")} ({v.daysRequested} días)</p>
-                          </div>
-                          <div style={{ display: 'flex', gap: 8 }}>
-                            <button onClick={() => approveRequest("vacation", v.id)} style={{ padding: '4px 12px', fontSize: 11.5, borderRadius: 5, background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', color: '#4ade80', cursor: 'pointer' }}>Aprobar</button>
-                            <button onClick={() => rejectRequest("vacation", v.id)} style={{ padding: '4px 12px', fontSize: 11.5, borderRadius: 5, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: 'rgba(252,165,165,0.8)', cursor: 'pointer' }}>Rechazar</button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {pendingRequests.permisos.length > 0 && (
-                  <div>
-                    <h3 style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.25)', marginBottom: 10 }}>Permisos</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {pendingRequests.permisos.map((p: any) => (
-                        <div key={p.id} style={{ padding: 14, borderRadius: 10, background: '#141820', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div>
-                            <p style={{ fontSize: 13, fontWeight: 500, margin: '0 0 3px', color: '#c8cdd8' }}>{p.employeeId}</p>
-                            <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.35)', margin: 0 }}>{new Date(p.date).toLocaleDateString("es-MX")} — {p.hours}h — {p.type}</p>
-                          </div>
-                          <div style={{ display: 'flex', gap: 8 }}>
-                            <button onClick={() => approveRequest("permission", p.id)} style={{ padding: '4px 12px', fontSize: 11.5, borderRadius: 5, background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', color: '#4ade80', cursor: 'pointer' }}>Aprobar</button>
-                            <button onClick={() => rejectRequest("permission", p.id)} style={{ padding: '4px 12px', fontSize: 11.5, borderRadius: 5, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: 'rgba(252,165,165,0.8)', cursor: 'pointer' }}>Rechazar</button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+          <SolicitudesTab headers={headers} employees={employees} onTotalPendientes={setVacacionesCount} />
         )}
 
         {/* ── TAB: Cumpleaños ── */}
