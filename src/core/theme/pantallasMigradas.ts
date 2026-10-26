@@ -12,4 +12,15 @@ export const PANTALLAS_MIGRADAS: readonly string[] = [
   'core/components/ModalPOS.tsx',
   'core/components/NoContextBanner.tsx',
   'core/components/reglasModal.ts',
+  // Ola 1: dashboard, centro de soluciones y guía de la prueba (el login conserva su paleta propia por negocio: ver PLAN-SKINS §11)
+  'pages/Dashboard/DashboardPage.tsx',
+  'pages/Dashboard/DashboardLite.tsx',
+  'pages/Dashboard/DashboardInfoModal.tsx',
+  'pages/solutions/SolutionsCenter.tsx',
+  'pages/prueba/PruebaWizard.tsx',
+  'pages/prueba/prueba.css',
+  'pages/prueba/ActivarPage.tsx',
+  'pages/prueba/MarcoMonitor.tsx',
+  'pages/prueba/PruebaLayout.tsx',
+  'pages/prueba/SolicitudPage.tsx',
 ];

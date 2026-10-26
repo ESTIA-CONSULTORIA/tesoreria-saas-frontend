@@ -358,7 +358,7 @@ export default function LoginPage() {
           </div>
 
           {/* Badge — justo debajo del isotipo */}
-          <div style={{ fontSize: 10, letterSpacing: '0.28em', color: '#64748B', textTransform: 'uppercase', marginBottom: 24 }}>
+          <div style={{ fontSize: 10, letterSpacing: '0.28em', color: '#7C8BA1', textTransform: 'uppercase', marginBottom: 24 }}>
             Inteligencia Empresarial
           </div>
 
@@ -368,7 +368,7 @@ export default function LoginPage() {
             para tu <span style={{ color: '#1D7CFF' }}>empresa</span>
           </h1>
 
-          <p style={{ fontSize: 16, color: '#64748B', fontWeight: 400, lineHeight: 1.7, maxWidth: 440, margin: '0 auto 56px' }}>
+          <p style={{ fontSize: 16, color: '#7C8BA1', fontWeight: 400, lineHeight: 1.7, maxWidth: 440, margin: '0 auto 56px' }}>
             Plataforma empresarial modular — multi-empresa, multi-sucursal, multi-usuario.
           </p>
 
@@ -403,7 +403,7 @@ export default function LoginPage() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>{f.icon}</div>
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#F8FAFC' }}>{f.title}</div>
-                <div style={{ fontSize: 11, color: '#64748B', lineHeight: 1.5 }}>{f.desc}</div>
+                <div style={{ fontSize: 11, color: '#7C8BA1', lineHeight: 1.5 }}>{f.desc}</div>
               </div>
             ))}
           </div>
@@ -436,7 +436,7 @@ export default function LoginPage() {
               <h2 style={{ fontSize: 22, fontWeight: 500, color: '#F8FAFC', textAlign: 'center', marginBottom: 8 }}>
                 Bienvenido de regreso
               </h2>
-              <p style={{ fontSize: 14, color: '#64748B', textAlign: 'center', marginBottom: 36 }}>
+              <p style={{ fontSize: 14, color: '#7C8BA1', textAlign: 'center', marginBottom: 36 }}>
                 Selecciona una opción para continuar
               </p>
 
@@ -484,7 +484,7 @@ export default function LoginPage() {
                   }}>{item.icon}</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 15, fontWeight: 600, color: '#F8FAFC', marginBottom: 4 }}>{item.title}</div>
-                    <div style={{ fontSize: 12, color: '#64748B', lineHeight: 1.5 }}>{item.desc}</div>
+                    <div style={{ fontSize: 12, color: '#7C8BA1', lineHeight: 1.5 }}>{item.desc}</div>
                   </div>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D7CFF" strokeWidth="1.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
                 </div>
@@ -739,7 +739,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <div style={{ position: 'absolute', bottom: 24, fontSize: 11, color: '#1e293b', letterSpacing: '0.05em' }}>
+        <div style={{ position: 'absolute', bottom: 24, fontSize: 11, color: '#6B7B93', letterSpacing: '0.05em' }}>
           © 2026 ESTIA Consultoría · Todos los derechos reservados
         </div>
       </div>

@@ -182,15 +182,15 @@ export default function DashboardPage() {
   return (
     <MainLayout>
       <DashboardInfoModal open={infoOpen} onClose={() => setInfoOpen(false)} />
-      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 48px)', backgroundColor: '#0A0A0A', overflowX: 'hidden' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 48px)', backgroundColor: 'rgb(var(--bg))', overflowX: 'hidden' }}>
         {/* Header del módulo */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 24px', borderBottom: '1px solid #2D2D2D', backgroundColor: '#0A0A0A' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 24px', borderBottom: '1px solid rgb(var(--border))', backgroundColor: 'rgb(var(--bg))' }}>
           <div>
-            <h1 style={{ fontSize: '18px', fontWeight: 400, color: '#F5F5F5', marginBottom: '2px', letterSpacing: '0.02em' }}>
+            <h1 style={{ fontSize: '18px', fontWeight: 400, color: 'rgb(var(--text-1))', marginBottom: '2px', letterSpacing: '0.02em' }}>
               Dashboard Ejecutivo
             </h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-              <span style={{ fontSize: '12px', color: '#7E7E7E', letterSpacing: '0.01em' }}>
+              <span style={{ fontSize: '12px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>
                 {activeBranch ? activeBranch.name : activeCompany ? activeCompany.name : 'Vista Global'}
               </span>
             </div>
@@ -210,15 +210,15 @@ export default function DashboardPage() {
                 style={{
                   padding: '6px 14px',
                   fontSize: '12px',
-                  color: period === p.value ? '#F5F5F5' : '#7E7E7E',
-                  backgroundColor: period === p.value ? '#1B1B1B' : 'transparent',
-                  border: period === p.value ? '1px solid #2D2D2D' : '1px solid #2D2D2D',
+                  color: period === p.value ? 'rgb(var(--text-1))' : 'rgb(var(--text-3))',
+                  backgroundColor: period === p.value ? 'rgb(var(--field))' : 'transparent',
+                  border: period === p.value ? '1px solid rgb(var(--border))' : '1px solid rgb(var(--border))',
                   borderRadius: '2px',
                   cursor: 'pointer',
                   letterSpacing: '0.01em',
                 }}
-                onMouseEnter={(e) => { if (period !== p.value) e.currentTarget.style.backgroundColor = '#161616'; e.currentTarget.style.borderColor = '#3D3D3D'; }}
-                onMouseLeave={(e) => { if (period !== p.value) e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.borderColor = '#2D2D2D'; }}
+                onMouseEnter={(e) => { if (period !== p.value) e.currentTarget.style.backgroundColor = 'rgb(var(--surface-1))'; e.currentTarget.style.borderColor = 'rgb(var(--surface-4))'; }}
+                onMouseLeave={(e) => { if (period !== p.value) e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.borderColor = 'rgb(var(--border))'; }}
               >
                 {p.label}
               </button>
@@ -228,25 +228,25 @@ export default function DashboardPage() {
 
         {/* Executive Alert Band */}
         {(!loading && kpis) && (
-          <div style={{ padding: '8px 24px', borderBottom: '1px solid #2D2D2D', backgroundColor: '#0A0A0A' }}>
+          <div style={{ padding: '8px 24px', borderBottom: '1px solid rgb(var(--border))', backgroundColor: 'rgb(var(--bg))' }}>
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               {pendingShifts.length > 0 && (
                 <div
                   onClick={() => navigate('/pos')}
                   style={{
                     padding: '8px 14px',
-                    border: '1px solid #8A6A3A44',
-                    background: '#8A6A3A11',
+                    border: '1px solid rgb(var(--warn-solid) / 0.267)',
+                    background: 'rgb(var(--warn-solid) / 0.067)',
                     borderRadius: '8px',
                     fontSize: '11px',
-                    color: '#8A6A3A',
+                    color: 'rgb(var(--warn))',
                     cursor: 'pointer',
                     display: 'flex',
                     gap: '8px',
                     alignItems: 'center',
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#8A6A3A88'; e.currentTarget.style.background = '#8A6A3A22'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#8A6A3A44'; e.currentTarget.style.background = '#8A6A3A11'; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgb(var(--warn-solid) / 0.533)'; e.currentTarget.style.background = 'rgb(var(--warn-solid) / 0.133)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgb(var(--warn-solid) / 0.267)'; e.currentTarget.style.background = 'rgb(var(--warn-solid) / 0.067)'; }}
                 >
                   <span>⚠</span>
                   <span>{pendingShifts.length} cortes pendientes de revisión</span>
@@ -257,18 +257,18 @@ export default function DashboardPage() {
                   onClick={() => navigate('/treasury')}
                   style={{
                     padding: '8px 14px',
-                    border: '1px solid #8A6A3A44',
-                    background: '#8A6A3A11',
+                    border: '1px solid rgb(var(--warn-solid) / 0.267)',
+                    background: 'rgb(var(--warn-solid) / 0.067)',
                     borderRadius: '8px',
                     fontSize: '11px',
-                    color: '#8A6A3A',
+                    color: 'rgb(var(--warn))',
                     cursor: 'pointer',
                     display: 'flex',
                     gap: '8px',
                     alignItems: 'center',
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#8A6A3A88'; e.currentTarget.style.background = '#8A6A3A22'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#8A6A3A44'; e.currentTarget.style.background = '#8A6A3A11'; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgb(var(--warn-solid) / 0.533)'; e.currentTarget.style.background = 'rgb(var(--warn-solid) / 0.133)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgb(var(--warn-solid) / 0.267)'; e.currentTarget.style.background = 'rgb(var(--warn-solid) / 0.067)'; }}
                 >
                   <span>⚠</span>
                   <span>{kpis.cxpVencidas} facturas vencidas</span>
@@ -279,18 +279,18 @@ export default function DashboardPage() {
                   onClick={() => navigate('/banks')}
                   style={{
                     padding: '8px 14px',
-                    border: '1px solid #8A6A3A44',
-                    background: '#8A6A3A11',
+                    border: '1px solid rgb(var(--warn-solid) / 0.267)',
+                    background: 'rgb(var(--warn-solid) / 0.067)',
                     borderRadius: '8px',
                     fontSize: '11px',
-                    color: '#8A6A3A',
+                    color: 'rgb(var(--warn))',
                     cursor: 'pointer',
                     display: 'flex',
                     gap: '8px',
                     alignItems: 'center',
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#8A6A3A88'; e.currentTarget.style.background = '#8A6A3A22'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#8A6A3A44'; e.currentTarget.style.background = '#8A6A3A11'; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgb(var(--warn-solid) / 0.533)'; e.currentTarget.style.background = 'rgb(var(--warn-solid) / 0.133)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgb(var(--warn-solid) / 0.267)'; e.currentTarget.style.background = 'rgb(var(--warn-solid) / 0.067)'; }}
                 >
                   <span>⚠</span>
                   <span>Saldo bajo en cuentas</span>
@@ -302,7 +302,7 @@ export default function DashboardPage() {
 
         {error && (
           <div style={{ padding: '24px' }}>
-            <div style={{ backgroundColor: '#2D2D2D', border: '1px solid #9B3A3A', borderRadius: '8px', padding: '16px', color: '#F5F5F5' }}>
+            <div style={{ backgroundColor: 'rgb(var(--surface-3))', border: '1px solid rgb(var(--danger-solid))', borderRadius: '8px', padding: '16px', color: 'rgb(var(--text-1))' }}>
               {error}
             </div>
           </div>
@@ -310,166 +310,166 @@ export default function DashboardPage() {
 
         {loading ? (
           <div style={{ padding: '24px' }}>
-            <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '8px', padding: '24px', color: '#9A9A9A' }}>
+            <div style={{ backgroundColor: 'rgb(var(--surface-1))', border: '1px solid rgb(var(--border))', borderRadius: '8px', padding: '24px', color: 'rgb(var(--text-3))' }}>
               Cargando dashboard...
             </div>
           </div>
         ) : (
           <>
                 {/* ZONA 1 - Resumen Consolidado */}
-                <div style={{ padding: '10px 24px', borderBottom: '1px solid #2D2D2D', display: 'flex', alignItems: 'center', backgroundColor: '#0A0A0A', overflowX: 'auto', minWidth: 0 }}>
+                <div style={{ padding: '10px 24px', borderBottom: '1px solid rgb(var(--border))', display: 'flex', alignItems: 'center', backgroundColor: 'rgb(var(--bg))', overflowX: 'auto', minWidth: 0 }}>
                   {/* Ventas */}
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
+                    <div style={{ fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
                       Ventas
                     </div>
-                    <div style={{ fontSize: '22px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
+                    <div style={{ fontSize: '22px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
                       {formatCurrency(ventasDisplay)}
                     </div>
-                    <div style={{ fontSize: '11px', color: '#3B7A57', letterSpacing: '0.01em' }}>
+                    <div style={{ fontSize: '11px', color: 'rgb(var(--ok))', letterSpacing: '0.01em' }}>
                       {formatPercent(kpis?.incomeVariation || 0)}
                     </div>
                   </div>
 
-                  <div style={{ width: '1px', height: '32px', backgroundColor: '#2D2D2D', margin: '0 16px' }} />
+                  <div style={{ width: '1px', height: '32px', backgroundColor: 'rgb(var(--surface-3))', margin: '0 16px' }} />
 
                   {/* Costo */}
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
+                    <div style={{ fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
                       Costo
                     </div>
-                    <div style={{ fontSize: '22px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
+                    <div style={{ fontSize: '22px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
                       {formatCurrency(costo)}
                     </div>
-                    <div style={{ fontSize: '11px', color: '#9B3A3A', letterSpacing: '0.01em' }}>
+                    <div style={{ fontSize: '11px', color: 'rgb(var(--danger))', letterSpacing: '0.01em' }}>
                       {formatPercent(kpis?.expenseVariation || 0)}
                     </div>
                   </div>
 
-                  <div style={{ width: '1px', height: '32px', backgroundColor: '#2D2D2D', margin: '0 16px' }} />
+                  <div style={{ width: '1px', height: '32px', backgroundColor: 'rgb(var(--surface-3))', margin: '0 16px' }} />
 
                   {/* Gasto */}
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
+                    <div style={{ fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
                       Gasto
                     </div>
-                    <div style={{ fontSize: '22px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
+                    <div style={{ fontSize: '22px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
                       {formatCurrency(gasto)}
                     </div>
-                    <div style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>
+                    <div style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>
                       {formatPercent(kpis?.expenseVariation || 0)}
                     </div>
                   </div>
 
-                  <div style={{ width: '1px', height: '32px', backgroundColor: '#2D2D2D', margin: '0 16px' }} />
+                  <div style={{ width: '1px', height: '32px', backgroundColor: 'rgb(var(--surface-3))', margin: '0 16px' }} />
 
                   {/* UAI */}
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
+                    <div style={{ fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
                       UAI
                     </div>
-                    <div style={{ fontSize: '22px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
+                    <div style={{ fontSize: '22px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
                       {formatCurrency(uaiDisplay)}
                     </div>
-                    <div style={{ fontSize: '11px', color: uaiDisplay >= 0 ? '#3B7A57' : '#9B3A3A', letterSpacing: '0.01em' }}>
+                    <div style={{ fontSize: '11px', color: uaiDisplay >= 0 ? 'rgb(var(--ok))' : 'rgb(var(--danger))', letterSpacing: '0.01em' }}>
                       {formatPercent(Number(safePercent(uaiDisplay, ventasDisplay)))}
                     </div>
                   </div>
 
-                  <div style={{ width: '1px', height: '32px', backgroundColor: '#2D2D2D', margin: '0 16px' }} />
+                  <div style={{ width: '1px', height: '32px', backgroundColor: 'rgb(var(--surface-3))', margin: '0 16px' }} />
 
                   {/* UDI */}
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
+                    <div style={{ fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
                       UDI
                     </div>
-                    <div style={{ fontSize: '22px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
+                    <div style={{ fontSize: '22px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
                       {formatCurrency(udiDisplay)}
                     </div>
-                    <div style={{ fontSize: '11px', color: udiDisplay >= 0 ? '#3B7A57' : '#9B3A3A', letterSpacing: '0.01em' }}>
+                    <div style={{ fontSize: '11px', color: udiDisplay >= 0 ? 'rgb(var(--ok))' : 'rgb(var(--danger))', letterSpacing: '0.01em' }}>
                       {formatPercent(Number(safePercent(udiDisplay, ventasDisplay)))}
                     </div>
                   </div>
                 </div>
 
                 {/* ZONA 2+3 - Comparativo y Detalle */}
-                <div style={{ display: 'flex', flex: 1, overflow: 'hidden', backgroundColor: '#0A0A0A' }}>
+                <div style={{ display: 'flex', flex: 1, overflow: 'hidden', backgroundColor: 'rgb(var(--bg))' }}>
                   {/* ZONA 2 - Comparativo Empresas (65%) */}
                   <div style={{ flex: '0 0 65%', display: 'flex', flexDirection: 'column', padding: '12px 16px', overflow: 'auto', minWidth: 0 }}>
                     <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
-                        <h2 style={{ fontSize: '14px', fontWeight: 400, color: '#F5F5F5', marginBottom: '2px', letterSpacing: '0.01em' }}>
+                        <h2 style={{ fontSize: '14px', fontWeight: 400, color: 'rgb(var(--text-1))', marginBottom: '2px', letterSpacing: '0.01em' }}>
                           {activeBranch ? 'Sucursales' : activeCompany ? 'Sucursales' : 'Comparativo por Empresa'}
                         </h2>
-                        <p style={{ fontSize: '12px', color: '#7E7E7A', letterSpacing: '0.01em' }}>
+                        <p style={{ fontSize: '12px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>
                           {period === 'today' ? 'Hoy' : period === 'week' ? 'Esta semana' : period === 'month' ? 'Este mes' : period === 'quarter' ? 'Este trimestre' : 'Este año'}
                         </p>
                       </div>
                     </div>
 
                 {/* BarChart */}
-                <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '4px', padding: '12px 20px', marginBottom: '8px', flex: '0 0 auto', minWidth: 0 }}>
+                <div style={{ backgroundColor: 'rgb(var(--surface-1))', border: '1px solid rgb(var(--border))', borderRadius: '4px', padding: '12px 20px', marginBottom: '8px', flex: '0 0 auto', minWidth: 0 }}>
                   {companyBarChartData.length > 0 ? (
                     <div style={{ height: '170px' }}>
                       <ResponsiveContainer width="100%" height={170}>
                         <BarChart data={companyBarChartData}>
-                        <CartesianGrid strokeDasharray="4 4" stroke="#2D2D2D" vertical={false} />
-                        <XAxis dataKey="name" stroke="#7E7E7E" fontSize="11" tick={{ fill: '#7E7E7E' }} />
-                        <YAxis stroke="#7E7E7E" fontSize="11" tick={{ fill: '#7E7E7E' }} />
+                        <CartesianGrid strokeDasharray="4 4" stroke="rgb(var(--border))" vertical={false} />
+                        <XAxis dataKey="name" stroke="rgb(var(--text-3))" fontSize="11" tick={{ fill: 'rgb(var(--text-3))' }} />
+                        <YAxis stroke="rgb(var(--text-3))" fontSize="11" tick={{ fill: 'rgb(var(--text-3))' }} />
                         <Tooltip
-                          contentStyle={{ backgroundColor: '#1B1B1B', border: '1px solid #2D2D2D', borderRadius: '2px', color: '#F5F5F5', fontSize: '12px', padding: '8px 12px' }}
-                          itemStyle={{ color: '#F5F5F5', fontSize: '11px' }}
+                          contentStyle={{ backgroundColor: 'rgb(var(--field))', border: '1px solid rgb(var(--border))', borderRadius: '2px', color: 'rgb(var(--text-1))', fontSize: '12px', padding: '8px 12px' }}
+                          itemStyle={{ color: 'rgb(var(--text-1))', fontSize: '11px' }}
                           formatter={(value: number) => formatCurrency(value)}
                         />
                         <Legend 
                           wrapperStyle={{ paddingTop: '12px', fontSize: '11px' }}
                           iconType="rect"
-                          formatter={(value: string) => <span style={{ color: '#BDBDBD', fontSize: '11px' }}>{value}</span>}
+                          formatter={(value: string) => <span style={{ color: 'rgb(var(--text-2))', fontSize: '11px' }}>{value}</span>}
                         />
-                        <Bar dataKey="Ingresos" fill="#BDBDBD" name="Ingresos" radius={[0, 0, 0, 0]} />
-                        <Bar dataKey="Egresos" fill="#7E7E7E" name="Egresos" radius={[0, 0, 0, 0]} />
-                        <Bar dataKey="Saldo" fill="#4A4A4A" name="Saldo" radius={[0, 0, 0, 0]} />
+                        <Bar dataKey="Ingresos" fill="rgb(var(--text-2))" name="Ingresos" radius={[0, 0, 0, 0]} />
+                        <Bar dataKey="Egresos" fill="rgb(var(--viz-5))" name="Egresos" radius={[0, 0, 0, 0]} />
+                        <Bar dataKey="Saldo" fill="rgb(var(--viz-6))" name="Saldo" radius={[0, 0, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                   ) : (
-                    <div style={{ height: '170px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7E7E7E', fontSize: '12px' }}>
+                    <div style={{ height: '170px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgb(var(--text-3))', fontSize: '12px' }}>
                       Sin datos para mostrar
                     </div>
                   )}
                 </div>
 
                 {/* Tabla */}
-                <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '4px', flex: 1, overflow: 'auto' }}>
+                <div style={{ backgroundColor: 'rgb(var(--surface-1))', border: '1px solid rgb(var(--border))', borderRadius: '4px', flex: 1, overflow: 'auto' }}>
                   <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse' }}>
                     <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
-                      <tr style={{ backgroundColor: '#1B1B1B' }}>
-                        <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
+                      <tr style={{ backgroundColor: 'rgb(var(--field))' }}>
+                        <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
                           Empresa
                         </th>
-                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
+                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
                           Ventas
                         </th>
-                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
+                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
                           Costo
                         </th>
-                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
+                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
                           Gasto
                         </th>
-                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
+                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
                           UAI
                         </th>
-                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
+                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
                           UDI
                         </th>
-                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
+                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
                           Margen
                         </th>
-                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
+                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
                           Part.%
                         </th>
-                        <th style={{ padding: '10px 12px', textAlign: 'center', fontSize: '10px', color: '#7E7E7E', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
+                        <th style={{ padding: '10px 12px', textAlign: 'center', fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
                           Acciones
                         </th>
                       </tr>
@@ -487,32 +487,32 @@ export default function DashboardPage() {
                         return (
                           <tr
                             key={company.companyId}
-                            style={{ borderBottom: '1px solid #2D2D2D' }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1B1B1B'}
+                            style={{ borderBottom: '1px solid rgb(var(--border))' }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgb(var(--field))'}
                             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                           >
-                            <td style={{ padding: '10px 12px', color: '#F5F5F5', fontSize: '12px', letterSpacing: '0.01em' }}>
+                            <td style={{ padding: '10px 12px', color: 'rgb(var(--text-1))', fontSize: '12px', letterSpacing: '0.01em' }}>
                               {company.companyName}
                             </td>
-                            <td style={{ padding: '10px 12px', textAlign: 'right', color: '#F5F5F5', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
+                            <td style={{ padding: '10px 12px', textAlign: 'right', color: 'rgb(var(--text-1))', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatCurrency(compVentas)}
                             </td>
-                            <td style={{ padding: '10px 12px', textAlign: 'right', color: '#F5F5F5', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
+                            <td style={{ padding: '10px 12px', textAlign: 'right', color: 'rgb(var(--text-1))', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatCurrency(compCosto)}
                             </td>
-                            <td style={{ padding: '10px 12px', textAlign: 'right', color: '#F5F5F5', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
+                            <td style={{ padding: '10px 12px', textAlign: 'right', color: 'rgb(var(--text-1))', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatCurrency(compGasto)}
                             </td>
-                            <td style={{ padding: '10px 12px', textAlign: 'right', color: compUai >= 0 ? '#3B7A57' : '#9B3A3A', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
+                            <td style={{ padding: '10px 12px', textAlign: 'right', color: compUai >= 0 ? 'rgb(var(--ok))' : 'rgb(var(--danger))', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatCurrency(compUai)}
                             </td>
-                            <td style={{ padding: '10px 12px', textAlign: 'right', color: compUdi >= 0 ? '#3B7A57' : '#9B3A3A', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
+                            <td style={{ padding: '10px 12px', textAlign: 'right', color: compUdi >= 0 ? 'rgb(var(--ok))' : 'rgb(var(--danger))', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatCurrency(compUdi)}
                             </td>
-                            <td style={{ padding: '10px 12px', textAlign: 'right', color: '#F5F5F5', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
+                            <td style={{ padding: '10px 12px', textAlign: 'right', color: 'rgb(var(--text-1))', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatPercentDecimal(compMargen)}
                             </td>
-                            <td style={{ padding: '10px 12px', textAlign: 'right', color: '#F5F5F5', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
+                            <td style={{ padding: '10px 12px', textAlign: 'right', color: 'rgb(var(--text-1))', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatPercentDecimal(compPart)}
                             </td>
                           </tr>
@@ -525,58 +525,58 @@ export default function DashboardPage() {
                 </div>
 
                   {/* ZONA 3 - Detalle Empresa (35%) */}
-                  <div style={{ flex: '0 0 35%', backgroundColor: '#161616', borderLeft: '1px solid #2D2D2D', padding: '12px 16px', overflowY: 'auto', minWidth: 0 }}>
+                  <div style={{ flex: '0 0 35%', backgroundColor: 'rgb(var(--surface-1))', borderLeft: '1px solid rgb(var(--border))', padding: '12px 16px', overflowY: 'auto', minWidth: 0 }}>
                     {activeCompany ? (
                       <>
-                        <h2 style={{ fontSize: '16px', fontWeight: 400, color: '#F5F5F5', marginBottom: '2px', letterSpacing: '0.01em' }}>
+                        <h2 style={{ fontSize: '16px', fontWeight: 400, color: 'rgb(var(--text-1))', marginBottom: '2px', letterSpacing: '0.01em' }}>
                           {activeCompany.name}
                         </h2>
-                        <p style={{ fontSize: '11px', color: '#7E7E7E', marginBottom: '8px', letterSpacing: '0.01em' }}>
+                        <p style={{ fontSize: '11px', color: 'rgb(var(--text-3))', marginBottom: '8px', letterSpacing: '0.01em' }}>
                           Restaurantes y Servicios
                         </p>
 
-                        <div style={{ borderBottom: '1px solid #2D2D2D', marginBottom: '10px' }} />
+                        <div style={{ borderBottom: '1px solid rgb(var(--border))', marginBottom: '10px' }} />
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Ventas</span>
-                            <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
+                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Ventas</span>
+                            <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatCurrency(panelVentas)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Costo</span>
-                            <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
+                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Costo</span>
+                            <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatCurrency(panelEgresos * 0.6)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Gasto</span>
-                            <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
+                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Gasto</span>
+                            <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatCurrency(panelEgresos * 0.4)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>UAI</span>
-                            <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
+                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>UAI</span>
+                            <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatCurrency(panelUAI)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>UDI</span>
-                            <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
+                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>UDI</span>
+                            <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatCurrency(panelUDI)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Margen Neto</span>
-                            <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
+                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Margen Neto</span>
+                            <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatPercentDecimal(panelMargen)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Participación %</span>
-                            <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
+                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Participación %</span>
+                            <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatPercentDecimal(Number(safePercent(panelVentas, totalVentasGrupo)))}
                             </span>
                           </div>
@@ -585,15 +585,15 @@ export default function DashboardPage() {
                         <div style={{ height: '80px', marginBottom: '10px', minWidth: 0 }}>
                           <ResponsiveContainer width="100%" height={80}>
                             <LineChart data={trendLineChartData}>
-                              <CartesianGrid strokeDasharray="4 4" stroke="#2D2D2D" vertical={false} />
-                              <XAxis dataKey="date" stroke="#7E7E7E" fontSize="10" tick={{ fill: '#7E7E7E' }} />
-                              <YAxis stroke="#7E7E7E" fontSize="10" tick={{ fill: '#7E7E7E' }} />
+                              <CartesianGrid strokeDasharray="4 4" stroke="rgb(var(--border))" vertical={false} />
+                              <XAxis dataKey="date" stroke="rgb(var(--text-3))" fontSize="10" tick={{ fill: 'rgb(var(--text-3))' }} />
+                              <YAxis stroke="rgb(var(--text-3))" fontSize="10" tick={{ fill: 'rgb(var(--text-3))' }} />
                               <Tooltip
-                                contentStyle={{ backgroundColor: '#1B1B1B', border: '1px solid #2D2D2D', borderRadius: '2px', color: '#F5F5F5', fontSize: '11px', padding: '6px 10px' }}
-                                itemStyle={{ color: '#F5F5F5', fontSize: '10px' }}
+                                contentStyle={{ backgroundColor: 'rgb(var(--field))', border: '1px solid rgb(var(--border))', borderRadius: '2px', color: 'rgb(var(--text-1))', fontSize: '11px', padding: '6px 10px' }}
+                                itemStyle={{ color: 'rgb(var(--text-1))', fontSize: '10px' }}
                                 formatter={(value) => [`$${Number(value).toLocaleString('es-MX')}`, 'Ventas']}
                               />
-                              <Line type="monotone" dataKey="value" stroke="#BDBDBD" strokeWidth={1.5} dot={false} />
+                              <Line type="monotone" dataKey="value" stroke="rgb(var(--text-2))" strokeWidth={1.5} dot={false} />
                             </LineChart>
                           </ResponsiveContainer>
                         </div>
@@ -603,59 +603,59 @@ export default function DashboardPage() {
                             width: '100%',
                             padding: '10px',
                             fontSize: '12px',
-                            color: '#BDBDBD',
+                            color: 'rgb(var(--text-2))',
                             backgroundColor: 'transparent',
-                            border: '1px solid #2D2D2D',
+                            border: '1px solid rgb(var(--border))',
                             borderRadius: '2px',
                             cursor: 'pointer',
                             letterSpacing: '0.01em',
                           }}
                           onClick={() => navigate('/reports')}
-                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.color = '#F5F5F5'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.color = '#BDBDBD'; }}
+                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgb(var(--surface-4))'; e.currentTarget.style.color = 'rgb(var(--text-1))'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgb(var(--border))'; e.currentTarget.style.color = 'rgb(var(--text-2))'; }}
                         >
                           Ver detalle completo →
                         </button>
                       </>
                     ) : (
                       <>
-                        <h2 style={{ fontSize: '16px', fontWeight: 400, color: '#F5F5F5', marginBottom: '2px', letterSpacing: '0.01em' }}>
+                        <h2 style={{ fontSize: '16px', fontWeight: 400, color: 'rgb(var(--text-1))', marginBottom: '2px', letterSpacing: '0.01em' }}>
                           Resumen del Grupo
                         </h2>
-                        <p style={{ fontSize: '11px', color: '#7E7E7E', marginBottom: '8px', letterSpacing: '0.01em' }}>
+                        <p style={{ fontSize: '11px', color: 'rgb(var(--text-3))', marginBottom: '8px', letterSpacing: '0.01em' }}>
                           Vista consolidada de todas las empresas
                         </p>
 
-                        <div style={{ borderBottom: '1px solid #2D2D2D', marginBottom: '10px' }} />
+                        <div style={{ borderBottom: '1px solid rgb(var(--border))', marginBottom: '10px' }} />
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Ventas Totales</span>
-                            <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
+                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Ventas Totales</span>
+                            <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatCurrency(ventasDisplay)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Costo Total</span>
-                            <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
+                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Costo Total</span>
+                            <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatCurrency(costo)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>Gasto Total</span>
-                            <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
+                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Gasto Total</span>
+                            <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatCurrency(gasto)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>UAI Consolidada</span>
-                            <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
+                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>UAI Consolidada</span>
+                            <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatCurrency(uaiDisplay)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>UDI Consolidada</span>
-                            <span style={{ fontSize: '13px', color: '#F5F5F5', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
+                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>UDI Consolidada</span>
+                            <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatCurrency(udiDisplay)}
                             </span>
                           </div>
@@ -664,20 +664,20 @@ export default function DashboardPage() {
                         <div style={{ height: '80px', marginBottom: '10px', minWidth: 0 }}>
                           <ResponsiveContainer width="100%" height={80}>
                             <LineChart data={trendLineChartData}>
-                              <CartesianGrid strokeDasharray="4 4" stroke="#2D2D2D" vertical={false} />
-                              <XAxis dataKey="date" stroke="#7E7E7E" fontSize="10" tick={{ fill: '#7E7E7E' }} />
-                              <YAxis stroke="#7E7E7E" fontSize="10" tick={{ fill: '#7E7E7E' }} />
+                              <CartesianGrid strokeDasharray="4 4" stroke="rgb(var(--border))" vertical={false} />
+                              <XAxis dataKey="date" stroke="rgb(var(--text-3))" fontSize="10" tick={{ fill: 'rgb(var(--text-3))' }} />
+                              <YAxis stroke="rgb(var(--text-3))" fontSize="10" tick={{ fill: 'rgb(var(--text-3))' }} />
                               <Tooltip
-                                contentStyle={{ backgroundColor: '#1B1B1B', border: '1px solid #2D2D2D', borderRadius: '2px', color: '#F5F5F5', fontSize: '11px', padding: '6px 10px' }}
-                                itemStyle={{ color: '#F5F5F5', fontSize: '10px' }}
+                                contentStyle={{ backgroundColor: 'rgb(var(--field))', border: '1px solid rgb(var(--border))', borderRadius: '2px', color: 'rgb(var(--text-1))', fontSize: '11px', padding: '6px 10px' }}
+                                itemStyle={{ color: 'rgb(var(--text-1))', fontSize: '10px' }}
                                 formatter={(value) => [`$${Number(value).toLocaleString('es-MX')}`, 'Ventas']}
                               />
-                              <Line type="monotone" dataKey="value" stroke="#BDBDBD" strokeWidth={1.5} dot={false} />
+                              <Line type="monotone" dataKey="value" stroke="rgb(var(--text-2))" strokeWidth={1.5} dot={false} />
                             </LineChart>
                           </ResponsiveContainer>
                         </div>
 
-                        <p style={{ fontSize: '12px', color: '#7E7E7E', textAlign: 'center', letterSpacing: '0.01em' }}>
+                        <p style={{ fontSize: '12px', color: 'rgb(var(--text-3))', textAlign: 'center', letterSpacing: '0.01em' }}>
                           Selecciona una empresa para ver el detalle
                         </p>
                       </>

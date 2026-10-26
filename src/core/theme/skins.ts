@@ -51,6 +51,8 @@ export interface Tokens {
   viz2: string; // (violeta)
   viz3: string; // (ámbar)
   viz4: string; // (rosa)
+  viz5: string; // series neutras de las gráficas (gris medio)
+  viz6: string; // (gris oscuro)
 }
 
 export const SKINS: Record<SkinId, { nombre: string; descripcion: string; tokens: Tokens }> = {
@@ -68,7 +70,7 @@ export const SKINS: Record<SkinId, { nombre: string; descripcion: string; tokens
       okSoft: '#1A2E22', dangerSoft: '#2E1A1A',
       focus: '#BDBDBD',
       veil: '#FFFFFF', scrim: '#000000', canvas: '#0F1117', panel: '#141820', popover: '#1A1F2E', textSoft: '#C8CDD8', textBright: '#E8ECF0',
-      accentAlt: '#7B9CCC', chip: '#1E2D45', viz1: '#4ADE80', viz2: '#A78BFA', viz3: '#FBBF24', viz4: '#F472B6',
+      accentAlt: '#7B9CCC', chip: '#1E2D45', viz1: '#4ADE80', viz2: '#A78BFA', viz3: '#FBBF24', viz4: '#F472B6', viz5: '#7E7E7E', viz6: '#4A4A4A',
     },
   },
   oscuro: {
@@ -85,7 +87,7 @@ export const SKINS: Record<SkinId, { nombre: string; descripcion: string; tokens
       okSoft: '#14281C', dangerSoft: '#2E1A1E',
       focus: '#6EA8FE',
       veil: '#FFFFFF', scrim: '#000000', canvas: '#0F1117', panel: '#141820', popover: '#1A1F2E', textSoft: '#C8CDD8', textBright: '#E8ECF0',
-      accentAlt: '#7B9CCC', chip: '#1E2D45', viz1: '#4ADE80', viz2: '#A78BFA', viz3: '#FBBF24', viz4: '#F472B6',
+      accentAlt: '#7B9CCC', chip: '#1E2D45', viz1: '#4ADE80', viz2: '#A78BFA', viz3: '#FBBF24', viz4: '#F472B6', viz5: '#7E7E7E', viz6: '#4A4A4A',
     },
   },
 };

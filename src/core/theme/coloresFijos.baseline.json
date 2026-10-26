@@ -149,24 +149,6 @@
   "tw": 22,
   "nombrados": 0
  },
- "pages/Dashboard/DashboardInfoModal.tsx": {
-  "hex": 0,
-  "rgb": 0,
-  "tw": 13,
-  "nombrados": 0
- },
- "pages/Dashboard/DashboardLite.tsx": {
-  "hex": 23,
-  "rgb": 47,
-  "tw": 0,
-  "nombrados": 0
- },
- "pages/Dashboard/DashboardPage.tsx": {
-  "hex": 167,
-  "rgb": 0,
-  "tw": 0,
-  "nombrados": 0
- },
  "pages/employee/EmployeeDocuments.tsx": {
   "hex": 15,
   "rgb": 0,
@@ -467,18 +449,6 @@
   "tw": 50,
   "nombrados": 0
  },
- "pages/prueba/prueba.css": {
-  "hex": 0,
-  "rgb": 1,
-  "tw": 0,
-  "nombrados": 0
- },
- "pages/prueba/PruebaWizard.tsx": {
-  "hex": 0,
-  "rgb": 1,
-  "tw": 0,
-  "nombrados": 0
- },
  "pages/purchases/CreateInvoiceModal.tsx": {
   "hex": 0,
   "rgb": 0,
@@ -573,12 +543,6 @@
   "hex": 0,
   "rgb": 0,
   "tw": 13,
-  "nombrados": 0
- },
- "pages/solutions/SolutionsCenter.tsx": {
-  "hex": 7,
-  "rgb": 21,
-  "tw": 0,
   "nombrados": 0
  },
  "pages/soporte/ConfiguracionGlobal.tsx": {

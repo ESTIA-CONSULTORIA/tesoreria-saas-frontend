@@ -9,11 +9,11 @@ import type { DashboardLitePeriod } from '../../core/store/useDashboardFilterSto
 type Period = DashboardLitePeriod;
 
 const CANALES = [
-  { key: 'efectivo',      label: 'Efectivo',      color: '#4ade80' },
-  { key: 'tarjeta',       label: 'Tarjeta',        color: '#8fafd4' },
-  { key: 'transferencia', label: 'Transferencia',  color: '#a78bfa' },
-  { key: 'plataformas',   label: 'Plataformas',    color: '#fbbf24' },
-  { key: 'promociones',   label: 'Promociones',    color: '#f472b6' },
+  { key: 'efectivo',      label: 'Efectivo',      color: 'rgb(var(--viz-1))' },
+  { key: 'tarjeta',       label: 'Tarjeta',        color: 'rgb(var(--accent))' },
+  { key: 'transferencia', label: 'Transferencia',  color: 'rgb(var(--viz-2))' },
+  { key: 'plataformas',   label: 'Plataformas',    color: 'rgb(var(--viz-3))' },
+  { key: 'promociones',   label: 'Promociones',    color: 'rgb(var(--viz-4))' },
 ];
 
 function parseNotas(notas: string | null) {
@@ -151,67 +151,67 @@ export default function DashboardLite() {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <h1 style={{ fontSize: 20, fontWeight: 500, color: '#c8cdd8', marginBottom: 4 }}>Dashboard</h1>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)' }}>Resumen de ventas por período</div>
+            <h1 style={{ fontSize: 20, fontWeight: 500, color: 'rgb(var(--text-soft))', marginBottom: 4 }}>Dashboard</h1>
+            <div style={{ fontSize: 13, color: 'rgb(var(--veil) / 0.5)' }}>Resumen de ventas por período</div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             {(['semana', 'mes'] as Period[]).map(p => (
               <button key={p} onClick={() => setPeriod(p)} style={{
                 padding: '6px 16px', borderRadius: 99, fontSize: 12, cursor: 'pointer',
-                border: `1px solid ${period === p ? 'rgba(143,175,212,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                background: period === p ? 'rgba(143,175,212,0.1)' : 'transparent',
-                color: period === p ? '#8fafd4' : 'rgba(255,255,255,0.35)',
+                border: `1px solid ${period === p ? 'rgb(var(--accent) / 0.4)' : 'rgb(var(--veil) / 0.08)'}`,
+                background: period === p ? 'rgb(var(--accent) / 0.1)' : 'transparent',
+                color: period === p ? 'rgb(var(--accent))' : 'rgb(var(--veil) / 0.5)',
                 textTransform: 'capitalize',
               }}>{p}</button>
             ))}
             <button onClick={() => setPeriod('custom')} style={{
               padding: '6px 16px', borderRadius: 99, fontSize: 12, cursor: 'pointer',
-              border: `1px solid ${period === 'custom' ? 'rgba(143,175,212,0.4)' : 'rgba(255,255,255,0.08)'}`,
-              background: period === 'custom' ? 'rgba(143,175,212,0.1)' : 'transparent',
-              color: period === 'custom' ? '#8fafd4' : 'rgba(255,255,255,0.35)',
+              border: `1px solid ${period === 'custom' ? 'rgb(var(--accent) / 0.4)' : 'rgb(var(--veil) / 0.08)'}`,
+              background: period === 'custom' ? 'rgb(var(--accent) / 0.1)' : 'transparent',
+              color: period === 'custom' ? 'rgb(var(--accent))' : 'rgb(var(--veil) / 0.5)',
             }}>Rango</button>
             {period === 'custom' && (
               <>
                 <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
-                  style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: '#c8cdd8', fontSize: 12 }} />
-                <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12 }}>al</span>
+                  style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid rgb(var(--veil) / 0.1)', background: 'rgb(var(--veil) / 0.04)', color: 'rgb(var(--text-soft))', fontSize: 12 }} />
+                <span style={{ color: 'rgb(var(--veil) / 0.5)', fontSize: 12 }}>al</span>
                 <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
-                  style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: '#c8cdd8', fontSize: 12 }} />
+                  style={{ padding: '5px 10px', borderRadius: 8, border: '1px solid rgb(var(--veil) / 0.1)', background: 'rgb(var(--veil) / 0.04)', color: 'rgb(var(--text-soft))', fontSize: 12 }} />
               </>
             )}
           </div>
         </div>
 
         {loading ? (
-          <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13, padding: 40, textAlign: 'center' }}>Cargando...</div>
+          <div style={{ color: 'rgb(var(--veil) / 0.5)', fontSize: 13, padding: 40, textAlign: 'center' }}>Cargando...</div>
         ) : (
           <>
             {/* KPI + canales */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16, marginBottom: 20 }}>
-              <div style={{ borderRadius: 12, border: '1px solid rgba(255,255,255,0.07)', background: '#141820', padding: '20px 24px' }}>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Venta total del período</div>
-                <div style={{ fontSize: 36, fontWeight: 300, color: '#4ade80', letterSpacing: '-0.02em' }}>{fmt(totalVenta)}</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', marginTop: 6 }}>
+              <div style={{ borderRadius: 12, border: '1px solid rgb(var(--veil) / 0.07)', background: 'rgb(var(--panel))', padding: '20px 24px' }}>
+                <div style={{ fontSize: 11, color: 'rgb(var(--veil) / 0.5)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Venta total del período</div>
+                <div style={{ fontSize: 36, fontWeight: 300, color: 'rgb(var(--viz-1))', letterSpacing: '-0.02em' }}>{fmt(totalVenta)}</div>
+                <div style={{ fontSize: 12, color: 'rgb(var(--veil) / 0.5)', marginTop: 6 }}>
                   {filtered.length} corte{filtered.length !== 1 ? 's' : ''} registrado{filtered.length !== 1 ? 's' : ''}
                 </div>
               </div>
 
-              <div style={{ borderRadius: 12, border: '1px solid rgba(255,255,255,0.07)', background: '#141820', padding: '20px 24px' }}>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>Desglose por canal</div>
+              <div style={{ borderRadius: 12, border: '1px solid rgb(var(--veil) / 0.07)', background: 'rgb(var(--panel))', padding: '20px 24px' }}>
+                <div style={{ fontSize: 11, color: 'rgb(var(--veil) / 0.5)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>Desglose por canal</div>
                 {canalTotals.length === 0 ? (
-                  <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>Sin datos</div>
+                  <div style={{ color: 'rgb(var(--veil) / 0.5)', fontSize: 13 }}>Sin datos</div>
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
                     {canalTotals.map(c => (
                       <div key={c.key}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{c.label}</span>
+                          <span style={{ fontSize: 12, color: 'rgb(var(--veil) / 0.5)' }}>{c.label}</span>
                           <span style={{ fontSize: 12, color: c.color, fontWeight: 500 }}>{c.pct}%</span>
                         </div>
-                        <div style={{ height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.06)' }}>
+                        <div style={{ height: 4, borderRadius: 99, background: 'rgb(var(--veil) / 0.06)' }}>
                           <div style={{ height: '100%', borderRadius: 99, background: c.color, width: `${c.pct}%`, transition: 'width 0.4s' }} />
                         </div>
-                        <div style={{ fontSize: 12, color: '#c8cdd8', marginTop: 4 }}>{fmt(c.total)}</div>
+                        <div style={{ fontSize: 12, color: 'rgb(var(--text-soft))', marginTop: 4 }}>{fmt(c.total)}</div>
                       </div>
                     ))}
                   </div>
@@ -221,17 +221,17 @@ export default function DashboardLite() {
 
             {/* Gráfica */}
             {chartData.length > 0 && (
-              <div style={{ borderRadius: 12, border: '1px solid rgba(255,255,255,0.07)', background: '#141820', padding: '20px 24px', marginBottom: 20 }}>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>Comportamiento por canal</div>
+              <div style={{ borderRadius: 12, border: '1px solid rgb(var(--veil) / 0.07)', background: 'rgb(var(--panel))', padding: '20px 24px', marginBottom: 20 }}>
+                <div style={{ fontSize: 11, color: 'rgb(var(--veil) / 0.5)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>Comportamiento por canal</div>
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={chartData} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                    <XAxis dataKey="day" tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.3)' }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.3)' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
+                    <XAxis dataKey="day" tick={{ fontSize: 11, fill: 'rgb(var(--veil) / 0.3)' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11, fill: 'rgb(var(--veil) / 0.3)' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
                     <Tooltip
-                      contentStyle={{ background: '#0f1117', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
+                      contentStyle={{ background: 'rgb(var(--canvas))', border: '1px solid rgb(var(--veil) / 0.1)', borderRadius: 8, fontSize: 12 }}
                       formatter={(value: any, name: string) => [fmt(Number(value)), name]}
                     />
-                    <Legend wrapperStyle={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }} />
+                    <Legend wrapperStyle={{ fontSize: 11, color: 'rgb(var(--veil) / 0.5)' }} />
                     {CANALES.map(c => (
                       <Bar key={c.key} dataKey={c.key} name={c.label} fill={c.color} radius={[4, 4, 0, 0]} stackId="a" />
                     ))}
@@ -242,12 +242,12 @@ export default function DashboardLite() {
 
             {/* Lista de cortes + detalle */}
             <div style={{ display: 'grid', gridTemplateColumns: selectedShift ? '1fr 1fr' : '1fr', gap: 16 }}>
-              <div style={{ borderRadius: 12, border: '1px solid rgba(255,255,255,0.07)', background: '#141820', overflow: 'hidden' }}>
-                <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', fontSize: 11, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              <div style={{ borderRadius: 12, border: '1px solid rgb(var(--veil) / 0.07)', background: 'rgb(var(--panel))', overflow: 'hidden' }}>
+                <div style={{ padding: '14px 20px', borderBottom: '1px solid rgb(var(--veil) / 0.06)', fontSize: 11, color: 'rgb(var(--veil) / 0.5)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                   Cortes del período
                 </div>
                 {filtered.length === 0 ? (
-                  <div style={{ padding: 32, textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>Sin cortes registrados</div>
+                  <div style={{ padding: 32, textAlign: 'center', color: 'rgb(var(--veil) / 0.5)', fontSize: 13 }}>Sin cortes registrados</div>
                 ) : (
                   filtered.map(s => {
                     const fecha = parseBusinessDate(s.fecha || s.createdAt);
@@ -258,19 +258,19 @@ export default function DashboardLite() {
                         style={{
                           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                           padding: '12px 20px', cursor: 'pointer',
-                          borderBottom: '1px solid rgba(255,255,255,0.04)',
-                          background: isSelected ? 'rgba(143,175,212,0.06)' : 'transparent',
-                          borderLeft: `3px solid ${isSelected ? '#8fafd4' : 'transparent'}`,
+                          borderBottom: '1px solid rgb(var(--veil) / 0.04)',
+                          background: isSelected ? 'rgb(var(--accent) / 0.06)' : 'transparent',
+                          borderLeft: `3px solid ${isSelected ? 'rgb(var(--accent))' : 'transparent'}`,
                         }}>
                         <div>
-                          <div style={{ fontSize: 13, color: '#c8cdd8' }}>
+                          <div style={{ fontSize: 13, color: 'rgb(var(--text-soft))' }}>
                             {fecha.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
                           </div>
-                          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', marginTop: 2 }}>
+                          <div style={{ fontSize: 11, color: 'rgb(var(--veil) / 0.5)', marginTop: 2 }}>
                             {fecha.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
                           </div>
                         </div>
-                        <div style={{ fontSize: 16, fontWeight: 400, color: total > 0 ? '#4ade80' : 'rgba(255,255,255,0.3)' }}>
+                        <div style={{ fontSize: 16, fontWeight: 400, color: total > 0 ? 'rgb(var(--viz-1))' : 'rgb(var(--veil) / 0.5)' }}>
                           {fmt(total)}
                         </div>
                       </div>
@@ -281,28 +281,28 @@ export default function DashboardLite() {
 
               {/* Detalle del corte seleccionado */}
               {selectedShift && shiftDetalle && (
-                <div style={{ borderRadius: 12, border: '1px solid rgba(143,175,212,0.15)', background: '#141820', overflow: 'hidden' }}>
-                  <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Detalle del corte</div>
-                    <button onClick={() => setSelectedShift(null)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', cursor: 'pointer', fontSize: 16 }}>✕</button>
+                <div style={{ borderRadius: 12, border: '1px solid rgb(var(--accent) / 0.15)', background: 'rgb(var(--panel))', overflow: 'hidden' }}>
+                  <div style={{ padding: '14px 20px', borderBottom: '1px solid rgb(var(--veil) / 0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontSize: 11, color: 'rgb(var(--veil) / 0.5)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Detalle del corte</div>
+                    <button onClick={() => setSelectedShift(null)} style={{ background: 'none', border: 'none', color: 'rgb(var(--veil) / 0.5)', cursor: 'pointer', fontSize: 16 }}>✕</button>
                   </div>
                   <div style={{ padding: '16px 20px' }}>
                     {shiftDetalle.canales.map(c => (
-                      <div key={c.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                        <span style={{ fontSize: 14, color: c.resta ? 'rgba(252,165,165,0.6)' : 'rgba(255,255,255,0.5)' }}>{c.label}</span>
+                      <div key={c.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid rgb(var(--veil) / 0.04)' }}>
+                        <span style={{ fontSize: 14, color: c.resta ? 'rgb(var(--danger))' : 'rgb(var(--veil) / 0.5)' }}>{c.label}</span>
                         <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: 15, fontWeight: 400, color: c.resta ? 'rgba(252,165,165,0.8)' : '#c8cdd8' }}>
+                          <div style={{ fontSize: 15, fontWeight: 400, color: c.resta ? 'rgb(var(--danger))' : 'rgb(var(--text-soft))' }}>
                             {c.resta ? '-' : ''}{fmt(c.valor)}
                           </div>
-                          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>
+                          <div style={{ fontSize: 11, color: 'rgb(var(--veil) / 0.5)' }}>
                             {shiftDetalle.ingresos > 0 ? (c.valor / shiftDetalle.ingresos * 100).toFixed(1) : '0.0'}%
                           </div>
                         </div>
                       </div>
                     ))}
                     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 0 0', marginTop: 4 }}>
-                      <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total</span>
-                      <span style={{ fontSize: 22, fontWeight: 300, color: '#4ade80' }}>{fmt(shiftDetalle.total)}</span>
+                      <span style={{ fontSize: 14, color: 'rgb(var(--veil) / 0.5)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total</span>
+                      <span style={{ fontSize: 22, fontWeight: 300, color: 'rgb(var(--viz-1))' }}>{fmt(shiftDetalle.total)}</span>
                     </div>
                   </div>
                 </div>
