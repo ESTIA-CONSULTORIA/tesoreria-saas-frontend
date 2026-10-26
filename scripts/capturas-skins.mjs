@@ -10,6 +10,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
+import { ESCENAS_POS, responderPos } from './escenas-pos.mjs';
 
 const RAIZ = fileURLToPath(new URL('..', import.meta.url));
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, x, i, arr) => (x.startsWith('--') ? [...a, [x.slice(2), arr[i + 1]]] : a), []));
@@ -44,6 +45,10 @@ const modulosCatalogo = [
 const turnoPendiente = [{ id: 's1', status: 'PENDIENTE_APROBACION', cashierName: 'Luis', difference: -45.5, closedAt: '2026-10-24T20:10:00Z', branchName: 'Matriz' }];
 
 function responder(metodo, ruta, escena) {
+  // Escenas del POS/caja/mesas/Lite (scripts/escenas-pos.mjs): sus respuestas van primero; `fallos` fuerza un 500 en esas rutas (estado de error)
+  if (escena.fallos?.some((r) => ruta.startsWith(r))) return [500, { message: 'Error simulado' }];
+  const rp = responderPos(metodo, ruta, escena);
+  if (rp) return rp;
   if (ruta.startsWith('/auth/me')) return escena.sinSesion ? [401, { message: 'No autenticado' }] : [200, usuario(escena.usuario)];
   if (ruta.startsWith('/tenants/resolve')) return [200, { id: 't1', slug: 'demo', tradeName: 'Negocio Demo' }];
   if (/^\/tenants\/t1/.test(ruta)) return [200, { id: 't1', plan: escena.plan ?? 'BUSINESS', giro: escena.giro ?? 'generico', isOnboarded: true }];
@@ -71,6 +76,7 @@ export const ESCENAS = {
   guia: { ruta: '/dashboard', plan: 'PRUEBA', giro: 'restaurante', guia: true, accion: async (p) => { const b = await p.evaluateHandle(() => [...document.querySelectorAll('button')].find((x) => /Guía de la prueba/.test(x.textContent || ''))); await b.asElement()?.click(); await ESPERA(400); } },
   'topbar-mas-modulos': { ruta: '/dashboard', accion: async (p) => { await p.keyboard.down('Alt'); await p.keyboard.press('KeyM'); await p.keyboard.up('Alt'); await ESPERA(300); } },
   'topbar-contexto': { ruta: '/dashboard', accion: async (p) => { const b = await p.evaluateHandle(() => [...document.querySelectorAll('button')].find((x) => /empresa|vista|grupo|global/i.test(x.textContent || '') && x.closest('header,div'))); await b.asElement()?.click(); await ESPERA(300); } },
+  ...ESCENAS_POS,
   'busqueda-global': { ruta: '/dashboard', accion: async (p) => { await p.keyboard.down('Control'); await p.keyboard.press('KeyK'); await p.keyboard.up('Control'); await ESPERA(300); } },
 };
 
@@ -87,6 +93,7 @@ async function servidor() {
 async function capturar(browser, nombre, escena, skin) {
   const page = await browser.newPage();
   await page.setViewport({ width: 1366, height: 768, deviceScaleFactor: 1 });
+  page.on('dialog', (d) => { d.dismiss().catch(() => {}); }); // alert()/confirm() del POS bloquearían el teclado del navegador
   await page.setRequestInterception(true);
   page.on('request', (req) => {
     const url = new URL(req.url());
@@ -102,6 +109,8 @@ async function capturar(browser, nombre, escena, skin) {
   await page.evaluateOnNewDocument((skinId, e, usuarioJson) => {
     try {
       localStorage.setItem('ui_skin_device', skinId);
+      for (const [k, v] of Object.entries(e.localStorage ?? {})) localStorage.setItem(k, v);
+      for (const [k, v] of Object.entries(e.sessionStorage ?? {})) sessionStorage.setItem(k, v);
       if (!e.sinSesion) {
         const u = JSON.parse(usuarioJson);
         localStorage.setItem('user', JSON.stringify(u));
@@ -127,6 +136,17 @@ async function capturar(browser, nombre, escena, skin) {
     const r = await window.axe.run(document, { runOnly: { type: 'rule', values: [regla] }, resultTypes: ['violations'] });
     return r.violations.flatMap((v) => v.nodes.map((n) => ({ objetivo: n.target.join(' '), resumen: (n.any[0]?.message ?? '').replace(/\s+/g, ' ').slice(0, 160) })));
   }, regla);
+  // atajos de la escena (F2/F3/F4/F6/F8/F10, Esc…): tras cada tecla, qué hay abierto y dónde está el foco (se compara antes/después)
+  const atajos = [];
+  for (const k of escena.teclas ?? []) {
+    await page.keyboard.press(k);
+    await ESPERA(300);
+    atajos.push({ tecla: k, ...(await page.evaluate(() => {
+      const d = document.querySelector('[role="dialog"], .fixed.inset-0');
+      const a = document.activeElement;
+      return { dialogos: document.querySelectorAll('[role="dialog"]').length, titulo: (d?.textContent || '').replace(/s+/g, ' ').trim().slice(0, 70), foco: a ? (a.tagName.toLowerCase() + ':' + (a.getAttribute('name') || a.id || (a.textContent || '').trim().slice(0, 20))) : null };
+    })) });
+  }
   // teclado: a dónde llega el foco con Tab (hasta 40 pasos)
   await page.evaluate(() => (document.activeElement instanceof HTMLElement ? document.activeElement.blur() : undefined));
   const teclado = [];
@@ -143,18 +163,19 @@ async function capturar(browser, nombre, escena, skin) {
     if (!d) break;
   }
   await page.close();
-  return { axe, teclado, desborde };
+  return { axe, teclado, desborde, atajos };
 }
 
 mkdirSync(SALIDA, { recursive: true });
 const nombres = args.escenas && args.escenas !== 'todas' ? args.escenas.split(',') : Object.keys(ESCENAS);
 const srv = await servidor();
-const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--no-sandbox', '--force-color-profile=srgb', '--font-render-hinting=none', '--disable-lcd-text'] });
-const axeTodo = {}, tecladoTodo = {}, desbordes = {};
+const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, protocolTimeout: 60000, args: ['--no-sandbox', '--force-color-profile=srgb', '--font-render-hinting=none', '--disable-lcd-text'] });
+const axeTodo = {}, tecladoTodo = {}, desbordes = {}, atajosTodo = {};
 try {
   for (const n of nombres) for (const skin of SKINS) {
-    const r = await capturar(browser, n, ESCENAS[n], skin);
-    axeTodo[`${n}__${skin}`] = r.axe; tecladoTodo[`${n}__${skin}`] = r.teclado; desbordes[`${n}__${skin}`] = r.desborde;
+    let r;
+    try { r = await capturar(browser, n, ESCENAS[n], skin); } catch (e) { console.log(`${n.padEnd(20)} ${skin.padEnd(7)} ESCENA FALLÓ: ${String(e.message).slice(0, 90)}`); continue; }
+    axeTodo[`${n}__${skin}`] = r.axe; tecladoTodo[`${n}__${skin}`] = r.teclado; desbordes[`${n}__${skin}`] = r.desborde; atajosTodo[`${n}__${skin}`] = r.atajos;
     console.log(`${n.padEnd(20)} ${skin.padEnd(7)} contraste: ${String(r.axe.length).padStart(3)} fallos | foco: ${r.teclado.length} pasos | desborde: ${r.desborde ? 'SÍ' : 'no'}`);
   }
 } finally {
@@ -164,4 +185,5 @@ try {
 writeFileSync(join(SALIDA, 'axe.json'), JSON.stringify(axeTodo, null, 1));
 writeFileSync(join(SALIDA, 'teclado.json'), JSON.stringify(tecladoTodo, null, 1));
 writeFileSync(join(SALIDA, 'desborde.json'), JSON.stringify(desbordes, null, 1));
+writeFileSync(join(SALIDA, 'atajos.json'), JSON.stringify(atajosTodo, null, 1));
 process.exit(0);
