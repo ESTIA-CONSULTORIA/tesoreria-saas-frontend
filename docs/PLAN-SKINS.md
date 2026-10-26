@@ -198,3 +198,15 @@ Hecho: **F0** (`src/core/theme/skins.ts`, `contraste.ts`, `aplicarSkin.ts`; prue
 - ESTIA: los textos de estado (éxito, error, aviso) ahora pasan 4.5:1 (S-01) y el borde de los campos pasa 3:1; fondos, tarjetas y botones conservan los mismos grises.
 - Medido en Chrome a 1366×768 (caja: apertura de turno, terminal, cobro; Apariencia, Datos fiscales, Usuarios): sin desborde horizontal en ninguna de las dos skins.
 - Pendiente (F2/F3): los colores fijos en línea de las pantallas (2,158 hex y 2,105 `style`) siguen sin migrar; con dos skins oscuras no hay texto ilegible, pero p. ej. los botones de Retiro/Precorte conservan su color propio y varios elementos de la barra superior usan transparencias fijas.
+
+## 11. Procedimiento de oleada y estado (rama `feat/skins-ola-N`)
+
+**Decisiones aprobadas (2026-10-25):** el usuario elige su skin y el negocio define el valor por defecto; la Vista Ejecutiva conserva su paleta; el CSS libre queda aislado; los portales (analítica móvil, empleado) quedan fuera; en el login mandan los colores por negocio (su paleta propia no sigue la skin). Claro y Alto contraste no se crean antes de terminar la ola 1; el ALTER de `uiPrefs` tampoco.
+
+**Redes automáticas** (`src/core/theme/coloresFijos.spec.ts`): (1) tope de colores fijos por archivo con línea base (`coloresFijos.baseline.json`, `npm run colores:baseline`): solo baja; un archivo nuevo no puede traer ninguno; (2) `pantallasMigradas.ts`: cero tolerancia en cada archivo migrado.
+
+**Cada oleada:** rama → pruebas primero → migrar (`rgb(var(--token) / a)` en estilos, clases `!bg-surface-1`… con `!important` para conservar la precedencia que hoy les da `index.css`) → `node scripts/capturas-skins.mjs --salida capturas-skins/olaN-despues` y `node scripts/capturas-comparar.mjs …antes …despues` (Chrome real, 1366×768, API simulada; en ESTIA solo pueden cambiar los textos de contraste corregidos) → axe-core (`color-contrast`, WCAG 2 AA) y recorrido de Tab idéntico (`teclado.json`) → merge → Railway en SUCCESS → login responde 401 sin credenciales.
+
+**Tokens de cáscara** (ola 0; mismos valores que ya estaban fijos, así ESTIA y Oscuro no cambian): `veil`, `scrim`, `canvas`, `panel`, `popover`, `textSoft`, `textBright`, `accentAlt`, `chip`, `viz1–4`.
+
+**Ola 0 (cáscara):** TopBar, Header, MainLayout, UpdatePrompt, NoContextBanner, búsqueda global, ModalPOS y reglasModal, App.tsx. ESTIA y Oscuro sin cambio visual salvo los textos de la barra superior que no llegaban a 4.5:1 (rol, «Salir», encabezados y subnavegación: de 0.28–0.45 a 0.5 de opacidad).

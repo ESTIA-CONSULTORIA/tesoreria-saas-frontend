@@ -5,7 +5,7 @@ const ESTIA_LOGO = 'https://res.cloudinary.com/dv8wvstg2/image/upload/v178246524
 export function NoContextBanner() {
   const { logoUrl, splashBg } = useBrandingStore();
   const logo = logoUrl || ESTIA_LOGO;
-  const bg = splashBg || '#0a0c12';
+  const bg = splashBg || 'rgb(var(--canvas))';
   const isImage = bg.startsWith('http') || bg.startsWith('data:');
 
   return (

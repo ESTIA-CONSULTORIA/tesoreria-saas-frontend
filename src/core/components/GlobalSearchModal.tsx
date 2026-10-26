@@ -201,10 +201,10 @@ export default function GlobalSearchModal({ open, onClose }: Props) {
   }, {} as Record<string, SearchResult[]>);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-scrim/50 p-4">
+      <div className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-xl border !border-line !bg-nav shadow-2xl overflow-hidden">
         {/* Header - flex-shrink-0 */}
-        <div className="flex-shrink-0 p-6 border-b border-slate-800">
+        <div className="flex-shrink-0 p-6 border-b !border-line">
           <div className="flex items-center gap-3">
             <input
               ref={inputRef}
@@ -213,24 +213,24 @@ export default function GlobalSearchModal({ open, onClose }: Props) {
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Buscar páginas, movimientos, proveedores..."
-              className="flex-1 bg-transparent text-2xl text-white outline-none placeholder-slate-500"
+              className="flex-1 bg-transparent text-2xl !text-content-1 outline-none placeholder:text-content-3"
               autoFocus
             />
-            <kbd className="px-2 py-1 text-xs text-slate-400 bg-slate-800 rounded">ESC</kbd>
+            <kbd className="px-2 py-1 text-xs !text-content-3 !bg-surface-1 rounded">ESC</kbd>
           </div>
         </div>
 
         {/* Body - flex-1 overflow-y-auto */}
         <div className="flex-1 overflow-y-auto p-4">
           {loading ? (
-            <p className="text-center text-slate-400 py-8">Buscando...</p>
+            <p className="text-center !text-content-3 py-8">Buscando...</p>
           ) : results.length === 0 ? (
-            <p className="text-center text-slate-400 py-8">No se encontraron resultados</p>
+            <p className="text-center !text-content-3 py-8">No se encontraron resultados</p>
           ) : (
             <div className="space-y-4">
               {Object.entries(groupedResults).map(([type, typeResults]) => (
                 <div key={type}>
-                  <div className="px-4 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <div className="px-4 py-2 text-xs font-semibold !text-content-3 uppercase tracking-wider">
                     {typeLabels[type] || type}
                   </div>
                   <div className="space-y-1">
@@ -247,8 +247,8 @@ export default function GlobalSearchModal({ open, onClose }: Props) {
                           }}
                           className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
                             globalIndex === selectedIndex
-                              ? "bg-blue-600 text-white"
-                              : "bg-slate-800 text-white hover:bg-slate-700"
+                              ? "!bg-btn !text-content-1"
+                              : "!bg-surface-1 !text-content-1 hover:!bg-surface-2"
                           }`}
                         >
                           <div className="flex items-center gap-3">
@@ -271,7 +271,7 @@ export default function GlobalSearchModal({ open, onClose }: Props) {
         </div>
 
         {/* Footer - flex-shrink-0 */}
-        <div className="flex-shrink-0 p-4 border-t border-slate-800 text-center text-xs text-slate-500">
+        <div className="flex-shrink-0 p-4 border-t !border-line text-center text-xs !text-content-3">
           <span className="mr-4">↑↓ para navegar</span>
           <span className="mr-4">Enter para seleccionar</span>
           <span>ESC para cerrar</span>

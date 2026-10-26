@@ -129,10 +129,10 @@ export function ModalPOS({ title, subtitle, size = 'md', footer, onClose, atajos
         <div className={`${CLASES_MODAL.header} flex items-start justify-between gap-3`}>
           <div className="min-w-0">
             <h3 className="truncate text-lg font-semibold">{title}</h3>
-            {subtitle ? <p className="text-xs text-slate-400">{subtitle}</p> : null}
+            {subtitle ? <p className="text-xs !text-content-3">{subtitle}</p> : null}
           </div>
           {onClose ? (
-            <button type="button" onClick={onClose} aria-label="Cerrar" className="text-2xl leading-none text-slate-400 hover:text-white">
+            <button type="button" onClick={onClose} aria-label="Cerrar" className="text-2xl leading-none !text-content-3 hover:text-content-1">
               ×
             </button>
           ) : null}
@@ -140,10 +140,10 @@ export function ModalPOS({ title, subtitle, size = 'md', footer, onClose, atajos
         <div className={CLASES_MODAL.body}>{children}</div>
         {footer ? <div data-pos-footer className={CLASES_MODAL.footer}>{footer}</div> : null}
         {leyenda.length > 0 ? (
-          <div className="shrink-0 border-t border-slate-800 px-5 py-1.5 text-[11px] text-slate-500" aria-label="Atajos de teclado">
+          <div className="shrink-0 border-t !border-line px-5 py-1.5 text-[11px] !text-content-3" aria-label="Atajos de teclado">
             {leyenda.map((t, i) => (
               <span key={t}>
-                {i > 0 ? <span className="mx-2 text-slate-700">·</span> : null}
+                {i > 0 ? <span className="mx-2 text-content-3">·</span> : null}
                 <kbd className="font-sans">{t.split(' ')[0]}</kbd> {t.split(' ').slice(1).join(' ')}
               </span>
             ))}

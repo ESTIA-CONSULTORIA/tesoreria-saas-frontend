@@ -17,11 +17,11 @@ export const CLASE_ANCHO: Record<TamanoModal, string> = {
 };
 
 export const CLASES_MODAL = {
-  overlay: 'fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3',
-  panel: 'flex max-h-[90vh] w-[90vw] flex-col overflow-hidden rounded-xl border border-slate-700 bg-slate-800 text-white shadow-2xl',
-  header: 'shrink-0 border-b border-slate-700 px-5 py-3',
+  overlay: 'fixed inset-0 z-50 flex items-center justify-center bg-scrim/60 p-3',
+  panel: 'flex max-h-[90vh] w-[90vw] flex-col overflow-hidden rounded-xl border !border-line !bg-surface-1 !text-content-1 shadow-2xl',
+  header: 'shrink-0 border-b !border-line px-5 py-3',
   body: 'min-h-0 flex-1 overflow-y-auto px-5 py-3',
-  footer: 'flex shrink-0 gap-2 border-t border-slate-700 bg-slate-800 px-5 py-3',
+  footer: 'flex shrink-0 gap-2 border-t !border-line !bg-surface-1 px-5 py-3',
 } as const;
 
 export function clasePanel(size: TamanoModal): string {
