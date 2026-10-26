@@ -118,6 +118,11 @@ export const ESCENAS_POS = {
   // ── POS: cobro y recibo ──
   'pos-cobro': pos({ teclas: ['F3', 'F6', 'F8', 'F2', 'Escape'] }, async (p) => { await prod(p, 'Hamburguesa'); await tecla(p, 'F4'); }),
   'pos-cobro-error': pos({ fallos: ['/pos/sales'], teclas: ['F8'] }, async (p) => { await prod(p, 'Hamburguesa'); await tecla(p, 'F4'); await tecla(p, 'F8'); await clic(p, 'Agregar pago'); await clic(p, 'CONFIRMAR COBRO'); await ESPERA(900); }),
+  'pos-cobro-tarjeta': pos({ teclas: ['F6', 'F2', 'Escape'] }, async (p) => { await prod(p, 'Hamburguesa'); await tecla(p, 'F4'); await tecla(p, 'F3'); }),
+  'pos-cobro-spei': pos({ teclas: ['F2', 'Escape'] }, async (p) => { await prod(p, 'Hamburguesa'); await tecla(p, 'F4'); await tecla(p, 'F6'); }),
+  'pos-cobro-pago-parcial': pos({ teclas: ['Escape'] }, async (p) => { await prod(p, 'Hamburguesa'); await tecla(p, 'F4'); await p.keyboard.type('50'); await clic(p, 'Agregar pago'); }),
+  'mesas-cobro': { ...BASE, ruta: '/mesas', teclas: ['F3', 'F6', 'F8', 'F2', 'Escape'], accion: async (p) => { await clic(p, 'Ocupada|Mesa 2|^2'); await clic(p, '^Cobrar$'); } },
+  'mesas-dividir': { ...BASE, ruta: '/mesas', teclas: ['Escape'], accion: async (p) => { await clic(p, 'Ocupada|Mesa 2|^2'); await clic(p, '^Dividir$'); } },
   'pos-recibo': pos({ imprimible: true }, async (p) => { await prod(p, 'Hamburguesa'); await tecla(p, 'F4'); await tecla(p, 'F8'); await clic(p, 'Agregar pago'); await clic(p, 'CONFIRMAR COBRO'); await ESPERA(1200); }),
   // ── POS: caja ──
   'pos-abrir-turno': pos({ sinTurno: true, teclas: ['F4', 'Escape'] }),

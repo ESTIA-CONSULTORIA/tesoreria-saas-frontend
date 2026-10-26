@@ -26,7 +26,7 @@ import { esReintentable } from '../../core/utils/monto';
 import { motivoDeRechazo } from '../../core/offline/saleDuplicate';
 import { ModalPOS } from "../../core/components/ModalPOS";
 import { useAviso } from "../../core/components/confirmContext";
-import { AperturaTurnoModal, CierreTurnoModal, CobroModal, MovimientoEfectivoModal, PrecorteModal, efectivoEsperado } from "./ModalesCaja";
+import { AperturaTurnoModal, CierreTurnoModal, CobroPOS, MovimientoEfectivoModal, PrecorteModal, efectivoEsperado } from "./ModalesCaja";
 import { totalContado } from "./cajaTurno";
 import { InputBusqueda } from "../../core/components/InputBusqueda";
 import { OPCIONES_POLITICA_COBRO, OPCIONES_POLITICA_DIVISION, type PoliticaCobro, type PoliticaDivision } from "../mesas/mesasLogic";
@@ -1859,20 +1859,16 @@ export default function POSPage() {
             </div>
           )}
 
-          {/* RETAIL: CheckoutFast overlay */}
+          {/* RETAIL: cobro rápido (CobroModal único) */}
           {isRetail && shift && showRetailCheckout && ticket.length > 0 && (
-            <div className="fixed inset-0 z-50 bg-scrim/80 flex items-end justify-center">
-              <div className="w-full max-w-lg">
-                <CheckoutFast
-                  items={ticket}
-                  total={ticket.reduce((s, i) => s + i.subtotal, 0)}
-                  onPay={(formasPago) => {
-                    setShowRetailCheckout(false);
-                  }}
-                  onCancel={() => setShowRetailCheckout(false)}
-                />
-              </div>
-            </div>
+            <CheckoutFast
+              items={ticket}
+              total={ticket.reduce((s, i) => s + i.subtotal, 0)}
+              onPay={(formasPago) => {
+                setShowRetailCheckout(false);
+              }}
+              onCancel={() => setShowRetailCheckout(false)}
+            />
           )}
 
           {/* MAIN CONTENT - 2 ZONES */}
@@ -3365,9 +3361,9 @@ export default function POSPage() {
         </ModalPOS>
       )}
 
-      {/* MODAL DE COBRO PREMIUM */}
-      {showPaymentModal && (
-        <CobroModal
+      {/* COBRO Y RECIBO: una sola ventana. Tras cobrar, esta misma ventana pasa a mostrar el recibo (id="print-area" es lo que se imprime). */}
+      {(showPaymentModal || (showReceipt && currentSale)) && (
+        <CobroPOS
           total={getTotal()}
           pagado={getTotalCovered()}
           pendiente={getPending()}
@@ -3411,13 +3407,8 @@ export default function POSPage() {
           error={cardValidationError}
           onCancel={cerrarCobro}
           onConfirm={processPayment}
-        />
-      )}
-
-      {/* MODAL TICKET DE VENTA */}
-      {showReceipt && currentSale && (
-        <div className="fixed inset-0 bg-scrim/50 flex items-center justify-center z-50">
-          <div id="print-area" className="!bg-surface-1 text-content-1 rounded-xl p-6 w-[400px] max-h-[90vh] overflow-y-auto">
+                  recibo={showReceipt && currentSale ? (
+            <div id="print-area" className="text-content-1">
             {/* Header del ticket */}
             <div className="text-center mb-4">
               {config.logoUrl && (
@@ -3535,28 +3526,14 @@ export default function POSPage() {
                 </div>
               )}
             </div>
-
-            {/* Botones */}
-            <div className="flex gap-2 mt-4 print:hidden">
-              <button
-                onClick={() => setShowReceipt(false)}
-                autoFocus
-                className="flex-1 py-2 rounded bg-tono-slate-200 text-tono-ink hover:bg-tono-slate-300"
-              >
-                Cerrar
-              </button>
-              <button
-                onClick={() => {
-                  window.print();
-                  setShowReceipt(false);
-                }}
-                className="flex-1 py-2 rounded !bg-btn !text-on-solid hover:!bg-btn-hover"
-              >
-                Imprimir
-              </button>
             </div>
-          </div>
-        </div>
+          ) : undefined}
+          onCerrarRecibo={() => setShowReceipt(false)}
+          onImprimirRecibo={() => {
+            window.print();
+            setShowReceipt(false);
+          }}
+        />
       )}
 
       {/* MODAL PRODUCTO */}

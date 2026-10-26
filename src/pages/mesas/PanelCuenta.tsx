@@ -4,6 +4,9 @@ import { esFormaTarjeta, motivoFaltaTarjeta, soloUltimos4 } from '../../core/uti
 import type { IvaConfig } from '../../core/utils/iva';
 import { textoAtiende } from '../../core/utils/nombreUsuario';
 import { InputBusqueda } from '../../core/components/InputBusqueda';
+import { Boton } from '../../core/components/Boton';
+import { CobroModal } from '../../core/components/cobro/CobroModal';
+import type { ClaveForma } from '../../core/components/cobro/reglasCobro';
 import type { FormaPago, MesasApi, Producto } from './mesasApi';
 import {
   accionesVisibles, construirItem, desgloseIva, dinero, etiquetaIva, indicesPorCobrar, itemsVivos, mensajeError,
@@ -261,71 +264,86 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
         </div>
 
         {cobrando && cuenta && (
-          <div className="absolute inset-0 z-50 flex items-end justify-center bg-scrim/70 sm:items-center">
-            <div className="w-full max-w-md space-y-3 rounded-t-2xl border !border-line !bg-nav p-5 sm:rounded-2xl">
-              <h3 className="text-lg font-bold">{modo === 'completo' ? 'Cobrar cuenta' : 'Dividir cuenta'} · saldo {dinero(saldo)}</h3>
-              {error && <div role="alert" className="rounded-lg bg-tono-danger-950 p-2 text-sm text-tono-danger-200">{error}</div>}
-              {acc.dividir && (
-                <div className="grid grid-cols-3 gap-2 text-sm">
-                  {(['completo', 'parcial', 'items'] as Modo[])
-                    .filter((m) => (m === 'completo' ? acc.cobrar : true))
-                    .map((m) => (
-                      <button key={m} className={`${btn} ${modo === m ? '!bg-btn' : '!bg-surface-1'}`} onClick={() => setModo(m)}>
-                        {m === 'completo' ? 'Completa' : m === 'parcial' ? 'Por monto' : 'Por ítems'}
-                      </button>
-                    ))}
-                </div>
-              )}
-              {modo === 'parcial' && (
-                <input className="w-full rounded-lg border !border-line !bg-bg px-3 py-3 text-base" inputMode="decimal" placeholder="Monto a cobrar" value={monto} onChange={(e) => setMonto(e.target.value)} />
-              )}
-              {modo === 'items' && (
-                <div className="max-h-40 space-y-1 overflow-y-auto">
+          <CobroModal
+            titulo={modo === 'completo' ? 'Cobrar cuenta' : 'Dividir cuenta'}
+            etiquetaTotal="Saldo a cobrar"
+            totalTexto={dinero(saldo)}
+            formas={FORMAS.map((f) => ({ clave: f.v as ClaveForma, etiqueta: f.l }))}
+            formaActiva={forma}
+            onElegirForma={(f) => { setForma(f as FormaPago); setUltimos4(''); }}
+            columnaFormas={
+              acc.dividir ? (
+                <>
+                  <p className="mt-1 text-xs !text-content-3">CUÁNTO COBRAR</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['completo', 'parcial', 'items'] as Modo[])
+                      .filter((m) => (m === 'completo' ? acc.cobrar : true))
+                      .map((m) => (
+                        <Boton key={m} variante={modo === m ? 'principal' : 'secundario'} confirma={false} tamano="sm" aria-pressed={modo === m} onClick={() => setModo(m)}>
+                          {m === 'completo' ? 'Completa' : m === 'parcial' ? 'Por monto' : 'Por ítems'}
+                        </Boton>
+                      ))}
+                  </div>
+                </>
+              ) : undefined
+            }
+            cuerpoImporte={
+              modo === 'items' ? (
+                <div className="mb-3 max-h-56 space-y-1 overflow-y-auto">
                   {indicesPorCobrar(cuenta).map((i) => (
-                    <label key={i} className="flex items-center gap-3 rounded-lg !bg-bg p-3 text-sm">
+                    <label key={i} className="flex items-center gap-3 rounded-lg !bg-nav p-3 text-sm">
                       <input type="checkbox" className="h-5 w-5" checked={sel.includes(i)} onChange={(e) => setSel(e.target.checked ? [...sel, i] : sel.filter((x) => x !== i))} />
                       {cuenta.items[i].cantidad} × {cuenta.items[i].nombre} · {dinero(cuenta.items[i].subtotal)}
                     </label>
                   ))}
                 </div>
-              )}
-              <div className="grid grid-cols-2 gap-2">
-                {FORMAS.map((f) => (
-                  <button key={f.v} className={`${btn} ${forma === f.v ? '!bg-btn' : '!bg-surface-1'}`} onClick={() => { setForma(f.v); setUltimos4(''); }}>{f.l}</button>
-                ))}
-              </div>
-              {esFormaTarjeta(forma) && (
+              ) : modo === 'completo' && forma !== 'EFECTIVO' ? (
+                <p className="mb-3 text-sm !text-content-3">Se cobra el saldo completo de la cuenta.</p>
+              ) : undefined
+            }
+            campos={[
+              ...(modo === 'parcial' ? [{ id: 'monto', etiqueta: 'Monto a cobrar', valor: monto, onCambio: setMonto, grande: true }] : []),
+              ...(forma === 'EFECTIVO' && modo !== 'items' ? [{ id: 'recibido', etiqueta: 'Recibido (opcional)', valor: recibido, onCambio: setRecibido, grande: modo !== 'parcial' }] : []),
+            ]}
+            onExacto={
+              modo === 'items'
+                ? undefined
+                : () => {
+                    if (modo === 'parcial') setMonto(String(saldo));
+                    else if (forma === 'EFECTIVO') setRecibido(String(saldo));
+                  }
+            }
+            lineas={[
+              { etiqueta: 'Total de la cuenta', valor: dinero(cuenta.total) },
+              { etiqueta: 'Pagado', valor: dinero(cuenta.pagado), tono: 'ok' },
+              { etiqueta: 'Saldo', valor: dinero(saldo), tono: saldo > 0 ? 'peligro' : 'tenue' },
+              ...(cambio > 0 ? [{ etiqueta: 'Cambio', valor: dinero(cambio), tono: 'ok' as const }] : []),
+            ]}
+            detalle={
+              esFormaTarjeta(forma) ? (
                 <div>
+                  <label htmlFor="mesa-ultimos4" className="mb-1 block text-sm !text-content-3">Últimos 4 dígitos de la tarjeta *</label>
                   <input
-                    className="w-full rounded-lg border !border-line !bg-bg px-3 py-3 text-base"
+                    id="mesa-ultimos4"
+                    className="w-full rounded-lg border !border-line !bg-nav px-3 py-3 text-base"
                     inputMode="numeric"
                     autoComplete="off"
                     maxLength={4}
-                    placeholder="Últimos 4 dígitos de la tarjeta *"
+                    placeholder="1234"
                     value={ultimos4}
                     onChange={(e) => setUltimos4(soloUltimos4(e.target.value))}
                   />
-                  {motivoTarjeta && <p className="mt-1 text-sm text-tono-amber-300">{motivoTarjeta}</p>}
                 </div>
-              )}
-              {forma === 'EFECTIVO' && modo !== 'items' && (
-                <div>
-                  <input className="w-full rounded-lg border !border-line !bg-bg px-3 py-3 text-base" inputMode="decimal" placeholder="Recibido (opcional)" value={recibido} onChange={(e) => setRecibido(e.target.value)} />
-                  {cambio > 0 && <p className="mt-1 text-sm !text-ok">Cambio: {dinero(cambio)}</p>}
-                </div>
-              )}
-              <div className="flex gap-2">
-                <button className={`${btn} flex-1 !bg-surface-1`} onClick={() => { setCobrando(false); setError(''); }}>Volver</button>
-                <button
-                  disabled={ocupado || !!motivoTarjeta || (modo === 'parcial' && !(montoNum > 0)) || (modo === 'items' && sel.length === 0)}
-                  className={`${btn} flex-1 !bg-ok-solid disabled:opacity-40`}
-                  onClick={cobrar}
-                >
-                  Confirmar cobro
-                </button>
-              </div>
-            </div>
-          </div>
+              ) : undefined
+            }
+            error={error || null}
+            textoCancelar="Volver"
+            onCancel={() => { setCobrando(false); setError(''); }}
+            textoConfirmar="Confirmar cobro"
+            onConfirm={cobrar}
+            procesando={ocupado}
+            motivoBloqueo={motivoTarjeta ?? (modo === 'parcial' && !(montoNum > 0) ? 'Escribe el monto a cobrar' : modo === 'items' && sel.length === 0 ? 'Elige al menos un ítem' : null)}
+          />
         )}
 
         {cancelando && cuenta && (

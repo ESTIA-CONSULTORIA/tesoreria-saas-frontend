@@ -11,11 +11,13 @@ export interface PropsBoton extends Omit<ButtonHTMLAttributes<HTMLButtonElement>
   completo?: boolean;
   /** `papel`: pantallas Lite (papel claro). Solo cambia los botones neutros. */
   apariencia?: 'sistema' | 'papel';
+  /** Por omisión las variantes de color confirman (`data-primary`). `false` para un botón de color DENTRO del cuerpo que no debe ganarle a Enter (Exacto, Agregar pago). */
+  confirma?: boolean;
   className?: string;
 }
 
-export function Boton({ variante = 'principal', tamano = 'md', cargando = false, completo = false, apariencia = 'sistema', className = '', disabled, children, type = 'button', ...resto }: PropsBoton) {
-  const principal = esVariantePrincipal(variante);
+export function Boton({ variante = 'principal', tamano = 'md', cargando = false, completo = false, apariencia = 'sistema', confirma, className = '', disabled, children, type = 'button', ...resto }: PropsBoton) {
+  const principal = confirma ?? esVariantePrincipal(variante);
   const colores = (apariencia === 'papel' && CLASES_NEUTRO_PAPEL[variante]) || CLASES_VARIANTE[variante];
   return (
     <button

@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { esFormaTarjeta, motivoFaltaTarjeta, soloUltimos4 } from "../../core/utils/tarjeta";
+import { Boton } from "../../core/components/Boton";
+import { CobroModal } from "../../core/components/cobro/CobroModal";
+import type { ClaveForma } from "../../core/components/cobro/reglasCobro";
 
 interface TicketItem {
   productoId: string;
@@ -19,15 +22,18 @@ interface Props {
   onCancel: () => void;
 }
 
-const PAYMENT_METHODS = [
-  { key: "EFECTIVO", label: "Efectivo", icon: "💵" },
-  { key: "TARJETA", label: "Tarjeta", icon: "💳" },
-  { key: "TRANSFERENCIA", label: "Transferencia", icon: "🏦" },
-  { key: "CORTESIA", label: "Cortesía", icon: "🎁" },
+const PAYMENT_METHODS: { key: ClaveForma; label: string }[] = [
+  { key: "EFECTIVO", label: "Efectivo" },
+  { key: "TARJETA", label: "Tarjeta" },
+  { key: "TRANSFERENCIA", label: "Transferencia" },
+  { key: "CORTESIA", label: "Cortesía" },
 ];
 
-export default function CheckoutFast({ items, total, tableId, tableNumber, onPay, onCancel }: Props) {
-  const [selectedMethod, setSelectedMethod] = useState("EFECTIVO");
+const dinero = (v: number) => `$${v.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+
+// Cobro rápido de retail (un solo pago). Es el CobroModal único: aquí solo viven los montos rápidos y la lógica de este cobro.
+export default function CheckoutFast({ items, total, tableNumber, onPay, onCancel }: Props) {
+  const [selectedMethod, setSelectedMethod] = useState<ClaveForma>("EFECTIVO");
   const [cash, setCash] = useState("");
   const [processing, setProcessing] = useState(false);
   const [ultimos4, setUltimos4] = useState("");
@@ -35,6 +41,8 @@ export default function CheckoutFast({ items, total, tableId, tableNumber, onPay
 
   const parsedCash = parseFloat(cash) || 0;
   const change = selectedMethod === "EFECTIVO" ? Math.max(0, parsedCash - total) : 0;
+  const efectivo = selectedMethod === "EFECTIVO";
+  const faltaEfectivo = efectivo && parsedCash < total && parsedCash > 0;
 
   async function handlePay() {
     if (processing || motivoTarjeta) return;
@@ -49,88 +57,34 @@ export default function CheckoutFast({ items, total, tableId, tableNumber, onPay
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ backgroundColor: "rgb(var(--scrim) / 0.8)" }}>
-      <div
-        className="w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-5 space-y-4"
-        style={{ backgroundColor: "rgb(var(--surface-1))", border: "1px solid rgb(var(--border))", maxHeight: "90vh", overflowY: "auto" }}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-semibold" style={{ color: "rgb(var(--text-1))" }}>
-              {tableNumber ? `Mesa ${tableNumber}` : "Cobrar"}
-            </h3>
-            <p className="text-xs" style={{ color: "rgb(var(--text-3))" }}>{items.length} producto(s)</p>
+    <CobroModal
+      titulo={tableNumber ? `Mesa ${tableNumber}` : "Cobrar"}
+      totalTexto={dinero(total)}
+      formas={PAYMENT_METHODS.map((m) => ({ clave: m.key, etiqueta: m.label }))}
+      formaActiva={selectedMethod}
+      onElegirForma={setSelectedMethod}
+      columnaFormas={<p className="mt-1 text-xs !text-content-3">{items.length} producto(s)</p>}
+      campos={efectivo ? [{ id: "recibido", etiqueta: "Monto recibido", valor: cash, onCambio: setCash, grande: true, placeholder: `Mínimo $${total.toFixed(2)}` }] : []}
+      accionesImporte={
+        efectivo ? (
+          <div className="flex gap-2">
+            {quickAmounts.map((a) => (
+              <Boton key={a} variante="secundario" confirma={false} tamano="sm" className="flex-1" onClick={() => setCash(String(a))}>${a}</Boton>
+            ))}
           </div>
-          <button onClick={onCancel} style={{ color: "rgb(var(--text-3))" }}>✕</button>
-        </div>
-
-        {/* Total */}
-        <div className="text-center py-2">
-          <span className="text-3xl font-bold" style={{ color: "rgb(var(--text-1))" }}>
-            ${total.toLocaleString("es-MX", { minimumFractionDigits: 2 })}
-          </span>
-        </div>
-
-        {/* Payment method selector */}
-        <div className="grid grid-cols-4 gap-2">
-          {PAYMENT_METHODS.map((m) => (
-            <button
-              key={m.key}
-              onClick={() => setSelectedMethod(m.key)}
-              className="py-2 rounded-lg text-center"
-              style={{
-                backgroundColor: selectedMethod === m.key ? "rgb(var(--text-1))" : "rgb(var(--surface-alt))",
-                color: selectedMethod === m.key ? "rgb(var(--bg))" : "rgb(var(--text-3))",
-                border: `1px solid ${selectedMethod === m.key ? "rgb(var(--text-1))" : "rgb(var(--border))"}`,
-              }}
-            >
-              <div className="text-lg">{m.icon}</div>
-              <div className="text-xs mt-0.5">{m.label}</div>
-            </button>
-          ))}
-        </div>
-
-        {/* Cash amount input */}
-        {selectedMethod === "EFECTIVO" && (
+        ) : undefined
+      }
+      onExacto={efectivo ? () => setCash(String(total)) : undefined}
+      lineas={[
+        { etiqueta: "Productos", valor: String(items.length), tono: "tenue" },
+        ...(efectivo && parsedCash >= total && parsedCash > 0 ? [{ etiqueta: "Cambio", valor: dinero(change), tono: "ok" as const }] : []),
+      ]}
+      detalle={
+        esFormaTarjeta(selectedMethod) ? (
           <div>
-            <label className="text-xs mb-1 block" style={{ color: "rgb(var(--text-3))" }}>Monto recibido</label>
+            <label htmlFor="checkout-ultimos4" className="mb-1 block text-sm !text-content-3">Últimos 4 dígitos de la tarjeta *</label>
             <input
-              type="number"
-              value={cash}
-              onChange={(e) => setCash(e.target.value)}
-              placeholder={`Mínimo $${total.toFixed(2)}`}
-              className="w-full text-lg px-3 py-3 rounded-lg"
-              style={{ backgroundColor: "rgb(var(--bg))", border: "1px solid rgb(var(--border))", color: "rgb(var(--text-1))" }}
-              autoFocus
-            />
-            {/* Quick amounts */}
-            <div className="flex gap-2 mt-2">
-              {quickAmounts.map((a) => (
-                <button
-                  key={a}
-                  onClick={() => setCash(String(a))}
-                  className="flex-1 py-1.5 rounded text-xs"
-                  style={{ backgroundColor: "rgb(var(--surface-alt))", border: "1px solid rgb(var(--border))", color: "rgb(var(--text-3))" }}
-                >
-                  ${a}
-                </button>
-              ))}
-            </div>
-            {parsedCash >= total && parsedCash > 0 && (
-              <div className="mt-2 p-2 rounded-lg text-center" style={{ backgroundColor: "rgb(var(--st-ok) / 0.082)" }}>
-                <span className="text-sm font-semibold" style={{ color: "rgb(var(--st-ok))" }}>
-                  Cambio: ${change.toLocaleString("es-MX", { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {esFormaTarjeta(selectedMethod) && (
-          <div>
-            <label className="text-xs mb-1 block" style={{ color: "rgb(var(--text-3))" }}>Últimos 4 dígitos de la tarjeta *</label>
-            <input
+              id="checkout-ultimos4"
               type="text"
               inputMode="numeric"
               autoComplete="off"
@@ -138,26 +92,16 @@ export default function CheckoutFast({ items, total, tableId, tableNumber, onPay
               value={ultimos4}
               onChange={(e) => setUltimos4(soloUltimos4(e.target.value))}
               placeholder="1234"
-              className="w-full text-lg px-3 py-3 rounded-lg"
-              style={{ backgroundColor: "rgb(var(--bg))", border: "1px solid rgb(var(--border))", color: "rgb(var(--text-1))" }}
+              className="w-full rounded border !border-line !bg-nav px-3 py-2 !text-content-1"
             />
-            {motivoTarjeta && <p className="mt-1 text-xs" style={{ color: "rgb(var(--st-warn))" }}>{motivoTarjeta}</p>}
           </div>
-        )}
-
-        {/* Pay button */}
-        <button
-          onClick={handlePay}
-          disabled={processing || !!motivoTarjeta || (selectedMethod === "EFECTIVO" && parsedCash < total && parsedCash > 0)}
-          className="w-full py-3 rounded-xl font-semibold text-base"
-          style={{
-            backgroundColor: processing ? "rgb(var(--surface-3))" : "rgb(var(--text-1))",
-            color: processing ? "rgb(var(--text-3))" : "rgb(var(--bg))",
-          }}
-        >
-          {processing ? "Procesando..." : `Cobrar $${total.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`}
-        </button>
-      </div>
-    </div>
+        ) : undefined
+      }
+      textoConfirmar={processing ? "Procesando..." : `Cobrar ${dinero(total)}`}
+      onCancel={onCancel}
+      onConfirm={handlePay}
+      procesando={processing}
+      motivoBloqueo={motivoTarjeta ?? (faltaEfectivo ? `El monto recibido no cubre ${dinero(total)}` : null)}
+    />
   );
 }
