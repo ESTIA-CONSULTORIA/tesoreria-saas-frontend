@@ -17,6 +17,7 @@ export default {
         content: { 1: 'rgb(var(--text-1) / <alpha-value>)', 2: 'rgb(var(--text-2) / <alpha-value>)', 3: 'rgb(var(--text-3) / <alpha-value>)' },
         accent: 'rgb(var(--accent) / <alpha-value>)',
         'on-accent': 'rgb(var(--on-accent) / <alpha-value>)',
+        'on-solid': 'rgb(var(--on-solid) / <alpha-value>)',
         ok: 'rgb(var(--ok) / <alpha-value>)',
         danger: 'rgb(var(--danger) / <alpha-value>)',
         warn: 'rgb(var(--warn) / <alpha-value>)',

@@ -3,6 +3,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 /* Variables de las skins (ESTIA, Oscuro). Generado desde src/core/theme/skins.ts: npm run skins:css */
 @import './core/theme/skins.generated.css';
+/* Texto sobre botones de color (--on-solid): reglas de compatibilidad que nombran clases de Tailwind, en su propio archivo para no subir el tope de colores fijos de este */
+@import './core/theme/compatSolidos.css';
 
 @tailwind base;
 @tailwind components;
@@ -98,7 +100,7 @@ input::placeholder, textarea::placeholder {
 
 /* Modals */
 [role="dialog"], .modal {
-  background-color: rgb(var(--surface-1)) !important;
+  background-color: rgb(var(--modal)) !important;
 }
 
 /* Executive Graphite — Global Overrides */
@@ -172,7 +174,7 @@ input::placeholder, textarea::placeholder {
 .fixed.inset-0 > div,
 [role="dialog"],
 .modal-content {
-  background-color: rgb(var(--surface-1)) !important;
+  background-color: rgb(var(--modal)) !important;
   border-color: rgb(var(--border)) !important;
 }
 
@@ -220,6 +222,21 @@ td { border-color: rgb(var(--border)) !important; }
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover { background: rgb(var(--surface-4)); }
+
+/* Alto contraste: anillo de foco de 3 px siempre visible (también en campos, donde arriba se quita el contorno por defecto) */
+[data-skin="contraste"] :focus-visible {
+  outline: 3px solid rgb(var(--focus)) !important;
+  outline-offset: 2px !important;
+}
+
+/* El sistema operativo pide más contraste (prefers-contrast): en cualquier skin, bordes de separación al nivel de los de los campos y foco de 3 px */
+@media (prefers-contrast: more) {
+  :root { --border: var(--border-field); }
+  :focus-visible {
+    outline: 3px solid rgb(var(--focus)) !important;
+    outline-offset: 2px !important;
+  }
+}
 
 /* Viewport height base — fixes Safari iOS position:fixed */
 html { height: 100%; }

@@ -61,7 +61,7 @@ export default function SolutionsCenter() {
           <h1 style={{ fontSize: 28, fontWeight: 200, color: 'rgb(var(--text-bright))', marginBottom: 8, letterSpacing: '-0.01em' }}>
             Centro de Soluciones
           </h1>
-          <p style={{ fontSize: 14, color: 'rgb(var(--veil) / 0.5)', fontWeight: 300, maxWidth: 500, lineHeight: 1.7 }}>
+          <p style={{ fontSize: 14, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', fontWeight: 300, maxWidth: 500, lineHeight: 1.7 }}>
             Expande las capacidades de tu sistema. Activa módulos adicionales según las necesidades de tu negocio.
           </p>
         </div>
@@ -73,7 +73,7 @@ export default function SolutionsCenter() {
               padding: '6px 16px', borderRadius: 99, fontSize: 12, cursor: 'pointer',
               border: `1px solid ${selectedCategory === cat ? 'rgb(var(--accent) / 0.4)' : 'rgb(var(--veil) / 0.08)'}`,
               background: selectedCategory === cat ? 'rgb(var(--accent) / 0.1)' : 'transparent',
-              color: selectedCategory === cat ? 'rgb(var(--accent))' : 'rgb(var(--veil) / 0.5)',
+              color: selectedCategory === cat ? 'rgb(var(--accent))' : 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))',
             }}>
               {cat === 'all' ? 'Todos' : CATEGORY_LABELS[cat] || cat}
             </button>
@@ -81,7 +81,7 @@ export default function SolutionsCenter() {
         </div>
 
         {loading ? (
-          <div style={{ color: 'rgb(var(--veil) / 0.5)', fontSize: 13, textAlign: 'center', padding: 60 }}>Cargando...</div>
+          <div style={{ color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', fontSize: 13, textAlign: 'center', padding: 60 }}>Cargando...</div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
             {filtered.map(m => {
@@ -97,7 +97,7 @@ export default function SolutionsCenter() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 500, color: 'rgb(var(--text-soft))', marginBottom: 4 }}>{m.name}</div>
-                      <div style={{ fontSize: 10, color: 'rgb(var(--veil) / 0.5)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                      <div style={{ fontSize: 10, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                         {CATEGORY_LABELS[m.category] || m.category}
                       </div>
                     </div>
@@ -110,21 +110,21 @@ export default function SolutionsCenter() {
                         ADD-ON
                       </span>
                     ) : (
-                      <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 99, background: 'rgb(var(--veil) / 0.05)', color: 'rgb(var(--veil) / 0.5)', letterSpacing: '0.08em' }}>
+                      <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 99, background: 'rgb(var(--veil) / 0.05)', color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', letterSpacing: '0.08em' }}>
                         INCLUIDO
                       </span>
                     )}
                   </div>
 
                   {m.description && (
-                    <div style={{ fontSize: 12, color: 'rgb(var(--veil) / 0.5)', lineHeight: 1.6 }}>{m.description}</div>
+                    <div style={{ fontSize: 12, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', lineHeight: 1.6 }}>{m.description}</div>
                   )}
 
                   <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     {m.isAddon && m.defaultPrice > 0 && !isActive && (
                       <div style={{ fontSize: 13, color: 'rgb(var(--text-soft))' }}>
                         <span style={{ fontSize: 18, fontWeight: 300 }}>${m.defaultPrice}</span>
-                        <span style={{ fontSize: 11, color: 'rgb(var(--veil) / 0.5)' }}>/mes</span>
+                        <span style={{ fontSize: 11, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))' }}>/mes</span>
                       </div>
                     )}
                     {isActive ? (
@@ -141,7 +141,7 @@ export default function SolutionsCenter() {
                         {requesting === m.code ? 'Abriendo WhatsApp...' : 'Solicitar activación'}
                       </button>
                     ) : (
-                      <div style={{ fontSize: 12, color: 'rgb(var(--veil) / 0.5)' }}>Incluido en tu plan</div>
+                      <div style={{ fontSize: 12, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))' }}>Incluido en tu plan</div>
                     )}
                   </div>
                 </div>

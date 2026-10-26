@@ -1,0 +1,9 @@
+/* Compatibilidad de skins: el texto de un botón de color lleva --on-solid, no --text-1. En ESTIA y Oscuro valen lo mismo (nada cambia); en Claro es blanco
+   y en Alto contraste, negro. Nombra clases de Tailwind a propósito, por eso está declarado en DEFINEN_COLORES (coloresFijos.ts). */
+
+:is(.bg-blue-500, .bg-blue-600, .bg-blue-700, .bg-blue-800, .bg-indigo-600, .bg-violet-600, .bg-cyan-600,
+    .bg-green-500, .bg-green-600, .bg-green-700, .bg-red-500, .bg-red-600, .bg-red-700, .bg-yellow-500, .bg-amber-500):is(.text-white, .text-gray-100, .text-slate-100),
+:is(.bg-blue-500, .bg-blue-600, .bg-blue-700, .bg-blue-800, .bg-indigo-600, .bg-violet-600, .bg-cyan-600,
+    .bg-green-500, .bg-green-600, .bg-green-700, .bg-red-500, .bg-red-600, .bg-red-700, .bg-yellow-500, .bg-amber-500) :is(.text-white, .text-gray-100, .text-slate-100) {
+  color: rgb(var(--on-solid)) !important;
+}
