@@ -29,19 +29,19 @@ export default function MainLayout({ children }: Props) {
       display: 'flex',
       flexDirection: 'column',
       position: 'relative',
-      color: '#c8cdd8',
+      color: 'rgb(var(--text-soft))',
       ...(backgroundImage ? {
         backgroundImage: `url(${backgroundImage})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         backgroundAttachment: 'fixed',
-      } : { backgroundColor: '#0f1117' }),
+      } : { backgroundColor: 'rgb(var(--canvas))' }),
     }}>
       {backgroundImage && (
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundColor: 'rgba(0,0,0,0.65)',
+          backgroundColor: 'rgb(var(--scrim) / 0.65)',
           zIndex: 0, pointerEvents: 'none',
         }} />
       )}
@@ -53,7 +53,7 @@ export default function MainLayout({ children }: Props) {
           overflowY: 'auto',
           overflowX: 'hidden',
           position: 'relative',
-          backgroundColor: backgroundImage ? 'transparent' : '#0f1117',
+          backgroundColor: backgroundImage ? 'transparent' : 'rgb(var(--canvas))',
         }}>
           {children}
         </main>

@@ -61,11 +61,11 @@ export function UpdatePrompt() {
         bottom: 16,
         right: 16,
         zIndex: 9999,
-        background: '#050B1A',
-        color: '#fff',
+        background: 'rgb(var(--canvas))',
+        color: 'rgb(var(--text-1))',
         padding: '12px 16px',
         borderRadius: 8,
-        boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+        boxShadow: '0 4px 12px rgb(var(--scrim) / 0.4)',
         display: 'flex',
         alignItems: 'center',
         gap: 12,
@@ -82,8 +82,8 @@ export function UpdatePrompt() {
         onClick={actualizar}
         disabled={actualizando}
         style={{
-          background: '#fff',
-          color: '#050B1A',
+          background: 'rgb(var(--text-1))',
+          color: 'rgb(var(--canvas))',
           border: 'none',
           borderRadius: 6,
           padding: '6px 12px',

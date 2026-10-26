@@ -34,8 +34,8 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   return (
     <header style={{
       height: '48px',
-      background: '#101010',
-      borderBottom: '1px solid #2D2D2D',
+      background: 'rgb(var(--nav))',
+      borderBottom: '1px solid rgb(var(--border))',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -49,7 +49,7 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         )}
         <span style={{
           fontSize: '14px',
-          color: '#F5F5F5',
+          color: 'rgb(var(--text-1))',
           fontWeight: 500,
           letterSpacing: '0.02em',
         }}>
@@ -65,14 +65,14 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         <div style={{ textAlign: 'right' }}>
           <div style={{ 
             fontSize: '13px', 
-            color: '#F5F5F5',
+            color: 'rgb(var(--text-1))',
             fontWeight: 500,
           }}>
             {user?.name || user?.email}
           </div>
           <div style={{ 
             fontSize: '11px', 
-            color: '#9A9A9A',
+            color: 'rgb(var(--text-3))',
           }}>
             {user?.roleCode}
           </div>
@@ -82,20 +82,20 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           style={{
             padding: '6px 14px',
             fontSize: '12px',
-            color: '#9A9A9A',
+            color: 'rgb(var(--text-3))',
             background: 'transparent',
-            border: '1px solid #2D2D2D',
+            border: '1px solid rgb(var(--border))',
             borderRadius: '6px',
             cursor: 'pointer',
             letterSpacing: '0.04em',
           }}
           onMouseEnter={e => {
-            e.currentTarget.style.color = '#9B3A3A'
-            e.currentTarget.style.borderColor = '#9B3A3A'
+            e.currentTarget.style.color = 'rgb(var(--danger))'
+            e.currentTarget.style.borderColor = 'rgb(var(--danger-solid))'
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.color = '#9A9A9A'
-            e.currentTarget.style.borderColor = '#2D2D2D'
+            e.currentTarget.style.color = 'rgb(var(--text-3))'
+            e.currentTarget.style.borderColor = 'rgb(var(--border))'
           }}
         >
           Salir

@@ -426,9 +426,9 @@ export default function TopBar() {
   const estiloItem = (activo: boolean): React.CSSProperties => ({
     display: 'flex', alignItems: 'center', gap: 5,
     padding: '5px 10px', borderRadius: 6, fontSize: 13,
-    border: activo ? '1px solid rgba(123,156,204,0.4)' : '1px solid rgba(255,255,255,0.08)',
-    background: activo ? 'rgba(123,156,204,0.15)' : 'rgba(255,255,255,0.04)',
-    color: activo ? '#8fafd4' : '#c8cdd8',
+    border: activo ? '1px solid rgb(var(--accent-alt) / 0.4)' : '1px solid rgb(var(--veil) / 0.08)',
+    background: activo ? 'rgb(var(--accent-alt) / 0.15)' : 'rgb(var(--veil) / 0.04)',
+    color: activo ? 'rgb(var(--accent))' : 'rgb(var(--text-soft))',
     whiteSpace: 'nowrap', flexShrink: 0, textDecoration: 'none',
   });
   const itemNav = (m: typeof NAV[number], enMenu: boolean) => {
@@ -438,8 +438,8 @@ export default function TopBar() {
       return (
         <span key={m.key} role={enMenu ? 'menuitem' : undefined} aria-disabled="true" title="Elige una empresa para usar este módulo" style={{
           ...estiloItem(false),
-          border: '1px solid rgba(255,255,255,0.03)', background: 'rgba(255,255,255,0.02)', color: 'rgba(255,255,255,0.18)',
-          cursor: 'not-allowed', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.5)', userSelect: 'none',
+          border: '1px solid rgb(var(--veil) / 0.03)', background: 'rgb(var(--veil) / 0.02)', color: 'rgb(var(--veil) / 0.18)',
+          cursor: 'not-allowed', boxShadow: 'inset 0 1px 3px rgb(var(--scrim) / 0.5)', userSelect: 'none',
         }}>
           <span style={{ opacity: 0.3, display: 'flex' }}>{IC[m.key]}</span>
           {m.label}
@@ -454,12 +454,12 @@ export default function TopBar() {
         style={{
           ...estiloItem(active), cursor: 'pointer', transition: 'all 0.15s ease',
           boxShadow: active
-            ? '0 1px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(123,156,204,0.15)'
-            : '0 1px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
+            ? '0 1px 3px rgb(var(--scrim) / 0.4), inset 0 1px 0 rgb(var(--accent-alt) / 0.15)'
+            : '0 1px 3px rgb(var(--scrim) / 0.4), inset 0 1px 0 rgb(var(--veil) / 0.06)',
         }}
-        onMouseEnter={e => { if (!active) { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.08)'; el.style.color = '#e8ecf0'; } }}
-        onMouseLeave={e => { if (!active) { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(255,255,255,0.04)'; el.style.color = '#c8cdd8'; } }}
-        onFocus={e => { if (enMenu) (e.currentTarget as HTMLElement).style.outline = '2px solid #7b9ccc'; }}
+        onMouseEnter={e => { if (!active) { const el = e.currentTarget as HTMLElement; el.style.background = 'rgb(var(--veil) / 0.08)'; el.style.color = 'rgb(var(--text-bright))'; } }}
+        onMouseLeave={e => { if (!active) { const el = e.currentTarget as HTMLElement; el.style.background = 'rgb(var(--veil) / 0.04)'; el.style.color = 'rgb(var(--text-soft))'; } }}
+        onFocus={e => { if (enMenu) (e.currentTarget as HTMLElement).style.outline = '2px solid rgb(var(--accent-alt))'; }}
         onBlur={e => { (e.currentTarget as HTMLElement).style.outline = ''; }}
       >
         <span style={{ opacity: active ? 0.9 : 0.55, display: 'flex' }}>{IC[m.key]}</span>
@@ -482,16 +482,16 @@ export default function TopBar() {
     <>
       {/* ── Main topbar ── */}
       <div style={{
-        height: 52, background: '#141820',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        height: 52, background: 'rgb(var(--panel))',
+        borderBottom: '1px solid rgb(var(--veil) / 0.06)',
         display: 'flex', alignItems: 'center',
         padding: '0 20px', flexShrink: 0,
         position: 'relative', zIndex: 100,
       }}>
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 1, marginRight: 28, flexShrink: 0 }}>
-          <span style={{ fontSize: 13.5, fontWeight: 700, color: '#c8cdd8', letterSpacing: '0.1em' }}>ESTIA</span>
-          <span style={{ fontSize: 13.5, fontWeight: 700, color: '#7b9ccc', letterSpacing: '0.1em' }}>ERP</span>
+          <span style={{ fontSize: 13.5, fontWeight: 700, color: 'rgb(var(--text-soft))', letterSpacing: '0.1em' }}>ESTIA</span>
+          <span style={{ fontSize: 13.5, fontWeight: 700, color: 'rgb(var(--accent-alt))', letterSpacing: '0.1em' }}>ERP</span>
         </div>
 
         {/* Nav: lo que no cabe va al menú «Más» (se mide el ancho real de cada módulo, ver navOverflow.ts) */}
@@ -524,8 +524,8 @@ export default function TopBar() {
                   onKeyDown={teclaMenuMas}
                   style={{
                     position: 'absolute', top: 'calc(100% + 2px)', left: 0, minWidth: 190, zIndex: 1000,
-                    background: '#1a1f2e', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 8,
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.5)', padding: 4, display: 'flex', flexDirection: 'column', gap: 2,
+                    background: 'rgb(var(--popover))', border: '1px solid rgb(var(--veil) / 0.09)', borderRadius: 8,
+                    boxShadow: '0 8px 24px rgb(var(--scrim) / 0.5)', padding: 4, display: 'flex', flexDirection: 'column', gap: 2,
                   }}
                 >
                   {reparto.enMas.map(i => itemNav(visibleNav[i], true))}
@@ -551,8 +551,8 @@ export default function TopBar() {
           <div ref={ctxRef} style={{ position: 'relative' }}>
             {isRestricted ? (
               <div style={{
-                padding: '5px 10px', fontSize: 12, color: 'rgba(255,255,255,0.45)',
-                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+                padding: '5px 10px', fontSize: 12, color: 'rgb(var(--veil) / 0.5)',
+                background: 'rgb(var(--veil) / 0.03)', border: '1px solid rgb(var(--veil) / 0.06)',
                 borderRadius: 6, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>
                 {ctxLabel}
@@ -560,9 +560,9 @@ export default function TopBar() {
             ) : (
               <button onClick={openCtx} style={{
                 display: 'flex', alignItems: 'center', gap: 6,
-                padding: '5px 10px', background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6,
-                color: '#c8cdd8', fontSize: 12, cursor: 'pointer',
+                padding: '5px 10px', background: 'rgb(var(--veil) / 0.04)',
+                border: '1px solid rgb(var(--veil) / 0.08)', borderRadius: 6,
+                color: 'rgb(var(--text-soft))', fontSize: 12, cursor: 'pointer',
                 maxWidth: 220, overflow: 'hidden',
               }}>
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
@@ -574,14 +574,14 @@ export default function TopBar() {
             {ctxOpen && (
               <div style={{
                 position: 'absolute', top: 'calc(100% + 4px)', right: 0,
-                background: '#1a1f2e', border: '1px solid rgba(255,255,255,0.09)',
+                background: 'rgb(var(--popover))', border: '1px solid rgb(var(--veil) / 0.09)',
                 borderRadius: 8, width: 230, zIndex: 1000,
-                boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                boxShadow: '0 8px 24px rgb(var(--scrim) / 0.5)',
                 overflow: 'hidden',
               }}>
                 {ctxPhase === 'company' ? (
                   <>
-                    <div style={{ padding: '8px 12px 4px', fontSize: 9.5, color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Empresa</div>
+                    <div style={{ padding: '8px 12px 4px', fontSize: 9.5, color: 'rgb(var(--veil) / 0.5)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Empresa</div>
                     {isAdmin && (
                       <CtxItem
                         label={ctxSwitching ? 'Cambiando…' : 'Vista Global'}
@@ -591,7 +591,7 @@ export default function TopBar() {
                         onClick={clearCtx}
                       />
                     )}
-                    {companies.length === 0 && <div style={{ padding: '8px 12px', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>Cargando...</div>}
+                    {companies.length === 0 && <div style={{ padding: '8px 12px', fontSize: 12, color: 'rgb(var(--veil) / 0.5)' }}>Cargando...</div>}
                     {companies.map(co => (
                       <CtxItem key={co.id} label={co.tradeName || co.legalName} active={activeCompany?.id === co.id}
                         disabled={ctxSwitching}
@@ -602,19 +602,19 @@ export default function TopBar() {
                   </>
                 ) : (
                   <>
-                    <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, borderBottom: '1px solid rgb(var(--veil) / 0.06)' }}>
                       <button
                         onClick={() => { setCtxPhase('company'); setPendingCo(null); }}
                         disabled={ctxSwitching}
                         style={{
                           display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none',
-                          color: 'rgba(255,255,255,0.35)', cursor: ctxSwitching ? 'default' : 'pointer', fontSize: 11, padding: 0,
+                          color: 'rgb(var(--veil) / 0.5)', cursor: ctxSwitching ? 'default' : 'pointer', fontSize: 11, padding: 0,
                           opacity: ctxSwitching ? 0.5 : 1,
                         }}>
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
                         Volver
                       </button>
-                      <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>{pendingCo?.name}</span>
+                      <span style={{ fontSize: 11.5, color: 'rgb(var(--veil) / 0.6)', fontWeight: 500 }}>{pendingCo?.name}</span>
                     </div>
                     <CtxItem
                       label={ctxSwitching ? 'Cambiando…' : 'Ver toda la empresa'}
@@ -623,8 +623,8 @@ export default function TopBar() {
                       disabled={ctxSwitching}
                       onClick={viewFullCompany}
                     />
-                    <div style={{ padding: '6px 12px 4px', fontSize: 9.5, color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Sucursal</div>
-                    {branches.length === 0 && <div style={{ padding: '8px 12px', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>Cargando...</div>}
+                    <div style={{ padding: '6px 12px 4px', fontSize: 9.5, color: 'rgb(var(--veil) / 0.5)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Sucursal</div>
+                    {branches.length === 0 && <div style={{ padding: '8px 12px', fontSize: 12, color: 'rgb(var(--veil) / 0.5)' }}>Cargando...</div>}
                     {branches.map(br => (
                       <CtxItem
                         key={br.id}
@@ -641,28 +641,28 @@ export default function TopBar() {
           </div>
 
           {/* Divider */}
-          <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.08)' }} />
+          <div style={{ width: 1, height: 20, background: 'rgb(var(--veil) / 0.08)' }} />
 
           {/* User */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{
               width: 28, height: 28, borderRadius: '50%',
-              background: '#1e2d45', border: '1px solid rgba(123,156,204,0.25)',
+              background: 'rgb(var(--chip))', border: '1px solid rgb(var(--accent-alt) / 0.25)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 10.5, fontWeight: 600, color: '#8fafd4', flexShrink: 0,
+              fontSize: 10.5, fontWeight: 600, color: 'rgb(var(--accent))', flexShrink: 0,
             }}>
               {userInitials}
             </div>
             <div style={{ lineHeight: 1.2 }}>
-              <div style={{ fontSize: 11.5, color: '#c8cdd8', fontWeight: 500 }}>{user?.name?.split(' ')[0] || user?.email?.split('@')[0]}</div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{user?.roleCode}</div>
+              <div style={{ fontSize: 11.5, color: 'rgb(var(--text-soft))', fontWeight: 500 }}>{user?.name?.split(' ')[0] || user?.email?.split('@')[0]}</div>
+              <div style={{ fontSize: 10, color: 'rgb(var(--veil) / 0.5)' }}>{user?.roleCode}</div>
             </div>
             <button onClick={triggerLogout} style={{
-              fontSize: 11, color: 'rgba(255,255,255,0.28)', background: 'transparent',
+              fontSize: 11, color: 'rgb(var(--veil) / 0.5)', background: 'transparent',
               border: 'none', cursor: 'pointer', padding: '4px 6px', borderRadius: 4,
             }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#c8cdd8'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.28)'; }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgb(var(--text-soft))'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgb(var(--veil) / 0.5)'; }}
             >
               Salir
             </button>
@@ -673,8 +673,8 @@ export default function TopBar() {
       {/* ── Subnav ── */}
       {subItems.length > 0 && (
         <div style={{
-          height: 40, background: '#111419',
-          borderBottom: '1px solid rgba(255,255,255,0.05)',
+          height: 40, background: 'rgb(var(--panel))',
+          borderBottom: '1px solid rgb(var(--veil) / 0.05)',
           display: 'flex', alignItems: 'stretch',
           padding: '0 20px', flexShrink: 0,
           overflowX: 'auto', position: 'relative', zIndex: 99,
@@ -686,12 +686,12 @@ export default function TopBar() {
                 display: 'flex', alignItems: 'center',
                 padding: '0 14px', height: '100%', textDecoration: 'none',
                 fontSize: 12, fontWeight: active ? 500 : 400,
-                color: active ? '#c8cdd8' : 'rgba(255,255,255,0.35)',
-                borderBottom: active ? '2px solid rgba(255,255,255,0.25)' : '2px solid transparent',
+                color: active ? 'rgb(var(--text-soft))' : 'rgb(var(--veil) / 0.5)',
+                borderBottom: active ? '2px solid rgb(var(--veil) / 0.25)' : '2px solid transparent',
                 whiteSpace: 'nowrap', transition: 'color 0.15s', flexShrink: 0,
               }}
-              onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.65)'; }}
-              onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.35)'; }}
+              onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.color = 'rgb(var(--veil) / 0.65)'; }}
+              onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.color = 'rgb(var(--veil) / 0.5)'; }}
               >
                 {item.label}
               </Link>
@@ -713,14 +713,14 @@ function CtxItem({
   return (
     <div onClick={disabled ? undefined : onClick} style={{
       padding: '8px 12px', fontSize: 12.5, cursor: disabled ? 'default' : 'pointer',
-      color: active ? '#c8cdd8' : 'rgba(255,255,255,0.55)',
-      background: active ? 'rgba(255,255,255,0.04)' : 'transparent',
+      color: active ? 'rgb(var(--text-soft))' : 'rgb(var(--veil) / 0.55)',
+      background: active ? 'rgb(var(--veil) / 0.04)' : 'transparent',
       opacity: disabled ? 0.55 : 1,
       display: 'flex', alignItems: 'center', gap: 8,
       transition: 'background 0.1s',
     }}
-    onMouseEnter={e => { if (!disabled) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)'; }}
-    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = active ? 'rgba(255,255,255,0.04)' : 'transparent'; }}
+    onMouseEnter={e => { if (!disabled) (e.currentTarget as HTMLElement).style.background = 'rgb(var(--veil) / 0.07)'; }}
+    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = active ? 'rgb(var(--veil) / 0.04)' : 'transparent'; }}
     >
       {icon && <span style={{ opacity: 0.6, display: 'flex' }}>{icon}</span>}
       <span style={{ flex: 1 }}>{label}</span>

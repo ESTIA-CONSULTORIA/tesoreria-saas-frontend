@@ -34,3 +34,6 @@ tsconfig.node.tsbuildinfo
 *.njsproj
 *.sln
 *.sw?
+
+# Capturas de las oleadas de skins (se regeneran con scripts/capturas-skins.mjs; no se versionan)
+capturas-skins/

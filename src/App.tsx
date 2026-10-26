@@ -233,10 +233,10 @@ function App() {
     }
     // Si el rol no es permitido en móvil, mostrar mensaje
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+      <div className="min-h-screen !bg-bg flex items-center justify-center p-4">
         <div className="text-center">
-          <p className="text-white text-lg mb-2">Acceso restringido en móvil</p>
-          <p className="text-slate-400">Accede desde una computadora para usar el sistema</p>
+          <p className="!text-content-1 text-lg mb-2">Acceso restringido en móvil</p>
+          <p className="!text-content-3">Accede desde una computadora para usar el sistema</p>
         </div>
       </div>
     );

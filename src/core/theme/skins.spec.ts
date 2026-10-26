@@ -74,6 +74,12 @@ describe.each(Object.keys(SKINS) as SkinId[])('skin %s: contraste', (id) => {
     min(t.danger, t.dangerSoft, 4.5, 'error en insignia');
   });
 
+  it('cáscara: el texto suave y el destacado se leen sobre el lienzo, los paneles y los menús (4.5:1); el acento secundario sobre el panel (3:1)', () => {
+    for (const fondo of [t.canvas, t.panel, t.popover]) { min(t.textSoft, fondo, 4.5, 'texto suave'); min(t.textBright, fondo, 7, 'texto destacado'); }
+    min(t.accentAlt, t.panel, 3, 'acento secundario');
+    for (const v of [t.viz1, t.viz2, t.viz3, t.viz4]) min(v, t.surface1, 4.5, 'serie de color');
+  });
+
   it('botones con relleno de color llevan texto legible (4.5:1)', () => {
     for (const fondo of [t.btn, t.btnHover, t.okSolid, t.dangerSolid, t.warnSolid]) min(t.text1, fondo, 4.5, 'texto sobre botón');
     for (const fondo of [t.surface3, t.surface4]) min(t.text1, fondo, 4.5, 'texto sobre elevado');

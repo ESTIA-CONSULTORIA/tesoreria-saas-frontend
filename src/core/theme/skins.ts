@@ -37,6 +37,20 @@ export interface Tokens {
   okSoft: string; // fondo suave de insignias
   dangerSoft: string;
   focus: string;
+  // ── cáscara y transparencias (Ola 0/1 de PLAN-SKINS): hoy llevan los mismos valores que ya estaban fijos en pantalla, así que ESTIA y Oscuro no cambian ──
+  veil: string; // base de las transparencias claras sobre fondo oscuro (rgb(var(--veil) / .08)); en una skin clara será oscura
+  scrim: string; // fondo de ventanas modales y sombras (rgb(var(--scrim) / .6))
+  canvas: string; // fondo de las pantallas que van dentro de MainLayout
+  panel: string; // paneles internos y menús
+  popover: string; // menús desplegables y ventanas flotantes
+  textSoft: string; // texto de la barra superior y de las tarjetas del panel principal
+  textBright: string; // texto destacado sobre panel/popover
+  accentAlt: string; // acento secundario (tinte de la barra superior)
+  chip: string; // fondo de las iniciales/avatares
+  viz1: string; // series de color de los indicadores (verde)
+  viz2: string; // (violeta)
+  viz3: string; // (ámbar)
+  viz4: string; // (rosa)
 }
 
 export const SKINS: Record<SkinId, { nombre: string; descripcion: string; tokens: Tokens }> = {
@@ -53,6 +67,8 @@ export const SKINS: Record<SkinId, { nombre: string; descripcion: string; tokens
       okSolid: '#3B7A57', dangerSolid: '#9B3A3A', warnSolid: '#8A6A3A',
       okSoft: '#1A2E22', dangerSoft: '#2E1A1A',
       focus: '#BDBDBD',
+      veil: '#FFFFFF', scrim: '#000000', canvas: '#0F1117', panel: '#141820', popover: '#1A1F2E', textSoft: '#C8CDD8', textBright: '#E8ECF0',
+      accentAlt: '#7B9CCC', chip: '#1E2D45', viz1: '#4ADE80', viz2: '#A78BFA', viz3: '#FBBF24', viz4: '#F472B6',
     },
   },
   oscuro: {
@@ -68,6 +84,8 @@ export const SKINS: Record<SkinId, { nombre: string; descripcion: string; tokens
       okSolid: '#27704A', dangerSolid: '#B03A3A', warnSolid: '#7A5C18',
       okSoft: '#14281C', dangerSoft: '#2E1A1E',
       focus: '#6EA8FE',
+      veil: '#FFFFFF', scrim: '#000000', canvas: '#0F1117', panel: '#141820', popover: '#1A1F2E', textSoft: '#C8CDD8', textBright: '#E8ECF0',
+      accentAlt: '#7B9CCC', chip: '#1E2D45', viz1: '#4ADE80', viz2: '#A78BFA', viz3: '#FBBF24', viz4: '#F472B6',
     },
   },
 };

@@ -1,10 +1,4 @@
 {
- "App.tsx": {
-  "hex": 0,
-  "rgb": 0,
-  "tw": 3,
-  "nombrados": 0
- },
  "assets/css/basketball-theme.css": {
   "hex": 12,
   "rgb": 41,
@@ -38,54 +32,6 @@
  "components/SplashScreen.tsx": {
   "hex": 12,
   "rgb": 12,
-  "tw": 0,
-  "nombrados": 0
- },
- "core/components/GlobalSearchModal.tsx": {
-  "hex": 0,
-  "rgb": 0,
-  "tw": 18,
-  "nombrados": 0
- },
- "core/components/ModalPOS.tsx": {
-  "hex": 0,
-  "rgb": 0,
-  "tw": 6,
-  "nombrados": 0
- },
- "core/components/NoContextBanner.tsx": {
-  "hex": 1,
-  "rgb": 0,
-  "tw": 0,
-  "nombrados": 0
- },
- "core/components/reglasModal.ts": {
-  "hex": 0,
-  "rgb": 0,
-  "tw": 7,
-  "nombrados": 0
- },
- "core/layout/Header.tsx": {
-  "hex": 11,
-  "rgb": 0,
-  "tw": 0,
-  "nombrados": 0
- },
- "core/layout/MainLayout.tsx": {
-  "hex": 3,
-  "rgb": 1,
-  "tw": 0,
-  "nombrados": 0
- },
- "core/layout/TopBar.tsx": {
-  "hex": 18,
-  "rgb": 45,
-  "tw": 0,
-  "nombrados": 0
- },
- "core/pwa/UpdatePrompt.tsx": {
-  "hex": 4,
-  "rgb": 1,
   "tw": 0,
   "nombrados": 0
  },
