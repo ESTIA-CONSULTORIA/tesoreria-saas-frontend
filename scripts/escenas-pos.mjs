@@ -19,7 +19,7 @@ const entrarPos = async (p) => {
   await clic(p, 'Continuar');
   await ESPERA(1200);
 };
-const digitos = async (p, d) => { for (const c of d) await clic(p, '^' + c + '$'); await ESPERA(900); };
+const digitos = async (p, d) => { for (const c of d) await clic(p, '^' + c + '( ' + c + ')?$'); await ESPERA(900); };
 const tecla = async (p, k) => { await p.keyboard.press(k); await ESPERA(250); };
 
 const categorias = [
@@ -72,6 +72,8 @@ const ventas = [
 
 export function responderPos(metodo, ruta, escena) {
   if (!escena.pos) return null;
+  if (escena.erp && metodo === 'GET' && ruta.startsWith('/banks')) return [200, [{ id: 'k1', name: 'BBVA', accountNumber: '0123456789', clabe: '012345678901234567', currency: 'MXN', balance: 125000, isActive: true, companyId: 'c1' }]];
+  if (escena.erp && metodo !== 'GET') return [200, { id: 'nuevo', ok: true }];
   const turnoEsc = escena.precorte ? { ...turno, precorteGuardado: true, precorteDeclaracion: { efectivo: 2300.5, tarjeta: 800.5, transferencia: 150 } } : turno;
   const vacio = escena.vacio;
   if (metodo === 'POST' && ruta.startsWith('/pos/cashiers/nip')) return [200, { user: { id: 'u1', name: 'Ana Demo', email: 'ana@negocio-demo.mx', branchId: 'b1' } }];
@@ -152,4 +154,15 @@ export const ESCENAS_POS = {
   'backfill': { ...BASE, ruta: '/pos/backfill' },
   'ventas-offline': { ...BASE, ruta: '/ventas-offline' },
   'corte-campos': { ...BASE, ruta: '/settings/corte-fields' },
+  // ── Fase 1 de modales (conjunto de corte): estados de error y teclado en pantalla ──
+  'pos-abrir-turno-error': pos({ sinTurno: true }, async (p) => { await clic(p, '^Abrir Turno$', '[role="dialog"] button'); }),
+  'pos-retiro-error': pos({}, async (p) => { await clic(p, 'Retiro'); await clic(p, '^Retirar$'); }),
+  'pos-deposito-error': pos({}, async (p) => { await clic(p, 'Depósito'); await clic(p, '^Depositar$'); }),
+  'pos-precorte-error': pos({ fallos: ['/pos/shifts/s1/precut'] }, async (p) => { await clic(p, 'Precorte'); await clic(p, 'Guardar Precorte'); }),
+  'pos-cierre-error': pos({ precorte: true, fallos: ['/pos/shifts/s1/close'] }, async (p) => { await clic(p, 'Cerrar Turno'); await clic(p, 'Definitivamente'); }),
+  'corte-teclado': { ...BASE, ruta: '/corte?tenant=t1', accion: async (p) => { await clic(p, 'Grupo Demo|Norte'); await digitos(p, '1234'); await clic(p, '^Efectivo$', 'span'); } },
+  'corte-corte-error': { ...BASE, ruta: '/corte?tenant=t1', fallos: ['/pos/shifts/s1/precut'], accion: async (p) => { await clic(p, 'Grupo Demo|Norte'); await digitos(p, '1234'); await clic(p, 'Guardar corte'); await ESPERA(600); } },
+  // ERP: ventana Create* (capa sobre la barra superior y Esc que cierra)
+  'erp-banks-nuevo': { ...BASE, erp: true, ruta: '/banks', localStorage: { active_company_id: 'c1', active_company_name: 'Grupo Demo', active_branch_id: 'b1', active_branch_name: 'Matriz' }, usuario: { modulosActivos: ['dashboard', 'empresas', 'sucursales', 'usuarios', 'configuracion', 'tesoreria', 'pos', 'bancos', 'movimientos', 'transferencias', 'compras', 'proveedores', 'reportes', 'costos', 'rh'] }, teclas: ['Escape'], accion: async (p) => { await ESPERA(900); await clic(p, 'Nuev|Agregar|Crear|Añadir'); await ESPERA(500); } },
+  'corte-fondo-error': { ...BASE, ruta: '/corte?tenant=t1', sinTurno: true, fallos: ['/pos/shifts'], accion: async (p) => { await clic(p, 'Grupo Demo|Norte'); await digitos(p, '1234'); await ESPERA(600); await clic(p, 'Confirmar y abrir turno'); await ESPERA(600); } },
 };

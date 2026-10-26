@@ -2,6 +2,11 @@ import { useEffect, type ChangeEvent, type RefObject } from 'react';
 import { normalizarMonto } from '../../core/utils/monto';
 import { esFormaTarjeta, motivoBloqueoCobro, motivoFaltaTarjeta, soloUltimos4 } from '../../core/utils/tarjeta';
 import { ModalPOS } from '../../core/components/ModalPOS';
+import { AlertaModal } from '../../core/components/AlertaModal';
+import { Boton } from '../../core/components/Boton';
+import { CampoMoneda } from '../../core/components/CampoMoneda';
+import { ErrorCampo } from '../../core/components/ErrorCampo';
+import { ModalFooter } from '../../core/components/ModalFooter';
 import { DENOMINACIONES, conciliacionTurno, diferenciasPrecorte, efectivoEsperado, totalContado, type TurnoCaja } from './cajaTurno';
 
 // Ventanas de caja de uso diario (apertura, retiro, depósito, precorte, corte, cobro). Presentacionales: el estado y las
@@ -18,6 +23,10 @@ export function AperturaTurnoModal(p: {
   setFondo: (v: string) => void;
   notas: string;
   setNotas: (v: string) => void;
+  /** Error de la operación (servidor) que se muestra dentro de la ventana, en vez de un alert(). */
+  error?: string | null;
+  /** Error de validación del campo «Fondo de caja». */
+  errorFondo?: string | null;
   onCancel: () => void;
   onOpen: () => void;
 }) {
@@ -29,40 +38,27 @@ export function AperturaTurnoModal(p: {
       etiquetaEnter="Abrir turno"
       atajos={[{ tecla: 'F4', etiqueta: 'Abrir turno', accion: p.onOpen }]}
       footer={
-        <>
-          <button onClick={p.onCancel} className={`flex-1 ${btnCancelar}`}>Cancelar</button>
-          <button onClick={p.onOpen} className="flex-1 py-2.5 rounded !bg-ok-solid !text-on-solid font-semibold hover:bg-tono-ok-700">
-            Abrir Turno
-          </button>
-        </>
+        <ModalFooter
+          secundario={<Boton variante="secundario" onClick={p.onCancel}>Cancelar</Boton>}
+          principal={<Boton onClick={p.onOpen}>Abrir Turno</Boton>}
+        />
       }
     >
+      {p.error ? <AlertaModal className="mb-3">{p.error}</AlertaModal> : null}
       <div className="grid gap-5 md:grid-cols-2">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm !text-content-3 mb-1">Cajero</label>
+            <span className="mb-1 block text-sm !text-content-3">Cajero</span>
             <div className="!text-content-1 font-medium">{p.cajero}</div>
           </div>
           <div>
-            <label className="block text-sm !text-content-3 mb-1">Fecha y Hora</label>
+            <span className="mb-1 block text-sm !text-content-3">Fecha y Hora</span>
             <div className="!text-content-1">{new Date().toLocaleString()}</div>
           </div>
-        </div>
-        <div className="space-y-4">
           <div>
-            <label className="block text-sm !text-content-3 mb-1">Fondo de Caja *</label>
-            <input
-              type="number"
-              step="0.01"
-              value={p.fondo}
-              onChange={(e) => p.setFondo(e.target.value)}
-              placeholder="0.00"
-              className="w-full px-4 py-2 rounded-lg border !border-line !bg-nav !text-content-1"
-            />
-          </div>
-          <div>
-            <label className="block text-sm !text-content-3 mb-1">Notas (opcional)</label>
+            <label htmlFor="apertura-notas" className="mb-1 block text-sm !text-content-3">Notas (opcional)</label>
             <textarea
+              id="apertura-notas"
               value={p.notas}
               onChange={(e) => p.setNotas(e.target.value)}
               placeholder="Notas del turno..."
@@ -71,6 +67,7 @@ export function AperturaTurnoModal(p: {
             />
           </div>
         </div>
+        <CampoMoneda etiqueta="Fondo de Caja" requerido valor={p.fondo} onCambio={p.setFondo} error={p.errorFondo} conTeclado autoFocus />
       </div>
     </ModalPOS>
   );
@@ -86,10 +83,15 @@ export function MovimientoEfectivoModal(p: {
   setConcepto: (v: string) => void;
   autorizadoPor: string;
   setAutorizadoPor: (v: string) => void;
+  /** Error de la operación (servidor) que se muestra dentro de la ventana, en vez de un alert(). */
+  error?: string | null;
+  /** Errores de validación por campo. */
+  errores?: { monto?: string; autorizadoPor?: string; concepto?: string };
   onCancel: () => void;
   onConfirm: () => void;
 }) {
   const retiro = p.tipo === 'RETIRO';
+  const campo = (c: boolean) => `w-full px-3 py-2 rounded !bg-nav !text-content-1 ${c ? 'border !border-danger' : ''}`;
   return (
     <ModalPOS
       size="md"
@@ -99,52 +101,44 @@ export function MovimientoEfectivoModal(p: {
       enterModo="siguiente"
       atajos={[{ tecla: 'F4', etiqueta: retiro ? 'Registrar retiro' : 'Registrar depósito', accion: p.onConfirm }]}
       footer={
-        <>
-          <button onClick={p.onCancel} className={`flex-1 ${btnCancelar}`}>Cancelar</button>
-          <button
-            onClick={p.onConfirm}
-            className={`flex-1 py-2.5 rounded font-semibold ${retiro ? 'bg-tono-yellow-600 !text-on-yellow hover:bg-tono-yellow-700' : '!bg-btn !text-on-solid hover:!bg-btn-hover'}`}
-          >
-            {retiro ? 'Retirar' : 'Depositar'}
-          </button>
-        </>
+        <ModalFooter
+          secundario={<Boton variante="secundario" onClick={p.onCancel}>Cancelar</Boton>}
+          principal={<Boton onClick={p.onConfirm}>{retiro ? 'Retirar' : 'Depositar'}</Boton>}
+        />
       }
     >
+      {p.error ? <AlertaModal className="mb-3">{p.error}</AlertaModal> : null}
       <div className="grid gap-4 md:grid-cols-2">
+        <CampoMoneda etiqueta="Monto" requerido valor={p.monto} onCambio={p.setMonto} error={p.errores?.monto} conTeclado autoFocus />
         <div className="space-y-4">
           <div>
-            <label className="block text-sm !text-content-3 mb-1">Monto *</label>
-            <input
-              type="number"
-              step="0.01"
-              value={p.monto}
-              onChange={(e) => p.setMonto(e.target.value)}
-              placeholder="0.00"
-              className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
-            />
-          </div>
-          <div>
-            <label className="block text-sm !text-content-3 mb-1">Autorizado por *</label>
+            <label htmlFor="mov-autoriza" className="mb-1 block text-sm !text-content-3">Autorizado por *</label>
             <select
+              id="mov-autoriza"
               value={p.autorizadoPor}
               onChange={(e) => p.setAutorizadoPor(e.target.value)}
-              className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
+              aria-invalid={p.errores?.autorizadoPor ? true : undefined}
+              className={campo(!!p.errores?.autorizadoPor)}
             >
               <option value="">Seleccionar autorizador</option>
               <option value="admin">Administrador</option>
               <option value="soporte">Soporte</option>
             </select>
+            <ErrorCampo id="mov-autoriza" mensaje={p.errores?.autorizadoPor} />
           </div>
-        </div>
-        <div>
-          <label className="block text-sm !text-content-3 mb-1">{retiro ? 'Motivo *' : 'Origen *'}</label>
-          <textarea
-            value={p.concepto}
-            onChange={(e) => p.setConcepto(e.target.value)}
-            placeholder={retiro ? 'Motivo del retiro' : 'Origen del depósito'}
-            rows={4}
-            className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
-          />
+          <div>
+            <label htmlFor="mov-concepto" className="mb-1 block text-sm !text-content-3">{retiro ? 'Motivo *' : 'Origen *'}</label>
+            <textarea
+              id="mov-concepto"
+              value={p.concepto}
+              onChange={(e) => p.setConcepto(e.target.value)}
+              placeholder={retiro ? 'Motivo del retiro' : 'Origen del depósito'}
+              rows={4}
+              aria-invalid={p.errores?.concepto ? true : undefined}
+              className={campo(!!p.errores?.concepto)}
+            />
+            <ErrorCampo id="mov-concepto" mensaje={p.errores?.concepto} />
+          </div>
         </div>
       </div>
     </ModalPOS>
@@ -165,6 +159,8 @@ export function PrecorteModal(p: {
   setTransferencia: (v: string) => void;
   vales: string;
   setVales: (v: string) => void;
+  /** Error de la operación (servidor) que se muestra dentro de la ventana, en vez de un alert(). */
+  error?: string | null;
   onCancel: () => void;
   onSave: () => void;
 }) {
@@ -195,22 +191,23 @@ export function PrecorteModal(p: {
       enterModo="siguiente"
       atajos={[{ tecla: 'F4', etiqueta: 'Guardar precorte', accion: p.onSave }]}
       footer={
-        <>
-          <div className="flex flex-1 flex-wrap items-center gap-x-6 gap-y-1 text-sm" data-testid="precorte-diferencia">
-            <div><span className="!text-content-3">Esperado </span><span className="font-semibold">{money(ef.sistema)}</span></div>
-            <div><span className="!text-content-3">Contado </span><span className="font-semibold">{money(ef.declarado)}</span></div>
-            <div className={`text-base font-bold ${colorDif(ef.diferencia)}`}>
-              Diferencia efectivo {ef.diferencia > 0 ? '+' : ''}{money(ef.diferencia)}
-              {ef.diferencia < 0 ? ' (faltante)' : ef.diferencia > 0 ? ' (sobrante)' : ' ✓'}
+        <ModalFooter
+          resumen={
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm" data-testid="precorte-diferencia">
+              <div><span className="!text-content-3">Esperado </span><span className="font-semibold">{money(ef.sistema)}</span></div>
+              <div><span className="!text-content-3">Contado </span><span className="font-semibold">{money(ef.declarado)}</span></div>
+              <div className={`text-base font-bold ${colorDif(ef.diferencia)}`}>
+                Diferencia efectivo {ef.diferencia > 0 ? '+' : ''}{money(ef.diferencia)}
+                {ef.diferencia < 0 ? ' (faltante)' : ef.diferencia > 0 ? ' (sobrante)' : ' ✓'}
+              </div>
             </div>
-          </div>
-          <button onClick={p.onCancel} className={btnCancelar}>Cancelar</button>
-          <button onClick={p.onSave} className="px-6 py-2.5 rounded bg-tono-purple-600 !text-on-strong font-semibold hover:bg-tono-purple-700">
-            Guardar Precorte
-          </button>
-        </>
+          }
+          secundario={<Boton variante="secundario" onClick={p.onCancel}>Cancelar</Boton>}
+          principal={<Boton onClick={p.onSave}>Guardar Precorte</Boton>}
+        />
       }
     >
+      {p.error ? <AlertaModal className="mb-3">{p.error}</AlertaModal> : null}
       <div className="grid gap-4 lg:grid-cols-[1fr_1.3fr_1fr]">
         <div className="!bg-nav rounded-lg p-4">
           <h4 className="font-semibold mb-3">Resumen de Ventas</h4>
@@ -248,6 +245,7 @@ export function PrecorteModal(p: {
                 <input
                   type="text"
                   inputMode="numeric"
+                  aria-label={`Cantidad de billetes o monedas de $${denom}`}
                   value={p.cashCounts[denom] || 0}
                   onChange={(e) => {
                     let val = e.target.value.replace(/[^0-9]/g, '');
@@ -273,6 +271,7 @@ export function PrecorteModal(p: {
                   <input
                     type="text"
                     inputMode="numeric"
+                    aria-label={etiqueta}
                     value={valor}
                     onChange={soloNumeros(setter)}
                     placeholder="0.00"
@@ -307,6 +306,8 @@ export function PrecorteModal(p: {
 export function CierreTurnoModal(p: {
   turno: TurnoCaja & { id: string; horaApertura?: string; totalVentas?: number | string; precorteDeclaracion?: Record<string, unknown> };
   totalesServidor?: Record<string, number>;
+  /** Error de la operación (ventas sin sincronizar, servidor) que se muestra dentro de la ventana, en vez de un alert(). */
+  error?: string | null;
   onCancel: () => void;
   onClose: () => void;
 }) {
@@ -321,17 +322,18 @@ export function CierreTurnoModal(p: {
       enterModo="avanzar"
       atajos={[{ tecla: 'F10', etiqueta: 'Cerrar turno', accion: p.onClose }]}
       footer={
-        <>
-          <div className={`flex flex-1 items-center text-base font-bold ${dif(conc.totalDif) || '!text-content-2'}`} data-testid="cierre-diferencia">
-            Diferencia total {money(conc.totalDif)}
-          </div>
-          <button onClick={p.onCancel} className={btnCancelar}>Cancelar</button>
-          <button onClick={p.onClose} className="px-6 py-2.5 rounded !bg-danger-solid !text-on-solid font-semibold hover:bg-tono-danger-700">
-            Cerrar Turno Definitivamente
-          </button>
-        </>
+        <ModalFooter
+          resumen={
+            <div className={`text-base font-bold ${dif(conc.totalDif) || '!text-content-2'}`} data-testid="cierre-diferencia">
+              Diferencia total {money(conc.totalDif)}
+            </div>
+          }
+          secundario={<Boton variante="secundario" onClick={p.onCancel}>Cancelar</Boton>}
+          principal={<Boton variante="peligro" onClick={p.onClose}>Cerrar Turno Definitivamente</Boton>}
+        />
       }
     >
+      {p.error ? <AlertaModal className="mb-3">{p.error}</AlertaModal> : null}
       <div className="grid gap-4 lg:grid-cols-[1fr_1.7fr]">
         <div className="!bg-nav rounded-lg p-4">
           <h4 className="font-semibold mb-3">Resumen del Turno</h4>

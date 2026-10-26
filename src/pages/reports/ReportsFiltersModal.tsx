@@ -1,3 +1,5 @@
+import { createPortal } from "react-dom";
+import { usePilaEscape } from "../../core/components/usePilaEscape";
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -13,13 +15,15 @@ export default function ReportsFiltersModal({
   endDate,
   onApply,
 }: Props) {
+  usePilaEscape(onClose, open);
+
   if (!open) return null;
 
   let start = startDate;
   let end = endDate;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+  return createPortal(
+    <div role="dialog" aria-modal="true" className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-md max-h-[90vh] flex flex-col rounded-xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden">
         {/* Header - flex-shrink-0 */}
         <div className="flex-shrink-0 p-6 border-b border-slate-800">
@@ -42,6 +46,7 @@ export default function ReportsFiltersModal({
           ESC para cerrar
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

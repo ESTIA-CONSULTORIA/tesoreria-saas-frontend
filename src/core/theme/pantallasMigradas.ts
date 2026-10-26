@@ -12,6 +12,17 @@ export const PANTALLAS_MIGRADAS: readonly string[] = [
   'core/components/ModalPOS.tsx',
   'core/components/NoContextBanner.tsx',
   'core/components/reglasModal.ts',
+  // Modales fase 1: componentes compartidos del estándar de ventanas (docs/PLAN-MODALES.md)
+  'core/components/Modal.tsx',
+  'core/components/Boton.tsx',
+  'core/components/ModalFooter.tsx',
+  'core/components/AlertaModal.tsx',
+  'core/components/ErrorCampo.tsx',
+  'core/components/TecladoNumerico.tsx',
+  'core/components/CampoMoneda.tsx',
+  'core/components/NipPad.tsx',
+  'core/components/ConfirmDialog.tsx',
+  'core/components/reglasBoton.ts',
   // Ola 1: dashboard, centro de soluciones y guía de la prueba (el login conserva su paleta propia por negocio: ver PLAN-SKINS §11)
   'pages/Dashboard/DashboardPage.tsx',
   'pages/Dashboard/DashboardLite.tsx',

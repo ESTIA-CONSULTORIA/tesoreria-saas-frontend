@@ -25,6 +25,7 @@ import { esFormaTarjeta, ultimos4Validos } from '../../core/utils/tarjeta';
 import { esReintentable } from '../../core/utils/monto';
 import { motivoDeRechazo } from '../../core/offline/saleDuplicate';
 import { ModalPOS } from "../../core/components/ModalPOS";
+import { useAviso } from "../../core/components/confirmContext";
 import { AperturaTurnoModal, CierreTurnoModal, CobroModal, MovimientoEfectivoModal, PrecorteModal, efectivoEsperado } from "./ModalesCaja";
 import { totalContado } from "./cajaTurno";
 import { InputBusqueda } from "../../core/components/InputBusqueda";
@@ -310,6 +311,14 @@ export default function POSPage() {
   // Precorte/Corte modals
   const [showPrecutModal, setShowPrecutModal] = useState(false);
   const [showCloseShiftModal, setShowCloseShiftModal] = useState(false);
+  // Errores dentro de las ventanas de caja (antes alert()): de validación por campo y de la operación (servidor). Se limpian al cerrar la ventana.
+  const avisar = useAviso();
+  const [errApertura, setErrApertura] = useState<string | null>(null);
+  const [errAperturaFondo, setErrAperturaFondo] = useState<string | null>(null);
+  const [errMovimiento, setErrMovimiento] = useState<string | null>(null);
+  const [errMovimientoCampos, setErrMovimientoCampos] = useState<{ monto?: string; autorizadoPor?: string; concepto?: string }>({});
+  const [errPrecorte, setErrPrecorte] = useState<string | null>(null);
+  const [errCierre, setErrCierre] = useState<string | null>(null);
   const [shiftSummary, setShiftSummary] = useState<any>(null);
   const [showExitConfirmModal, setShowExitConfirmModal] = useState(false);
   const [cashCounts, setCashCounts] = useState<Record<string, number>>({});
@@ -766,11 +775,19 @@ export default function POSPage() {
     }
   }
 
+  // Al cerrar una ventana de caja se descartan sus errores (no deben reaparecer al volver a abrirla).
+  useEffect(() => { if (!showOpenShiftModal) { setErrApertura(null); setErrAperturaFondo(null); } }, [showOpenShiftModal]);
+  useEffect(() => { if (!showWithdrawalModal && !showDepositModal) { setErrMovimiento(null); setErrMovimientoCampos({}); } }, [showWithdrawalModal, showDepositModal]);
+  useEffect(() => { if (!showPrecutModal) setErrPrecorte(null); }, [showPrecutModal]);
+  useEffect(() => { if (!showCloseShiftModal) setErrCierre(null); }, [showCloseShiftModal]);
+
   async function openShift() {
+    setErrApertura(null);
     if (!initialFund || Number(initialFund) <= 0) {
-      alert("El fondo de caja es obligatorio");
+      setErrAperturaFondo("El fondo de caja es obligatorio");
       return;
     }
+    setErrAperturaFondo(null);
     const body = {
       cajero: selectedCashier || user?.id,
       sucursalId: user?.branchId || branchId,
@@ -799,7 +816,7 @@ export default function POSPage() {
     } catch (error) {
       console.error("Error opening shift:", error);
       if (!isNetworkOrTimeoutError(error)) {
-        alert("Error al abrir turno");
+        setErrApertura("No se pudo abrir el turno. Revisa los datos e inténtalo de nuevo.");
         return;
       }
       // Fase C2: sin red/timeout — encolar y abrir el turno de forma optimista con un
@@ -866,9 +883,10 @@ export default function POSPage() {
     // sincronizar, ni siquiera se intenta la petición. closeShift recalcula los
     // totales desde las ventas ya guardadas en el servidor; cerrar con ventas
     // pendientes dejaría el corte con datos incompletos, sin ningún error visible.
+    setErrCierre(null);
     const pendingSales = await getPendingSalesForShift(shift.id);
     if (pendingSales.length > 0) {
-      alert(`Tienes ${pendingSales.length} venta(s) pendientes de guardar. Espera a tener señal para cerrar el turno.`);
+      setErrCierre(`Tienes ${pendingSales.length} venta(s) pendientes de guardar. Espera a tener señal para cerrar el turno.`);
       return;
     }
 
@@ -891,11 +909,11 @@ export default function POSPage() {
       setNipSessionActive(false);
       setShowCloseShiftModal(false);
       setShowLoginScreen(true);
-      alert("Turno cerrado exitosamente");
+      void avisar({ tipo: "ok", mensaje: "Turno cerrado exitosamente" });
     } catch (error) {
       console.error("Error closing shift:", error);
       if (!isNetworkOrTimeoutError(error)) {
-        alert("Error al cerrar turno");
+        setErrCierre("No se pudo cerrar el turno. Inténtalo de nuevo; si persiste, avisa a soporte.");
         return;
       }
       const clientTimestamp = new Date().toISOString();
@@ -905,15 +923,22 @@ export default function POSPage() {
       setNipSessionActive(false);
       setShowCloseShiftModal(false);
       setShowLoginScreen(true);
-      alert("Turno cerrado (pendiente de sincronizar) — se completará cuando haya conexión.");
+      void avisar({ tipo: "aviso", mensaje: "Turno cerrado (pendiente de sincronizar) — se completará cuando haya conexión." });
     }
   }
 
   async function handleWithdrawal() {
-    if (!shift || !withdrawalAmount || !withdrawalReason || !withdrawalAuthorizedBy) {
-      alert("Todos los campos son obligatorios");
+    setErrMovimiento(null);
+    const faltan = {
+      monto: withdrawalAmount ? undefined : "Escribe el monto",
+      autorizadoPor: withdrawalAuthorizedBy ? undefined : "Elige quién autoriza",
+      concepto: withdrawalReason ? undefined : "Escribe el motivo",
+    };
+    if (!shift || faltan.monto || faltan.autorizadoPor || faltan.concepto) {
+      setErrMovimientoCampos(faltan);
       return;
     }
+    setErrMovimientoCampos({});
     const body = {
       monto: Number(withdrawalAmount),
       motivo: withdrawalReason,
@@ -929,7 +954,7 @@ export default function POSPage() {
     } catch (error) {
       console.error("Error processing withdrawal:", error);
       if (!isNetworkOrTimeoutError(error)) {
-        alert("Error al procesar retiro");
+        setErrMovimiento("No se pudo registrar el retiro. Revisa los datos e inténtalo de nuevo.");
         return;
       }
       // Fase C2: totales del turno quedan congelados hasta que sincronice de verdad
@@ -944,10 +969,17 @@ export default function POSPage() {
   }
 
   async function handleDeposit() {
-    if (!shift || !depositAmount || !depositOrigin || !depositAuthorizedBy) {
-      alert("Todos los campos son obligatorios");
+    setErrMovimiento(null);
+    const faltan = {
+      monto: depositAmount ? undefined : "Escribe el monto",
+      autorizadoPor: depositAuthorizedBy ? undefined : "Elige quién autoriza",
+      concepto: depositOrigin ? undefined : "Escribe el origen",
+    };
+    if (!shift || faltan.monto || faltan.autorizadoPor || faltan.concepto) {
+      setErrMovimientoCampos(faltan);
       return;
     }
+    setErrMovimientoCampos({});
     const body = {
       monto: Number(depositAmount),
       origen: depositOrigin,
@@ -963,7 +995,7 @@ export default function POSPage() {
     } catch (error) {
       console.error("Error processing deposit:", error);
       if (!isNetworkOrTimeoutError(error)) {
-        alert("Error al procesar depósito");
+        setErrMovimiento("No se pudo registrar el depósito. Revisa los datos e inténtalo de nuevo.");
         return;
       }
       // Fase C2: mismo criterio — totales congelados hasta sincronización real.
@@ -978,6 +1010,7 @@ export default function POSPage() {
 
   async function handlePrecut() {
     if (!shift) return;
+    setErrPrecorte(null);
     const body = {
       efectivoContado: calculateTotalCash(),
       efectivoDenominaciones: cashCounts,
@@ -1001,11 +1034,11 @@ export default function POSPage() {
       setCreditoDeclarado("");
       setTransferenciaDeclarada("");
       setValesDeclarados("");
-      alert("Precorte guardado correctamente");
+      void avisar({ tipo: "ok", mensaje: "Precorte guardado correctamente" });
     } catch (error) {
       console.error("Error saving precut:", error);
       if (!isNetworkOrTimeoutError(error)) {
-        alert("Error al guardar precorte");
+        setErrPrecorte("No se pudo guardar el precorte. Revisa los montos e inténtalo de nuevo.");
         return;
       }
       // Fase C2: NO marcamos precorteGuardado=true localmente (decisión (a) — congelado
@@ -1019,7 +1052,7 @@ export default function POSPage() {
       setCreditoDeclarado("");
       setTransferenciaDeclarada("");
       setValesDeclarados("");
-      alert("Precorte guardado (pendiente de sincronizar) — se completará cuando haya conexión.");
+      void avisar({ tipo: "aviso", mensaje: "Precorte guardado (pendiente de sincronizar) — se completará cuando haya conexión." });
     }
   }
 
@@ -2945,6 +2978,8 @@ export default function POSPage() {
       {showOpenShiftModal && (
         <AperturaTurnoModal
           cajero={nombreCajero(selectedCashier || user?.id)}
+          error={errApertura}
+          errorFondo={errAperturaFondo}
           fondo={initialFund}
           setFondo={setInitialFund}
           notas={shiftNotes}
@@ -3686,6 +3721,8 @@ export default function POSPage() {
       {showWithdrawalModal && (
         <MovimientoEfectivoModal
           tipo="RETIRO"
+          error={errMovimiento}
+          errores={errMovimientoCampos}
           esperado={shift ? efectivoEsperado(shift as any) : undefined}
           monto={withdrawalAmount}
           setMonto={setWithdrawalAmount}
@@ -3702,6 +3739,8 @@ export default function POSPage() {
       {showDepositModal && (
         <MovimientoEfectivoModal
           tipo="DEPOSITO"
+          error={errMovimiento}
+          errores={errMovimientoCampos}
           esperado={shift ? efectivoEsperado(shift as any) : undefined}
           monto={depositAmount}
           setMonto={setDepositAmount}
@@ -3718,6 +3757,7 @@ export default function POSPage() {
       {showPrecutModal && shift && (
         <PrecorteModal
           turno={shift as any}
+          error={errPrecorte}
           tickets={salesHistory.length}
           cashCounts={cashCounts}
           setCashCounts={setCashCounts}
@@ -3738,6 +3778,7 @@ export default function POSPage() {
       {showCloseShiftModal && shift && (
         <CierreTurnoModal
           turno={shift as any}
+          error={errCierre}
           totalesServidor={shiftSummary?.calculatedTotals}
           onCancel={() => setShowCloseShiftModal(false)}
           onClose={closeShift}

@@ -178,6 +178,12 @@ input::placeholder, textarea::placeholder {
   border-color: rgb(var(--border)) !important;
 }
 
+/* Ventanas sobre papel claro (Modal apariencia="papel", pantallas Lite): ganan a la regla de arriba, que pinta todo panel con --modal */
+.fixed.inset-0 > [data-modal-apariencia="papel"] {
+  background-color: rgb(var(--papel)) !important;
+  border-color: rgb(var(--papel-linea)) !important;
+}
+
 /* Tablas */
 th {
   background-color: rgb(var(--field)) !important;

@@ -1,6 +1,14 @@
 import { IMPRESION } from './impresionClara';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { AlertaModal } from '../../core/components/AlertaModal';
+import { Boton } from '../../core/components/Boton';
+import { CampoMoneda } from '../../core/components/CampoMoneda';
+import { ErrorCampo } from '../../core/components/ErrorCampo';
+import { Modal } from '../../core/components/Modal';
+import { ModalFooter } from '../../core/components/ModalFooter';
+import { NipPad } from '../../core/components/NipPad';
+import { TecladoNumerico } from '../../core/components/TecladoNumerico';
 
 const API = ((import.meta.env.VITE_API_URL as string) ||
   'https://api.estiaconsultoria.com') + '/api/v1';
@@ -117,6 +125,8 @@ export default function CorteCajaLite() {
   useEffect(() => {
     if (screen !== 'corte') return;
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Con una ventana encima (fondo inicial, avisos de insumos) el teclado es de la ventana, no del monto de atrás.
+      if (showInsumos || showFondoModal) return;
       if (e.key >= '0' && e.key <= '9') {
         if (!activeField) setActiveField(activeFieldOrder[0]);
         handleMonto(e.key);
@@ -134,7 +144,7 @@ export default function CorteCajaLite() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [screen, activeField, inputValue]);
+  }, [screen, activeField, inputValue, showInsumos, showFondoModal]);
 
   const finishLogin = async (currentShift: any) => {
     // Cargar campos configurables del corte
@@ -409,8 +419,6 @@ export default function CorteCajaLite() {
     </div>
   );
 
-  const PIN_KEYS = ['1','2','3','4','5','6','7','8','9','','0','del'];
-
   const shared = {
     outer: { position: 'fixed' as const, inset: 0, background: 'rgb(var(--papel-bg))', display: 'flex', alignItems: 'center', justifyContent: 'center' },
     wrap: { width: '100%', maxWidth: 420, height: '100%', maxHeight: 860, background: 'rgb(var(--papel))', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', borderRadius: window.innerWidth > 500 ? 20 : 0, boxShadow: '0 4px 40px rgb(var(--scrim) / 0.08)' },
@@ -462,21 +470,7 @@ export default function CorteCajaLite() {
             </div>
             <div style={{ ...shared.content, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 40 }}>
               <div style={{ fontSize: 13, color: 'rgb(var(--tinta-3))', marginBottom: 36, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Ingresa tu NIP</div>
-              <div style={{ display: 'flex', gap: 20, marginBottom: 48 }}>
-                {[0,1,2,3].map(i => (
-                  <div key={i} style={{ width: 14, height: 14, borderRadius: '50%', background: pin.length > i ? 'rgb(var(--papel-azul))' : 'rgb(var(--papel-linea))', transition: 'all 0.2s', boxShadow: pin.length > i ? '0 0 12px rgb(var(--papel-azul) / 0.3)' : 'none' }} />
-                ))}
-              </div>
-              {error && <div style={{ color: 'rgb(var(--papel-rojo))', fontSize: 14, marginBottom: 20, letterSpacing: '0.02em', fontWeight: 500 }}>{error}</div>}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, width: '100%', maxWidth: 300 }}>
-                {PIN_KEYS.map((k, i) => (
-                  <button key={i}
-                    style={{ padding: '22px 8px', borderRadius: 14, border: '1px solid rgb(var(--papel-linea))', background: 'rgb(var(--papel-soft))', color: 'rgb(var(--tinta-1))', fontSize: 28, fontWeight: 400, cursor: 'pointer', letterSpacing: '-0.02em', opacity: k === '' ? 0 : 1, pointerEvents: k === '' ? 'none' : 'auto' }}
-                    onClick={() => k !== '' && !loading && handlePin(k)}>
-                    {k === 'del' ? '←' : k}
-                  </button>
-                ))}
-              </div>
+              <NipPad id="lite-nip" apariencia="papel" valor={pin} error={error} cargando={loading || showFondoModal} onTecla={(t) => { if (!loading) handlePin(t === 'borrar' ? 'del' : t); }} />
               {loading && <div style={{ color: 'rgb(var(--tinta-3))', fontSize: 13, marginTop: 24, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Verificando...</div>}
               <button onClick={() => { setScreen('empresa'); setPin(''); setError(''); }}
                 style={{ background: 'none', border: 'none', color: 'rgb(var(--tinta-3))', fontSize: 13, cursor: 'pointer', marginTop: 40, letterSpacing: '0.05em' }}>
@@ -487,37 +481,26 @@ export default function CorteCajaLite() {
         </div>
       )}
 
-      {/* Modal: Fondo inicial de caja (turno nuevo) */}
+      {/* Ventana: Fondo inicial de caja (turno nuevo) */}
       {showFondoModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgb(var(--papel-navy) / 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div style={{ width: '100%', maxWidth: 360, background: 'rgb(var(--papel))', borderRadius: 20, padding: 28, boxShadow: '0 20px 60px rgb(var(--scrim) / 0.2)' }}>
-            <div style={{ fontSize: 10, letterSpacing: '0.2em', color: 'rgb(var(--tinta-3))', textTransform: 'uppercase', marginBottom: 6 }}>Nuevo turno</div>
-            <div style={{ fontSize: 19, fontWeight: 700, color: 'rgb(var(--tinta-1))', marginBottom: 20 }}>Fondo inicial de caja</div>
-            <input
-              type="number"
-              inputMode="decimal"
-              autoFocus
-              placeholder="0.00"
-              value={fondoInicialInput}
-              onChange={e => setFondoInicialInput(e.target.value)}
-              style={{ width: '100%', padding: '16px 14px', borderRadius: 12, border: '1px solid rgb(var(--papel-linea))', background: 'rgb(var(--papel-soft))', color: 'rgb(var(--tinta-1))', fontSize: 22, fontWeight: 600, marginBottom: 16, boxSizing: 'border-box' }}
+        <Modal
+          size="sm"
+          apariencia="papel"
+          title="Fondo inicial de caja"
+          subtitle="Nuevo turno"
+          onClose={loading ? undefined : cancelFondoInicial}
+          etiquetaEnter="Abrir turno"
+          atajos={[{ tecla: 'F4', etiqueta: 'Abrir turno', accion: confirmFondoInicial, deshabilitado: loading }]}
+          footer={
+            <ModalFooter
+              secundario={<Boton apariencia="papel" variante="secundario" disabled={loading} onClick={cancelFondoInicial}>Cancelar</Boton>}
+              principal={<Boton cargando={loading} onClick={confirmFondoInicial}>{loading ? 'Abriendo turno...' : 'Confirmar y abrir turno'}</Boton>}
             />
-            {error && <div style={{ color: 'rgb(var(--papel-rojo))', fontSize: 13, marginBottom: 12, fontWeight: 500 }}>{error}</div>}
-            <button onClick={confirmFondoInicial} disabled={loading} style={{
-              width: '100%', padding: 16, borderRadius: 12, border: 'none',
-              background: 'rgb(var(--papel-azul))', color: 'rgb(var(--papel))', fontSize: 15, fontWeight: 600,
-              cursor: 'pointer', fontFamily: 'inherit', marginBottom: 10,
-            }}>
-              {loading ? 'Abriendo turno...' : 'Confirmar y abrir turno'}
-            </button>
-            <button onClick={cancelFondoInicial} disabled={loading} style={{
-              width: '100%', padding: 14, borderRadius: 12, border: 'none',
-              background: 'none', color: 'rgb(var(--tinta-3))', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
-            }}>
-              Cancelar
-            </button>
-          </div>
-        </div>
+          }
+        >
+          {error ? <AlertaModal apariencia="papel" className="mb-3">{error}</AlertaModal> : null}
+          <CampoMoneda apariencia="papel" etiqueta="Fondo de caja" valor={fondoInicialInput} onCambio={setFondoInicialInput} conTeclado autoFocus />
+        </Modal>
       )}
 
       {/* PANTALLA: Corte */}
@@ -538,8 +521,8 @@ export default function CorteCajaLite() {
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={handleBloquear} style={{
-                  background: 'none', border: '1px solid rgb(var(--scrim) / 0.15)',
-                  color: 'rgb(var(--scrim) / 0.35)', fontSize: 10, padding: '4px 10px',
+                  background: 'none', border: '1px solid rgb(var(--papel-linea))',
+                  color: 'rgb(var(--tinta-3))', fontSize: 10, padding: '4px 10px',
                   borderRadius: 8, cursor: 'pointer', letterSpacing: '0.08em',
                   fontFamily: 'inherit',
                 }}>
@@ -586,21 +569,7 @@ export default function CorteCajaLite() {
                 {/* Teclado inline */}
                 {activeField === f.key && (
                   <div style={{ padding: '12px 0 8px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 8 }}>
-                      {['1','2','3','4','5','6','7','8','9','.','0','←'].map((k, i) => (
-                        <button key={i}
-                          onClick={e => { e.stopPropagation(); k === '←' ? handleMonto('del') : handleMonto(k); }}
-                          style={{
-                            padding: '16px 8px', borderRadius: 10,
-                            border: '1px solid rgb(var(--papel-linea))',
-                            background: 'rgb(var(--papel-soft))',
-                            color: k === '←' ? 'rgb(var(--tinta-3))' : 'rgb(var(--tinta-1))',
-                            fontSize: k === '←' ? 17 : 24, fontWeight: 400, cursor: 'pointer',
-                          }}>
-                          {k}
-                        </button>
-                      ))}
-                    </div>
+                    <TecladoNumerico className="mb-2" permitirPunto apariencia="papel" onTecla={(t) => handleMonto(t === 'borrar' ? 'del' : t)} />
                     <button onClick={confirmMonto} style={{
                       width: '100%', padding: '14px', borderRadius: 10, border: 'none',
                       background: 'rgb(var(--papel-azul))', color: 'rgb(var(--papel))',
@@ -622,7 +591,7 @@ export default function CorteCajaLite() {
             </div>
 
             {/* Error */}
-            {error && <div style={{ color: 'rgb(var(--papel-rojo))', fontSize: 14, textAlign: 'center', marginBottom: 12, fontWeight: 500 }}>{error}</div>}
+            {error && <div style={{ textAlign: 'center', marginBottom: 12 }}><ErrorCampo id="lite-corte" apariencia="papel" mensaje={error} /></div>}
           </div>
 
           {/* Botón guardar — fijo abajo, siempre visible */}
@@ -639,14 +608,7 @@ export default function CorteCajaLite() {
 
           {/* Modal de insumos */}
           {showInsumos && (
-            <div style={{
-              position: 'fixed', inset: 0, background: 'rgb(var(--papel))',
-              display: 'flex', flexDirection: 'column', zIndex: 50,
-            }}>
-              <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid rgb(var(--papel-linea-2))', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ fontSize: 18, fontWeight: 700, color: 'rgb(var(--tinta-1))' }}>Avisos de Insumos</div>
-                <button onClick={() => setShowInsumos(false)} style={{ background: 'rgb(var(--papel-linea-2))', border: 'none', color: 'rgb(var(--tinta-2))', fontSize: 16, cursor: 'pointer', borderRadius: 8, width: 36, height: 36, fontWeight: 600 }}>✕</button>
-              </div>
+            <Modal size="md" apariencia="papel" title="Avisos de Insumos" onClose={() => setShowInsumos(false)}>
 
               <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px' }}>
                 {/* Formulario nuevo aviso */}
@@ -747,7 +709,7 @@ export default function CorteCajaLite() {
                   </div>
                 ))}
               </div>
-            </div>
+            </Modal>
           )}
         </div>
       )}
