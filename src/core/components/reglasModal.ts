@@ -16,16 +16,36 @@ export const CLASE_ANCHO: Record<TamanoModal, string> = {
   xl: 'max-w-[1240px]',
 };
 
+/**
+ * Capa ÚNICA de todas las ventanas. La barra superior del ERP vive en z-index 100 dentro de un contenedor propio
+ * (MainLayout), así que un overlay en z-50 dentro de la página queda debajo de ella. `Modal` se pinta en un portal
+ * colgado de <body> con esta capa, por encima de la barra y de sus menús.
+ */
+export const CAPA_MODAL = 200;
+export const CAPA_BARRA_SUPERIOR = 100;
+
 export const CLASES_MODAL = {
-  overlay: 'fixed inset-0 z-50 flex items-center justify-center bg-scrim/60 p-3',
+  overlay: 'fixed inset-0 z-[200] flex items-center justify-center bg-scrim/60 p-3',
   panel: 'flex max-h-[90vh] w-[90vw] flex-col overflow-hidden rounded-xl border !border-line !bg-surface-1 !text-content-1 shadow-2xl',
   header: 'shrink-0 border-b !border-line px-5 py-3',
   body: 'min-h-0 flex-1 overflow-y-auto px-5 py-3',
   footer: 'flex shrink-0 gap-2 border-t !border-line !bg-surface-1 px-5 py-3',
 } as const;
 
-export function clasePanel(size: TamanoModal): string {
-  return `${CLASES_MODAL.panel} ${CLASE_ANCHO[size]}`;
+/** Apariencia de la ventana: `sistema` usa los tokens de la skin; `papel` es para las pantallas Lite, que pintan sobre papel claro (tokens papel-*). */
+export type AparienciaModal = 'sistema' | 'papel';
+
+export const CLASES_MODAL_PAPEL = {
+  panel: 'flex max-h-[90vh] w-[90vw] flex-col overflow-hidden rounded-xl border border-papel-linea bg-papel text-tinta-1 shadow-2xl',
+  header: 'shrink-0 border-b border-papel-linea-2 px-5 py-3',
+  footer: 'flex shrink-0 gap-2 border-t border-papel-linea-2 bg-papel px-5 py-3',
+  leyenda: 'shrink-0 border-t border-papel-linea-2 px-5 py-1.5 text-[11px] text-tinta-3',
+  subtitulo: 'text-xs text-tinta-3',
+  cerrar: 'text-2xl leading-none text-tinta-3 hover:text-tinta-1',
+} as const;
+
+export function clasePanel(size: TamanoModal, apariencia: AparienciaModal = 'sistema'): string {
+  return `${apariencia === 'papel' ? CLASES_MODAL_PAPEL.panel : CLASES_MODAL.panel} ${CLASE_ANCHO[size]}`;
 }
 
 /** Ancho real que ocupa una ventana en un viewport dado: min(90vw, tope del tamaño). */

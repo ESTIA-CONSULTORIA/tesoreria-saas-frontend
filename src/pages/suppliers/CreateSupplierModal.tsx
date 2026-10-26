@@ -1,3 +1,5 @@
+import { createPortal } from "react-dom";
+import { usePilaEscape } from "../../core/components/usePilaEscape";
 import { useState, useEffect } from "react";
 import { api } from "../../core/api/api";
 
@@ -87,10 +89,12 @@ export default function CreateSupplierModal({ open, onClose, onCreated, supplier
     }
   }
 
+  usePilaEscape(onClose, open);
+
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+  return createPortal(
+    <div role="dialog" aria-modal="true" className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden">
         {/* Header - flex-shrink-0 */}
         <div className="flex-shrink-0 p-6 border-b border-slate-800">
@@ -299,6 +303,7 @@ export default function CreateSupplierModal({ open, onClose, onCreated, supplier
           ESC para cerrar
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

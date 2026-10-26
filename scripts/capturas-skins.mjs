@@ -128,6 +128,17 @@ async function capturar(browser, nombre, escena, skin) {
   await ESPERA(300);
   await page.screenshot({ path: join(SALIDA, `${nombre}__${skin}.png`), type: 'png' });
   const desborde = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+  // contrato de la ventana de arriba (estándar de modales): rol, nombre accesible, medidas a 1366×768, capa sobre la barra y foco dentro
+  const contrato = await page.evaluate(() => {
+    const d = [...document.querySelectorAll('[role="dialog"]')].pop();
+    if (!d) return null;
+    const panel = d.firstElementChild;
+    const r = panel.getBoundingClientRect();
+    const nombre = (d.getAttribute('aria-labelledby') || '').split(' ').map((i) => document.getElementById(i)?.textContent || '').join(' ').trim();
+    const arriba = document.elementFromPoint(r.left + r.width / 2, r.top + 14);
+    const cuerpo = [...panel.querySelectorAll('div')].find((x) => /overflow-y-auto/.test(x.className) && /flex-1/.test(x.className));
+    return { rol: d.getAttribute('role'), modal: d.getAttribute('aria-modal'), nombre, ancho: Math.round(r.width), alto: Math.round(r.height), caben1366: r.width <= 1229.5 && r.height <= 691.5, sobreBarra: !!arriba && d.contains(arriba), focoDentro: d.contains(document.activeElement), scrollInterno: cuerpo ? cuerpo.scrollHeight > cuerpo.clientHeight + 1 : false, botones: [...panel.querySelectorAll('[data-pos-footer] button')].map((b) => (b.textContent || '').trim()) };
+  });
   // impresión (recibos): se emula el medio «print»; el papel debe quedar claro y el texto oscuro, sea cual sea la skin
   let impresion = null;
   if (escena.imprimible) {
@@ -179,19 +190,19 @@ async function capturar(browser, nombre, escena, skin) {
     if (!d) break;
   }
   await page.close();
-  return { axe, teclado, desborde, atajos, impresion };
+  return { axe, teclado, desborde, atajos, impresion, contrato };
 }
 
 mkdirSync(SALIDA, { recursive: true });
 const nombres = args.escenas && args.escenas !== 'todas' ? args.escenas.split(',') : Object.keys(ESCENAS);
 const srv = await servidor();
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, protocolTimeout: 60000, args: ['--no-sandbox', '--force-color-profile=srgb', '--font-render-hinting=none', '--disable-lcd-text'] });
-const axeTodo = {}, tecladoTodo = {}, desbordes = {}, atajosTodo = {}, impresionTodo = {};
+const axeTodo = {}, tecladoTodo = {}, desbordes = {}, atajosTodo = {}, impresionTodo = {}, contratoTodo = {};
 try {
   for (const n of nombres) for (const skin of SKINS) {
     let r;
     try { r = await capturar(browser, n, ESCENAS[n], skin); } catch (e) { console.log(`${n.padEnd(20)} ${skin.padEnd(7)} ESCENA FALLÓ: ${String(e.message).slice(0, 90)}`); continue; }
-    axeTodo[`${n}__${skin}`] = r.axe; tecladoTodo[`${n}__${skin}`] = r.teclado; desbordes[`${n}__${skin}`] = r.desborde; atajosTodo[`${n}__${skin}`] = r.atajos; if (r.impresion) impresionTodo[`${n}__${skin}`] = r.impresion;
+    axeTodo[`${n}__${skin}`] = r.axe; tecladoTodo[`${n}__${skin}`] = r.teclado; desbordes[`${n}__${skin}`] = r.desborde; atajosTodo[`${n}__${skin}`] = r.atajos; contratoTodo[`${n}__${skin}`] = r.contrato; if (r.impresion) impresionTodo[`${n}__${skin}`] = r.impresion;
     console.log(`${n.padEnd(20)} ${skin.padEnd(7)} contraste: ${String(r.axe.length).padStart(3)} fallos | foco: ${r.teclado.length} pasos | desborde: ${r.desborde ? 'SÍ' : 'no'}`);
   }
 } finally {
@@ -203,4 +214,5 @@ writeFileSync(join(SALIDA, 'teclado.json'), JSON.stringify(tecladoTodo, null, 1)
 writeFileSync(join(SALIDA, 'desborde.json'), JSON.stringify(desbordes, null, 1));
 writeFileSync(join(SALIDA, 'atajos.json'), JSON.stringify(atajosTodo, null, 1));
 writeFileSync(join(SALIDA, 'impresion.json'), JSON.stringify(impresionTodo, null, 1));
+writeFileSync(join(SALIDA, 'contrato.json'), JSON.stringify(contratoTodo, null, 1));
 process.exit(0);
