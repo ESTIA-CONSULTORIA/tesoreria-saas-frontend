@@ -17,6 +17,8 @@ export const DEFINEN_COLORES: readonly string[] = [
   'core/theme/contraste.ts',
   'core/theme/skins.generated.css',
   'core/theme/compatSolidos.css',
+  'pages/pos/coloresDatos.ts',
+  'pages/lite/impresionClara.ts',
   'core/theme/coloresFijos.ts',
   'pages/Login/loginPaleta.ts',
 ];

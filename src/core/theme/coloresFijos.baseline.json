@@ -311,18 +311,6 @@
   "tw": 0,
   "nombrados": 0
  },
- "pages/lite/CorteCajaLite.tsx": {
-  "hex": 137,
-  "rgb": 6,
-  "tw": 0,
-  "nombrados": 0
- },
- "pages/lite/NotasCocinaLite.tsx": {
-  "hex": 29,
-  "rgb": 7,
-  "tw": 0,
-  "nombrados": 0
- },
  "pages/Login/LoginPage.tsx": {
   "hex": 41,
   "rgb": 68,
@@ -339,42 +327,6 @@
   "hex": 0,
   "rgb": 0,
   "tw": 122,
-  "nombrados": 0
- },
- "pages/mesas/ConfigMesas.tsx": {
-  "hex": 0,
-  "rgb": 0,
-  "tw": 26,
-  "nombrados": 0
- },
- "pages/mesas/mesasLogic.ts": {
-  "hex": 4,
-  "rgb": 0,
-  "tw": 0,
-  "nombrados": 0
- },
- "pages/mesas/MesasPage.tsx": {
-  "hex": 0,
-  "rgb": 0,
-  "tw": 1,
-  "nombrados": 0
- },
- "pages/mesas/MesasScreen.tsx": {
-  "hex": 0,
-  "rgb": 0,
-  "tw": 31,
-  "nombrados": 0
- },
- "pages/mesas/MeseroPage.tsx": {
-  "hex": 0,
-  "rgb": 0,
-  "tw": 8,
-  "nombrados": 0
- },
- "pages/mesas/PanelCuenta.tsx": {
-  "hex": 0,
-  "rgb": 0,
-  "tw": 69,
   "nombrados": 0
  },
  "pages/mobile-analytics/MobileAnalyticsApp.tsx": {
@@ -405,48 +357,6 @@
   "hex": 23,
   "rgb": 34,
   "tw": 0,
-  "nombrados": 0
- },
- "pages/pos/BackfillCortePage.tsx": {
-  "hex": 14,
-  "rgb": 14,
-  "tw": 0,
-  "nombrados": 0
- },
- "pages/pos/CheckoutFast.tsx": {
-  "hex": 30,
-  "rgb": 1,
-  "tw": 0,
-  "nombrados": 0
- },
- "pages/pos/ModalesCaja.tsx": {
-  "hex": 0,
-  "rgb": 0,
-  "tw": 127,
-  "nombrados": 0
- },
- "pages/pos/PosChatPanel.tsx": {
-  "hex": 51,
-  "rgb": 1,
-  "tw": 0,
-  "nombrados": 0
- },
- "pages/pos/POSPage.tsx": {
-  "hex": 3,
-  "rgb": 0,
-  "tw": 629,
-  "nombrados": 0
- },
- "pages/pos/TableLayout.tsx": {
-  "hex": 16,
-  "rgb": 0,
-  "tw": 0,
-  "nombrados": 0
- },
- "pages/pos/VentasOfflineFallidas.tsx": {
-  "hex": 0,
-  "rgb": 0,
-  "tw": 50,
   "nombrados": 0
  },
  "pages/purchases/CreateInvoiceModal.tsx": {
@@ -518,12 +428,6 @@
  "pages/settings/AppearancePage.tsx": {
   "hex": 55,
   "rgb": 21,
-  "tw": 0,
-  "nombrados": 0
- },
- "pages/settings/CorteFieldsConfig.tsx": {
-  "hex": 5,
-  "rgb": 8,
   "tw": 0,
   "nombrados": 0
  },

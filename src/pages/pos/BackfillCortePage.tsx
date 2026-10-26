@@ -114,7 +114,7 @@ export default function BackfillCortePage() {
   if (!isAuthorized) {
     return (
       <MainLayout>
-        <div style={{ padding: 40, color: '#c8cdd8', fontSize: 14 }}>
+        <div style={{ padding: 40, color: 'rgb(var(--text-soft))', fontSize: 14 }}>
           No tienes permisos para acceder a esta sección.
         </div>
       </MainLayout>
@@ -123,50 +123,50 @@ export default function BackfillCortePage() {
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '10px 12px', borderRadius: 8,
-    border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117',
-    color: '#c8cdd8', fontSize: 14, boxSizing: 'border-box',
+    border: '1px solid rgb(var(--veil) / 0.1)', background: 'rgb(var(--canvas))',
+    color: 'rgb(var(--text-soft))', fontSize: 14, boxSizing: 'border-box',
   };
   const labelStyle: React.CSSProperties = {
-    fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 6, display: 'block',
+    fontSize: 12, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', marginBottom: 6, display: 'block',
   };
 
   return (
     <MainLayout>
       <div style={{ maxWidth: 560, padding: '24px 24px 60px' }}>
-        <h1 style={{ fontSize: 18, fontWeight: 500, color: '#c8cdd8', marginBottom: 6 }}>
+        <h1 style={{ fontSize: 18, fontWeight: 500, color: 'rgb(var(--text-soft))', marginBottom: 6 }}>
           Captura Retroactiva de Corte
         </h1>
-        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 24 }}>
+        <p style={{ fontSize: 13, color: 'rgb(var(--veil) / max(0.55, var(--alfa-texto-min)))', marginBottom: 24 }}>
           Registra el corte de un día pasado que no quedó capturado en el sistema. Solo disponible para ADMIN/SOPORTE.
         </p>
 
         {!activeCompany || !activeBranch ? (
-          <div style={{ padding: 16, borderRadius: 10, border: '1px solid rgba(252,165,165,0.3)', background: 'rgba(252,165,165,0.08)', color: '#fca5a5', fontSize: 13, marginBottom: 20 }}>
+          <div style={{ padding: 16, borderRadius: 10, border: '1px solid rgb(var(--tono-danger-300) / 0.3)', background: 'rgb(var(--tono-danger-300) / 0.08)', color: 'rgb(var(--tono-danger-300))', fontSize: 13, marginBottom: 20 }}>
             Selecciona una empresa y sucursal en la barra superior para continuar.
           </div>
         ) : (
-          <div style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.07)', background: '#141820', color: 'rgba(255,255,255,0.6)', fontSize: 12, marginBottom: 20 }}>
+          <div style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid rgb(var(--veil) / 0.07)', background: 'rgb(var(--panel))', color: 'rgb(var(--veil) / max(0.6, var(--alfa-texto-min)))', fontSize: 12, marginBottom: 20 }}>
             {activeCompany.name} — {activeBranch.name}
           </div>
         )}
 
         {success ? (
-          <div style={{ borderRadius: 10, border: '1px solid rgba(74,222,128,0.3)', background: 'rgba(74,222,128,0.08)', padding: 24 }}>
-            <div style={{ fontSize: 15, color: '#4ade80', fontWeight: 600, marginBottom: 8 }}>
+          <div style={{ borderRadius: 10, border: '1px solid rgb(var(--viz-1) / 0.3)', background: 'rgb(var(--viz-1) / 0.08)', padding: 24 }}>
+            <div style={{ fontSize: 15, color: 'rgb(var(--viz-1))', fontWeight: 600, marginBottom: 8 }}>
               Corte retroactivo guardado ✓
             </div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 20 }}>
+            <div style={{ fontSize: 13, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', marginBottom: 20 }}>
               Fecha capturada: {fecha}
             </div>
             <button
               onClick={capturarOtroDia}
-              style={{ padding: '12px 20px', borderRadius: 8, border: 'none', background: '#1d4ed8', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+              style={{ padding: '12px 20px', borderRadius: 8, border: 'none', background: 'rgb(var(--papel-azul))', color: 'rgb(var(--papel))', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
             >
               Capturar otro día
             </button>
           </div>
         ) : (
-          <div style={{ borderRadius: 10, border: '1px solid rgba(255,255,255,0.07)', background: '#141820', padding: 20 }}>
+          <div style={{ borderRadius: 10, border: '1px solid rgb(var(--veil) / 0.07)', background: 'rgb(var(--panel))', padding: 20 }}>
             <div style={{ marginBottom: 16 }}>
               <label style={labelStyle}>Fecha del corte</label>
               <input
@@ -192,15 +192,15 @@ export default function BackfillCortePage() {
               </div>
             ))}
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderTop: '1px solid rgba(255,255,255,0.07)', marginBottom: 16 }}>
-              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total</span>
-              <span style={{ fontSize: 20, fontWeight: 700, color: '#4ade80' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderTop: '1px solid rgb(var(--veil) / 0.07)', marginBottom: 16 }}>
+              <span style={{ fontSize: 12, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total</span>
+              <span style={{ fontSize: 20, fontWeight: 700, color: 'rgb(var(--viz-1))' }}>
                 ${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
               </span>
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'rgba(255,255,255,0.7)', cursor: 'pointer' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'rgb(var(--veil) / max(0.7, var(--alfa-texto-min)))', cursor: 'pointer' }}>
                 <input
                   type="checkbox"
                   checked={aplicoFondoInicial}
@@ -235,7 +235,7 @@ export default function BackfillCortePage() {
             </div>
 
             {error && (
-              <div style={{ color: '#fca5a5', fontSize: 13, marginBottom: 16 }}>{error}</div>
+              <div style={{ color: 'rgb(var(--tono-danger-300))', fontSize: 13, marginBottom: 16 }}>{error}</div>
             )}
 
             <button
@@ -243,7 +243,7 @@ export default function BackfillCortePage() {
               disabled={loading}
               style={{
                 width: '100%', padding: 14, borderRadius: 10, border: 'none',
-                background: '#1d4ed8', color: '#fff', fontSize: 15, fontWeight: 600,
+                background: 'rgb(var(--papel-azul))', color: 'rgb(var(--papel))', fontSize: 15, fontWeight: 600,
                 cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.6 : 1,
               }}
             >

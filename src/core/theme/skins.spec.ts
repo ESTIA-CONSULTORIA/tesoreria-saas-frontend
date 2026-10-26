@@ -256,3 +256,49 @@ describe('texto translúcido en las pantallas migradas', () => {
     expect(malos).toEqual([]);
   });
 });
+
+// ── Ola 2: tonos de estado, estados de mesa y «papel» de las pantallas Lite ──
+describe('Ola 2: tonos nuevos', () => {
+  const TONOS_ID = Object.keys(SKINS.estia.tokens).filter((k) => /^(tono|st[A-Z]|papel|tinta|chat|toggleOn|surfaceAlt|navAlt|onYellow)/.test(k));
+
+  it('hay tonos y Oscuro usa los mismos valores que ESTIA (las pantallas no cambian en ninguna de las dos)', () => {
+    expect(TONOS_ID.length).toBeGreaterThan(60);
+    for (const k of TONOS_ID) expect((SKINS.oscuro.tokens as unknown as Record<string, string>)[k], k).toBe((SKINS.estia.tokens as unknown as Record<string, string>)[k]);
+  });
+
+  it('todas las skins definen todos los tonos con un color válido', () => {
+    for (const id of Object.keys(SKINS) as SkinId[]) for (const k of TONOS_ID) expect((SKINS[id].tokens as unknown as Record<string, string>)[k], `${id}.${k}`).toMatch(/^#[0-9A-F]{6}$/);
+  });
+
+  describe.each(Object.keys(SKINS) as SkinId[])('skin %s', (id) => {
+    const t = SKINS[id].tokens;
+    const x = (SKINS[id].tokens as unknown as Record<string, string>);
+    const minimo = id === 'contraste' ? 7 : 4.5;
+    const sobre = (frente: string, fondo: string) => razon(frente, fondo);
+    const mezcla = (frente: string, fondo: string, a: number) => aHex(aRgb(frente).map((v, i) => v * a + aRgb(fondo)[i] * (1 - a)) as [number, number, number]);
+
+    it('texto sobre papel (pantallas Lite): principal y secundario ≥ AA (AAA en Alto contraste)', () => {
+      for (const fondo of [t.papel, x.papelBg, x.papelSoft]) for (const c of [x.tinta1, x.tinta2]) expect(sobre(c, fondo), `${c} sobre ${fondo}`).toBeGreaterThanOrEqual(minimo);
+      for (const fondo of [x.papel, x.papelBg, x.papelSoft]) expect(sobre(x.tinta3, fondo), `tinta3 sobre ${fondo}`).toBeGreaterThanOrEqual(minimo);
+      for (const fondo of [x.papelNavy, x.papelNavy2]) expect(sobre(x.tintaNavyTx, fondo), `tintaNavyTx sobre ${fondo}`).toBeGreaterThanOrEqual(minimo);
+      expect(sobre(x.papelOnVerde, x.papelVerde)).toBeGreaterThanOrEqual(minimo);
+      expect(sobre(x.papel, x.papelVerdeTx)).toBeGreaterThanOrEqual(minimo);
+    });
+
+    it('textos de estado claros sobre su fondo tenue (rojo, ámbar, amarillo) ≥ AA', () => {
+      const base = t.surface1;
+      for (const [txt, bg] of [['tonoDanger200', 'tonoDanger900'], ['tonoDanger100', 'tonoDanger900'], ['tonoDanger300', 'tonoDanger900'], ['tonoAmber300', 'tonoAmber900'], ['tonoYellow300', 'tonoYellow900']] as const) {
+        const fondo = mezcla(x[bg], base, 0.4);
+        expect(sobre(x[txt], fondo), `${txt} sobre ${bg}@40%`).toBeGreaterThanOrEqual(minimo);
+      }
+    });
+
+    it('texto de los botones de color (onSolid / onYellow) y marcadores de mesa', () => {
+      for (const fondo of [x.tonoPurple700, x.tonoIndigo700]) expect(sobre(t.onSolid, fondo), `onSolid sobre ${fondo}`).toBeGreaterThanOrEqual(minimo);
+      for (const fondo of [x.tonoPurple600, x.tonoAmber700, x.tonoYellow700]) expect(sobre(x.onStrong, fondo), `onStrong sobre ${fondo}`).toBeGreaterThanOrEqual(minimo);
+      expect(sobre(x.onYellow, x.tonoYellow600)).toBeGreaterThanOrEqual(minimo);
+      expect(sobre(x.papel, x.papelAzul)).toBeGreaterThanOrEqual(minimo);
+      for (const c of [x.stOk, x.stDanger, x.stWarn, x.stNeutral]) expect(sobre(c, t.surface1), c).toBeGreaterThanOrEqual(id === 'contraste' ? 7 : 3);
+    });
+  });
+});

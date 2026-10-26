@@ -58,7 +58,7 @@ export default function VentasOfflineFallidas() {
   }, [propias.map((o) => o.id).join(',')]);
 
   if (user?.roleCode !== 'ADMIN' && user?.roleCode !== 'GERENTE') {
-    return <div className="p-6 text-slate-300">Esta pantalla es solo para administradores y gerentes.</div>;
+    return <div className="p-6 !text-content-2">Esta pantalla es solo para administradores y gerentes.</div>;
   }
 
   async function registrar(op: PendingOperation, confirmarDiferencia: boolean) {
@@ -96,14 +96,14 @@ export default function VentasOfflineFallidas() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 p-4 text-white">
+    <div className="min-h-screen !bg-bg p-4 !text-content-1">
       <h1 className="text-xl font-bold">Ventas offline fallidas</h1>
-      <p className="mb-4 max-w-3xl text-sm text-slate-400">
+      <p className="mb-4 max-w-3xl text-sm !text-content-3">
         Ventas hechas sin conexión que el servidor rechazó al sincronizar. Aquí se registran al <b>precio vigente</b> (nunca al precio con el que se
         cobró) o se descartan con motivo. Cada resolución queda registrada con tu nombre. La lista es de este dispositivo.
       </p>
 
-      {propias.length === 0 && <p className="rounded-xl border border-slate-800 bg-slate-900 p-4 text-sm text-slate-300">No hay ventas fallidas en este dispositivo. 🎉</p>}
+      {propias.length === 0 && <p className="rounded-xl border !border-line !bg-nav p-4 text-sm !text-content-2">No hay ventas fallidas en este dispositivo. 🎉</p>}
 
       <div className="space-y-4">
         {propias.map((op) => {
@@ -112,58 +112,58 @@ export default function VentasOfflineFallidas() {
           const accion = accionRegistrar(ev);
           const cobrado = cobradoDelPayload(op.payload);
           return (
-            <section key={op.id} className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+            <section key={op.id} className="rounded-xl border !border-line !bg-nav p-4">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
                   <div className="font-mono text-sm">{op.payload.folio}</div>
-                  <div className="text-xs text-slate-400">
+                  <div className="text-xs !text-content-3">
                     {op.payload.clientTimestamp ? new Date(op.payload.clientTimestamp).toLocaleString('es-MX') : 'sin fecha'} · cajero {nombreUsuario(op.payload.cajero, directorioUsuarios)}
                   </div>
                 </div>
                 <div className="text-right text-sm">
                   <div>Cobrado: <b>{dinero(cobrado)}</b></div>
-                  <div className="text-slate-400">Total al cobrar: {dinero(op.payload.total ?? null)}</div>
+                  <div className="!text-content-3">Total al cobrar: {dinero(op.payload.total ?? null)}</div>
                   <div>Total nuevo: <b>{ev ? dinero(ev.totalNuevo) : '…'}</b></div>
-                  {ev && ev.diferencia !== null && ev.diferencia > 0.01 && <div className="text-amber-300">Faltan {dinero(ev.diferencia)}</div>}
+                  {ev && ev.diferencia !== null && ev.diferencia > 0.01 && <div className="text-tono-amber-300">Faltan {dinero(ev.diferencia)}</div>}
                 </div>
               </div>
 
-              <p className="mt-2 rounded-lg bg-red-950/60 p-2 text-sm text-red-200"><b>Motivo:</b> {motivoVisible(op, ev)}</p>
-              {raw && 'error' in raw && <p role="alert" className="mt-2 text-sm text-red-300">{raw.error}</p>}
-              {errores[op.id!] && <p role="alert" className="mt-2 rounded-lg bg-red-950 p-2 text-sm text-red-200">{errores[op.id!]}</p>}
+              <p className="mt-2 rounded-lg bg-tono-danger-950/60 p-2 text-sm text-tono-danger-200"><b>Motivo:</b> {motivoVisible(op, ev)}</p>
+              {raw && 'error' in raw && <p role="alert" className="mt-2 text-sm !text-danger">{raw.error}</p>}
+              {errores[op.id!] && <p role="alert" className="mt-2 rounded-lg bg-tono-danger-950 p-2 text-sm text-tono-danger-200">{errores[op.id!]}</p>}
 
               {ev && ev.items.length > 0 && (
                 <table className="mt-3 w-full text-left text-xs">
-                  <thead className="text-slate-400"><tr><th>Producto</th><th>Cant.</th><th>Precio cobrado</th><th>Precio vigente</th></tr></thead>
+                  <thead className="!text-content-3"><tr><th>Producto</th><th>Cant.</th><th>Precio cobrado</th><th>Precio vigente</th></tr></thead>
                   <tbody>
                     {ev.items.map((it, i) => (
-                      <tr key={i} className="border-t border-slate-800">
+                      <tr key={i} className="border-t !border-line">
                         <td className="py-1">{it.nombre || it.productoId}</td><td>{it.cantidad}</td><td>{dinero(it.precioCliente)}</td>
-                        <td className={it.precioCliente !== it.precioVigente ? 'text-amber-300' : ''}>{dinero(it.precioVigente)}</td>
+                        <td className={it.precioCliente !== it.precioVigente ? 'text-tono-amber-300' : ''}>{dinero(it.precioVigente)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               )}
 
-              <details className="mt-3 text-xs text-slate-400">
+              <details className="mt-3 text-xs !text-content-3">
                 <summary className="cursor-pointer">Venta guardada en el dispositivo (payload)</summary>
-                <pre className="mt-2 max-h-64 overflow-auto rounded-lg bg-slate-950 p-2">{JSON.stringify(op.payload, null, 2)}</pre>
+                <pre className="mt-2 max-h-64 overflow-auto rounded-lg !bg-bg p-2">{JSON.stringify(op.payload, null, 2)}</pre>
               </details>
 
               <div className="mt-3 flex flex-wrap gap-2">
                 {accion === 'registrar' && (
-                  <button disabled={ocupado === op.id} className={`${btn} bg-green-700`} onClick={() => registrar(op, false)}>Registrar al precio vigente</button>
+                  <button disabled={ocupado === op.id} className={`${btn} !bg-ok-solid`} onClick={() => registrar(op, false)}>Registrar al precio vigente</button>
                 )}
                 {accion === 'confirmar' && (
-                  <button disabled={ocupado === op.id} className={`${btn} bg-amber-700`} onClick={() => setConfirmar(op)}>Registrar y confirmar diferencia…</button>
+                  <button disabled={ocupado === op.id} className={`${btn} bg-tono-amber-700 text-on-strong`} onClick={() => setConfirmar(op)}>Registrar y confirmar diferencia…</button>
                 )}
                 {accion === 'ya_registrada' && (
-                  <button disabled={ocupado === op.id} className={`${btn} bg-slate-700`} onClick={() => registrar(op, false)}>Ya está en el servidor: marcar resuelta</button>
+                  <button disabled={ocupado === op.id} className={`${btn} !bg-surface-2`} onClick={() => registrar(op, false)}>Ya está en el servidor: marcar resuelta</button>
                 )}
-                {accion === 'no_disponible' && <span className="self-center text-xs text-slate-400">No se puede registrar: revisa el motivo o descártala.</span>}
-                <button disabled={ocupado === op.id} className={`${btn} bg-red-900`} onClick={() => { setDescartar(op); setMotivo(''); }}>Descartar…</button>
-                <button disabled={ocupado === op.id} className={`${btn} bg-slate-800`} onClick={() => evaluar(op)}>Reevaluar</button>
+                {accion === 'no_disponible' && <span className="self-center text-xs !text-content-3">No se puede registrar: revisa el motivo o descártala.</span>}
+                <button disabled={ocupado === op.id} className={`${btn} !bg-danger-soft !text-danger`} onClick={() => { setDescartar(op); setMotivo(''); }}>Descartar…</button>
+                <button disabled={ocupado === op.id} className={`${btn} !bg-surface-1`} onClick={() => evaluar(op)}>Reevaluar</button>
               </div>
             </section>
           );
@@ -172,10 +172,10 @@ export default function VentasOfflineFallidas() {
 
       {resueltas.length > 0 && (
         <section className="mt-8">
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">Resueltas en este dispositivo</h2>
-          <ul className="space-y-1 text-xs text-slate-300">
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide !text-content-3">Resueltas en este dispositivo</h2>
+          <ul className="space-y-1 text-xs !text-content-2">
             {resueltas.map((op) => (
-              <li key={op.id} className="rounded-lg border border-slate-800 bg-slate-900 p-2">
+              <li key={op.id} className="rounded-lg border !border-line !bg-nav p-2">
                 <span className="font-mono">{op.payload.folio}</span> · {op.resolution!.tipo === 'DESCARTADA' ? 'descartada' : op.resolution!.tipo === 'YA_REGISTRADA' ? 'ya estaba registrada' : 'registrada al precio vigente'} por {op.resolution!.por ?? '—'} ·{' '}
                 {new Date(op.resolution!.at).toLocaleString('es-MX')}{op.resolution!.motivo ? ` · motivo: ${op.resolution!.motivo}` : ''}
               </li>
@@ -187,17 +187,17 @@ export default function VentasOfflineFallidas() {
       {confirmar && (() => {
         const ev = evals[confirmar.id!] as EvaluacionVenta | undefined;
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-            <div className="w-full max-w-md space-y-3 rounded-2xl border border-slate-700 bg-slate-900 p-5">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-scrim/70 p-4">
+            <div className="w-full max-w-md space-y-3 rounded-2xl border !border-line !bg-nav p-5">
               <h3 className="text-lg font-bold">Confirmar la diferencia</h3>
-              <p className="text-sm text-slate-300">
+              <p className="text-sm !text-content-2">
                 Se registra al precio vigente: total <b>{dinero(ev?.totalNuevo)}</b>. Lo cobrado fue <b>{dinero(cobradoDelPayload(confirmar.payload))}</b>, así que faltan{' '}
                 <b>{dinero(ev?.diferencia)}</b>. Al confirmar, esa diferencia se absorbe como <b>cortesía autorizada por ti</b> y queda registrada con tu nombre.
               </p>
-              {errores[confirmar.id!] && <p role="alert" className="rounded-lg bg-red-950 p-2 text-sm text-red-200">{errores[confirmar.id!]}</p>}
+              {errores[confirmar.id!] && <p role="alert" className="rounded-lg bg-tono-danger-950 p-2 text-sm text-tono-danger-200">{errores[confirmar.id!]}</p>}
               <div className="flex gap-2">
-                <button className={`${btn} flex-1 bg-slate-800`} onClick={() => setConfirmar(null)}>Volver</button>
-                <button disabled={ocupado === confirmar.id} className={`${btn} flex-1 bg-amber-700`} onClick={() => registrar(confirmar, true)}>Confirmo la diferencia</button>
+                <button className={`${btn} flex-1 !bg-surface-1`} onClick={() => setConfirmar(null)}>Volver</button>
+                <button disabled={ocupado === confirmar.id} className={`${btn} flex-1 bg-tono-amber-700 text-on-strong`} onClick={() => registrar(confirmar, true)}>Confirmo la diferencia</button>
               </div>
             </div>
           </div>
@@ -205,15 +205,15 @@ export default function VentasOfflineFallidas() {
       })()}
 
       {descartar && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-md space-y-3 rounded-2xl border border-slate-700 bg-slate-900 p-5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-scrim/70 p-4">
+          <div className="w-full max-w-md space-y-3 rounded-2xl border !border-line !bg-nav p-5">
             <h3 className="text-lg font-bold">Descartar la venta {descartar.payload.folio}</h3>
-            <p className="text-sm text-slate-300">La venta no se registrará. Queda anotado quién la descartó y el motivo.</p>
-            {errores[descartar.id!] && <p role="alert" className="rounded-lg bg-red-950 p-2 text-sm text-red-200">{errores[descartar.id!]}</p>}
-            <textarea className="min-h-[88px] w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-base" placeholder={`Motivo (obligatorio, mínimo ${MOTIVO_MIN} caracteres)`} value={motivo} onChange={(e) => setMotivo(e.target.value)} />
+            <p className="text-sm !text-content-2">La venta no se registrará. Queda anotado quién la descartó y el motivo.</p>
+            {errores[descartar.id!] && <p role="alert" className="rounded-lg bg-tono-danger-950 p-2 text-sm text-tono-danger-200">{errores[descartar.id!]}</p>}
+            <textarea className="min-h-[88px] w-full rounded-lg border !border-line !bg-bg p-3 text-base" placeholder={`Motivo (obligatorio, mínimo ${MOTIVO_MIN} caracteres)`} value={motivo} onChange={(e) => setMotivo(e.target.value)} />
             <div className="flex gap-2">
-              <button className={`${btn} flex-1 bg-slate-800`} onClick={() => setDescartar(null)}>Volver</button>
-              <button disabled={ocupado === descartar.id || !motivoDescarteValido(motivo)} className={`${btn} flex-1 bg-red-800`} onClick={() => descartarVenta(descartar)}>Descartar</button>
+              <button className={`${btn} flex-1 !bg-surface-1`} onClick={() => setDescartar(null)}>Volver</button>
+              <button disabled={ocupado === descartar.id || !motivoDescarteValido(motivo)} className={`${btn} flex-1 !bg-danger-soft !text-danger`} onClick={() => descartarVenta(descartar)}>Descartar</button>
             </div>
           </div>
         </div>

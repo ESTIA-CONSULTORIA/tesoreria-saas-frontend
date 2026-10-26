@@ -1,3 +1,4 @@
+import { IMPRESION } from './impresionClara';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 
@@ -165,15 +166,15 @@ export default function NotasCocinaLite() {
     const hora = new Date(items[0].createdAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
     win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
-      body { font-family: 'Courier New', monospace; font-size: 14px; padding: 16px; width: 280px; color: #111; }
+      body { font-family: 'Courier New', monospace; font-size: 14px; padding: 16px; width: 280px; color: ${IMPRESION.tinta}; }
       .center { text-align: center; }
       .bold { font-weight: 700; }
-      .sep { border: none; border-top: 1px dashed #999; margin: 10px 0; }
+      .sep { border: none; border-top: 1px dashed ${IMPRESION.linea}; margin: 10px 0; }
       .item { padding: 6px 0; display: flex; justify-content: space-between; }
-      .footer { font-size: 10px; color: #999; margin-top: 14px; text-align: center; }
+      .footer { font-size: 10px; color: ${IMPRESION.tintaTenue}; margin-top: 14px; text-align: center; }
     </style></head><body>
     <div class="center bold" style="font-size:16px;">${estacion}</div>
-    <div class="center" style="font-size:11px; color:#666;">Venta ${saleId.slice(0, 8)} · ${hora}</div>
+    <div class="center" style="font-size:11px; color:${IMPRESION.tintaSuave};">Venta ${saleId.slice(0, 8)} · ${hora}</div>
     <hr class="sep">
     ${items.map(i => `<div class="item"><span>${i.nombre}</span><span class="bold">x${i.cantidad}</span></div>`).join('')}
     <hr class="sep">
@@ -184,8 +185,8 @@ export default function NotasCocinaLite() {
   };
 
   if (screen === 'urlInvalida') return (
-    <div style={{ position: 'fixed', inset: 0, background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ fontSize: 13, color: '#94a3b8', letterSpacing: '0.1em', textTransform: 'uppercase', textAlign: 'center', padding: 24 }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgb(var(--papel-navy))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ fontSize: 13, color: 'rgb(var(--tinta-3))', letterSpacing: '0.1em', textTransform: 'uppercase', textAlign: 'center', padding: 24 }}>
         URL incorrecta — falta ?estacion=COCINA o ?estacion=BARRA<br />Contacta a tu administrador
       </div>
     </div>
@@ -194,70 +195,70 @@ export default function NotasCocinaLite() {
   const PIN_KEYS = ['1','2','3','4','5','6','7','8','9','','0','del'];
 
   if (screen === 'pin') return (
-    <div style={{ position: 'fixed', inset: 0, background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ width: '100%', maxWidth: 420, background: '#ffffff', borderRadius: 20, padding: '32px 32px 40px', boxShadow: '0 4px 40px rgba(0,0,0,0.2)' }}>
-        <div style={{ fontSize: 9, letterSpacing: '0.35em', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8 }}>ESTIA ERP · {estacion}</div>
-        <div style={{ fontSize: 22, fontWeight: 600, color: '#111827', marginBottom: 32 }}>Ingresa tu NIP</div>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgb(var(--papel-navy))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: '100%', maxWidth: 420, background: 'rgb(var(--papel))', borderRadius: 20, padding: '32px 32px 40px', boxShadow: '0 4px 40px rgb(var(--scrim) / 0.2)' }}>
+        <div style={{ fontSize: 9, letterSpacing: '0.35em', color: 'rgb(var(--tinta-3))', textTransform: 'uppercase', marginBottom: 8 }}>ESTIA ERP · {estacion}</div>
+        <div style={{ fontSize: 22, fontWeight: 600, color: 'rgb(var(--tinta-1))', marginBottom: 32 }}>Ingresa tu NIP</div>
         <div style={{ display: 'flex', gap: 20, marginBottom: 36, justifyContent: 'center' }}>
           {[0,1,2,3].map(i => (
-            <div key={i} style={{ width: 14, height: 14, borderRadius: '50%', background: pin.length > i ? '#1d4ed8' : '#e2e8f0' }} />
+            <div key={i} style={{ width: 14, height: 14, borderRadius: '50%', background: pin.length > i ? 'rgb(var(--papel-azul))' : 'rgb(var(--papel-linea))' }} />
           ))}
         </div>
-        {error && <div style={{ color: '#dc2626', fontSize: 14, marginBottom: 16, textAlign: 'center', fontWeight: 500 }}>{error}</div>}
+        {error && <div style={{ color: 'rgb(var(--papel-rojo))', fontSize: 14, marginBottom: 16, textAlign: 'center', fontWeight: 500 }}>{error}</div>}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
           {PIN_KEYS.map((k, i) => (
             <button key={i}
               onClick={() => k !== '' && !loading && handlePin(k)}
-              style={{ padding: '22px 8px', borderRadius: 14, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#111827', fontSize: 28, cursor: 'pointer', opacity: k === '' ? 0 : 1, pointerEvents: k === '' ? 'none' : 'auto' }}>
+              style={{ padding: '22px 8px', borderRadius: 14, border: '1px solid rgb(var(--papel-linea))', background: 'rgb(var(--papel-soft))', color: 'rgb(var(--tinta-1))', fontSize: 28, cursor: 'pointer', opacity: k === '' ? 0 : 1, pointerEvents: k === '' ? 'none' : 'auto' }}>
               {k === 'del' ? '←' : k}
             </button>
           ))}
         </div>
-        {loading && <div style={{ color: '#64748b', fontSize: 13, marginTop: 20, textAlign: 'center', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Verificando...</div>}
+        {loading && <div style={{ color: 'rgb(var(--tinta-3))', fontSize: 13, marginTop: 20, textAlign: 'center', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Verificando...</div>}
       </div>
     </div>
   );
 
   // screen === 'notas'
   return (
-    <div style={{ position: 'fixed', inset: 0, background: '#0f172a', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '20px 28px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgb(var(--papel-navy))', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '20px 28px', borderBottom: '1px solid rgb(var(--veil) / 0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
         <div>
-          <div style={{ fontSize: 10, letterSpacing: '0.2em', color: '#64748b', textTransform: 'uppercase' }}>ESTIA ERP</div>
-          <div style={{ fontSize: 24, fontWeight: 700, color: '#ffffff' }}>{estacion}</div>
+          <div style={{ fontSize: 10, letterSpacing: '0.2em', color: 'rgb(var(--tinta-navy-tx))', textTransform: 'uppercase' }}>ESTIA ERP</div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: 'rgb(var(--papel))' }}>{estacion}</div>
         </div>
-        <button onClick={handleBloquear} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.5)', fontSize: 11, padding: '6px 14px', borderRadius: 8, cursor: 'pointer', letterSpacing: '0.08em' }}>
+        <button onClick={handleBloquear} style={{ background: 'none', border: '1px solid rgb(var(--veil) / 0.2)', color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', fontSize: 11, padding: '6px 14px', borderRadius: 8, cursor: 'pointer', letterSpacing: '0.08em' }}>
           BLOQUEAR
         </button>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
         {ventasOrdenadas.length === 0 ? (
-          <div style={{ color: '#475569', fontSize: 16, textAlign: 'center', marginTop: 80, letterSpacing: '0.05em' }}>
+          <div style={{ color: 'rgb(var(--tinta-navy-tx))', fontSize: 16, textAlign: 'center', marginTop: 80, letterSpacing: '0.05em' }}>
             Sin pendientes en {estacion}
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
             {ventasOrdenadas.map(([saleId, items]) => (
-              <div key={saleId} style={{ background: '#1e293b', borderRadius: 16, padding: 18, border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div key={saleId} style={{ background: 'rgb(var(--papel-navy2))', borderRadius: 16, padding: 18, border: '1px solid rgb(var(--veil) / 0.08)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <div style={{ color: '#94a3b8', fontSize: 12, letterSpacing: '0.05em' }}>
+                  <div style={{ color: 'rgb(var(--tinta-4))', fontSize: 12, letterSpacing: '0.05em' }}>
                     Venta {saleId.slice(0, 8)} · {new Date(items[0].createdAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
                   </div>
-                  <button onClick={() => imprimirComanda(saleId, items)} style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: '#cbd5e1', fontSize: 11, padding: '5px 10px', borderRadius: 6, cursor: 'pointer' }}>
+                  <button onClick={() => imprimirComanda(saleId, items)} style={{ background: 'rgb(var(--veil) / 0.08)', border: 'none', color: 'rgb(var(--papel-linea-3))', fontSize: 11, padding: '5px 10px', borderRadius: 6, cursor: 'pointer' }}>
                     🖨 Imprimir
                   </button>
                 </div>
                 {items.map(n => (
-                  <div key={n.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div key={n.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderTop: '1px solid rgb(var(--veil) / 0.06)' }}>
                     <div>
-                      <div style={{ color: '#f1f5f9', fontSize: 17, fontWeight: 600 }}>{n.nombre}</div>
-                      <div style={{ color: '#64748b', fontSize: 13 }}>Cantidad: {n.cantidad}</div>
+                      <div style={{ color: 'rgb(var(--papel-linea-2))', fontSize: 17, fontWeight: 600 }}>{n.nombre}</div>
+                      <div style={{ color: 'rgb(var(--tinta-navy-tx))', fontSize: 13 }}>Cantidad: {n.cantidad}</div>
                     </div>
                     <button
                       disabled={marcando.has(n.id)}
                       onClick={() => marcarPreparado(n.id)}
-                      style={{ padding: '16px 20px', borderRadius: 12, border: 'none', background: marcando.has(n.id) ? '#166534' : '#16a34a', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', letterSpacing: '0.03em', textTransform: 'uppercase' as const }}>
+                      style={{ padding: '16px 20px', borderRadius: 12, border: 'none', background: marcando.has(n.id) ? 'rgb(var(--papel-verde-tx))' : 'rgb(var(--papel-verde))', color: marcando.has(n.id) ? 'rgb(var(--papel))' : 'rgb(var(--papel-on-verde))', fontSize: 14, fontWeight: 700, cursor: 'pointer', letterSpacing: '0.03em', textTransform: 'uppercase' as const }}>
                       {marcando.has(n.id) ? '...' : '✓ Preparado'}
                     </button>
                   </div>

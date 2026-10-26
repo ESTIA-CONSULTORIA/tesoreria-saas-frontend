@@ -74,11 +74,12 @@ export interface Area {
   tables?: Mesa[];
 }
 
-export const ESTADO_MESA: Record<EstadoMesa, { label: string; color: string }> = {
-  AVAILABLE: { label: 'Libre', color: '#22C55E' },
-  OCCUPIED: { label: 'Ocupada', color: '#EF4444' },
-  RESERVED: { label: 'Reservada', color: '#F59E0B' },
-  DIRTY: { label: 'Por limpiar', color: '#94A3B8' },
+// color = borde y texto; fondo = el mismo color al 9 % (antes color + "18"). Son tokens de skin (--st-*), no hex.
+export const ESTADO_MESA: Record<EstadoMesa, { label: string; color: string; fondo: string }> = {
+  AVAILABLE: { label: 'Libre', color: 'rgb(var(--st-ok))', fondo: 'rgb(var(--st-ok) / 0.094)' },
+  OCCUPIED: { label: 'Ocupada', color: 'rgb(var(--st-danger))', fondo: 'rgb(var(--st-danger) / 0.094)' },
+  RESERVED: { label: 'Reservada', color: 'rgb(var(--st-warn))', fondo: 'rgb(var(--st-warn) / 0.094)' },
+  DIRTY: { label: 'Por limpiar', color: 'rgb(var(--st-neutral))', fondo: 'rgb(var(--st-neutral) / 0.094)' },
 };
 
 export const OPCIONES_POLITICA_COBRO: Array<{ value: PoliticaCobro; label: string; linea: string }> = [

@@ -8,8 +8,8 @@ import { DENOMINACIONES, conciliacionTurno, diferenciasPrecorte, efectivoEsperad
 // llamadas a la API viven en POSPage. Todas usan ModalPOS (90vw × 90vh, botones fijos, columnas, sin scroll a 1366×768).
 
 const money = (v: unknown) => { const n = Number(v) || 0; return `${n < 0 ? '-' : ''}$${Math.abs(n).toFixed(2)}`; };
-const colorDif = (d: number) => (d === 0 ? 'text-slate-300' : d < 0 ? 'text-red-400' : 'text-green-400');
-const btnCancelar = 'px-6 py-2.5 rounded bg-slate-700 text-white hover:bg-slate-600';
+const colorDif = (d: number) => (d === 0 ? '!text-content-2' : d < 0 ? '!text-danger' : '!text-ok');
+const btnCancelar = 'px-6 py-2.5 rounded !bg-surface-2 !text-content-1 hover:!bg-surface-2';
 
 // ───────────────────────── Apertura de turno ─────────────────────────
 export function AperturaTurnoModal(p: {
@@ -31,7 +31,7 @@ export function AperturaTurnoModal(p: {
       footer={
         <>
           <button onClick={p.onCancel} className={`flex-1 ${btnCancelar}`}>Cancelar</button>
-          <button onClick={p.onOpen} className="flex-1 py-2.5 rounded bg-green-600 text-white font-semibold hover:bg-green-700">
+          <button onClick={p.onOpen} className="flex-1 py-2.5 rounded !bg-ok-solid !text-on-solid font-semibold hover:bg-tono-ok-700">
             Abrir Turno
           </button>
         </>
@@ -40,33 +40,33 @@ export function AperturaTurnoModal(p: {
       <div className="grid gap-5 md:grid-cols-2">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm text-slate-400 mb-1">Cajero</label>
-            <div className="text-white font-medium">{p.cajero}</div>
+            <label className="block text-sm !text-content-3 mb-1">Cajero</label>
+            <div className="!text-content-1 font-medium">{p.cajero}</div>
           </div>
           <div>
-            <label className="block text-sm text-slate-400 mb-1">Fecha y Hora</label>
-            <div className="text-white">{new Date().toLocaleString()}</div>
+            <label className="block text-sm !text-content-3 mb-1">Fecha y Hora</label>
+            <div className="!text-content-1">{new Date().toLocaleString()}</div>
           </div>
         </div>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm text-slate-400 mb-1">Fondo de Caja *</label>
+            <label className="block text-sm !text-content-3 mb-1">Fondo de Caja *</label>
             <input
               type="number"
               step="0.01"
               value={p.fondo}
               onChange={(e) => p.setFondo(e.target.value)}
               placeholder="0.00"
-              className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white"
+              className="w-full px-4 py-2 rounded-lg border !border-line !bg-nav !text-content-1"
             />
           </div>
           <div>
-            <label className="block text-sm text-slate-400 mb-1">Notas (opcional)</label>
+            <label className="block text-sm !text-content-3 mb-1">Notas (opcional)</label>
             <textarea
               value={p.notas}
               onChange={(e) => p.setNotas(e.target.value)}
               placeholder="Notas del turno..."
-              className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white"
+              className="w-full px-4 py-2 rounded-lg border !border-line !bg-nav !text-content-1"
               rows={2}
             />
           </div>
@@ -103,7 +103,7 @@ export function MovimientoEfectivoModal(p: {
           <button onClick={p.onCancel} className={`flex-1 ${btnCancelar}`}>Cancelar</button>
           <button
             onClick={p.onConfirm}
-            className={`flex-1 py-2.5 rounded text-white font-semibold ${retiro ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+            className={`flex-1 py-2.5 rounded font-semibold ${retiro ? 'bg-tono-yellow-600 !text-on-yellow hover:bg-tono-yellow-700' : '!bg-btn !text-on-solid hover:!bg-btn-hover'}`}
           >
             {retiro ? 'Retirar' : 'Depositar'}
           </button>
@@ -113,22 +113,22 @@ export function MovimientoEfectivoModal(p: {
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm text-slate-400 mb-1">Monto *</label>
+            <label className="block text-sm !text-content-3 mb-1">Monto *</label>
             <input
               type="number"
               step="0.01"
               value={p.monto}
               onChange={(e) => p.setMonto(e.target.value)}
               placeholder="0.00"
-              className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+              className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
             />
           </div>
           <div>
-            <label className="block text-sm text-slate-400 mb-1">Autorizado por *</label>
+            <label className="block text-sm !text-content-3 mb-1">Autorizado por *</label>
             <select
               value={p.autorizadoPor}
               onChange={(e) => p.setAutorizadoPor(e.target.value)}
-              className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+              className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
             >
               <option value="">Seleccionar autorizador</option>
               <option value="admin">Administrador</option>
@@ -137,13 +137,13 @@ export function MovimientoEfectivoModal(p: {
           </div>
         </div>
         <div>
-          <label className="block text-sm text-slate-400 mb-1">{retiro ? 'Motivo *' : 'Origen *'}</label>
+          <label className="block text-sm !text-content-3 mb-1">{retiro ? 'Motivo *' : 'Origen *'}</label>
           <textarea
             value={p.concepto}
             onChange={(e) => p.setConcepto(e.target.value)}
             placeholder={retiro ? 'Motivo del retiro' : 'Origen del depósito'}
             rows={4}
-            className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+            className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
           />
         </div>
       </div>
@@ -197,22 +197,22 @@ export function PrecorteModal(p: {
       footer={
         <>
           <div className="flex flex-1 flex-wrap items-center gap-x-6 gap-y-1 text-sm" data-testid="precorte-diferencia">
-            <div><span className="text-slate-400">Esperado </span><span className="font-semibold">{money(ef.sistema)}</span></div>
-            <div><span className="text-slate-400">Contado </span><span className="font-semibold">{money(ef.declarado)}</span></div>
+            <div><span className="!text-content-3">Esperado </span><span className="font-semibold">{money(ef.sistema)}</span></div>
+            <div><span className="!text-content-3">Contado </span><span className="font-semibold">{money(ef.declarado)}</span></div>
             <div className={`text-base font-bold ${colorDif(ef.diferencia)}`}>
               Diferencia efectivo {ef.diferencia > 0 ? '+' : ''}{money(ef.diferencia)}
               {ef.diferencia < 0 ? ' (faltante)' : ef.diferencia > 0 ? ' (sobrante)' : ' ✓'}
             </div>
           </div>
           <button onClick={p.onCancel} className={btnCancelar}>Cancelar</button>
-          <button onClick={p.onSave} className="px-6 py-2.5 rounded bg-purple-600 text-white font-semibold hover:bg-purple-700">
+          <button onClick={p.onSave} className="px-6 py-2.5 rounded bg-tono-purple-600 !text-on-strong font-semibold hover:bg-tono-purple-700">
             Guardar Precorte
           </button>
         </>
       }
     >
       <div className="grid gap-4 lg:grid-cols-[1fr_1.3fr_1fr]">
-        <div className="bg-slate-900 rounded-lg p-4">
+        <div className="!bg-nav rounded-lg p-4">
           <h4 className="font-semibold mb-3">Resumen de Ventas</h4>
           <dl className="space-y-1.5 text-sm">
             {([
@@ -224,22 +224,22 @@ export function PrecorteModal(p: {
               ['Tickets', String(p.tickets)],
             ] as [string, string][]).map(([k, v]) => (
               <div key={k} className="flex justify-between">
-                <dt className="text-slate-400">{k}</dt>
+                <dt className="!text-content-3">{k}</dt>
                 <dd>{v}</dd>
               </div>
             ))}
-            <div className="flex justify-between border-t border-slate-700 pt-1.5">
-              <dt className="text-slate-400">Fondo inicial</dt>
+            <div className="flex justify-between border-t !border-line pt-1.5">
+              <dt className="!text-content-3">Fondo inicial</dt>
               <dd>{money(t.fondoInicial)}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-400">Depósitos / Retiros</dt>
+              <dt className="!text-content-3">Depósitos / Retiros</dt>
               <dd>{money(t.totalDepositos)} / {money(t.totalRetiros)}</dd>
             </div>
           </dl>
         </div>
 
-        <div className="bg-slate-900 rounded-lg p-4">
+        <div className="!bg-nav rounded-lg p-4">
           <h4 className="font-semibold mb-3">Conteo de Efectivo</h4>
           <div className="grid grid-cols-2 gap-x-4 gap-y-2">
             {DENOMINACIONES.map((denom) => (
@@ -254,17 +254,17 @@ export function PrecorteModal(p: {
                     if (val.startsWith('0') && val.length > 1) val = val.slice(1);
                     p.setCashCounts({ ...p.cashCounts, [denom]: Number(val) || 0 });
                   }}
-                  className="w-16 px-2 py-1 rounded bg-slate-700 text-white text-sm"
+                  className="w-16 px-2 py-1 rounded !bg-surface-2 !text-content-1 text-sm"
                 />
-                <span className="text-xs text-slate-400">= ${(p.cashCounts[denom] || 0) * denom}</span>
+                <span className="text-xs !text-content-3">= ${(p.cashCounts[denom] || 0) * denom}</span>
               </div>
             ))}
           </div>
-          <div className="mt-3 pt-3 border-t border-slate-700 font-semibold">TOTAL EFECTIVO: {money(ef.declarado)}</div>
+          <div className="mt-3 pt-3 border-t !border-line font-semibold">TOTAL EFECTIVO: {money(ef.declarado)}</div>
         </div>
 
         <div className="space-y-3">
-          <div className="bg-slate-900 rounded-lg p-4">
+          <div className="!bg-nav rounded-lg p-4">
             <h4 className="font-semibold mb-2">Otras Formas de Pago (Declaración)</h4>
             <div className="space-y-2">
               {declaraciones.map(([etiqueta, valor, setter]) => (
@@ -276,19 +276,19 @@ export function PrecorteModal(p: {
                     value={valor}
                     onChange={soloNumeros(setter)}
                     placeholder="0.00"
-                    className="flex-1 min-w-0 px-2 py-1 rounded bg-slate-700 text-white text-sm"
+                    className="flex-1 min-w-0 px-2 py-1 rounded !bg-surface-2 !text-content-1 text-sm"
                   />
                 </div>
               ))}
             </div>
           </div>
-          <div className="bg-slate-900 rounded-lg p-4">
+          <div className="!bg-nav rounded-lg p-4">
             <h4 className="font-semibold mb-2">Diferencias vs sistema</h4>
             <table className="w-full text-sm">
               <tbody>
                 {difs.map((f) => (
                   <tr key={f.clave}>
-                    <td className="py-0.5 text-slate-400">{f.nombre}</td>
+                    <td className="py-0.5 !text-content-3">{f.nombre}</td>
                     <td className={`py-0.5 text-right font-semibold ${colorDif(f.diferencia)}`}>
                       {f.diferencia > 0 ? '+' : ''}{money(f.diferencia)}
                     </td>
@@ -312,7 +312,7 @@ export function CierreTurnoModal(p: {
 }) {
   const t = p.turno;
   const conc = conciliacionTurno(t, t.precorteDeclaracion, p.totalesServidor);
-  const dif = (d: number) => (d === 0 ? '' : d < 0 ? 'text-red-400' : 'text-green-400');
+  const dif = (d: number) => (d === 0 ? '' : d < 0 ? '!text-danger' : '!text-ok');
   return (
     <ModalPOS
       size="lg"
@@ -322,18 +322,18 @@ export function CierreTurnoModal(p: {
       atajos={[{ tecla: 'F10', etiqueta: 'Cerrar turno', accion: p.onClose }]}
       footer={
         <>
-          <div className={`flex flex-1 items-center text-base font-bold ${dif(conc.totalDif) || 'text-slate-300'}`} data-testid="cierre-diferencia">
+          <div className={`flex flex-1 items-center text-base font-bold ${dif(conc.totalDif) || '!text-content-2'}`} data-testid="cierre-diferencia">
             Diferencia total {money(conc.totalDif)}
           </div>
           <button onClick={p.onCancel} className={btnCancelar}>Cancelar</button>
-          <button onClick={p.onClose} className="px-6 py-2.5 rounded bg-red-600 text-white font-semibold hover:bg-red-700">
+          <button onClick={p.onClose} className="px-6 py-2.5 rounded !bg-danger-solid !text-on-solid font-semibold hover:bg-tono-danger-700">
             Cerrar Turno Definitivamente
           </button>
         </>
       }
     >
       <div className="grid gap-4 lg:grid-cols-[1fr_1.7fr]">
-        <div className="bg-slate-900 rounded-lg p-4">
+        <div className="!bg-nav rounded-lg p-4">
           <h4 className="font-semibold mb-3">Resumen del Turno</h4>
           <dl className="space-y-1.5 text-sm">
             {([
@@ -345,17 +345,17 @@ export function CierreTurnoModal(p: {
               ['Total depósitos', money(t.totalDepositos)],
             ] as [string, string][]).map(([k, v]) => (
               <div key={k} className="flex justify-between">
-                <dt className="text-slate-400">{k}</dt>
+                <dt className="!text-content-3">{k}</dt>
                 <dd>{v}</dd>
               </div>
             ))}
           </dl>
         </div>
-        <div className="bg-slate-900 rounded-lg p-4">
+        <div className="!bg-nav rounded-lg p-4">
           <h4 className="font-semibold mb-2">Conciliación — Sistema vs Declarado</h4>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-700">
+              <tr className="border-b !border-line">
                 <th className="text-left py-2">Forma de Pago</th>
                 <th className="text-right py-2">Sistema</th>
                 <th className="text-right py-2">Declarado</th>
@@ -364,14 +364,14 @@ export function CierreTurnoModal(p: {
             </thead>
             <tbody>
               {conc.filas.map((row) => (
-                <tr key={row.nombre} className="border-b border-slate-800">
+                <tr key={row.nombre} className="border-b !border-line">
                   <td className="py-1.5">{row.nombre}</td>
                   <td className="text-right py-1.5">{money(row.sistema)}</td>
                   <td className="text-right py-1.5">{row.noDeclarado ? '-' : money(row.declarado)}</td>
                   <td className={`text-right py-1.5 font-semibold ${dif(row.dif)}`}>{row.noDeclarado ? '-' : money(row.dif)}</td>
                 </tr>
               ))}
-              <tr className="border-t border-slate-700 font-bold">
+              <tr className="border-t !border-line font-bold">
                 <td className="py-2">TOTAL</td>
                 <td className="text-right py-2">{money(conc.totalSistema)}</td>
                 <td className="text-right py-2">{money(conc.totalDeclarado)}</td>
@@ -435,7 +435,7 @@ export function CobroModal(p: {
     ['TRANSFERENCIA', 'SPEI'],
     ...(p.puedeCortesia ? ([['CORTESIA', 'Cortesía']] as [FormaPago, string][]) : []),
   ];
-  const campo = 'w-full px-3 py-2 rounded bg-slate-900 text-white border border-slate-700';
+  const campo = 'w-full px-3 py-2 rounded !bg-nav !text-content-1 border !border-line';
   const motivoTarjeta = motivoFaltaTarjeta(p.formaActiva, p.cardLast4);
   const motivoConfirmar = motivoBloqueoCobro({ pagado: p.pagado, total: p.total, pagos: p.pagos, formaActiva: p.formaActiva, ultimos4Activo: p.cardLast4 });
   return (
@@ -454,12 +454,12 @@ export function CobroModal(p: {
       ]}
       footer={
         <>
-          <button onClick={p.onCancel} className="px-6 py-3 rounded-lg bg-slate-700 text-slate-200 hover:bg-slate-600">Cancelar</button>
-          {motivoConfirmar ? <span role="status" className="self-center text-xs text-amber-300">{motivoConfirmar}</span> : null}
+          <button onClick={p.onCancel} className="px-6 py-3 rounded-lg !bg-surface-2 !text-content-2 hover:!bg-surface-2">Cancelar</button>
+          {motivoConfirmar ? <span role="status" className="self-center text-xs text-tono-amber-300">{motivoConfirmar}</span> : null}
           <button
             onClick={p.onConfirm}
             disabled={!!motivoConfirmar}
-            className="flex-1 py-3 rounded-lg bg-green-700 text-white font-bold hover:bg-green-600 disabled:bg-slate-700 disabled:text-slate-500"
+            className="flex-1 py-3 rounded-lg !bg-ok-solid !text-on-solid font-bold hover:bg-tono-ok-700 disabled:bg-tono-slate-700 disabled:text-tinta-3"
           >
             CONFIRMAR COBRO →
           </button>
@@ -468,39 +468,39 @@ export function CobroModal(p: {
     >
       <div className="grid gap-4 lg:grid-cols-[1fr_1.15fr_1fr]">
         <div className="flex flex-col gap-2">
-          <p className="text-xs text-slate-400">FORMA DE PAGO</p>
+          <p className="text-xs !text-content-3">FORMA DE PAGO</p>
           {formas.map(([forma, etiqueta]) => (
             <button
               key={forma}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => p.onElegirForma(forma)}
               className={`w-full h-11 rounded-lg flex items-center gap-3 px-4 transition-colors ${
-                p.formaActiva === forma ? 'bg-blue-600 border-2 border-blue-400' : 'bg-slate-700 border border-slate-600 hover:bg-slate-600'
+                p.formaActiva === forma ? '!bg-btn border-2 border-tono-blue-400' : '!bg-surface-2 border !border-line hover:!bg-surface-2'
               }`}
             >
               <span className="text-xl">{ICONO[forma]}</span>
               <span className="font-medium">{etiqueta}</span>
             </button>
           ))}
-          <p className="text-xs text-slate-400 mt-1">PAGOS AGREGADOS</p>
+          <p className="text-xs !text-content-3 mt-1">PAGOS AGREGADOS</p>
           <div className="max-h-28 overflow-y-auto space-y-2">
-            {p.pagos.length === 0 && <p className="text-sm text-slate-500">Ninguno todavía</p>}
+            {p.pagos.length === 0 && <p className="text-sm !text-content-3">Ninguno todavía</p>}
             {p.pagos.map((pf) => (
-              <div key={pf.id} className="flex items-center justify-between p-2 rounded bg-slate-900 border border-slate-700">
+              <div key={pf.id} className="flex items-center justify-between p-2 rounded !bg-nav border !border-line">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{ICONO[pf.forma] ?? '✦'}</span>
                   <span className="text-sm">{money(pf.monto)}</span>
-                  {pf.ultimos4Digitos ? <span className="text-xs text-slate-400">****{pf.ultimos4Digitos}</span> : null}
+                  {pf.ultimos4Digitos ? <span className="text-xs !text-content-3">****{pf.ultimos4Digitos}</span> : null}
                 </div>
-                <button onClick={() => p.onQuitar(pf.id)} className="text-red-400 hover:text-red-300 text-lg">×</button>
+                <button onClick={() => p.onQuitar(pf.id)} className="!text-danger hover:text-tono-danger-300 text-lg">×</button>
               </div>
             ))}
           </div>
         </div>
 
         <div className="flex flex-col">
-          <p className="text-sm text-slate-400 mb-2">{p.formaActiva || 'Seleccionar forma de pago'}</p>
-          <div className="bg-slate-900 rounded-lg px-4 py-2 border border-slate-700 mb-3">
+          <p className="text-sm !text-content-3 mb-2">{p.formaActiva || 'Seleccionar forma de pago'}</p>
+          <div className="!bg-nav rounded-lg px-4 py-2 border !border-line mb-3">
             <input
               ref={p.inputRef}
               type="text"
@@ -521,7 +521,7 @@ export function CobroModal(p: {
                 }
               }}
               placeholder="0.00"
-              className="w-full bg-transparent text-4xl font-bold text-white text-right outline-none"
+              className="w-full bg-transparent text-4xl font-bold !text-content-1 text-right outline-none"
             />
           </div>
           <div className="grid grid-cols-3 gap-2 mb-3">
@@ -534,21 +534,21 @@ export function CobroModal(p: {
                   p.setMonto(normalizarMonto(p.monto + key));
                   p.inputRef.current?.focus();
                 }}
-                className="h-12 rounded-lg bg-slate-700 hover:bg-slate-600 text-xl font-medium transition-colors"
+                className="h-12 rounded-lg !bg-surface-2 hover:!bg-surface-2 text-xl font-medium transition-colors"
               >
                 {key}
               </button>
             ))}
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <button onClick={p.onExacto} className="py-2.5 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700">
+            <button onClick={p.onExacto} className="py-2.5 rounded-lg !bg-ok-solid !text-on-solid font-medium hover:bg-tono-ok-700">
               Exacto {money(p.pendiente)}
             </button>
             <button
               onClick={p.onAgregar}
               disabled={!p.formaActiva || Number(p.monto) <= 0 || !!motivoTarjeta}
               title={motivoTarjeta ?? undefined}
-              className="py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500"
+              className="py-2.5 rounded-lg !bg-btn !text-on-solid font-medium hover:!bg-btn-hover disabled:bg-tono-slate-700 disabled:text-tinta-3"
             >
               + Agregar pago
             </button>
@@ -556,24 +556,24 @@ export function CobroModal(p: {
         </div>
 
         <div className="flex flex-col gap-3">
-          <div className="rounded-lg bg-slate-900 border border-slate-700 p-3">
-            <p className="text-xs text-slate-400">TOTAL</p>
-            <p className="text-4xl font-bold text-green-400">{money(p.total)}</p>
+          <div className="rounded-lg !bg-nav border !border-line p-3">
+            <p className="text-xs !text-content-3">TOTAL</p>
+            <p className="text-4xl font-bold !text-ok">{money(p.total)}</p>
             <div className="mt-2 space-y-1 text-sm">
-              <div className="text-green-400">Pagado: {money(p.pagado)}</div>
-              <div className={p.pendiente > 0 ? 'text-red-400' : 'text-slate-500'}>Pendiente: {money(p.pendiente)}</div>
-              <div className={p.cambio > 0 ? 'text-green-400' : 'text-slate-500'}>Cambio: {money(p.cambio)}</div>
+              <div className="!text-ok">Pagado: {money(p.pagado)}</div>
+              <div className={p.pendiente > 0 ? '!text-danger' : '!text-content-3'}>Pendiente: {money(p.pendiente)}</div>
+              <div className={p.cambio > 0 ? '!text-ok' : '!text-content-3'}>Cambio: {money(p.cambio)}</div>
             </div>
           </div>
 
           {p.error ? (
-            <div role="alert" className="rounded-lg border border-red-700 bg-red-950 p-2 text-sm text-red-200">{p.error}</div>
+            <div role="alert" className="rounded-lg border border-tono-danger-700 bg-tono-danger-950 p-2 text-sm text-tono-danger-200">{p.error}</div>
           ) : null}
 
           {esFormaTarjeta(p.formaActiva) && (
             <div className="space-y-3">
               <div>
-                <label className="text-sm text-slate-400 mb-1 block">Últimos 4 dígitos de la tarjeta *</label>
+                <label className="text-sm !text-content-3 mb-1 block">Últimos 4 dígitos de la tarjeta *</label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -585,10 +585,10 @@ export function CobroModal(p: {
                   aria-invalid={!!motivoTarjeta}
                   className={campo}
                 />
-                {motivoTarjeta ? <p className="mt-1 text-xs text-amber-300">{motivoTarjeta}</p> : null}
+                {motivoTarjeta ? <p className="mt-1 text-xs text-tono-amber-300">{motivoTarjeta}</p> : null}
               </div>
               <div>
-                <label className="text-sm text-slate-400 mb-1 block">Banco emisor</label>
+                <label className="text-sm !text-content-3 mb-1 block">Banco emisor</label>
                 <input type="text" value={p.cardBank} onChange={(e) => p.setCardBank(e.target.value)} placeholder="Banco" className={campo} />
               </div>
             </div>
@@ -597,12 +597,12 @@ export function CobroModal(p: {
           {p.formaActiva === 'TRANSFERENCIA' && (
             <div className="space-y-3">
               <div>
-                <label className="text-sm text-slate-400 mb-1 block">Clave de rastreo SPEI *</label>
+                <label className="text-sm !text-content-3 mb-1 block">Clave de rastreo SPEI *</label>
                 <input type="text" value={p.speiKey} onChange={(e) => p.setSpeiKey(e.target.value)} placeholder="Clave de rastreo" className={campo} />
               </div>
               <button
                 onClick={() => window.open('https://www.banxico.org.mx/cep/', '_blank')}
-                className="w-full py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+                className="w-full py-2 rounded !bg-btn !text-on-solid text-sm hover:!bg-btn-hover"
               >
                 Verificar en BANXICO →
               </button>
@@ -612,7 +612,7 @@ export function CobroModal(p: {
           {p.formaActiva === 'CORTESIA' && (
             <div className="space-y-3">
               <div>
-                <label className="text-sm text-slate-400 mb-1 block">Motivo *</label>
+                <label className="text-sm !text-content-3 mb-1 block">Motivo *</label>
                 <select value={p.courtesyReason} onChange={(e) => p.setCourtesyReason(e.target.value)} className={campo}>
                   <option value="">Seleccionar motivo...</option>
                   <option value="cortesia_ejecutiva">Cortesía ejecutiva</option>
@@ -624,7 +624,7 @@ export function CobroModal(p: {
                 </select>
               </div>
               <div>
-                <label className="text-sm text-slate-400 mb-1 block">Autorizado por *</label>
+                <label className="text-sm !text-content-3 mb-1 block">Autorizado por *</label>
                 <select value={p.courtesyAuthUser} onChange={(e) => p.setCourtesyAuthUser(e.target.value)} className={campo}>
                   <option value="">Seleccionar autorizador...</option>
                   <option value="admin">Administrador</option>

@@ -128,34 +128,34 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
   const sinCuenta = !cuenta;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/70 sm:items-center">
-      <div className="relative flex max-h-[96vh] w-full max-w-5xl flex-col overflow-hidden rounded-t-2xl border border-slate-700 bg-slate-950 text-white sm:rounded-2xl">
-        <header className="flex items-center justify-between border-b border-slate-800 p-4">
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-scrim/70 sm:items-center">
+      <div className="relative flex max-h-[96vh] w-full max-w-5xl flex-col overflow-hidden rounded-t-2xl border !border-line !bg-bg !text-content-1 sm:rounded-2xl">
+        <header className="flex items-center justify-between border-b !border-line p-4">
           <div>
             <h2 className="text-lg font-bold">
               Mesa {mesa.number}
               {cuenta?.folio ? ` · ${cuenta.folio}` : ''}
             </h2>
-            <p className="text-xs text-slate-400">{textoAtiende(sinCuenta, nombreMesero)}</p>
+            <p className="text-xs !text-content-3">{textoAtiende(sinCuenta, nombreMesero)}</p>
           </div>
-          <button className={`${btn} bg-slate-800`} onClick={onCerrar}>Cerrar</button>
+          <button className={`${btn} !bg-surface-1`} onClick={onCerrar}>Cerrar</button>
         </header>
 
         {error && !cobrando && !cancelando && (
-          <div role="alert" className="border-b border-red-900 bg-red-950 px-4 py-3 text-sm text-red-200">{error}</div>
+          <div role="alert" className="border-b border-tono-danger-900 bg-tono-danger-950 px-4 py-3 text-sm text-tono-danger-200">{error}</div>
         )}
 
         <div className="grid flex-1 grid-cols-1 gap-4 overflow-y-auto p-4 md:grid-cols-2">
           <section>
-            <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">Cuenta</h3>
+            <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide !text-content-3">Cuenta</h3>
             {cuenta && (
               <ul className="mb-3 space-y-2">
                 {cuenta.items.map((it, i) =>
                   it.anulado ? null : (
-                    <li key={i} className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 p-3">
+                    <li key={i} className="flex items-center gap-2 rounded-lg border !border-line !bg-nav p-3">
                       <div className="flex-1">
                         <div className="text-sm font-medium">{it.cantidad} × {it.nombre}</div>
-                        <div className="text-xs text-slate-400">
+                        <div className="text-xs !text-content-3">
                           {dinero(it.subtotal)}
                           {it.notaCocinaId ? ' · enviado a cocina/barra' : ''}
                           {(cuenta.formasPago ?? []).some((p) => (p.itemIndexes ?? []).includes(i)) ? ' · cobrado' : ''}
@@ -164,7 +164,7 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
                       {acc.quitarItem(it, i) && (
                         <button
                           disabled={ocupado}
-                          className={`${btn} bg-red-900 text-red-100 disabled:opacity-40`}
+                          className={`${btn} !bg-danger-soft !text-danger disabled:opacity-40`}
                           onClick={() => run(() => api.quitarItem(cuenta.id, i))}
                         >
                           Quitar
@@ -173,33 +173,33 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
                     </li>
                   ),
                 )}
-                {itemsVivos(cuenta).length === 0 && <li className="text-sm text-slate-400">La cuenta no tiene ítems.</li>}
+                {itemsVivos(cuenta).length === 0 && <li className="text-sm !text-content-3">La cuenta no tiene ítems.</li>}
               </ul>
             )}
             {cuenta && (
-              <div className="mb-3 rounded-lg bg-slate-900 p-3 text-sm">
+              <div className="mb-3 rounded-lg !bg-nav p-3 text-sm">
                 {cuenta.impuestos !== undefined && (
-                  <div className="flex justify-between text-slate-400"><span>Subtotal + IVA</span><span>{dinero(cuenta.subtotal)} + {dinero(cuenta.impuestos)}</span></div>
+                  <div className="flex justify-between !text-content-3"><span>Subtotal + IVA</span><span>{dinero(cuenta.subtotal)} + {dinero(cuenta.impuestos)}</span></div>
                 )}
                 <div className="flex justify-between"><span>Total</span><b>{dinero(cuenta.total)}</b></div>
-                <div className="flex justify-between text-slate-400"><span>Pagado</span><span>{dinero(cuenta.pagado)}</span></div>
-                <div className="flex justify-between text-amber-300"><span>Saldo</span><b>{dinero(cuenta.saldoPendiente)}</b></div>
+                <div className="flex justify-between !text-content-3"><span>Pagado</span><span>{dinero(cuenta.pagado)}</span></div>
+                <div className="flex justify-between text-tono-amber-300"><span>Saldo</span><b>{dinero(cuenta.saldoPendiente)}</b></div>
               </div>
             )}
 
             {carrito.length > 0 && (
-              <div className="mb-3 rounded-lg border border-blue-900 bg-blue-950/40 p-3">
-                <h4 className="mb-2 text-xs font-semibold uppercase text-blue-300">{sinCuenta ? 'Por abrir' : 'Por agregar'}</h4>
+              <div className="mb-3 rounded-lg border border-tono-blue-900 bg-tono-blue-950/40 p-3">
+                <h4 className="mb-2 text-xs font-semibold uppercase !text-link">{sinCuenta ? 'Por abrir' : 'Por agregar'}</h4>
                 {carrito.map((it) => (
                   <div key={it.productoId} className="flex items-center justify-between py-1 text-sm">
                     <span>{it.cantidad} × {it.nombre}</span>
                     <span className="flex items-center gap-2">
                       {dinero(it.subtotal)}
-                      <button className="h-10 w-10 rounded-lg bg-slate-800" onClick={() => restar(it.productoId)} aria-label="Restar">−</button>
+                      <button className="h-10 w-10 rounded-lg !bg-surface-1" onClick={() => restar(it.productoId)} aria-label="Restar">−</button>
                     </span>
                   </div>
                 ))}
-                <div className="mt-1 flex justify-between text-xs text-slate-300">
+                <div className="mt-1 flex justify-between text-xs !text-content-2">
                   <span>
                     Subtotal {dinero(desgloseIva(carrito, ivaCfg).subtotal)} + {etiquetaIva(carrito, ivaCfg)} {dinero(desgloseIva(carrito, ivaCfg).iva)}
                     {ivaCfg.preciosIncluyenIva ? ' (precios con IVA incluido)' : ''}
@@ -207,82 +207,82 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
                 </div>
                 <button
                   disabled={ocupado || (sinCuenta && !sucursalId)}
-                  className={`${btn} mt-2 w-full bg-blue-600 disabled:opacity-40`}
+                  className={`${btn} mt-2 w-full !bg-btn disabled:opacity-40`}
                   onClick={sinCuenta ? abrir : sumar}
                 >
                   {sinCuenta ? `Abrir cuenta · ${dinero(desgloseIva(carrito, ivaCfg).total)}` : `Agregar a la cuenta · ${dinero(desgloseIva(carrito, ivaCfg).total)}`}
                 </button>
-                {sinCuenta && !sucursalId && <p className="mt-1 text-xs text-amber-300">Falta la sucursal de la sesión.</p>}
+                {sinCuenta && !sucursalId && <p className="mt-1 text-xs text-tono-amber-300">Falta la sucursal de la sesión.</p>}
               </div>
             )}
 
             {cuenta && (
               <div className="flex flex-wrap gap-2">
                 {acc.cobrar && (
-                  <button disabled={ocupado} className={`${btn} bg-green-700 disabled:opacity-40`} onClick={() => { setModo('completo'); setCobrando(true); }}>
+                  <button disabled={ocupado} className={`${btn} !bg-ok-solid disabled:opacity-40`} onClick={() => { setModo('completo'); setCobrando(true); }}>
                     Cobrar
                   </button>
                 )}
                 {acc.dividir && (
-                  <button disabled={ocupado} className={`${btn} bg-indigo-700 disabled:opacity-40`} onClick={() => { setModo('parcial'); setCobrando(true); }}>
+                  <button disabled={ocupado} className={`${btn} bg-tono-indigo-700 text-on-solid disabled:opacity-40`} onClick={() => { setModo('parcial'); setCobrando(true); }}>
                     Dividir
                   </button>
                 )}
                 {acc.cancelar && (
-                  <button disabled={ocupado} className={`${btn} bg-red-900 disabled:opacity-40`} onClick={() => setCancelando(true)}>
+                  <button disabled={ocupado} className={`${btn} !bg-danger-soft !text-danger disabled:opacity-40`} onClick={() => setCancelando(true)}>
                     Cancelar cuenta
                   </button>
                 )}
-                {!acc.cobrar && <p className="w-full text-xs text-slate-400">El cobro de esta cuenta se hace en caja.</p>}
+                {!acc.cobrar && <p className="w-full text-xs !text-content-3">El cobro de esta cuenta se hace en caja.</p>}
               </div>
             )}
           </section>
 
           <section>
-            <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">Productos</h3>
+            <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide !text-content-3">Productos</h3>
             <InputBusqueda
               name="mesas-buscar-producto"
               aria-label="Buscar producto"
-              className="mb-2 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-3 text-base"
+              className="mb-2 w-full rounded-lg border !border-line !bg-nav px-3 py-3 text-base"
               placeholder="Buscar producto"
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
             />
             <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
               {visibles.map((p) => (
-                <button key={p.id} className="min-h-[72px] rounded-lg border border-slate-700 bg-slate-900 p-2 text-left active:bg-slate-800" onClick={() => agregar(p)}>
+                <button key={p.id} className="min-h-[72px] rounded-lg border !border-line !bg-nav p-2 text-left active:bg-tono-slate-800" onClick={() => agregar(p)}>
                   <div className="text-sm font-medium leading-tight">{p.name}</div>
-                  <div className="text-xs text-slate-400">{dinero(p.price)}</div>
+                  <div className="text-xs !text-content-3">{dinero(p.price)}</div>
                 </button>
               ))}
-              {visibles.length === 0 && <p className="col-span-full text-sm text-slate-400">Sin productos.</p>}
+              {visibles.length === 0 && <p className="col-span-full text-sm !text-content-3">Sin productos.</p>}
             </div>
           </section>
         </div>
 
         {cobrando && cuenta && (
-          <div className="absolute inset-0 z-50 flex items-end justify-center bg-black/70 sm:items-center">
-            <div className="w-full max-w-md space-y-3 rounded-t-2xl border border-slate-700 bg-slate-900 p-5 sm:rounded-2xl">
+          <div className="absolute inset-0 z-50 flex items-end justify-center bg-scrim/70 sm:items-center">
+            <div className="w-full max-w-md space-y-3 rounded-t-2xl border !border-line !bg-nav p-5 sm:rounded-2xl">
               <h3 className="text-lg font-bold">{modo === 'completo' ? 'Cobrar cuenta' : 'Dividir cuenta'} · saldo {dinero(saldo)}</h3>
-              {error && <div role="alert" className="rounded-lg bg-red-950 p-2 text-sm text-red-200">{error}</div>}
+              {error && <div role="alert" className="rounded-lg bg-tono-danger-950 p-2 text-sm text-tono-danger-200">{error}</div>}
               {acc.dividir && (
                 <div className="grid grid-cols-3 gap-2 text-sm">
                   {(['completo', 'parcial', 'items'] as Modo[])
                     .filter((m) => (m === 'completo' ? acc.cobrar : true))
                     .map((m) => (
-                      <button key={m} className={`${btn} ${modo === m ? 'bg-blue-600' : 'bg-slate-800'}`} onClick={() => setModo(m)}>
+                      <button key={m} className={`${btn} ${modo === m ? '!bg-btn' : '!bg-surface-1'}`} onClick={() => setModo(m)}>
                         {m === 'completo' ? 'Completa' : m === 'parcial' ? 'Por monto' : 'Por ítems'}
                       </button>
                     ))}
                 </div>
               )}
               {modo === 'parcial' && (
-                <input className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 text-base" inputMode="decimal" placeholder="Monto a cobrar" value={monto} onChange={(e) => setMonto(e.target.value)} />
+                <input className="w-full rounded-lg border !border-line !bg-bg px-3 py-3 text-base" inputMode="decimal" placeholder="Monto a cobrar" value={monto} onChange={(e) => setMonto(e.target.value)} />
               )}
               {modo === 'items' && (
                 <div className="max-h-40 space-y-1 overflow-y-auto">
                   {indicesPorCobrar(cuenta).map((i) => (
-                    <label key={i} className="flex items-center gap-3 rounded-lg bg-slate-950 p-3 text-sm">
+                    <label key={i} className="flex items-center gap-3 rounded-lg !bg-bg p-3 text-sm">
                       <input type="checkbox" className="h-5 w-5" checked={sel.includes(i)} onChange={(e) => setSel(e.target.checked ? [...sel, i] : sel.filter((x) => x !== i))} />
                       {cuenta.items[i].cantidad} × {cuenta.items[i].nombre} · {dinero(cuenta.items[i].subtotal)}
                     </label>
@@ -291,13 +291,13 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
               )}
               <div className="grid grid-cols-2 gap-2">
                 {FORMAS.map((f) => (
-                  <button key={f.v} className={`${btn} ${forma === f.v ? 'bg-blue-600' : 'bg-slate-800'}`} onClick={() => { setForma(f.v); setUltimos4(''); }}>{f.l}</button>
+                  <button key={f.v} className={`${btn} ${forma === f.v ? '!bg-btn' : '!bg-surface-1'}`} onClick={() => { setForma(f.v); setUltimos4(''); }}>{f.l}</button>
                 ))}
               </div>
               {esFormaTarjeta(forma) && (
                 <div>
                   <input
-                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 text-base"
+                    className="w-full rounded-lg border !border-line !bg-bg px-3 py-3 text-base"
                     inputMode="numeric"
                     autoComplete="off"
                     maxLength={4}
@@ -305,20 +305,20 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
                     value={ultimos4}
                     onChange={(e) => setUltimos4(soloUltimos4(e.target.value))}
                   />
-                  {motivoTarjeta && <p className="mt-1 text-sm text-amber-300">{motivoTarjeta}</p>}
+                  {motivoTarjeta && <p className="mt-1 text-sm text-tono-amber-300">{motivoTarjeta}</p>}
                 </div>
               )}
               {forma === 'EFECTIVO' && modo !== 'items' && (
                 <div>
-                  <input className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 text-base" inputMode="decimal" placeholder="Recibido (opcional)" value={recibido} onChange={(e) => setRecibido(e.target.value)} />
-                  {cambio > 0 && <p className="mt-1 text-sm text-green-300">Cambio: {dinero(cambio)}</p>}
+                  <input className="w-full rounded-lg border !border-line !bg-bg px-3 py-3 text-base" inputMode="decimal" placeholder="Recibido (opcional)" value={recibido} onChange={(e) => setRecibido(e.target.value)} />
+                  {cambio > 0 && <p className="mt-1 text-sm !text-ok">Cambio: {dinero(cambio)}</p>}
                 </div>
               )}
               <div className="flex gap-2">
-                <button className={`${btn} flex-1 bg-slate-800`} onClick={() => { setCobrando(false); setError(''); }}>Volver</button>
+                <button className={`${btn} flex-1 !bg-surface-1`} onClick={() => { setCobrando(false); setError(''); }}>Volver</button>
                 <button
                   disabled={ocupado || !!motivoTarjeta || (modo === 'parcial' && !(montoNum > 0)) || (modo === 'items' && sel.length === 0)}
-                  className={`${btn} flex-1 bg-green-700 disabled:opacity-40`}
+                  className={`${btn} flex-1 !bg-ok-solid disabled:opacity-40`}
                   onClick={cobrar}
                 >
                   Confirmar cobro
@@ -329,16 +329,16 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
         )}
 
         {cancelando && cuenta && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-            <div className="w-full max-w-md space-y-3 rounded-2xl border border-slate-700 bg-slate-900 p-5">
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-scrim/70 p-4">
+            <div className="w-full max-w-md space-y-3 rounded-2xl border !border-line !bg-nav p-5">
               <h3 className="text-lg font-bold">Cancelar la cuenta de la mesa {mesa.number}</h3>
-              {error && <div role="alert" className="rounded-lg bg-red-950 p-2 text-sm text-red-200">{error}</div>}
-              <input className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 text-base" placeholder="Motivo (obligatorio)" value={motivo} onChange={(e) => setMotivo(e.target.value)} />
+              {error && <div role="alert" className="rounded-lg bg-tono-danger-950 p-2 text-sm text-tono-danger-200">{error}</div>}
+              <input className="w-full rounded-lg border !border-line !bg-bg px-3 py-3 text-base" placeholder="Motivo (obligatorio)" value={motivo} onChange={(e) => setMotivo(e.target.value)} />
               <div className="flex gap-2">
-                <button className={`${btn} flex-1 bg-slate-800`} onClick={() => { setCancelando(false); setError(''); }}>Volver</button>
+                <button className={`${btn} flex-1 !bg-surface-1`} onClick={() => { setCancelando(false); setError(''); }}>Volver</button>
                 <button
                   disabled={ocupado || !motivo.trim()}
-                  className={`${btn} flex-1 bg-red-800 disabled:opacity-40`}
+                  className={`${btn} flex-1 !bg-danger-soft !text-danger disabled:opacity-40`}
                   onClick={() => run(() => api.cancelar(cuenta.id, motivo.trim()), () => { setCancelando(false); onCerrar(); })}
                 >
                   Cancelar cuenta

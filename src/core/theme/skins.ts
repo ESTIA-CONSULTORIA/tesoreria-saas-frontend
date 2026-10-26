@@ -56,6 +56,82 @@ export interface Tokens {
   viz4: string; // (rosa)
   viz5: string; // series neutras de las gráficas (gris medio)
   viz6: string; // (gris oscuro)
+  // ── Ola 2 (POS, caja, mesas, Lite): tonos con el mismo valor que ya estaba fijo en ESTIA y Oscuro; Claro y Alto contraste tienen los suyos ──
+  tonoDanger950: string; // fondo rojo muy oscuro (red-950)
+  tonoDanger900: string; // fondo rojo oscuro con opacidad (red-900)
+  tonoDanger800: string; // borde rojo (red-800)
+  tonoDanger700: string; // borde rojo (red-700)
+  tonoDanger200: string; // texto rojo claro sobre fondo rojo (red-200)
+  tonoDanger100: string; // texto rojo muy claro sobre fondo rojo (red-100)
+  tonoOk900: string; // fondo verde oscuro con opacidad (green-900)
+  tonoOk700: string; // borde verde (green-700)
+  tonoYellow900: string; // fondo amarillo oscuro (yellow-900)
+  tonoYellow700: string; // borde / hover amarillo (yellow-700)
+  tonoYellow600: string; // botón amarillo (yellow-600)
+  tonoYellow300: string; // texto amarillo (yellow-300)
+  tonoAmber900: string; // fondo ámbar oscuro (amber-900)
+  tonoAmber700: string; // botón ámbar (amber-700)
+  tonoAmber300: string; // texto ámbar (amber-300)
+  tonoOrange700: string; // borde naranja (orange-700)
+  tonoOrange400: string; // texto naranja (orange-400)
+  tonoBlue950: string; // fondo azul muy oscuro (blue-950)
+  tonoBlue900: string; // borde / fondo azul oscuro (blue-900)
+  tonoBlue400: string; // borde / texto azul (blue-400)
+  tonoPurple600: string; // botón morado (purple-600)
+  tonoPurple700: string; // hover del botón morado (purple-700)
+  tonoIndigo700: string; // botón índigo (indigo-700)
+  tonoSlate800: string; // fondo gris azulado con opacidad (slate-800)
+  tonoSlate700: string; // fondo gris azulado con opacidad (slate-700)
+  tonoSlate600: string; // texto gris azulado (slate-600)
+  tonoSlate300: string; // borde / hover claro (slate-300)
+  tonoSlate200: string; // botón neutro claro (slate-200)
+  tonoInk: string; // texto sobre el botón neutro claro
+  onYellow: string; // texto sobre el botón amarillo
+  stOk: string; // mesa libre
+  stDanger: string; // mesa ocupada
+  stWarn: string; // mesa reservada
+  stNeutral: string; // mesa por limpiar
+  papel: string; // tarjeta / hoja
+  papelBg: string; // fondo de la pantalla Lite
+  papelSoft: string; // fondo suave de filas y teclas
+  papelLinea: string; // separadores
+  papelLinea2: string; // separadores finos
+  papelLinea3: string; // bordes de teclas y campos
+  papelAzul: string; // acento principal
+  papelAzulBg: string; // fondo de aviso informativo
+  papelRojo: string; // texto / botón de error
+  papelRojoBg: string; // fondo de error
+  papelRojoLinea: string; // borde de error
+  papelVerde: string; // texto / botón de éxito
+  papelVerdeBg: string; // fondo de éxito
+  papelVerdeTx: string; // texto verde oscuro
+  papelAmbar: string; // texto / botón de aviso
+  papelAmbarBg: string; // fondo de aviso
+  papelAmbarLinea: string; // borde de aviso
+  papelWhats: string; // botón de WhatsApp
+  tinta1: string; // texto principal sobre papel
+  tinta2: string; // texto secundario sobre papel
+  tinta3: string; // texto terciario sobre papel
+  tinta4: string; // texto tenue / marcadores sobre papel
+  tinta5: string; // texto gris oscuro sobre papel
+  tintaNavy: string; // texto / fondo azul marino
+  papelNavy: string; // fondo azul marino (pantalla de cocina)
+  papelNavy2: string; // tarjeta azul marino (pantalla de cocina)
+  tonoDanger300: string; // texto / borde rojo claro (red-300)
+  chatWarnBg: string; // chat: fondo de solicitud de aprobación
+  chatOkBg: string; // chat: fondo de aprobado
+  chatDangerBg: string; // chat: fondo de rechazado
+  chatDangerBtn: string; // chat: botón de rechazar
+  chatMineBg: string; // chat: burbuja propia
+  chatMineLine: string; // chat: borde de la burbuja propia
+  chatInfoBg: string; // chat: fondo de aviso
+  chatInfoText: string; // chat: texto de aviso
+  toggleOn: string; // interruptor encendido
+  surfaceAlt: string; // fondo de campos y botones del cobro rápido y del chat
+  navAlt: string; // fondo del pie del chat
+  onStrong: string; // texto sobre los botones morado y ámbar
+  papelOnVerde: string; // texto sobre botones verdes (papelVerde)
+  tintaNavyTx: string; // texto secundario sobre fondo azul marino (cocina)
 }
 
 /**
@@ -80,6 +156,36 @@ export const SKINS: Record<SkinId, { nombre: string; descripcion: string; alfaTe
       focus: '#BDBDBD',
       veil: '#FFFFFF', scrim: '#000000', canvas: '#0F1117', panel: '#141820', popover: '#1A1F2E', textSoft: '#C8CDD8', textBright: '#E8ECF0',
       accentAlt: '#7B9CCC', chip: '#1E2D45', modal: '#161616', viz1: '#4ADE80', viz2: '#A78BFA', viz3: '#FBBF24', viz4: '#F472B6', viz5: '#7E7E7E', viz6: '#4A4A4A',
+      tonoDanger950: '#450A0A', tonoDanger900: '#7F1D1D', tonoDanger800: '#991B1B', tonoDanger700: '#B91C1C',
+      tonoDanger200: '#FECACA', tonoDanger100: '#FEE2E2', tonoOk900: '#14532D', tonoOk700: '#15803D',
+      tonoYellow900: '#713F12', tonoYellow700: '#A16207', tonoYellow600: '#CA8A04', tonoYellow300: '#FDE047',
+      tonoAmber900: '#78350F', tonoAmber700: '#B45309', tonoAmber300: '#FCD34D', tonoOrange700: '#C2410C',
+      tonoOrange400: '#FB923C', tonoBlue950: '#172554', tonoBlue900: '#1E3A8A', tonoBlue400: '#60A5FA',
+      tonoPurple600: '#9333EA', tonoPurple700: '#7E22CE', tonoIndigo700: '#4338CA', tonoSlate800: '#1E293B',
+      tonoSlate700: '#334155', tonoSlate600: '#475569', tonoSlate300: '#CBD5E1', tonoSlate200: '#E2E8F0',
+      tonoInk: '#000000', onYellow: '#0A0A0A', stOk: '#22C55E', stDanger: '#EF4444',
+      stWarn: '#F59E0B', stNeutral: '#94A3B8', papel: '#FFFFFF', papelBg: '#F0F4F8',
+      papelSoft: '#F8FAFC', papelLinea: '#E2E8F0', papelLinea2: '#F1F5F9', papelLinea3: '#CBD5E1',
+      papelAzul: '#1D4ED8', papelAzulBg: '#EFF6FF', papelRojo: '#DC2626', papelRojoBg: '#FEF2F2',
+      papelRojoLinea: '#FECACA', papelVerde: '#16A34A', papelVerdeBg: '#F0FDF4', papelVerdeTx: '#166534',
+      papelAmbar: '#D97706', papelAmbarBg: '#FFFBEB', papelAmbarLinea: '#FDE68A', papelWhats: '#128C7E',
+      tinta1: '#111827', tinta2: '#475569', tinta3: '#5B6B82', tinta4: '#94A3B8',
+      tinta5: '#374151', tintaNavy: '#0F172A', papelNavy: '#0F172A', papelNavy2: '#1E293B',
+      tonoDanger300: '#FCA5A5',
+      chatWarnBg: '#1A1A0A',
+      chatOkBg: '#0A1A0A',
+      chatDangerBg: '#1A0A0A',
+      chatDangerBtn: '#2A1515',
+      chatMineBg: '#1A1A2A',
+      chatMineLine: '#3D3D6D',
+      chatInfoBg: '#1B1B2B',
+      chatInfoText: '#BDBDFF',
+      toggleOn: '#1A5C3A',
+      surfaceAlt: '#1A1A1A',
+      navAlt: '#111111',
+      onStrong: '#F5F5F5',
+      papelOnVerde: '#0B1F13',
+      tintaNavyTx: '#94A3B8',
     },
   },
   oscuro: {
@@ -98,6 +204,36 @@ export const SKINS: Record<SkinId, { nombre: string; descripcion: string; alfaTe
       focus: '#6EA8FE',
       veil: '#FFFFFF', scrim: '#000000', canvas: '#0F1117', panel: '#141820', popover: '#1A1F2E', textSoft: '#C8CDD8', textBright: '#E8ECF0',
       accentAlt: '#7B9CCC', chip: '#1E2D45', modal: '#171A22', viz1: '#4ADE80', viz2: '#A78BFA', viz3: '#FBBF24', viz4: '#F472B6', viz5: '#7E7E7E', viz6: '#4A4A4A',
+      tonoDanger950: '#450A0A', tonoDanger900: '#7F1D1D', tonoDanger800: '#991B1B', tonoDanger700: '#B91C1C',
+      tonoDanger200: '#FECACA', tonoDanger100: '#FEE2E2', tonoOk900: '#14532D', tonoOk700: '#15803D',
+      tonoYellow900: '#713F12', tonoYellow700: '#A16207', tonoYellow600: '#CA8A04', tonoYellow300: '#FDE047',
+      tonoAmber900: '#78350F', tonoAmber700: '#B45309', tonoAmber300: '#FCD34D', tonoOrange700: '#C2410C',
+      tonoOrange400: '#FB923C', tonoBlue950: '#172554', tonoBlue900: '#1E3A8A', tonoBlue400: '#60A5FA',
+      tonoPurple600: '#9333EA', tonoPurple700: '#7E22CE', tonoIndigo700: '#4338CA', tonoSlate800: '#1E293B',
+      tonoSlate700: '#334155', tonoSlate600: '#475569', tonoSlate300: '#CBD5E1', tonoSlate200: '#E2E8F0',
+      tonoInk: '#000000', onYellow: '#0A0A0A', stOk: '#22C55E', stDanger: '#EF4444',
+      stWarn: '#F59E0B', stNeutral: '#94A3B8', papel: '#FFFFFF', papelBg: '#F0F4F8',
+      papelSoft: '#F8FAFC', papelLinea: '#E2E8F0', papelLinea2: '#F1F5F9', papelLinea3: '#CBD5E1',
+      papelAzul: '#1D4ED8', papelAzulBg: '#EFF6FF', papelRojo: '#DC2626', papelRojoBg: '#FEF2F2',
+      papelRojoLinea: '#FECACA', papelVerde: '#16A34A', papelVerdeBg: '#F0FDF4', papelVerdeTx: '#166534',
+      papelAmbar: '#D97706', papelAmbarBg: '#FFFBEB', papelAmbarLinea: '#FDE68A', papelWhats: '#128C7E',
+      tinta1: '#111827', tinta2: '#475569', tinta3: '#5B6B82', tinta4: '#94A3B8',
+      tinta5: '#374151', tintaNavy: '#0F172A', papelNavy: '#0F172A', papelNavy2: '#1E293B',
+      tonoDanger300: '#FCA5A5',
+      chatWarnBg: '#1A1A0A',
+      chatOkBg: '#0A1A0A',
+      chatDangerBg: '#1A0A0A',
+      chatDangerBtn: '#2A1515',
+      chatMineBg: '#1A1A2A',
+      chatMineLine: '#3D3D6D',
+      chatInfoBg: '#1B1B2B',
+      chatInfoText: '#BDBDFF',
+      toggleOn: '#1A5C3A',
+      surfaceAlt: '#1A1A1A',
+      navAlt: '#111111',
+      onStrong: '#FFFFFF',
+      papelOnVerde: '#0B1F13',
+      tintaNavyTx: '#94A3B8',
     },
   },
   claro: {
@@ -116,6 +252,36 @@ export const SKINS: Record<SkinId, { nombre: string; descripcion: string; alfaTe
       focus: '#1D4ED8',
       veil: '#0F172A', scrim: '#0F172A', canvas: '#EEF2F7', panel: '#FFFFFF', popover: '#FFFFFF', textSoft: '#334155', textBright: '#0F172A',
       accentAlt: '#2563EB', chip: '#DBEAFE', modal: '#FFFFFF', viz1: '#166534', viz2: '#6D28D9', viz3: '#B45309', viz4: '#BE185D', viz5: '#64748B', viz6: '#CBD5E1',
+      tonoDanger950: '#FEF2F2', tonoDanger900: '#FEE2E2', tonoDanger800: '#FCA5A5', tonoDanger700: '#F87171',
+      tonoDanger200: '#991B1B', tonoDanger100: '#7F1D1D', tonoOk900: '#DCFCE7', tonoOk700: '#86EFAC',
+      tonoYellow900: '#FEF9C3', tonoYellow700: '#A16207', tonoYellow600: '#B45309', tonoYellow300: '#854D0E',
+      tonoAmber900: '#FEF3C7', tonoAmber700: '#B45309', tonoAmber300: '#92400E', tonoOrange700: '#FDBA74',
+      tonoOrange400: '#9A3412', tonoBlue950: '#EFF6FF', tonoBlue900: '#DBEAFE', tonoBlue400: '#1D4ED8',
+      tonoPurple600: '#7E22CE', tonoPurple700: '#6B21A8', tonoIndigo700: '#3730A3', tonoSlate800: '#E2E8F0',
+      tonoSlate700: '#CBD5E1', tonoSlate600: '#475569', tonoSlate300: '#CBD5E1', tonoSlate200: '#E2E8F0',
+      tonoInk: '#111827', onYellow: '#FFFFFF', stOk: '#166534', stDanger: '#B91C1C',
+      stWarn: '#92400E', stNeutral: '#475569', papel: '#FFFFFF', papelBg: '#F0F4F8',
+      papelSoft: '#F8FAFC', papelLinea: '#E2E8F0', papelLinea2: '#F1F5F9', papelLinea3: '#CBD5E1',
+      papelAzul: '#1D4ED8', papelAzulBg: '#EFF6FF', papelRojo: '#DC2626', papelRojoBg: '#FEF2F2',
+      papelRojoLinea: '#FECACA', papelVerde: '#16A34A', papelVerdeBg: '#F0FDF4', papelVerdeTx: '#166534',
+      papelAmbar: '#D97706', papelAmbarBg: '#FFFBEB', papelAmbarLinea: '#FDE68A', papelWhats: '#128C7E',
+      tinta1: '#111827', tinta2: '#475569', tinta3: '#5B6B82', tinta4: '#94A3B8',
+      tinta5: '#374151', tintaNavy: '#0F172A', papelNavy: '#0F172A', papelNavy2: '#1E293B',
+      tonoDanger300: '#B91C1C',
+      chatWarnBg: '#FEF9C3',
+      chatOkBg: '#DCFCE7',
+      chatDangerBg: '#FEE2E2',
+      chatDangerBtn: '#FEE2E2',
+      chatMineBg: '#EEF2FF',
+      chatMineLine: '#A5B4FC',
+      chatInfoBg: '#EEF2FF',
+      chatInfoText: '#3730A3',
+      toggleOn: '#16A34A',
+      surfaceAlt: '#F1F4F8',
+      navAlt: '#FFFFFF',
+      onStrong: '#FFFFFF',
+      papelOnVerde: '#0B1F13',
+      tintaNavyTx: '#94A3B8',
     },
   },
   contraste: {
@@ -134,6 +300,36 @@ export const SKINS: Record<SkinId, { nombre: string; descripcion: string; alfaTe
       focus: '#FFD60A',
       veil: '#FFFFFF', scrim: '#000000', canvas: '#000000', panel: '#0A0A0A', popover: '#0A0A0A', textSoft: '#F0F0F0', textBright: '#FFFFFF',
       accentAlt: '#8AD0FF', chip: '#1A3A5C', modal: '#000000', viz1: '#5CFF9A', viz2: '#C4B5FD', viz3: '#FFD60A', viz4: '#FF9ED2', viz5: '#BDBDBD', viz6: '#8C8C8C',
+      tonoDanger950: '#2B0000', tonoDanger900: '#3D0F0F', tonoDanger800: '#FF8A8A', tonoDanger700: '#FF8A8A',
+      tonoDanger200: '#FFC9C9', tonoDanger100: '#FFE0E0', tonoOk900: '#0B2E1A', tonoOk700: '#5CFF9A',
+      tonoYellow900: '#2E2500', tonoYellow700: '#FFD60A', tonoYellow600: '#FFD60A', tonoYellow300: '#FFE95C',
+      tonoAmber900: '#2E1C00', tonoAmber700: '#FFD60A', tonoAmber300: '#FFE95C', tonoOrange700: '#FFB066',
+      tonoOrange400: '#FFB066', tonoBlue950: '#0A1A33', tonoBlue900: '#1A3A5C', tonoBlue400: '#8AD0FF',
+      tonoPurple600: '#C4B5FD', tonoPurple700: '#DDD6FE', tonoIndigo700: '#C4B5FD', tonoSlate800: '#1A1A1A',
+      tonoSlate700: '#262626', tonoSlate600: '#D6D6D6', tonoSlate300: '#B3B3B3', tonoSlate200: '#FFFFFF',
+      tonoInk: '#000000', onYellow: '#000000', stOk: '#5CFF9A', stDanger: '#FF8A8A',
+      stWarn: '#FFD60A', stNeutral: '#D6D6D6', papel: '#0A0A0A', papelBg: '#000000',
+      papelSoft: '#121212', papelLinea: '#B3B3B3', papelLinea2: '#262626', papelLinea3: '#E0E0E0',
+      papelAzul: '#FFD60A', papelAzulBg: '#1A3A5C', papelRojo: '#FF8A8A', papelRojoBg: '#3D0F0F',
+      papelRojoLinea: '#FF8A8A', papelVerde: '#5CFF9A', papelVerdeBg: '#0B2E1A', papelVerdeTx: '#5CFF9A',
+      papelAmbar: '#FFD60A', papelAmbarBg: '#2E2500', papelAmbarLinea: '#FFD60A', papelWhats: '#5CFF9A',
+      tinta1: '#FFFFFF', tinta2: '#F0F0F0', tinta3: '#D6D6D6', tinta4: '#BDBDBD',
+      tinta5: '#F0F0F0', tintaNavy: '#FFFFFF', papelNavy: '#000000', papelNavy2: '#1A1A1A',
+      tonoDanger300: '#FFC9C9',
+      chatWarnBg: '#2E2500',
+      chatOkBg: '#0B2E1A',
+      chatDangerBg: '#3D0F0F',
+      chatDangerBtn: '#3D0F0F',
+      chatMineBg: '#1A1A33',
+      chatMineLine: '#C4B5FD',
+      chatInfoBg: '#1A1A33',
+      chatInfoText: '#DDD6FE',
+      toggleOn: '#5CFF9A',
+      surfaceAlt: '#121212',
+      navAlt: '#000000',
+      onStrong: '#000000',
+      papelOnVerde: '#000000',
+      tintaNavyTx: '#F0F0F0',
     },
   },
 };
@@ -175,7 +371,9 @@ export function cssSkins(): string {
     bloque(':root, [data-skin="estia"]', 'estia') +
     bloque('[data-skin="oscuro"]', 'oscuro') +
     bloque('[data-skin="claro"]', 'claro') +
-    bloque('[data-skin="contraste"]', 'contraste')
+    bloque('[data-skin="contraste"]', 'contraste') +
+    // Impresión (recibos, cortes): siempre sobre papel claro, sea cual sea la skin. Gana a [data-skin=…] por especificidad (html[data-skin]).
+    '@media print {\n' + bloque('html, html[data-skin]', 'claro') + '}\n'
   );
 }
 

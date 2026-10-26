@@ -73,17 +73,17 @@ export default function MeseroPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-950 p-6 text-white">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 !bg-bg p-6 !text-content-1">
       <h1 className="text-xl font-bold">Mesas · NIP</h1>
-      {!tenantId && <p className="max-w-xs text-center text-sm text-amber-300">Abre esta pantalla desde el enlace de tu negocio (con ?tenant=…).</p>}
+      {!tenantId && <p className="max-w-xs text-center text-sm text-tono-amber-300">Abre esta pantalla desde el enlace de tu negocio (con ?tenant=…).</p>}
       <div className="flex gap-3" aria-label="NIP">
-        {[0, 1, 2, 3].map((i) => <span key={i} className={`h-4 w-4 rounded-full ${i < pin.length ? 'bg-blue-500' : 'bg-slate-700'}`} />)}
+        {[0, 1, 2, 3].map((i) => <span key={i} className={`h-4 w-4 rounded-full ${i < pin.length ? '!bg-btn' : '!bg-surface-2'}`} />)}
       </div>
-      {error && <p role="alert" className="max-w-xs text-center text-sm text-red-300">{error}</p>}
+      {error && <p role="alert" className="max-w-xs text-center text-sm !text-danger">{error}</p>}
       <div className="grid grid-cols-3 gap-3">
         {['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'del'].map((k) =>
           k === '' ? <span key="e" /> : (
-            <button key={k} disabled={!tenantId || cargando} className="h-20 w-20 rounded-2xl bg-slate-800 text-2xl font-semibold active:bg-slate-700 disabled:opacity-40" onClick={() => digitar(k)}>
+            <button key={k} disabled={!tenantId || cargando} className="h-20 w-20 rounded-2xl !bg-surface-1 text-2xl font-semibold active:bg-tono-slate-700 disabled:opacity-40" onClick={() => digitar(k)}>
               {k === 'del' ? '⌫' : k}
             </button>
           ),

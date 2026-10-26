@@ -9,7 +9,7 @@ export default function MesasPage() {
   const tenantId = useAuthStore((s) => s.tenantId) || user?.tenantId || localStorage.getItem('tenant_id') || '';
   const sucursalId = user?.branchId || localStorage.getItem('active_branch_id') || null;
 
-  if (!user || !tenantId) return <div className="p-6 text-slate-300">Sin sesión.</div>;
+  if (!user || !tenantId) return <div className="p-6 !text-content-2">Sin sesión.</div>;
 
   return (
     <MesasScreen
