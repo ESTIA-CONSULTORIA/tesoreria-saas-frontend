@@ -115,7 +115,7 @@ export default function PruebaWizard({ tenantId, giro }: { tenantId: string; gir
   const puedeEjemplo = esAdmin && real?.puedeCargarEjemplo === true;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)' }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgb(var(--scrim) / 0.6)' }}>
       <div ref={dialogo} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="guia-titulo"
         className="w-[680px] max-w-[94vw] max-h-[92vh] rounded-xl border border-line-field bg-surface-1 text-content-1 shadow-2xl outline-none flex flex-col">
         <div className="px-6 pt-5 pb-3 border-b border-line">
