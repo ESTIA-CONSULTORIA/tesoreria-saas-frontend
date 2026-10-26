@@ -1,3 +1,4 @@
+import { COLOR_CATEGORIA_POR_DEFECTO } from "./coloresDatos";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -388,7 +389,7 @@ export default function POSPage() {
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [categoryForm, setCategoryForm] = useState({
     nombre: "",
-    color: "#3B82F6",
+    color: COLOR_CATEGORIA_POR_DEFECTO,
     descripcion: ""
   });
 
@@ -1573,17 +1574,17 @@ export default function POSPage() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen !bg-bg !text-content-1">
       {/* HEADER - Tabs */}
-      <div className="h-16 border-b border-slate-800 flex items-center px-4 bg-slate-900">
+      <div className="h-16 border-b !border-line flex items-center px-4 !bg-nav">
         <h1 className="text-xl font-bold mr-8">POS</h1>
         <div className="flex gap-2">
           <button
             onClick={() => setActiveTab("terminal")}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               activeTab === "terminal"
-                ? "bg-blue-600 text-white"
-                : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                ? "!bg-btn !text-on-solid"
+                : "!bg-surface-1 !text-content-3 hover:!bg-surface-2"
             }`}
           >
             Terminal
@@ -1594,8 +1595,8 @@ export default function POSPage() {
                 onClick={() => setActiveTab("productos")}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === "productos"
-                    ? "bg-blue-600 text-white"
-                    : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                    ? "!bg-btn !text-on-solid"
+                    : "!bg-surface-1 !text-content-3 hover:!bg-surface-2"
                 }`}
               >
                 Productos
@@ -1604,8 +1605,8 @@ export default function POSPage() {
                 onClick={() => setActiveTab("categorias")}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === "categorias"
-                    ? "bg-blue-600 text-white"
-                    : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                    ? "!bg-btn !text-on-solid"
+                    : "!bg-surface-1 !text-content-3 hover:!bg-surface-2"
                 }`}
               >
                 Categorías
@@ -1613,7 +1614,7 @@ export default function POSPage() {
               {mesasHabilitado && (
                 <button
                   onClick={() => navigate("/mesas")}
-                  className="px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-slate-800 text-slate-400 hover:bg-slate-700"
+                  className="px-4 py-2 rounded-lg text-sm font-medium transition-colors !bg-surface-1 !text-content-3 hover:!bg-surface-2"
                 >
                   Mesas ↗
                 </button>
@@ -1622,8 +1623,8 @@ export default function POSPage() {
                 onClick={() => setActiveTab("turnos")}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === "turnos"
-                    ? "bg-blue-600 text-white"
-                    : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                    ? "!bg-btn !text-on-solid"
+                    : "!bg-surface-1 !text-content-3 hover:!bg-surface-2"
                 }`}
               >
                 Turnos
@@ -1632,8 +1633,8 @@ export default function POSPage() {
                 onClick={() => setActiveTab("hardware")}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === "hardware"
-                    ? "bg-blue-600 text-white"
-                    : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                    ? "!bg-btn !text-on-solid"
+                    : "!bg-surface-1 !text-content-3 hover:!bg-surface-2"
                 }`}
               >
                 Hardware
@@ -1642,8 +1643,8 @@ export default function POSPage() {
                 onClick={() => setActiveTab("parametros")}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === "parametros"
-                    ? "bg-blue-600 text-white"
-                    : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                    ? "!bg-btn !text-on-solid"
+                    : "!bg-surface-1 !text-content-3 hover:!bg-surface-2"
                 }`}
               >
                 Parámetros
@@ -1657,7 +1658,7 @@ export default function POSPage() {
       {activeTab === "terminal" && (
         <div className="h-[calc(100vh-64px)] flex flex-col">
           {/* TERMINAL HEADER */}
-          <header className="h-16 border-b border-slate-700 flex items-center justify-between px-4 bg-slate-800">
+          <header className="h-16 border-b !border-line flex items-center justify-between px-4 !bg-surface-1">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => {
@@ -1672,21 +1673,21 @@ export default function POSPage() {
                     }
                   }
                 }}
-                className="text-sm text-slate-400 hover:text-white flex items-center gap-1"
+                className="text-sm !text-content-3 hover:text-content-1 flex items-center gap-1"
               >
                 ← Salir
               </button>
-              <div className="text-sm text-slate-400">
-                Cajero: <span className="text-white">{nombreCajero(selectedCashier || user?.id)}</span>
+              <div className="text-sm !text-content-3">
+                Cajero: <span className="!text-content-1">{nombreCajero(selectedCashier || user?.id)}</span>
               </div>
               {shift && (
-                <div className="text-sm text-slate-400">
-                  Turno: <span className="text-green-400">Abierto</span> ({shift.horaApertura || new Date(shift.fecha).toLocaleTimeString('es-MX', { timeZone: 'America/Tijuana' })})
+                <div className="text-sm !text-content-3">
+                  Turno: <span className="!text-ok">Abierto</span> ({shift.horaApertura || new Date(shift.fecha).toLocaleTimeString('es-MX', { timeZone: 'America/Tijuana' })})
                 </div>
               )}
               {(usingCachedCategories || usingCachedProducts || usingCachedAreas) && (
                 <div
-                  className="text-xs text-yellow-400 border border-yellow-700 rounded px-2 py-1"
+                  className="text-xs !text-warn border border-tono-yellow-700 rounded px-2 py-1"
                   title="No se pudo conectar al servidor — mostrando la última copia guardada en este dispositivo, puede no estar actualizada."
                 >
                   ⚠ Datos sin conexión
@@ -1694,7 +1695,7 @@ export default function POSPage() {
               )}
               {pendingOpsCount > 0 && (
                 <div
-                  className="text-xs text-orange-400 border border-orange-700 rounded px-2 py-1"
+                  className="text-xs text-tono-orange-400 border border-tono-orange-700 rounded px-2 py-1"
                   title="Operaciones guardadas en este dispositivo que aún no se han enviado al servidor — se sincronizan solas cuando haya conexión."
                 >
                   ⏳ {pendingOpsCount} pendiente{pendingOpsCount === 1 ? "" : "s"}
@@ -1702,7 +1703,7 @@ export default function POSPage() {
               )}
               {failedOpsCount > 0 && (
                 <div
-                  className="text-xs text-red-400 border border-red-700 rounded px-2 py-1"
+                  className="text-xs !text-danger border border-tono-danger-700 rounded px-2 py-1"
                   title="El servidor rechazó estas operaciones (no es un problema de conexión) — necesitan revisión manual, no se van a reintentar solas."
                 >
                   ✕ {failedOpsCount} necesita{failedOpsCount === 1 ? "" : "n"} revisión
@@ -1712,7 +1713,7 @@ export default function POSPage() {
                 </div>
               )}
               {showSyncedToast && (
-                <div className="text-xs text-green-400 border border-green-700 rounded px-2 py-1">
+                <div className="text-xs !text-ok border border-tono-ok-700 rounded px-2 py-1">
                   ✓ Todo sincronizado
                 </div>
               )}
@@ -1721,7 +1722,7 @@ export default function POSPage() {
               {!shift ? (
                 <button
                   onClick={() => setShowOpenShiftModal(true)}
-                  className="px-4 py-2 rounded bg-green-600 text-white text-sm hover:bg-green-700"
+                  className="px-4 py-2 rounded !bg-ok-solid !text-on-solid text-sm hover:bg-tono-ok-700"
                 >
                   Abrir Turno
                 </button>
@@ -1729,27 +1730,27 @@ export default function POSPage() {
                 <>
                   <button
                     onClick={() => setShowWithdrawalModal(true)}
-                    className="px-3 py-2 rounded bg-yellow-600 text-white text-sm hover:bg-yellow-700"
+                    className="px-3 py-2 rounded bg-tono-yellow-600 !text-on-yellow text-sm hover:bg-tono-yellow-700"
                   >
                     💰 Retiro
                   </button>
                   <button
                     onClick={() => setShowDepositModal(true)}
-                    className="px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+                    className="px-3 py-2 rounded !bg-btn !text-on-solid text-sm hover:!bg-btn-hover"
                   >
                     💵 Depósito
                   </button>
                   <button
                     onClick={() => setShowPrecutModal(true)}
                     disabled={shift?.precorteGuardado}
-                    className="px-3 py-2 rounded bg-purple-600 text-white text-sm hover:bg-purple-700 disabled:bg-slate-700 disabled:text-slate-500"
+                    className="px-3 py-2 rounded bg-tono-purple-600 !text-on-strong text-sm hover:bg-tono-purple-700 disabled:bg-tono-slate-700 disabled:text-tinta-3"
                   >
                     {shift?.precorteGuardado ? '✓ Precorte realizado' : '📊 Precorte'}
                   </button>
                   {shift?.precorteGuardado && (
                     <button
                       onClick={() => setShowChatPanel(true)}
-                      className="px-3 py-2 rounded bg-yellow-700 text-white text-sm hover:bg-yellow-600"
+                      className="px-3 py-2 rounded bg-tono-yellow-700 !text-on-strong text-sm hover:bg-tono-yellow-600"
                     >
                       💬 Chat Supervisor
                     </button>
@@ -1767,7 +1768,7 @@ export default function POSPage() {
                       }
                     }}
                     disabled={!shift?.precorteGuardado}
-                    className="px-4 py-2 rounded bg-red-600 text-white text-sm hover:bg-red-700 disabled:bg-slate-700 disabled:text-slate-500"
+                    className="px-4 py-2 rounded !bg-danger-solid !text-on-solid text-sm hover:bg-tono-danger-700 disabled:bg-tono-slate-700 disabled:text-tinta-3"
                   >
                     Cerrar Turno
                   </button>
@@ -1778,7 +1779,7 @@ export default function POSPage() {
                   loadSalesHistory();
                   setShowSalesHistory(true);
                 }}
-                className="px-4 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+                className="px-4 py-2 rounded !bg-btn !text-on-solid text-sm hover:!bg-btn-hover"
               >
                 Historial de Ventas
               </button>
@@ -1787,10 +1788,10 @@ export default function POSPage() {
 
           {/* RESTAURANT: tabla selector overlay */}
           {isRestaurant && shift && showTableSelect && (
-            <div className="fixed inset-0 z-50 bg-black/80 flex flex-col overflow-auto p-4">
+            <div className="fixed inset-0 z-50 bg-scrim/80 flex flex-col overflow-auto p-4">
               <div className="flex items-center justify-between mb-4 max-w-5xl mx-auto w-full">
-                <h2 className="text-lg font-semibold text-white">Selecciona una mesa</h2>
-                <button onClick={() => setShowTableSelect(false)} className="text-sm text-slate-400 hover:text-white">✕ Cancelar</button>
+                <h2 className="text-lg font-semibold !text-content-1">Selecciona una mesa</h2>
+                <button onClick={() => setShowTableSelect(false)} className="text-sm !text-content-3 hover:text-content-1">✕ Cancelar</button>
               </div>
               <div className="max-w-5xl mx-auto w-full">
                 <TableLayout
@@ -1807,27 +1808,27 @@ export default function POSPage() {
 
           {/* RESTAURANT: mesa indicator + button when shift open */}
           {isRestaurant && shift && (
-            <div className="px-4 py-2 border-b border-slate-700 flex items-center gap-3 bg-slate-900">
+            <div className="px-4 py-2 border-b !border-line flex items-center gap-3 !bg-nav">
               {selectedTableForPOS ? (
-                <span className="text-sm text-green-400 font-medium">Mesa {selectedTableForPOS.numero} seleccionada</span>
+                <span className="text-sm !text-ok font-medium">Mesa {selectedTableForPOS.numero} seleccionada</span>
               ) : (
-                <span className="text-sm text-yellow-400">Sin mesa seleccionada</span>
+                <span className="text-sm !text-warn">Sin mesa seleccionada</span>
               )}
               <button
                 onClick={() => setShowTableSelect(true)}
-                className="text-xs px-3 py-1.5 rounded bg-slate-700 text-white hover:bg-slate-600"
+                className="text-xs px-3 py-1.5 rounded !bg-surface-2 !text-content-1 hover:!bg-surface-2"
               >
                 {selectedTableForPOS ? "Cambiar mesa" : "Seleccionar mesa"}
               </button>
               {selectedTableForPOS && (
-                <button onClick={() => setSelectedTableForPOS(null)} className="text-xs text-red-400 hover:text-red-300">Liberar mesa</button>
+                <button onClick={() => setSelectedTableForPOS(null)} className="text-xs !text-danger hover:text-tono-danger-300">Liberar mesa</button>
               )}
             </div>
           )}
 
           {/* RETAIL: CheckoutFast overlay */}
           {isRetail && shift && showRetailCheckout && ticket.length > 0 && (
-            <div className="fixed inset-0 z-50 bg-black/80 flex items-end justify-center">
+            <div className="fixed inset-0 z-50 bg-scrim/80 flex items-end justify-center">
               <div className="w-full max-w-lg">
                 <CheckoutFast
                   items={ticket}
@@ -1844,17 +1845,17 @@ export default function POSPage() {
           {/* MAIN CONTENT - 2 ZONES */}
           <div className="flex-1 flex overflow-hidden">
             {/* ZONA IZQUIERDA - PRODUCTOS (75%) */}
-            <div className="w-[75%] flex flex-col border-r border-slate-700">
-              <div className="p-4 border-b border-slate-700 space-y-3">
+            <div className="w-[75%] flex flex-col border-r !border-line">
+              <div className="p-4 border-b !border-line space-y-3">
                 <InputBusqueda
                   name="pos-buscar-producto"
                   placeholder="Buscar producto..."
                   aria-label="Buscar producto"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-slate-600 bg-slate-800 text-white"
+                  className="w-full px-4 py-2 rounded-lg border !border-line !bg-surface-1 !text-content-1"
                 />
-                <p className="text-[11px] text-slate-500" aria-label="Atajos de teclado">
+                <p className="text-[11px] !text-content-3" aria-label="Atajos de teclado">
                   <kbd className="font-sans">F2</kbd> Buscar producto · <kbd className="font-sans">F4</kbd> Cobrar · <kbd className="font-sans">Esc</kbd> Limpiar búsqueda
                 </p>
                 <div className="flex gap-2 overflow-x-auto pb-1">
@@ -1862,8 +1863,8 @@ export default function POSPage() {
                     onClick={() => setSelectedCategory("all")}
                     className={`px-3 py-1 rounded text-sm whitespace-nowrap ${
                       selectedCategory === "all"
-                        ? "bg-blue-600 text-white"
-                        : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                        ? "!bg-btn !text-on-solid"
+                        : "!bg-surface-2 !text-content-2 hover:!bg-surface-2"
                     }`}
                   >
                     Todos
@@ -1874,8 +1875,8 @@ export default function POSPage() {
                       onClick={() => setSelectedCategory(cat.name)}
                       className={`px-3 py-1 rounded text-sm whitespace-nowrap ${
                         selectedCategory === cat.name
-                          ? "bg-blue-600 text-white"
-                          : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                          ? "!bg-btn !text-on-solid"
+                          : "!bg-surface-2 !text-content-2 hover:!bg-surface-2"
                       }`}
                     >
                       {cat.name}
@@ -1905,11 +1906,11 @@ export default function POSPage() {
                       disabled={isBlocked}
                       className={`max-w-[120px] max-h-[120px] p-3 rounded-lg border text-left transition-colors flex flex-col relative ${
                         isBlocked
-                          ? 'bg-slate-900 border-slate-800 opacity-40 grayscale cursor-not-allowed'
-                          : 'bg-slate-800 hover:bg-slate-700 border-slate-700'
+                          ? '!bg-nav !border-line opacity-40 grayscale cursor-not-allowed'
+                          : '!bg-surface-1 hover:!bg-surface-2 !border-line'
                       }`}
                     >
-                      <div className="w-full aspect-square bg-slate-700 rounded mb-2 flex items-center justify-center overflow-hidden">
+                      <div className="w-full aspect-square !bg-surface-2 rounded mb-2 flex items-center justify-center overflow-hidden">
                         {product.imageUrl ? (
                           <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
                         ) : (
@@ -1917,14 +1918,14 @@ export default function POSPage() {
                         )}
                       </div>
                       <p className="font-medium text-xs line-clamp-2 h-8 overflow-hidden">{product.name}</p>
-                      <p className="text-green-400 font-bold text-sm">${product.price.toFixed(2)}</p>
+                      <p className="!text-ok font-bold text-sm">${product.price.toFixed(2)}</p>
                       {product.stock !== null && product.stock !== undefined && (
                         <div className={`absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${
                           product.stock <= 0
-                            ? 'bg-red-600 text-white'
+                            ? '!bg-danger-solid !text-on-solid'
                             : product.stock <= (product.stockMinimo || 0)
-                            ? 'bg-yellow-600 text-white'
-                            : 'bg-green-600 text-white'
+                            ? 'bg-tono-yellow-600 !text-on-yellow'
+                            : '!bg-ok-solid !text-on-solid'
                         }`}>
                           {product.stock <= 0 ? 'Agotado' : product.stock <= (product.stockMinimo || 0) ? `Quedan ${product.stock}` : product.stock}
                         </div>
@@ -1939,22 +1940,22 @@ export default function POSPage() {
             {/* ZONA DERECHA - TICKET + COBRO (25%) */}
             <div className="w-[25%] h-full flex flex-col">
               {/* TICKET */}
-              <div className="flex-1 flex flex-col border-b border-slate-700 min-h-0">
-                <div className="p-4 border-b border-slate-700 flex-shrink-0">
+              <div className="flex-1 flex flex-col border-b !border-line min-h-0">
+                <div className="p-4 border-b !border-line flex-shrink-0">
                   <h2 className="text-lg font-semibold">Ticket Actual</h2>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-2">
                   {ticket.length === 0 ? (
-                    <p className="text-slate-400 text-center py-8">Ticket vacío</p>
+                    <p className="!text-content-3 text-center py-8">Ticket vacío</p>
                   ) : (
                     ticket.map((item) => (
-                      <div key={item.productoId} className="p-3 rounded-lg bg-slate-800 border border-slate-700">
+                      <div key={item.productoId} className="p-3 rounded-lg !bg-surface-1 border !border-line">
                         <div className="flex justify-between items-start mb-2">
                           <p className="font-medium text-sm flex-1">{item.nombre}</p>
                           <button
                             onClick={() => removeFromTicket(item.productoId)}
-                            className="text-red-400 hover:text-red-300 text-xs ml-2"
+                            className="!text-danger hover:text-tono-danger-300 text-xs ml-2"
                           >
                             ✕
                           </button>
@@ -1963,14 +1964,14 @@ export default function POSPage() {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => updateQuantity(item.productoId, item.cantidad - 1)}
-                              className="w-6 h-6 rounded bg-slate-700 hover:bg-slate-600 text-sm"
+                              className="w-6 h-6 rounded !bg-surface-2 hover:!bg-surface-2 text-sm"
                             >
                               -
                             </button>
                             <span className="w-8 text-center">{item.cantidad}</span>
                             <button
                               onClick={() => updateQuantity(item.productoId, item.cantidad + 1)}
-                              className="w-6 h-6 rounded bg-slate-700 hover:bg-slate-600 text-sm"
+                              className="w-6 h-6 rounded !bg-surface-2 hover:!bg-surface-2 text-sm"
                             >
                               +
                             </button>
@@ -1983,14 +1984,14 @@ export default function POSPage() {
                 </div>
 
                 {membresiasOn && (
-                  <div className="px-4 py-2 border-t border-slate-700 bg-slate-800 text-sm flex-shrink-0">
+                  <div className="px-4 py-2 border-t !border-line !bg-surface-1 text-sm flex-shrink-0">
                     {socioPOS ? (
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-green-300">
+                        <span className="!text-ok">
                           Socio #{socioPOS.numeroSocio} · {socioPOS.nombre}
                           {socioPOS.descuentoPct > 0 ? ` · ${socioPOS.descuentoPct}% de beneficio` : " · sin beneficio vigente"}
                         </span>
-                        <button className="text-slate-400 hover:text-white" onClick={quitarSocioPOS}>Quitar</button>
+                        <button className="!text-content-3 hover:text-content-1" onClick={quitarSocioPOS}>Quitar</button>
                       </div>
                     ) : (
                       <div className="flex gap-2">
@@ -2000,60 +2001,60 @@ export default function POSPage() {
                           onChange={(e) => setSocioNumero(e.target.value)}
                           onKeyDown={(e) => e.key === "Enter" && buscarSocioPOS()}
                           placeholder="N.º de socio (beneficio)"
-                          className="flex-1 rounded bg-slate-900 px-3 py-1 text-white"
+                          className="flex-1 rounded !bg-nav px-3 py-1 !text-content-1"
                         />
-                        <button className="rounded bg-slate-700 px-3 py-1 hover:bg-slate-600" onClick={buscarSocioPOS}>Aplicar</button>
+                        <button className="rounded !bg-surface-2 px-3 py-1 hover:!bg-surface-2" onClick={buscarSocioPOS}>Aplicar</button>
                       </div>
                     )}
-                    {socioError && <div className="mt-1 text-xs text-red-400">{socioError}</div>}
+                    {socioError && <div className="mt-1 text-xs !text-danger">{socioError}</div>}
                   </div>
                 )}
-                <div className="p-4 border-t border-slate-700 space-y-2 bg-slate-800 flex-shrink-0">
+                <div className="p-4 border-t !border-line space-y-2 !bg-surface-1 flex-shrink-0">
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">Subtotal</span>
+                    <span className="!text-content-3">Subtotal</span>
                     <span>${getSubtotal().toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">Descuento</span>
-                    <span className="text-red-400">-${getTotalDiscount().toFixed(2)}</span>
+                    <span className="!text-content-3">Descuento</span>
+                    <span className="!text-danger">-${getTotalDiscount().toFixed(2)}</span>
                   </div>
                   {lineasDeIva(ivaTicket).length === 0 ? (
                     <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">{etiquetaIvaUnica(ivaTicket, ivaCfg)}</span>
+                      <span className="!text-content-3">{etiquetaIvaUnica(ivaTicket, ivaCfg)}</span>
                       <span>${getTaxes().toFixed(2)}</span>
                     </div>
                   ) : (
                     lineasDeIva(ivaTicket).map((l) => (
                       <div key={l.tasa} className="flex justify-between text-sm">
-                        <span className="text-slate-400">{l.tasa === "EXENTO" ? "Exento (base)" : `IVA ${l.etiqueta}`}</span>
+                        <span className="!text-content-3">{l.tasa === "EXENTO" ? "Exento (base)" : `IVA ${l.etiqueta}`}</span>
                         <span>${(l.tasa === "EXENTO" ? l.base : l.impuestos).toFixed(2)}</span>
                       </div>
                     ))
                   )}
                   {ivaCfg.preciosIncluyenIva && (
-                    <div className="text-xs text-slate-500">Los precios incluyen IVA.</div>
+                    <div className="text-xs !text-content-3">Los precios incluyen IVA.</div>
                   )}
-                  <div className="flex justify-between text-xl font-bold pt-2 border-t border-slate-700">
+                  <div className="flex justify-between text-xl font-bold pt-2 border-t !border-line">
                     <span>TOTAL</span>
-                    <span className="text-green-400">${getTotal().toFixed(2)}</span>
+                    <span className="!text-ok">${getTotal().toFixed(2)}</span>
                   </div>
                 </div>
               </div>
 
               {/* COBRO */}
-              <div className="p-4 space-y-3 bg-slate-900 flex-shrink-0">
+              <div className="p-4 space-y-3 !bg-nav flex-shrink-0">
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowDiscountModal(true)}
                     disabled={!ticket || ticket.length === 0}
-                    className="flex-1 h-9 rounded-lg bg-slate-700 text-white font-medium hover:bg-slate-600 disabled:bg-slate-800 disabled:text-slate-500"
+                    className="flex-1 h-9 rounded-lg !bg-surface-2 !text-content-1 font-medium hover:!bg-surface-2 disabled:bg-tono-slate-800 disabled:text-tinta-3"
                   >
                     Descuento
                   </button>
                   <button
                     onClick={() => setShowCourtesyModal(true)}
                     disabled={!ticket || ticket.length === 0}
-                    className="flex-1 h-9 rounded-lg bg-yellow-600 text-white font-medium hover:bg-yellow-700 disabled:bg-slate-800 disabled:text-slate-500"
+                    className="flex-1 h-9 rounded-lg bg-tono-yellow-600 !text-content-1 font-medium hover:bg-tono-yellow-700 disabled:bg-tono-slate-800 disabled:text-tinta-3"
                   >
                     Cortesía
                   </button>
@@ -2063,7 +2064,7 @@ export default function POSPage() {
                   onClick={abrirCobro}
                   title="Cobrar (F4)"
                   disabled={!ticket || ticket.length === 0}
-                  className="w-full py-4 rounded-lg bg-green-600 text-white font-bold text-xl hover:bg-green-700 disabled:bg-slate-700 disabled:text-slate-500"
+                  className="w-full py-4 rounded-lg !bg-ok-solid !text-on-solid font-bold text-xl hover:bg-tono-ok-700 disabled:bg-tono-slate-700 disabled:text-tinta-3"
                 >
                   COBRAR
                 </button>
@@ -2097,21 +2098,21 @@ export default function POSPage() {
                   });
                   setShowProductModal(true);
                 }}
-                className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                className="px-4 py-2 rounded !bg-btn !text-on-solid hover:!bg-btn-hover"
               >
                 + Nuevo Producto
               </button>
               <button
                 onClick={() => setPosProductImportModalOpen(true)}
-                className="px-4 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+                className="px-4 py-2 rounded !bg-surface-2 !text-content-1 hover:!bg-surface-2"
               >
                 Importar Insumos
               </button>
             </div>
           </div>
-          <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-x-auto">
+          <div className="rounded-xl border !border-line !bg-nav overflow-x-auto">
             <table className="w-full min-w-[700px]">
-              <thead className="bg-slate-800">
+              <thead className="!bg-surface-1">
                 <tr>
                   <th className="px-4 py-3 text-left text-sm">Código</th>
                   <th className="px-4 py-3 text-left text-sm">Nombre</th>
@@ -2121,23 +2122,23 @@ export default function POSPage() {
                   <th className="px-4 py-3 text-center text-sm">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className="divide-y divide-tono-slate-800">
                 {products.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
+                    <td colSpan={6} className="px-4 py-8 text-center !text-content-3">
                       No hay productos registrados
                     </td>
                   </tr>
                 ) : (
                   products.map((product) => (
-                    <tr key={product.id} className="hover:bg-slate-800/50">
+                    <tr key={product.id} className="hover:bg-tono-slate-800/50">
                       <td className="px-4 py-3 text-sm">{product.id || "-"}</td>
                       <td className="px-4 py-3 text-sm font-medium">{product.name}</td>
                       <td className="px-4 py-3 text-sm">{product.category || "-"}</td>
                       <td className="px-4 py-3 text-sm text-right">${Number(product.price).toFixed(2)}</td>
                       <td className="px-4 py-3 text-center">
                         <span className={`px-2 py-1 rounded text-xs ${
-                          product.isActive ? "bg-green-900/40 text-green-300" : "bg-red-900/40 text-red-300"
+                          product.isActive ? "bg-tono-ok-900/40 !text-ok" : "bg-tono-danger-900/40 !text-danger"
                         }`}>
                           {product.isActive ? "Activo" : "Inactivo"}
                         </span>
@@ -2161,7 +2162,7 @@ export default function POSPage() {
                             });
                             setShowProductModal(true);
                           }}
-                          className="px-2 py-1 rounded bg-blue-600 text-xs hover:bg-blue-700 mr-1"
+                          className="px-2 py-1 rounded !bg-btn text-xs hover:!bg-btn-hover mr-1"
                         >
                           Editar
                         </button>
@@ -2171,7 +2172,7 @@ export default function POSPage() {
                               setProducts(products.filter(p => p.id !== product.id));
                             }
                           }}
-                          className="px-2 py-1 rounded bg-red-600 text-xs hover:bg-red-700"
+                          className="px-2 py-1 rounded !bg-danger-solid text-xs hover:bg-tono-danger-700"
                         >
                           Eliminar
                         </button>
@@ -2192,22 +2193,22 @@ export default function POSPage() {
             <button
               onClick={() => {
                 setEditingCategory(null);
-                setCategoryForm({ nombre: "", color: "#3B82F6", descripcion: "" });
+                setCategoryForm({ nombre: "", color: COLOR_CATEGORIA_POR_DEFECTO, descripcion: "" });
                 setShowCategoryModal(true);
               }}
-              className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+              className="px-4 py-2 rounded !bg-btn !text-on-solid hover:!bg-btn-hover"
             >
               + Nueva Categoría
             </button>
           </div>
           <div className="grid grid-cols-3 gap-4">
             {posCategories.length === 0 ? (
-              <div className="col-span-3 p-8 text-center text-slate-400 rounded-xl bg-slate-900 border border-slate-800">
+              <div className="col-span-3 p-8 text-center !text-content-3 rounded-xl !bg-nav border !border-line">
                 No hay categorías registradas
               </div>
             ) : (
               posCategories.map((cat) => (
-                <div key={cat.id} className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                <div key={cat.id} className="rounded-xl border !border-line !bg-nav p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 rounded" style={{ backgroundColor: cat.color }}></div>
@@ -2224,7 +2225,7 @@ export default function POSPage() {
                           });
                           setShowCategoryModal(true);
                         }}
-                        className="px-2 py-1 rounded bg-blue-600 text-xs hover:bg-blue-700"
+                        className="px-2 py-1 rounded !bg-btn text-xs hover:!bg-btn-hover"
                       >
                         Editar
                       </button>
@@ -2234,14 +2235,14 @@ export default function POSPage() {
                             setPosCategories(posCategories.filter(c => c.id !== cat.id));
                           }
                         }}
-                        className="px-2 py-1 rounded bg-red-600 text-xs hover:bg-red-700"
+                        className="px-2 py-1 rounded !bg-danger-solid text-xs hover:bg-tono-danger-700"
                       >
                         Eliminar
                       </button>
                     </div>
                   </div>
-                  <p className="text-sm text-slate-400">{cat.description || "Sin descripción"}</p>
-                  <p className="text-xs text-slate-500 mt-2">{cat.products?.length || cat.productCount || 0} productos</p>
+                  <p className="text-sm !text-content-3">{cat.description || "Sin descripción"}</p>
+                  <p className="text-xs !text-content-3 mt-2">{cat.products?.length || cat.productCount || 0} productos</p>
                 </div>
               ))
             )}
@@ -2259,29 +2260,29 @@ export default function POSPage() {
                 setAreaForm({ nombre: "", descripcion: "" });
                 setShowAreaModal(true);
               }}
-              className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+              className="px-4 py-2 rounded !bg-btn !text-on-solid hover:!bg-btn-hover"
             >
               + Nueva Área
             </button>
           </div>
           <div className="space-y-4">
             {areas.length === 0 ? (
-              <div className="p-8 text-center text-slate-400 rounded-xl bg-slate-900 border border-slate-800">
+              <div className="p-8 text-center !text-content-3 rounded-xl !bg-nav border !border-line">
                 No hay áreas registradas
               </div>
             ) : (
               areas.map((area) => (
-                <div key={area.id} className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
-                  <div className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-800/50" onClick={() => setExpandedArea(expandedArea === area.id ? null : area.id)}>
+                <div key={area.id} className="rounded-xl border !border-line !bg-nav overflow-hidden">
+                  <div className="p-4 flex items-center justify-between cursor-pointer hover:bg-tono-slate-800/50" onClick={() => setExpandedArea(expandedArea === area.id ? null : area.id)}>
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{expandedArea === area.id ? "▼" : "▶"}</span>
                       <div>
                         <h3 className="font-semibold">{area.name}</h3>
-                        <p className="text-sm text-slate-400">{area.description || "Sin descripción"}</p>
+                        <p className="text-sm !text-content-3">{area.description || "Sin descripción"}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-slate-400">{area.tables?.length || 0} mesas</span>
+                      <span className="text-sm !text-content-3">{area.tables?.length || 0} mesas</span>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -2289,7 +2290,7 @@ export default function POSPage() {
                           setAreaForm({ nombre: area.name, descripcion: area.description || "" });
                           setShowAreaModal(true);
                         }}
-                        className="px-2 py-1 rounded bg-blue-600 text-xs hover:bg-blue-700"
+                        className="px-2 py-1 rounded !bg-btn text-xs hover:!bg-btn-hover"
                       >
                         Editar
                       </button>
@@ -2300,14 +2301,14 @@ export default function POSPage() {
                             setAreas(areas.filter(a => a.id !== area.id));
                           }
                         }}
-                        className="px-2 py-1 rounded bg-red-600 text-xs hover:bg-red-700"
+                        className="px-2 py-1 rounded !bg-danger-solid text-xs hover:bg-tono-danger-700"
                       >
                         Eliminar
                       </button>
                     </div>
                   </div>
                   {expandedArea === area.id && (
-                    <div className="p-4 border-t border-slate-800 bg-slate-800/50">
+                    <div className="p-4 border-t !border-line bg-tono-slate-800/50">
                       <div className="flex justify-between items-center mb-3">
                         <h4 className="font-medium">Mesas</h4>
                         <button
@@ -2316,28 +2317,28 @@ export default function POSPage() {
                             setMesaForm({ areaId: area.id, numero: "", capacidad: "", status: "AVAILABLE" });
                             setShowMesaModal(true);
                           }}
-                          className="px-3 py-1 rounded bg-green-600 text-xs hover:bg-green-700"
+                          className="px-3 py-1 rounded !bg-ok-solid text-xs hover:bg-tono-ok-700"
                         >
                           + Nueva Mesa
                         </button>
                       </div>
                       <div className="grid grid-cols-4 gap-2">
                         {area.tables?.length === 0 ? (
-                          <p className="col-span-4 text-sm text-slate-400">No hay mesas en esta área</p>
+                          <p className="col-span-4 text-sm !text-content-3">No hay mesas en esta área</p>
                         ) : (
                           area.tables.map((mesa: any) => (
-                            <div key={mesa.id} className="p-3 rounded-lg bg-slate-900 border border-slate-700">
+                            <div key={mesa.id} className="p-3 rounded-lg !bg-nav border !border-line">
                               <div className="flex justify-between items-start mb-1">
                                 <span className="font-semibold">Mesa {mesa.number}</span>
                                 <span className={`px-2 py-0.5 rounded text-xs ${
-                                  mesa.status === "AVAILABLE" ? "bg-green-900/40 text-green-300" :
-                                  mesa.status === "OCCUPIED" ? "bg-red-900/40 text-red-300" :
-                                  "bg-yellow-900/40 text-yellow-300"
+                                  mesa.status === "AVAILABLE" ? "bg-tono-ok-900/40 !text-ok" :
+                                  mesa.status === "OCCUPIED" ? "bg-tono-danger-900/40 !text-danger" :
+                                  "bg-tono-yellow-900/40 text-tono-yellow-300"
                                 }`}>
                                   {mesa.status}
                                 </span>
                               </div>
-                              <p className="text-xs text-slate-400">Capacidad: {mesa.capacity}</p>
+                              <p className="text-xs !text-content-3">Capacidad: {mesa.capacity}</p>
                               <button
                                 onClick={() => {
                                   if (confirm("¿Eliminar esta mesa?")) {
@@ -2348,7 +2349,7 @@ export default function POSPage() {
                                     ));
                                   }
                                 }}
-                                className="mt-2 text-xs text-red-400 hover:text-red-300"
+                                className="mt-2 text-xs !text-danger hover:text-tono-danger-300"
                               >
                                 Eliminar
                               </button>
@@ -2380,7 +2381,7 @@ export default function POSPage() {
                 });
                 setShowShiftConfigModal(true);
               }}
-              className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+              className="px-4 py-2 rounded !bg-btn !text-on-solid hover:!bg-btn-hover"
             >
               + Nuevo Turno
             </button>
@@ -2388,9 +2389,9 @@ export default function POSPage() {
           
           <div className="mb-6">
             <h3 className="text-lg font-semibold mb-3">Configuración de Turnos</h3>
-            <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
+            <div className="rounded-xl border !border-line !bg-nav overflow-hidden">
               <table className="w-full">
-                <thead className="bg-slate-800">
+                <thead className="!bg-surface-1">
                   <tr>
                     <th className="px-4 py-3 text-left text-sm">Nombre</th>
                     <th className="px-4 py-3 text-left text-sm">Hora Inicio</th>
@@ -2399,16 +2400,16 @@ export default function POSPage() {
                     <th className="px-4 py-3 text-center text-sm">Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800">
+                <tbody className="divide-y divide-tono-slate-800">
                   {shiftConfigs.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
+                      <td colSpan={5} className="px-4 py-8 text-center !text-content-3">
                         No hay turnos configurados
                       </td>
                     </tr>
                   ) : (
                     shiftConfigs.map((config) => (
-                      <tr key={config.id} className="hover:bg-slate-800/50">
+                      <tr key={config.id} className="hover:bg-tono-slate-800/50">
                         <td className="px-4 py-3 text-sm font-medium">{config.nombre}</td>
                         <td className="px-4 py-3 text-sm">{config.horaInicio}</td>
                         <td className="px-4 py-3 text-sm">{config.horaFin}</td>
@@ -2425,7 +2426,7 @@ export default function POSPage() {
                               });
                               setShowShiftConfigModal(true);
                             }}
-                            className="px-2 py-1 rounded bg-blue-600 text-xs hover:bg-blue-700 mr-1"
+                            className="px-2 py-1 rounded !bg-btn text-xs hover:!bg-btn-hover mr-1"
                           >
                             Editar
                           </button>
@@ -2435,7 +2436,7 @@ export default function POSPage() {
                                 setShiftConfigs(shiftConfigs.filter(c => c.id !== config.id));
                               }
                             }}
-                            className="px-2 py-1 rounded bg-red-600 text-xs hover:bg-red-700"
+                            className="px-2 py-1 rounded !bg-danger-solid text-xs hover:bg-tono-danger-700"
                           >
                             Eliminar
                           </button>
@@ -2450,9 +2451,9 @@ export default function POSPage() {
 
           <div>
             <h3 className="text-lg font-semibold mb-3">Historial de Turnos</h3>
-            <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
+            <div className="rounded-xl border !border-line !bg-nav overflow-hidden">
               <table className="w-full">
-                <thead className="bg-slate-800">
+                <thead className="!bg-surface-1">
                   <tr>
                     <th className="px-4 py-3 text-left text-sm">Fecha</th>
                     <th className="px-4 py-3 text-left text-sm">Cajero</th>
@@ -2461,23 +2462,23 @@ export default function POSPage() {
                     <th className="px-4 py-3 text-center text-sm">Estado</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800">
+                <tbody className="divide-y divide-tono-slate-800">
                   {salesHistory.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
+                      <td colSpan={5} className="px-4 py-8 text-center !text-content-3">
                         No hay historial de turnos
                       </td>
                     </tr>
                   ) : (
                     salesHistory.slice(0, 10).map((sale) => (
-                      <tr key={sale.id} className="hover:bg-slate-800/50">
+                      <tr key={sale.id} className="hover:bg-tono-slate-800/50">
                         <td className="px-4 py-3 text-sm">{sale.fecha}</td>
                         <td className="px-4 py-3 text-sm">{nombreCajero((sale as any).cajero || user?.id)}</td>
                         <td className="px-4 py-3 text-sm text-right">{sale.items?.length || 0}</td>
                         <td className="px-4 py-3 text-sm text-right">${Number(sale.total).toFixed(2)}</td>
                         <td className="px-4 py-3 text-center">
                           <span className={`px-2 py-1 rounded text-xs ${
-                            sale.status === "PAGADA" ? "bg-green-900/40 text-green-300" : "bg-red-900/40 text-red-300"
+                            sale.status === "PAGADA" ? "bg-tono-ok-900/40 !text-ok" : "bg-tono-danger-900/40 !text-danger"
                           }`}>
                             {sale.status}
                           </span>
@@ -2497,11 +2498,11 @@ export default function POSPage() {
           <h2 className="text-2xl font-bold mb-4">Hardware</h2>
           <div className="space-y-6">
             {/* Impresora Térmica */}
-            <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+            <div className="rounded-xl border !border-line !bg-nav p-4">
               <h3 className="text-lg font-semibold mb-3">Impresora Térmica</h3>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">IP</label>
+                  <label className="block text-sm !text-content-3 mb-1">IP</label>
                   <input
                     type="text"
                     value={hardwareConfig.impresora.ip}
@@ -2510,11 +2511,11 @@ export default function POSPage() {
                       impresora: { ...hardwareConfig.impresora, ip: e.target.value }
                     })}
                     placeholder="192.168.1.100"
-                    className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                    className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">Puerto</label>
+                  <label className="block text-sm !text-content-3 mb-1">Puerto</label>
                   <input
                     type="text"
                     value={hardwareConfig.impresora.puerto}
@@ -2523,11 +2524,11 @@ export default function POSPage() {
                       impresora: { ...hardwareConfig.impresora, puerto: e.target.value }
                     })}
                     placeholder="9100"
-                    className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                    className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">Modelo</label>
+                  <label className="block text-sm !text-content-3 mb-1">Modelo</label>
                   <input
                     type="text"
                     value={hardwareConfig.impresora.modelo}
@@ -2536,24 +2537,24 @@ export default function POSPage() {
                       impresora: { ...hardwareConfig.impresora, modelo: e.target.value }
                     })}
                     placeholder="Ej: EPSON TM-T20"
-                    className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                    className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
                   />
                 </div>
               </div>
               <button
                 onClick={() => alert("Probando conexión con impresora...")}
-                className="mt-3 px-4 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+                className="mt-3 px-4 py-2 rounded !bg-btn !text-on-solid text-sm hover:!bg-btn-hover"
               >
                 Probar Conexión
               </button>
             </div>
 
             {/* Terminal Bancaria */}
-            <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+            <div className="rounded-xl border !border-line !bg-nav p-4">
               <h3 className="text-lg font-semibold mb-3">Terminal Bancaria</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">Modelo</label>
+                  <label className="block text-sm !text-content-3 mb-1">Modelo</label>
                   <input
                     type="text"
                     value={hardwareConfig.terminal.modelo}
@@ -2562,11 +2563,11 @@ export default function POSPage() {
                       terminal: { ...hardwareConfig.terminal, modelo: e.target.value }
                     })}
                     placeholder="Ej: Verifone VX520"
-                    className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                    className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">Número de Serie</label>
+                  <label className="block text-sm !text-content-3 mb-1">Número de Serie</label>
                   <input
                     type="text"
                     value={hardwareConfig.terminal.serie}
@@ -2575,30 +2576,30 @@ export default function POSPage() {
                       terminal: { ...hardwareConfig.terminal, serie: e.target.value }
                     })}
                     placeholder="Serie del equipo"
-                    className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                    className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
                   />
                 </div>
               </div>
               <button
                 onClick={() => alert("Probando conexión con terminal...")}
-                className="mt-3 px-4 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+                className="mt-3 px-4 py-2 rounded !bg-btn !text-on-solid text-sm hover:!bg-btn-hover"
               >
                 Probar Conexión
               </button>
             </div>
 
             {/* Lector Código de Barras */}
-            <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+            <div className="rounded-xl border !border-line !bg-nav p-4">
               <h3 className="text-lg font-semibold mb-3">Lector Código de Barras</h3>
               <div className="w-1/2">
-                <label className="block text-sm text-slate-400 mb-1">Tipo</label>
+                <label className="block text-sm !text-content-3 mb-1">Tipo</label>
                 <select
                   value={hardwareConfig.lector.tipo}
                   onChange={(e) => setHardwareConfig({
                     ...hardwareConfig,
                     lector: { ...hardwareConfig.lector, tipo: e.target.value }
                   })}
-                  className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                  className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
                 >
                   <option value="USB">USB</option>
                   <option value="BLUETOOTH">Bluetooth</option>
@@ -2606,17 +2607,17 @@ export default function POSPage() {
               </div>
               <button
                 onClick={() => alert("Probando conexión con lector...")}
-                className="mt-3 px-4 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+                className="mt-3 px-4 py-2 rounded !bg-btn !text-on-solid text-sm hover:!bg-btn-hover"
               >
                 Probar Conexión
               </button>
             </div>
 
             {/* Cajón de Dinero */}
-            <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+            <div className="rounded-xl border !border-line !bg-nav p-4">
               <h3 className="text-lg font-semibold mb-3">Cajón de Dinero</h3>
               <div className="w-1/2">
-                <label className="block text-sm text-slate-400 mb-1">Puerto</label>
+                <label className="block text-sm !text-content-3 mb-1">Puerto</label>
                 <input
                   type="text"
                   value={hardwareConfig.cajon.puerto}
@@ -2625,12 +2626,12 @@ export default function POSPage() {
                     cajon: { ...hardwareConfig.cajon, puerto: e.target.value }
                   })}
                   placeholder="COM1, USB, etc."
-                  className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                  className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
                 />
               </div>
               <button
                 onClick={() => alert("Probando conexión con cajón...")}
-                className="mt-3 px-4 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
+                className="mt-3 px-4 py-2 rounded !bg-btn !text-on-solid text-sm hover:!bg-btn-hover"
               >
                 Probar Conexión
               </button>
@@ -2643,45 +2644,45 @@ export default function POSPage() {
         <div className="p-6">
           <h2 className="text-2xl font-bold mb-4">Parámetros</h2>
           <div className="max-w-2xl space-y-6">
-            <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+            <div className="rounded-xl border !border-line !bg-nav p-4">
               <h3 className="text-lg font-semibold mb-3">Información del Negocio</h3>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">Nombre del Negocio</label>
+                  <label className="block text-sm !text-content-3 mb-1">Nombre del Negocio</label>
                   <input
                     type="text"
                     value={posParams.nombreNegocio}
                     onChange={(e) => setPosParams({ ...posParams, nombreNegocio: e.target.value })}
                     placeholder="Mi Negocio"
-                    className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                    className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">RFC</label>
+                  <label className="block text-sm !text-content-3 mb-1">RFC</label>
                   <input
                     type="text"
                     value={posParams.rfc}
                     onChange={(e) => setPosParams({ ...posParams, rfc: e.target.value })}
                     placeholder="RFC del negocio"
-                    className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                    className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">Mensaje Pie de Ticket</label>
+                  <label className="block text-sm !text-content-3 mb-1">Mensaje Pie de Ticket</label>
                   <input
                     type="text"
                     value={posParams.mensajePie}
                     onChange={(e) => setPosParams({ ...posParams, mensajePie: e.target.value })}
                     placeholder="¡Gracias por su compra!"
-                    className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                    className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+            <div className="rounded-xl border !border-line !bg-nav p-4">
               <h3 className="text-lg font-semibold mb-3">Stock insuficiente al vender</h3>
-              <p className="text-xs text-slate-500 mb-4">
+              <p className="text-xs !text-content-3 mb-4">
                 Aplica a toda la empresa, no solo a esta sucursal.
               </p>
 
@@ -2694,8 +2695,8 @@ export default function POSPage() {
                   className="mt-1"
                 />
                 <div>
-                  <div className="text-sm font-medium text-white">Permitir venta (stock queda en negativo)</div>
-                  <div className="text-xs text-slate-400">El cajero puede vender igual; el stock refleja el déficit real.</div>
+                  <div className="text-sm font-medium !text-content-1">Permitir venta (stock queda en negativo)</div>
+                  <div className="text-xs !text-content-3">El cajero puede vender igual; el stock refleja el déficit real.</div>
                 </div>
               </label>
 
@@ -2708,21 +2709,21 @@ export default function POSPage() {
                   className="mt-1"
                 />
                 <div>
-                  <div className="text-sm font-medium text-white">Bloquear venta</div>
-                  <div className="text-xs text-slate-400">Sin stock suficiente, la venta se rechaza — el botón del producto se ve deshabilitado en el POS.</div>
+                  <div className="text-sm font-medium !text-content-1">Bloquear venta</div>
+                  <div className="text-xs !text-content-3">Sin stock suficiente, la venta se rechaza — el botón del producto se ve deshabilitado en el POS.</div>
                 </div>
               </label>
 
               <div className="mt-3 h-4 text-xs">
-                {savingStockPolicy && <span className="text-slate-400">Guardando...</span>}
-                {!savingStockPolicy && stockPolicySaved && <span className="text-green-400">Guardado.</span>}
+                {savingStockPolicy && <span className="!text-content-3">Guardando...</span>}
+                {!savingStockPolicy && stockPolicySaved && <span className="!text-ok">Guardado.</span>}
               </div>
             </div>
 
             {user?.roleCode === "ADMIN" && (
-              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+              <div className="rounded-xl border !border-line !bg-nav p-4">
                 <h3 className="text-lg font-semibold mb-3">Devoluciones de ventas</h3>
-                <p className="text-xs text-slate-500 mb-4">
+                <p className="text-xs !text-content-3 mb-4">
                   Define quién puede devolver una venta ya cobrada. Aplica a toda la empresa.
                 </p>
 
@@ -2736,8 +2737,8 @@ export default function POSPage() {
                     className="mt-1"
                   />
                   <div>
-                    <div className="text-sm font-medium text-white">Solo gerente o administrador (recomendado)</div>
-                    <div className="text-xs text-slate-400">Un cajero no puede devolver; debe pedirle a un gerente que lo haga.</div>
+                    <div className="text-sm font-medium !text-content-1">Solo gerente o administrador (recomendado)</div>
+                    <div className="text-xs !text-content-3">Un cajero no puede devolver; debe pedirle a un gerente que lo haga.</div>
                   </div>
                 </label>
 
@@ -2751,69 +2752,69 @@ export default function POSPage() {
                     className="mt-1"
                   />
                   <div>
-                    <div className="text-sm font-medium text-white">Cualquier cajero</div>
-                    <div className="text-xs text-slate-400">Cualquier usuario del POS puede devolver una venta, sin autorización de un gerente.</div>
+                    <div className="text-sm font-medium !text-content-1">Cualquier cajero</div>
+                    <div className="text-xs !text-content-3">Cualquier usuario del POS puede devolver una venta, sin autorización de un gerente.</div>
                   </div>
                 </label>
 
                 <div className="mt-3 h-4 text-xs">
-                  {savingPolitica && <span className="text-slate-400">Guardando...</span>}
-                  {!savingPolitica && politicaGuardada && !politicaError && <span className="text-green-400">Guardado.</span>}
-                  {!savingPolitica && politicaError && <span className="text-red-400">{politicaError}</span>}
+                  {savingPolitica && <span className="!text-content-3">Guardando...</span>}
+                  {!savingPolitica && politicaGuardada && !politicaError && <span className="!text-ok">Guardado.</span>}
+                  {!savingPolitica && politicaError && <span className="!text-danger">{politicaError}</span>}
                 </div>
               </div>
             )}
 
             {user?.roleCode === "ADMIN" && mesasHabilitado && (
-              <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+              <div className="rounded-xl border !border-line !bg-nav p-4">
                 <h3 className="text-lg font-semibold mb-3">Cuentas de mesa</h3>
-                <p className="text-xs text-slate-500 mb-4">Quién cobra y quién divide las cuentas abiertas en mesas. Aplica a toda la empresa; el sistema valida siempre.</p>
+                <p className="text-xs !text-content-3 mb-4">Quién cobra y quién divide las cuentas abiertas en mesas. Aplica a toda la empresa; el sistema valida siempre.</p>
 
-                <h4 className="text-sm font-semibold text-slate-300 mb-2">¿Quién cobra una cuenta de mesa?</h4>
+                <h4 className="text-sm font-semibold !text-content-2 mb-2">¿Quién cobra una cuenta de mesa?</h4>
                 {OPCIONES_POLITICA_COBRO.map((o) => (
                   <label key={o.value} className="flex items-start gap-3 mb-3 cursor-pointer">
                     <input type="radio" name="politicaCobro" checked={politicaCobro === o.value} onChange={() => savePoliticaMesas("politicaCobro", o.value)} disabled={savingMesasPol} className="mt-1" />
                     <div>
-                      <div className="text-sm font-medium text-white">{o.label}</div>
-                      <div className="text-xs text-slate-400">{o.linea}</div>
+                      <div className="text-sm font-medium !text-content-1">{o.label}</div>
+                      <div className="text-xs !text-content-3">{o.linea}</div>
                     </div>
                   </label>
                 ))}
 
-                <h4 className="text-sm font-semibold text-slate-300 mt-4 mb-2">¿Quién puede dividir la cuenta?</h4>
+                <h4 className="text-sm font-semibold !text-content-2 mt-4 mb-2">¿Quién puede dividir la cuenta?</h4>
                 {OPCIONES_POLITICA_DIVISION.map((o) => (
                   <label key={o.value} className="flex items-start gap-3 mb-3 cursor-pointer">
                     <input type="radio" name="politicaDivisionCuentas" checked={politicaDivision === o.value} onChange={() => savePoliticaMesas("politicaDivisionCuentas", o.value)} disabled={savingMesasPol} className="mt-1" />
                     <div>
-                      <div className="text-sm font-medium text-white">{o.label}</div>
-                      <div className="text-xs text-slate-400">{o.linea}</div>
+                      <div className="text-sm font-medium !text-content-1">{o.label}</div>
+                      <div className="text-xs !text-content-3">{o.linea}</div>
                     </div>
                   </label>
                 ))}
 
                 <div className="mt-3 h-4 text-xs">
-                  {savingMesasPol && <span className="text-slate-400">Guardando...</span>}
-                  {!savingMesasPol && mesasPolMsg && <span className={mesasPolMsg.ok ? "text-green-400" : "text-red-400"}>{mesasPolMsg.texto}</span>}
+                  {savingMesasPol && <span className="!text-content-3">Guardando...</span>}
+                  {!savingMesasPol && mesasPolMsg && <span className={mesasPolMsg.ok ? "!text-ok" : "!text-danger"}>{mesasPolMsg.texto}</span>}
                 </div>
               </div>
             )}
 
-            <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+            <div className="rounded-xl border !border-line !bg-nav p-4">
               <h3 className="text-lg font-semibold mb-3">Impuestos</h3>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">IVA por defecto del negocio</label>
+                <label className="block text-sm !text-content-3 mb-1">IVA por defecto del negocio</label>
                 <select
                   value={ivaTasaDefault}
                   onChange={(e) => esTasaIva(e.target.value) && guardarIva({ ivaTasaDefault: e.target.value })}
                   disabled={user?.roleCode !== "ADMIN" || guardandoIva}
-                  className="w-full px-3 py-2 rounded bg-slate-800 text-white disabled:opacity-60"
+                  className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1 disabled:opacity-60"
                 >
                   <option value="16">16%</option>
                   <option value="8">8%</option>
                   <option value="0">0%</option>
                   <option value="EXENTO">Exento</option>
                 </select>
-                <p className="text-xs text-slate-500 mt-1">Cada producto puede tener su propia tasa; esta aplica a los que no la tienen.</p>
+                <p className="text-xs !text-content-3 mt-1">Cada producto puede tener su propia tasa; esta aplica a los que no la tienen.</p>
               </div>
               <label className="flex items-start gap-2 mt-4 cursor-pointer">
                 <input
@@ -2823,21 +2824,21 @@ export default function POSPage() {
                   disabled={user?.roleCode !== "ADMIN" || guardandoIva}
                   className="mt-1 rounded"
                 />
-                <span className="text-sm text-slate-300">
+                <span className="text-sm !text-content-2">
                   Los precios de mis productos ya incluyen IVA
-                  <span className="block text-xs text-slate-500">
+                  <span className="block text-xs !text-content-3">
                     Activado: el sistema desglosa el IVA del precio. Desactivado: lo suma al precio.
                   </span>
                 </span>
               </label>
               <div className="mt-3 h-4 text-xs">
-                {guardandoIva && <span className="text-slate-400">Guardando...</span>}
-                {!guardandoIva && ivaMsg && <span className={ivaMsg.ok ? "text-green-400" : "text-red-400"}>{ivaMsg.texto}</span>}
-                {user?.roleCode !== "ADMIN" && <span className="text-slate-500">Solo un administrador puede cambiarlo.</span>}
+                {guardandoIva && <span className="!text-content-3">Guardando...</span>}
+                {!guardandoIva && ivaMsg && <span className={ivaMsg.ok ? "!text-ok" : "!text-danger"}>{ivaMsg.texto}</span>}
+                {user?.roleCode !== "ADMIN" && <span className="!text-content-3">Solo un administrador puede cambiarlo.</span>}
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+            <div className="rounded-xl border !border-line !bg-nav p-4">
               <h3 className="text-lg font-semibold mb-3">Propina Sugerida</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
@@ -2850,25 +2851,25 @@ export default function POSPage() {
                     })}
                     className="rounded"
                   />
-                  <label className="text-sm text-slate-400">Activar propina sugerida</label>
+                  <label className="text-sm !text-content-3">Activar propina sugerida</label>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm text-slate-400 mb-1">Tipo</label>
+                    <label className="block text-sm !text-content-3 mb-1">Tipo</label>
                     <select
                       value={posParams.propinaSugerida.tipo}
                       onChange={(e) => setPosParams({
                         ...posParams,
                         propinaSugerida: { ...posParams.propinaSugerida, tipo: e.target.value }
                       })}
-                      className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                      className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
                     >
                       <option value="PORCENTAJE">Porcentaje</option>
                       <option value="MONTO">Monto Fijo</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm text-slate-400 mb-1">Valor</label>
+                    <label className="block text-sm !text-content-3 mb-1">Valor</label>
                     <input
                       type="text"
                       value={posParams.propinaSugerida.valor}
@@ -2877,18 +2878,18 @@ export default function POSPage() {
                         propinaSugerida: { ...posParams.propinaSugerida, valor: e.target.value }
                       })}
                       placeholder="10"
-                      className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                      className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
                     />
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+            <div className="rounded-xl border !border-line !bg-nav p-4">
               <h3 className="text-lg font-semibold mb-3">Operación</h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm text-slate-400">Requerir apertura de turno para vender</label>
+                  <label className="text-sm !text-content-3">Requerir apertura de turno para vender</label>
                   <input
                     type="checkbox"
                     checked={posParams.requerirTurno}
@@ -2897,7 +2898,7 @@ export default function POSPage() {
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <label className="text-sm text-slate-400">Imprimir ticket automáticamente al cobrar</label>
+                  <label className="text-sm !text-content-3">Imprimir ticket automáticamente al cobrar</label>
                   <input
                     type="checkbox"
                     checked={posParams.imprimirAuto}
@@ -2906,21 +2907,21 @@ export default function POSPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">Número de copias del ticket</label>
+                  <label className="block text-sm !text-content-3 mb-1">Número de copias del ticket</label>
                   <input
                     type="number"
                     min="1"
                     value={posParams.copiasTicket}
                     onChange={(e) => setPosParams({ ...posParams, copiasTicket: e.target.value })}
-                    className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                    className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">Moneda</label>
+                  <label className="block text-sm !text-content-3 mb-1">Moneda</label>
                   <select
                     value={posParams.moneda}
                     onChange={(e) => setPosParams({ ...posParams, moneda: e.target.value })}
-                    className="w-full px-3 py-2 rounded bg-slate-800 text-white"
+                    className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
                   >
                     <option value="MXN">MXN - Peso Mexicano</option>
                     <option value="USD">USD - Dólar Americano</option>
@@ -2932,7 +2933,7 @@ export default function POSPage() {
 
             <button
               onClick={() => alert("Parámetros guardados")}
-              className="w-full py-3 rounded bg-green-600 text-white font-medium hover:bg-green-700"
+              className="w-full py-3 rounded !bg-ok-solid !text-on-solid font-medium hover:bg-tono-ok-700"
             >
               Guardar Parámetros
             </button>
@@ -2955,22 +2956,22 @@ export default function POSPage() {
 
       {/* PANTALLA LOGIN CAJERO */}
       {showLoginScreen && (
-        <div className="fixed inset-0 bg-slate-950 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-xl p-8 w-96">
+        <div className="fixed inset-0 !bg-bg flex items-center justify-center z-50">
+          <div className="!bg-surface-1 rounded-xl p-8 w-96">
             <div className="text-center mb-6">
               <div className="text-4xl mb-2">🏪</div>
               <h2 className="text-2xl font-bold">POS Sistema</h2>
-              <p className="text-slate-400">Inicio de Cajero</p>
+              <p className="!text-content-3">Inicio de Cajero</p>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Seleccionar Cajero</label>
+                <label className="block text-sm !text-content-3 mb-1">Seleccionar Cajero</label>
                 <select
                   value={selectedCashier}
                   onChange={(e) => {
                     setSelectedCashier(e.target.value);
                   }}
-                  className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white"
+                  className="w-full px-4 py-2 rounded-lg border !border-line !bg-nav !text-content-1"
                 >
                   <option value="">Seleccionar...</option>
                   <option value="cajero1">Juan Pérez</option>
@@ -2979,19 +2980,19 @@ export default function POSPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">PIN de Cajero</label>
+                <label className="block text-sm !text-content-3 mb-1">PIN de Cajero</label>
                 <input
                   type="password"
                   maxLength={6}
                   value={cashierPin}
                   onChange={(e) => setCashierPin(e.target.value)}
                   placeholder="****"
-                  className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white text-center text-2xl tracking-widest"
+                  className="w-full px-4 py-2 rounded-lg border !border-line !bg-nav !text-content-1 text-center text-2xl tracking-widest"
                 />
               </div>
               <button
                 onClick={handleLogin}
-                className="w-full py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700"
+                className="w-full py-3 rounded-lg !bg-btn !text-on-solid font-semibold hover:!bg-btn-hover"
               >
                 Continuar
               </button>
@@ -3002,13 +3003,13 @@ export default function POSPage() {
 
       {/* MODAL HISTORIAL DE VENTAS */}
       {showSalesHistory && (
-        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-xl p-6 w-[800px] max-h-[80vh] overflow-hidden flex flex-col">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-scrim/50 flex items-center justify-center z-50">
+          <div className="!bg-surface-1 rounded-xl p-6 w-[800px] max-h-[80vh] overflow-hidden flex flex-col">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Historial de Ventas</h3>
               <button
                 onClick={() => setShowSalesHistory(false)}
-                className="text-slate-400 hover:text-white"
+                className="!text-content-3 hover:text-content-1"
               >
                 ✕
               </button>
@@ -3017,7 +3018,7 @@ export default function POSPage() {
               <button
                 onClick={() => setSalesFilter("all")}
                 className={`px-3 py-1 rounded text-sm ${
-                  salesFilter === "all" ? "bg-blue-600" : "bg-slate-700"
+                  salesFilter === "all" ? "!bg-btn" : "!bg-surface-2"
                 }`}
               >
                 Todas
@@ -3025,7 +3026,7 @@ export default function POSPage() {
               <button
                 onClick={() => setSalesFilter("PAGADA")}
                 className={`px-3 py-1 rounded text-sm ${
-                  salesFilter === "PAGADA" ? "bg-blue-600" : "bg-slate-700"
+                  salesFilter === "PAGADA" ? "!bg-btn" : "!bg-surface-2"
                 }`}
               >
                 Pagadas
@@ -3033,7 +3034,7 @@ export default function POSPage() {
               <button
                 onClick={() => setSalesFilter("CANCELADA")}
                 className={`px-3 py-1 rounded text-sm ${
-                  salesFilter === "CANCELADA" ? "bg-blue-600" : "bg-slate-700"
+                  salesFilter === "CANCELADA" ? "!bg-btn" : "!bg-surface-2"
                 }`}
               >
                 Canceladas
@@ -3041,7 +3042,7 @@ export default function POSPage() {
             </div>
             <div className="flex-1 overflow-auto">
               <table className="w-full min-w-[500px]">
-                <thead className="bg-slate-700 sticky top-0">
+                <thead className="!bg-surface-2 sticky top-0">
                   <tr>
                     <th className="px-4 py-2 text-left text-sm">Folio</th>
                     <th className="px-4 py-2 text-left text-sm">Fecha</th>
@@ -3050,9 +3051,9 @@ export default function POSPage() {
                     <th className="px-4 py-2 text-center text-sm">Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-700">
+                <tbody className="divide-y divide-tono-slate-700">
                   {salesHistory.map((sale) => (
-                    <tr key={sale.id} className="hover:bg-slate-700/50">
+                    <tr key={sale.id} className="hover:bg-tono-slate-700/50">
                       <td className="px-4 py-2 text-sm">{sale.folio}</td>
                       <td className="px-4 py-2 text-sm">{sale.fecha}</td>
                       <td className="px-4 py-2 text-right text-sm font-semibold">
@@ -3062,10 +3063,10 @@ export default function POSPage() {
                         <span
                           className={`px-2 py-1 rounded text-xs ${
                             sale.status === "PAGADA"
-                              ? "bg-green-900/40 text-green-300"
+                              ? "bg-tono-ok-900/40 !text-ok"
                               : sale.status === "DEVUELTA" || sale.status === "DEVOLUCION"
-                                ? "bg-amber-900/40 text-amber-300"
-                                : "bg-red-900/40 text-red-300"
+                                ? "bg-tono-amber-900/40 text-tono-amber-300"
+                                : "bg-tono-danger-900/40 !text-danger"
                           }`}
                         >
                           {sale.status}
@@ -3078,7 +3079,7 @@ export default function POSPage() {
                         {sale.status === "PAGADA" && sale.total > 0 && !sale.folio?.endsWith("-DEV") && puedeDevolver && (
                           <button
                             onClick={() => devolverVenta(sale.id)}
-                            className="px-2 py-1 rounded bg-red-600 text-xs hover:bg-red-700"
+                            className="px-2 py-1 rounded !bg-danger-solid text-xs hover:bg-tono-danger-700"
                           >
                             Devolver
                           </button>
@@ -3099,7 +3100,7 @@ export default function POSPage() {
             <div className="space-y-4">
               {/* Sección 1: Descuentos predefinidos */}
               <div>
-                <label className="block text-sm text-slate-400 mb-2">Descuentos predefinidos</label>
+                <label className="block text-sm !text-content-3 mb-2">Descuentos predefinidos</label>
                 <div className="flex flex-wrap gap-2">
                   {predefinedDiscounts.map((percent) => (
                     <button
@@ -3108,7 +3109,7 @@ export default function POSPage() {
                         setDiscountType('percentage');
                         setCustomDiscountValue(percent.toString());
                       }}
-                      className="px-3 py-2 rounded bg-slate-700 text-white hover:bg-slate-600 text-sm"
+                      className="px-3 py-2 rounded !bg-surface-2 !text-content-1 hover:!bg-surface-2 text-sm"
                     >
                       {percent}%
                     </button>
@@ -3118,17 +3119,17 @@ export default function POSPage() {
 
               {/* Sección 2: Descuento personalizado */}
               <div>
-                <label className="block text-sm text-slate-400 mb-2">Descuento personalizado</label>
+                <label className="block text-sm !text-content-3 mb-2">Descuento personalizado</label>
                 <div className="flex gap-2 mb-2">
                   <button
                     onClick={() => setDiscountType('percentage')}
-                    className={`flex-1 py-2 rounded ${discountType === 'percentage' ? 'bg-blue-600' : 'bg-slate-700'} text-white`}
+                    className={`flex-1 py-2 rounded ${discountType === 'percentage' ? '!bg-btn !text-on-solid' : '!bg-surface-2 !text-content-1'}`}
                   >
                     Porcentaje
                   </button>
                   <button
                     onClick={() => setDiscountType('fixed')}
-                    className={`flex-1 py-2 rounded ${discountType === 'fixed' ? 'bg-blue-600' : 'bg-slate-700'} text-white`}
+                    className={`flex-1 py-2 rounded ${discountType === 'fixed' ? '!bg-btn !text-on-solid' : '!bg-surface-2 !text-content-1'}`}
                   >
                     Monto fijo
                   </button>
@@ -3139,7 +3140,7 @@ export default function POSPage() {
                   value={customDiscountValue || discountPercent}
                   onChange={(e) => setCustomDiscountValue(e.target.value)}
                   placeholder={discountType === 'percentage' ? '0' : '0.00'}
-                  className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white"
+                  className="w-full px-4 py-2 rounded-lg border !border-line !bg-nav !text-content-1"
                 />
               </div>
 
@@ -3159,7 +3160,7 @@ export default function POSPage() {
                     }}
                     className="rounded"
                   />
-                  <label className="text-sm text-slate-400">Aplicar a todo el ticket</label>
+                  <label className="text-sm !text-content-3">Aplicar a todo el ticket</label>
                 </div>
                 {!selectAllProducts && (
                   <div className="max-h-32 overflow-y-auto space-y-1">
@@ -3179,7 +3180,7 @@ export default function POSPage() {
                           }}
                           className="rounded"
                         />
-                        <span className="text-sm text-white">{item.nombre}</span>
+                        <span className="text-sm !text-content-1">{item.nombre}</span>
                       </div>
                     ))}
                   </div>
@@ -3188,11 +3189,11 @@ export default function POSPage() {
 
               {/* Sección 4: Motivo */}
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Motivo *</label>
+                <label className="block text-sm !text-content-3 mb-1">Motivo *</label>
                 <select
                   value={discountReason}
                   onChange={(e) => setDiscountReason(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white"
+                  className="w-full px-4 py-2 rounded-lg border !border-line !bg-nav !text-content-1"
                 >
                   <option value="">Seleccionar motivo...</option>
                   <option value="promocion">Promoción</option>
@@ -3206,14 +3207,14 @@ export default function POSPage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowDiscountModal(false)}
-                  className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+                  className="flex-1 py-2 rounded !bg-surface-2 !text-content-1 hover:!bg-surface-2"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={applyGlobalDiscount}
                   data-primary
-                  className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                  className="flex-1 py-2 rounded !bg-btn !text-on-solid hover:!bg-btn-hover"
                 >
                   Aplicar descuento
                 </button>
@@ -3242,7 +3243,7 @@ export default function POSPage() {
                     }}
                     className="rounded"
                   />
-                  <label className="text-sm text-slate-400">Cortesía total del ticket</label>
+                  <label className="text-sm !text-content-3">Cortesía total del ticket</label>
                 </div>
                 {!selectAllCourtesy && (
                   <div className="max-h-32 overflow-y-auto space-y-1">
@@ -3262,7 +3263,7 @@ export default function POSPage() {
                           }}
                           className="rounded"
                         />
-                        <span className="text-sm text-white">{item.nombre}</span>
+                        <span className="text-sm !text-content-1">{item.nombre}</span>
                       </div>
                     ))}
                   </div>
@@ -3271,11 +3272,11 @@ export default function POSPage() {
 
               {/* Sección 2: Motivo */}
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Motivo *</label>
+                <label className="block text-sm !text-content-3 mb-1">Motivo *</label>
                 <select
                   value={courtesyReason}
                   onChange={(e) => setCourtesyReason(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white"
+                  className="w-full px-4 py-2 rounded-lg border !border-line !bg-nav !text-content-1"
                 >
                   <option value="">Seleccionar motivo...</option>
                   <option value="cortesia_ejecutiva">Cortesía ejecutiva</option>
@@ -3289,11 +3290,11 @@ export default function POSPage() {
 
               {/* Sección 3: Autorización */}
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Autorización *</label>
+                <label className="block text-sm !text-content-3 mb-1">Autorización *</label>
                 <select
                   value={courtesyAuthUser}
                   onChange={(e) => setCourtesyAuthUser(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white mb-2"
+                  className="w-full px-4 py-2 rounded-lg border !border-line !bg-nav !text-content-1 mb-2"
                 >
                   <option value="">Seleccionar autorizador...</option>
                   <option value="admin">Administrador</option>
@@ -3305,14 +3306,14 @@ export default function POSPage() {
                   value={courtesyAuthPin}
                   onChange={(e) => setCourtesyAuthPin(e.target.value)}
                   placeholder="PIN de autorización (4 dígitos)"
-                  className="w-full px-4 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white text-center"
+                  className="w-full px-4 py-2 rounded-lg border !border-line !bg-nav !text-content-1 text-center"
                 />
               </div>
 
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowCourtesyModal(false)}
-                  className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+                  className="flex-1 py-2 rounded !bg-surface-2 !text-content-1 hover:!bg-surface-2"
                 >
                   Cancelar
                 </button>
@@ -3320,7 +3321,7 @@ export default function POSPage() {
                   onClick={applyCourtesy}
                   data-primary
                   disabled={!courtesyReason || !courtesyAuthUser || !courtesyAuthPin}
-                  className="flex-1 py-2 rounded bg-purple-600 text-white hover:bg-purple-700 disabled:bg-slate-700 disabled:text-slate-500"
+                  className="flex-1 py-2 rounded bg-tono-purple-600 !text-on-strong hover:bg-tono-purple-700 disabled:bg-tono-slate-700 disabled:text-tinta-3"
                 >
                   Aplicar cortesía
                 </button>
@@ -3380,20 +3381,20 @@ export default function POSPage() {
 
       {/* MODAL TICKET DE VENTA */}
       {showReceipt && currentSale && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white text-black rounded-xl p-6 w-[400px] max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-scrim/50 flex items-center justify-center z-50">
+          <div id="print-area" className="!bg-surface-1 text-content-1 rounded-xl p-6 w-[400px] max-h-[90vh] overflow-y-auto">
             {/* Header del ticket */}
             <div className="text-center mb-4">
               {config.logoUrl && (
                 <img src={config.logoUrl} alt="Logo" className="w-20 h-20 mx-auto mb-2 object-contain" />
               )}
               <h3 className="text-xl font-bold">{config.companyName || 'Empresa'}</h3>
-              <p className="text-xs text-slate-600 mt-1">Dirección: Calle Demo #123, Col. Centro</p>
-              <p className="text-xs text-slate-600">RFC: XAXX010101000</p>
-              <p className="text-xs text-slate-600">Tel: (555) 123-4567</p>
-              <div className="border-t border-slate-300 my-2"></div>
+              <p className="text-xs text-content-3 mt-1">Dirección: Calle Demo {"#"}123, Col. Centro</p>
+              <p className="text-xs text-content-3">RFC: XAXX010101000</p>
+              <p className="text-xs text-content-3">Tel: (555) 123-4567</p>
+              <div className="border-t border-tono-slate-300 my-2"></div>
               <p className="text-sm font-semibold">Ticket #{currentSale.folio}</p>
-              <p className="text-xs text-slate-600">{new Date(currentSale.fecha).toLocaleString('es-MX')}</p>
+              <p className="text-xs text-content-3">{new Date(currentSale.fecha).toLocaleString('es-MX')}</p>
             </div>
 
             {/* Productos */}
@@ -3402,7 +3403,7 @@ export default function POSPage() {
                 <div key={index} className="flex justify-between">
                   <div className="flex-1">
                     <p className="font-medium">{item.nombre}</p>
-                    <p className="text-xs text-slate-600">
+                    <p className="text-xs text-content-3">
                       {item.cantidad} x ${Number(item.precioUnitario).toFixed(2)}
                     </p>
                   </div>
@@ -3412,13 +3413,13 @@ export default function POSPage() {
             </div>
 
             {/* Totales */}
-            <div className="border-t border-slate-300 pt-2 mt-2 space-y-1 text-sm">
+            <div className="border-t border-tono-slate-300 pt-2 mt-2 space-y-1 text-sm">
               <div className="flex justify-between">
                 <span>Subtotal</span>
                 <span>${Number(currentSale.subtotal ?? reciboIva.subtotal).toFixed(2)}</span>
               </div>
               {(currentSale.descuento ?? 0) > 0 && (
-                <div className="flex justify-between text-red-600">
+                <div className="flex justify-between text-danger">
                   <span>Descuento</span>
                   <span>-${Number(currentSale.descuento).toFixed(2)}</span>
                 </div>
@@ -3436,14 +3437,14 @@ export default function POSPage() {
                   </div>
                 ))
               )}
-              <div className="flex justify-between font-bold text-lg border-t border-slate-300 pt-2 mt-2">
+              <div className="flex justify-between font-bold text-lg border-t border-tono-slate-300 pt-2 mt-2">
                 <span>TOTAL</span>
                 <span>${Number(currentSale.total).toFixed(2)}</span>
               </div>
             </div>
 
             {/* Formas de pago */}
-            <div className="border-t border-slate-300 pt-2 mt-2">
+            <div className="border-t border-tono-slate-300 pt-2 mt-2">
               <p className="text-sm font-semibold mb-2">Formas de Pago:</p>
               {Array.isArray(currentSale.formasPago) ? currentSale.formasPago.map((pf: any, idx: number) => (
                 <div key={idx} className="text-xs flex justify-between">
@@ -3459,19 +3460,19 @@ export default function POSPage() {
             </div>
 
             {/* Mensaje opcional */}
-            <div className="border-t border-slate-300 pt-2 mt-2">
+            <div className="border-t border-tono-slate-300 pt-2 mt-2">
               <label className="text-sm font-semibold block mb-1">Mensaje (opcional):</label>
               <textarea
                 value={ticketMessage}
                 onChange={(e) => setTicketMessage(e.target.value)}
-                className="w-full p-2 border border-slate-300 rounded text-sm"
+                className="w-full p-2 border border-tono-slate-300 rounded text-sm"
                 rows={2}
                 placeholder="¡Gracias por su compra!"
               />
             </div>
 
             {/* Datos de facturación */}
-            <div className="border-t border-slate-300 pt-2 mt-2">
+            <div className="border-t border-tono-slate-300 pt-2 mt-2 print:hidden">
               <label className="flex items-center gap-2 text-sm font-semibold mb-2">
                 <input
                   type="checkbox"
@@ -3487,25 +3488,25 @@ export default function POSPage() {
                     value={invoiceRfc}
                     onChange={(e) => setInvoiceRfc(e.target.value)}
                     placeholder="RFC"
-                    className="w-full p-2 border border-slate-300 rounded text-sm"
+                    className="w-full p-2 border border-tono-slate-300 rounded text-sm"
                   />
                   <input
                     type="email"
                     value={invoiceEmail}
                     onChange={(e) => setInvoiceEmail(e.target.value)}
                     placeholder="Email para factura"
-                    className="w-full p-2 border border-slate-300 rounded text-sm"
+                    className="w-full p-2 border border-tono-slate-300 rounded text-sm"
                   />
                 </div>
               )}
             </div>
 
             {/* Botones */}
-            <div className="flex gap-2 mt-4">
+            <div className="flex gap-2 mt-4 print:hidden">
               <button
                 onClick={() => setShowReceipt(false)}
                 autoFocus
-                className="flex-1 py-2 rounded bg-slate-200 text-black hover:bg-slate-300"
+                className="flex-1 py-2 rounded bg-tono-slate-200 text-tono-ink hover:bg-tono-slate-300"
               >
                 Cerrar
               </button>
@@ -3514,7 +3515,7 @@ export default function POSPage() {
                   window.print();
                   setShowReceipt(false);
                 }}
-                className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                className="flex-1 py-2 rounded !bg-btn !text-on-solid hover:!bg-btn-hover"
               >
                 Imprimir
               </button>
@@ -3528,67 +3529,67 @@ export default function POSPage() {
         <ModalPOS size="md" title={editingProduct ? "Editar Producto" : "Nuevo Producto"} onClose={() => setShowProductModal(false)}>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Código</label>
+                <label className="block text-sm !text-content-3 mb-1">Código</label>
                 <input
                   type="text"
                   value={productForm.codigo}
                   onChange={(e) => setProductForm({ ...productForm, codigo: e.target.value })}
                   placeholder="Código del producto"
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                  className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Nombre *</label>
+                <label className="block text-sm !text-content-3 mb-1">Nombre *</label>
                 <input
                   {...propsTextoLibre("pos-producto-nombre")}
                   value={productForm.nombre}
                   onChange={(e) => setProductForm({ ...productForm, nombre: e.target.value })}
                   placeholder="Nombre del producto"
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                  className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Descripción</label>
+                <label className="block text-sm !text-content-3 mb-1">Descripción</label>
                 <textarea
                   value={productForm.descripcion}
                   onChange={(e) => setProductForm({ ...productForm, descripcion: e.target.value })}
                   placeholder="Descripción del producto"
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                  className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
                   rows={2}
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Precio *</label>
+                <label className="block text-sm !text-content-3 mb-1">Precio *</label>
                 <input
                   type="number"
                   step="0.01"
                   value={productForm.precio}
                   onChange={(e) => setProductForm({ ...productForm, precio: e.target.value })}
                   placeholder="0.00"
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                  className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Categoría</label>
+                <label className="block text-sm !text-content-3 mb-1">Categoría</label>
                 <input
                   type="text"
                   value={productForm.categoria}
                   onChange={(e) => setProductForm({ ...productForm, categoria: e.target.value })}
                   placeholder="Categoría"
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                  className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">URL Imagen</label>
+                <label className="block text-sm !text-content-3 mb-1">URL Imagen</label>
                 <input
                   type="text"
                   value={productForm.imagenUrl}
                   onChange={(e) => setProductForm({ ...productForm, imagenUrl: e.target.value })}
                   placeholder="https://..."
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                  className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
                 />
                 {productForm.imagenUrl && (
-                  <div className="mt-2 w-24 h-24 rounded bg-slate-700 overflow-hidden">
+                  <div className="mt-2 w-24 h-24 rounded !bg-surface-2 overflow-hidden">
                     <img 
                       src={productForm.imagenUrl} 
                       alt="Preview" 
@@ -3599,11 +3600,11 @@ export default function POSPage() {
                 )}
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Tipo</label>
+                <label className="block text-sm !text-content-3 mb-1">Tipo</label>
                 <select
                   value={productForm.tipo}
                   onChange={(e) => setProductForm({ ...productForm, tipo: e.target.value, recipeId: "", insumoId: "" })}
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                  className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
                 >
                   <option value="SIMPLE">Simple (retail)</option>
                   <option value="PREPARADO">Preparado (receta)</option>
@@ -3611,11 +3612,11 @@ export default function POSPage() {
               </div>
               {productForm.tipo === "PREPARADO" && (
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">Receta</label>
+                  <label className="block text-sm !text-content-3 mb-1">Receta</label>
                   <select
                     value={productForm.recipeId}
                     onChange={(e) => setProductForm({ ...productForm, recipeId: e.target.value })}
-                    className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                    className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
                   >
                     <option value="">{opcionesStockCargadas && opcionesStock.recetas.length === 0 ? "No hay recetas registradas" : "Seleccionar receta"}</option>
                     {opcionesStock.recetas.map((r) => (
@@ -3626,11 +3627,11 @@ export default function POSPage() {
               )}
               {productForm.tipo === "SIMPLE" && (
                 <div>
-                  <label className="block text-sm text-slate-400 mb-1">Insumo</label>
+                  <label className="block text-sm !text-content-3 mb-1">Insumo</label>
                   <select
                     value={productForm.insumoId}
                     onChange={(e) => setProductForm({ ...productForm, insumoId: e.target.value })}
-                    className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                    className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
                   >
                     <option value="">{opcionesStockCargadas && opcionesStock.insumos.length === 0 ? "No hay insumos registrados" : "Seleccionar insumo"}</option>
                     {opcionesStock.insumos.map((i) => (
@@ -3640,18 +3641,18 @@ export default function POSPage() {
                 </div>
               )}
               <div>
-                <label className="block text-sm text-slate-400 mb-1">IVA de este producto</label>
+                <label className="block text-sm !text-content-3 mb-1">IVA de este producto</label>
                 <select
                   value={productForm.tasaIva}
                   onChange={(e) => setProductForm({ ...productForm, tasaIva: e.target.value })}
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                  className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
                 >
                   <option value="">Usar la del negocio ({etiquetaTasa(ivaTasaDefault)})</option>
                   {TASAS_IVA.map((t) => (
                     <option key={t} value={t}>{t === "EXENTO" ? "Exento" : `${t}%`}</option>
                   ))}
                 </select>
-                <p className="text-xs text-slate-500 mt-1">Reemplaza la tasa del negocio solo para este producto.</p>
+                <p className="text-xs !text-content-3 mt-1">Reemplaza la tasa del negocio solo para este producto.</p>
               </div>
               <div className="flex items-center gap-2">
                 <input
@@ -3660,19 +3661,19 @@ export default function POSPage() {
                   onChange={(e) => setProductForm({ ...productForm, activo: e.target.checked })}
                   className="rounded"
                 />
-                <label className="text-sm text-slate-400">Activo</label>
+                <label className="text-sm !text-content-3">Activo</label>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowProductModal(false)}
-                  className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+                  className="flex-1 py-2 rounded !bg-surface-2 !text-content-1 hover:!bg-surface-2"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={guardarProducto}
                   disabled={guardandoProducto}
-                  className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
+                  className="flex-1 py-2 rounded !bg-btn !text-on-solid hover:!bg-btn-hover disabled:opacity-60"
                 >
                   {guardandoProducto ? "Guardando..." : "Guardar"}
                 </button>
@@ -3746,13 +3747,13 @@ export default function POSPage() {
       {/* MODAL CONFIRMACIÓN SALIR */}
       {showExitConfirmModal && (
         <ModalPOS size="sm" title={"¿Salir del POS?"} onClose={() => setShowExitConfirmModal(false)}>
-            <p className="text-sm text-slate-400 mb-6">
+            <p className="text-sm !text-content-3 mb-6">
               ¿Seguro que deseas salir? El turno quedará activo y podrás continuar después.
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => setShowExitConfirmModal(false)}
-                className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+                className="flex-1 py-2 rounded !bg-surface-2 !text-content-1 hover:!bg-surface-2"
               >
                 Cancelar
               </button>
@@ -3768,7 +3769,7 @@ export default function POSPage() {
                     navigate('/dashboard');
                   }
                 }}
-                className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                className="flex-1 py-2 rounded !bg-btn !text-on-solid hover:!bg-btn-hover"
               >
                 Salir
               </button>
@@ -3781,38 +3782,38 @@ export default function POSPage() {
         <ModalPOS size="sm" title={editingCategory ? "Editar Categoría" : "Nueva Categoría"} onClose={() => setShowCategoryModal(false)}>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Nombre *</label>
+                <label className="block text-sm !text-content-3 mb-1">Nombre *</label>
                 <input
                   {...propsTextoLibre("pos-categoria-nombre")}
                   value={categoryForm.nombre}
                   onChange={(e) => setCategoryForm({ ...categoryForm, nombre: e.target.value })}
                   placeholder="Nombre de la categoría"
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                  className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Color</label>
+                <label className="block text-sm !text-content-3 mb-1">Color</label>
                 <input
                   type="color"
                   value={categoryForm.color}
                   onChange={(e) => setCategoryForm({ ...categoryForm, color: e.target.value })}
-                  className="w-full h-10 rounded bg-slate-900"
+                  className="w-full h-10 rounded !bg-nav"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Descripción</label>
+                <label className="block text-sm !text-content-3 mb-1">Descripción</label>
                 <textarea
                   value={categoryForm.descripcion}
                   onChange={(e) => setCategoryForm({ ...categoryForm, descripcion: e.target.value })}
                   placeholder="Descripción"
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                  className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
                   rows={2}
                 />
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowCategoryModal(false)}
-                  className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+                  className="flex-1 py-2 rounded !bg-surface-2 !text-content-1 hover:!bg-surface-2"
                 >
                   Cancelar
                 </button>
@@ -3825,7 +3826,7 @@ export default function POSPage() {
                     }
                     setShowCategoryModal(false);
                   }}
-                  className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                  className="flex-1 py-2 rounded !bg-btn !text-on-solid hover:!bg-btn-hover"
                 >
                   Guardar
                 </button>
@@ -3839,29 +3840,29 @@ export default function POSPage() {
         <ModalPOS size="sm" title={editingArea ? "Editar Área" : "Nueva Área"} onClose={() => setShowAreaModal(false)}>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Nombre *</label>
+                <label className="block text-sm !text-content-3 mb-1">Nombre *</label>
                 <input
                   {...propsTextoLibre("pos-area-nombre")}
                   value={areaForm.nombre}
                   onChange={(e) => setAreaForm({ ...areaForm, nombre: e.target.value })}
                   placeholder="Nombre del área"
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                  className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Descripción</label>
+                <label className="block text-sm !text-content-3 mb-1">Descripción</label>
                 <textarea
                   value={areaForm.descripcion}
                   onChange={(e) => setAreaForm({ ...areaForm, descripcion: e.target.value })}
                   placeholder="Descripción"
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                  className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
                   rows={2}
                 />
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowAreaModal(false)}
-                  className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+                  className="flex-1 py-2 rounded !bg-surface-2 !text-content-1 hover:!bg-surface-2"
                 >
                   Cancelar
                 </button>
@@ -3874,7 +3875,7 @@ export default function POSPage() {
                     }
                     setShowAreaModal(false);
                   }}
-                  className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                  className="flex-1 py-2 rounded !bg-btn !text-on-solid hover:!bg-btn-hover"
                 >
                   Guardar
                 </button>
@@ -3888,31 +3889,31 @@ export default function POSPage() {
         <ModalPOS size="sm" title={editingMesa ? "Editar Mesa" : "Nueva Mesa"} onClose={() => setShowMesaModal(false)}>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Número *</label>
+                <label className="block text-sm !text-content-3 mb-1">Número *</label>
                 <input
                   type="text"
                   value={mesaForm.numero}
                   onChange={(e) => setMesaForm({ ...mesaForm, numero: e.target.value })}
                   placeholder="Número de mesa"
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                  className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Capacidad *</label>
+                <label className="block text-sm !text-content-3 mb-1">Capacidad *</label>
                 <input
                   type="number"
                   value={mesaForm.capacidad}
                   onChange={(e) => setMesaForm({ ...mesaForm, capacidad: e.target.value })}
                   placeholder="Capacidad de personas"
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                  className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Status</label>
+                <label className="block text-sm !text-content-3 mb-1">Status</label>
                 <select
                   value={mesaForm.status}
                   onChange={(e) => setMesaForm({ ...mesaForm, status: e.target.value })}
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                  className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
                 >
                   <option value="AVAILABLE">Disponible</option>
                   <option value="OCCUPIED">Ocupada</option>
@@ -3922,7 +3923,7 @@ export default function POSPage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowMesaModal(false)}
-                  className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+                  className="flex-1 py-2 rounded !bg-surface-2 !text-content-1 hover:!bg-surface-2"
                 >
                   Cancelar
                 </button>
@@ -3936,7 +3937,7 @@ export default function POSPage() {
                     ));
                     setShowMesaModal(false);
                   }}
-                  className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                  className="flex-1 py-2 rounded !bg-btn !text-on-solid hover:!bg-btn-hover"
                 >
                   Guardar
                 </button>
@@ -3950,35 +3951,35 @@ export default function POSPage() {
         <ModalPOS size="sm" title={editingShiftConfig ? "Editar Turno" : "Nuevo Turno"} onClose={() => setShowShiftConfigModal(false)}>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Nombre *</label>
+                <label className="block text-sm !text-content-3 mb-1">Nombre *</label>
                 <input
                   type="text"
                   value={shiftConfigForm.nombre}
                   onChange={(e) => setShiftConfigForm({ ...shiftConfigForm, nombre: e.target.value })}
                   placeholder="Ej: Matutino"
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                  className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Hora Inicio *</label>
+                <label className="block text-sm !text-content-3 mb-1">Hora Inicio *</label>
                 <input
                   type="time"
                   value={shiftConfigForm.horaInicio}
                   onChange={(e) => setShiftConfigForm({ ...shiftConfigForm, horaInicio: e.target.value })}
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                  className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Hora Fin *</label>
+                <label className="block text-sm !text-content-3 mb-1">Hora Fin *</label>
                 <input
                   type="time"
                   value={shiftConfigForm.horaFin}
                   onChange={(e) => setShiftConfigForm({ ...shiftConfigForm, horaFin: e.target.value })}
-                  className="w-full px-3 py-2 rounded bg-slate-900 text-white"
+                  className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Días Activos</label>
+                <label className="block text-sm !text-content-3 mb-1">Días Activos</label>
                 <div className="flex gap-2 flex-wrap">
                   {["L", "M", "X", "J", "V", "S", "D"].map((dia) => (
                     <button
@@ -3991,8 +3992,8 @@ export default function POSPage() {
                       }}
                       className={`px-3 py-1 rounded text-sm ${
                         shiftConfigForm.diasActivos.includes(dia)
-                          ? "bg-blue-600 text-white"
-                          : "bg-slate-700 text-slate-300"
+                          ? "!bg-btn !text-on-solid"
+                          : "!bg-surface-2 !text-content-2"
                       }`}
                     >
                       {dia}
@@ -4003,7 +4004,7 @@ export default function POSPage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowShiftConfigModal(false)}
-                  className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+                  className="flex-1 py-2 rounded !bg-surface-2 !text-content-1 hover:!bg-surface-2"
                 >
                   Cancelar
                 </button>
@@ -4016,7 +4017,7 @@ export default function POSPage() {
                     }
                     setShowShiftConfigModal(false);
                   }}
-                  className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                  className="flex-1 py-2 rounded !bg-btn !text-on-solid hover:!bg-btn-hover"
                 >
                   Guardar
                 </button>
@@ -4027,43 +4028,43 @@ export default function POSPage() {
 
       {/* MODAL CANCELAR VENTA */}
       {showReturnSaleModal && (
-        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-scrim/70 px-4">
+          <div className="w-full max-w-md rounded-2xl border !border-line !bg-nav p-6 shadow-2xl">
             <div className="mb-6">
-              <h3 className="text-2xl font-bold text-white">Devolver Venta</h3>
-              <p className="text-sm text-slate-400">
+              <h3 className="text-2xl font-bold !text-content-1">Devolver Venta</h3>
+              <p className="text-sm !text-content-3">
                 Se devuelve la venta completa: el inventario regresa (salvo lo que ya salió a cocina o barra,
                 que se registra como merma) y el reembolso se descuenta en el turno abierto.
               </p>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-slate-400 mb-2">Motivo de la devolución</label>
+                <label className="block text-sm !text-content-3 mb-2">Motivo de la devolución</label>
                 <textarea
                   value={returnSaleReason}
                   onChange={(e) => setReturnSaleReason(e.target.value)}
                   autoFocus
                   placeholder="Describe el motivo..."
                   rows={3}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full rounded-lg border !border-line !bg-surface-1 p-3 !text-content-1 focus:outline-none focus:ring-2 focus:ring-st-danger"
                 />
               </div>
               {returnSaleError && (
-                <div className="rounded-lg border border-red-800 bg-red-900/30 px-3 py-2 text-sm text-red-300">
+                <div className="rounded-lg border border-tono-danger-800 bg-tono-danger-900/30 px-3 py-2 text-sm !text-danger">
                   {returnSaleError}
                 </div>
               )}
               <div className="flex gap-3 justify-end">
                 <button
                   onClick={() => { setShowReturnSaleModal(false); setReturnSaleId(null); setReturnSaleReason(""); setReturnSaleError(""); }}
-                  className="px-4 py-2 rounded-lg bg-slate-700 text-white font-medium hover:bg-slate-600"
+                  className="px-4 py-2 rounded-lg !bg-surface-2 !text-content-1 font-medium hover:!bg-surface-2"
                 >
                   Cerrar
                 </button>
                 <button
                   onClick={confirmReturnSale}
                   disabled={!returnSaleReason.trim() || returningSale}
-                  className="px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 rounded-lg !bg-danger-solid !text-on-solid font-medium hover:bg-tono-danger-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {returningSale ? "Devolviendo..." : "Confirmar Devolución"}
                 </button>
@@ -4080,12 +4081,12 @@ export default function POSPage() {
             <div className="space-y-4">
               <button
                 onClick={downloadPOSCSVTemplate}
-                className="w-full px-4 py-3 rounded bg-slate-700 text-white hover:bg-slate-600 border border-slate-600"
+                className="w-full px-4 py-3 rounded !bg-surface-2 !text-content-1 hover:!bg-surface-2 border !border-line"
               >
                 📥 Descargar Plantilla CSV
               </button>
 
-              <div className="border-2 border-dashed border-slate-700 rounded-lg p-8 text-center">
+              <div className="border-2 border-dashed !border-line rounded-lg p-8 text-center">
                 <input
                   type="file"
                   accept=".csv"
@@ -4097,10 +4098,10 @@ export default function POSPage() {
                   htmlFor="pos-csv-upload"
                   className="cursor-pointer"
                 >
-                  <div className="text-slate-400 mb-2">
+                  <div className="!text-content-3 mb-2">
                     Arrastra tu archivo CSV aquí o haz clic para seleccionar
                   </div>
-                  <div className="text-sm text-slate-500">
+                  <div className="text-sm !text-content-3">
                     Formato: nombre, categoria, precio, impuesto, descripcion, estacion (COCINA o BARRA)
                   </div>
                 </label>
@@ -4109,9 +4110,9 @@ export default function POSPage() {
               {posCsvPreview.length > 0 && (
                 <div>
                   <h4 className="text-sm font-semibold mb-2">Vista Previa (primeras 5 filas):</h4>
-                  <div className="rounded-lg border border-slate-700 bg-slate-900 overflow-x-auto">
+                  <div className="rounded-lg border !border-line !bg-nav overflow-x-auto">
                     <table className="min-w-full text-xs">
-                      <thead className="text-slate-400">
+                      <thead className="!text-content-3">
                         <tr>
                           {Object.keys(posCsvPreview[0]).map(key => (
                             <th key={key} className="p-2 text-left">{key}</th>
@@ -4120,7 +4121,7 @@ export default function POSPage() {
                       </thead>
                       <tbody>
                         {posCsvPreview.map((row, i) => (
-                          <tr key={i} className="border-t border-slate-700">
+                          <tr key={i} className="border-t !border-line">
                             {Object.values(row).map((val: any, j) => (
                               <td key={j} className="p-2">{val}</td>
                             ))}
@@ -4133,14 +4134,14 @@ export default function POSPage() {
               )}
 
               {posCsvImportResult && (
-                <div className={`rounded-lg p-4 ${posCsvImportResult.success > 0 ? 'bg-green-900/30 border border-green-700' : 'bg-red-900/30 border border-red-700'}`}>
-                  <p className="text-white font-semibold">
+                <div className={`rounded-lg p-4 ${posCsvImportResult.success > 0 ? 'bg-tono-ok-900/30 border border-tono-ok-700' : 'bg-tono-danger-900/30 border border-tono-danger-700'}`}>
+                  <p className="!text-content-1 font-semibold">
                     {posCsvImportResult.success} productos importados correctamente
                   </p>
                   {posCsvImportResult.errors.length > 0 && (
                     <div className="mt-2">
-                      <p className="text-red-300 text-sm">{posCsvImportResult.errors.length} errores:</p>
-                      <ul className="text-xs text-red-300 mt-1 space-y-1">
+                      <p className="!text-danger text-sm">{posCsvImportResult.errors.length} errores:</p>
+                      <ul className="text-xs !text-danger mt-1 space-y-1">
                         {posCsvImportResult.errors.map((err: any, i) => (
                           <li key={i}>Fila {err.row}: {err.message}</li>
                         ))}
@@ -4159,14 +4160,14 @@ export default function POSPage() {
                   setPosCsvPreview([]);
                   setPosCsvImportResult(null);
                 }}
-                className="flex-1 py-2 rounded bg-slate-700 text-white hover:bg-slate-600"
+                className="flex-1 py-2 rounded !bg-surface-2 !text-content-1 hover:!bg-surface-2"
               >
                 Cancelar
               </button>
               <button
                 onClick={importPosProductsFromCSV}
                 disabled={!posCsvFile || isPosImporting}
-                className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40"
+                className="flex-1 py-2 rounded !bg-btn !text-on-solid hover:!bg-btn-hover disabled:opacity-40"
               >
                 {isPosImporting ? "Importando..." : "Importar"}
               </button>

@@ -128,6 +128,22 @@ async function capturar(browser, nombre, escena, skin) {
   await ESPERA(300);
   await page.screenshot({ path: join(SALIDA, `${nombre}__${skin}.png`), type: 'png' });
   const desborde = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+  // impresión (recibos): se emula el medio «print»; el papel debe quedar claro y el texto oscuro, sea cual sea la skin
+  let impresion = null;
+  if (escena.imprimible) {
+    await page.emulateMediaType('print');
+    await ESPERA(250);
+    await page.screenshot({ path: join(SALIDA, `${nombre}__${skin}__print.png`), type: 'png' });
+    impresion = await page.evaluate(() => {
+      const el = document.getElementById('print-area');
+      if (!el) return { areaImpresion: false };
+      const cs = getComputedStyle(el);
+      const lum = (c) => { const m = (c.match(/[0-9.]+/g) || [0, 0, 0]).map(Number); const l = m.slice(0, 3).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * l[0] + 0.7152 * l[1] + 0.0722 * l[2]; };
+      const texto = el.querySelector('h3, p, span') ? getComputedStyle(el.querySelector('h3, p, span')).color : cs.color;
+      return { areaImpresion: true, visible: cs.visibility, fondo: cs.backgroundColor, fondoClaro: lum(cs.backgroundColor) > 0.8, texto, textoOscuro: lum(texto) < 0.2 };
+    });
+    await page.emulateMediaType('screen');
+  }
   // contraste AA (axe-core en el navegador real)
   await page.evaluate(AXE);
   // Alto contraste se mide contra AAA (7:1: regla color-contrast-enhanced); el resto, contra AA (4.5:1)
@@ -163,19 +179,19 @@ async function capturar(browser, nombre, escena, skin) {
     if (!d) break;
   }
   await page.close();
-  return { axe, teclado, desborde, atajos };
+  return { axe, teclado, desborde, atajos, impresion };
 }
 
 mkdirSync(SALIDA, { recursive: true });
 const nombres = args.escenas && args.escenas !== 'todas' ? args.escenas.split(',') : Object.keys(ESCENAS);
 const srv = await servidor();
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, protocolTimeout: 60000, args: ['--no-sandbox', '--force-color-profile=srgb', '--font-render-hinting=none', '--disable-lcd-text'] });
-const axeTodo = {}, tecladoTodo = {}, desbordes = {}, atajosTodo = {};
+const axeTodo = {}, tecladoTodo = {}, desbordes = {}, atajosTodo = {}, impresionTodo = {};
 try {
   for (const n of nombres) for (const skin of SKINS) {
     let r;
     try { r = await capturar(browser, n, ESCENAS[n], skin); } catch (e) { console.log(`${n.padEnd(20)} ${skin.padEnd(7)} ESCENA FALLÓ: ${String(e.message).slice(0, 90)}`); continue; }
-    axeTodo[`${n}__${skin}`] = r.axe; tecladoTodo[`${n}__${skin}`] = r.teclado; desbordes[`${n}__${skin}`] = r.desborde; atajosTodo[`${n}__${skin}`] = r.atajos;
+    axeTodo[`${n}__${skin}`] = r.axe; tecladoTodo[`${n}__${skin}`] = r.teclado; desbordes[`${n}__${skin}`] = r.desborde; atajosTodo[`${n}__${skin}`] = r.atajos; if (r.impresion) impresionTodo[`${n}__${skin}`] = r.impresion;
     console.log(`${n.padEnd(20)} ${skin.padEnd(7)} contraste: ${String(r.axe.length).padStart(3)} fallos | foco: ${r.teclado.length} pasos | desborde: ${r.desborde ? 'SÍ' : 'no'}`);
   }
 } finally {
@@ -186,4 +202,5 @@ writeFileSync(join(SALIDA, 'axe.json'), JSON.stringify(axeTodo, null, 1));
 writeFileSync(join(SALIDA, 'teclado.json'), JSON.stringify(tecladoTodo, null, 1));
 writeFileSync(join(SALIDA, 'desborde.json'), JSON.stringify(desbordes, null, 1));
 writeFileSync(join(SALIDA, 'atajos.json'), JSON.stringify(atajosTodo, null, 1));
+writeFileSync(join(SALIDA, 'impresion.json'), JSON.stringify(impresionTodo, null, 1));
 process.exit(0);

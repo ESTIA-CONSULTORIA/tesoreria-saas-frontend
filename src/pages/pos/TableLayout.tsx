@@ -23,10 +23,10 @@ interface Props {
 }
 
 const STATUS_STYLE: Record<string, { bg: string; border: string; color: string; label: string }> = {
-  AVAILABLE: { bg: "#22C55E15", border: "#22C55E60", color: "#22C55E", label: "Disponible" },
-  OCCUPIED: { bg: "#EF444415", border: "#EF444460", color: "#EF4444", label: "Ocupada" },
-  RESERVED: { bg: "#F59E0B15", border: "#F59E0B60", color: "#F59E0B", label: "Reservada" },
-  DIRTY: { bg: "#94A3B815", border: "#94A3B860", color: "#94A3B8", label: "Por limpiar" },
+  AVAILABLE: { bg: "rgb(var(--st-ok) / 0.082)", border: "rgb(var(--st-ok) / 0.376)", color: "rgb(var(--st-ok))", label: "Disponible" },
+  OCCUPIED: { bg: "rgb(var(--st-danger) / 0.082)", border: "rgb(var(--st-danger) / 0.376)", color: "rgb(var(--st-danger))", label: "Ocupada" },
+  RESERVED: { bg: "rgb(var(--st-warn) / 0.082)", border: "rgb(var(--st-warn) / 0.376)", color: "rgb(var(--st-warn))", label: "Reservada" },
+  DIRTY: { bg: "rgb(var(--st-neutral) / 0.082)", border: "rgb(var(--st-neutral) / 0.376)", color: "rgb(var(--st-neutral))", label: "Por limpiar" },
 };
 
 export default function TableLayout({ tenantId, branchId, onSelectTable }: Props) {
@@ -56,12 +56,12 @@ export default function TableLayout({ tenantId, branchId, onSelectTable }: Props
   }
 
   if (loading) {
-    return <div className="p-4 text-sm" style={{ color: "#9A9A9A" }}>Cargando mesas...</div>;
+    return <div className="p-4 text-sm" style={{ color: "rgb(var(--text-3))" }}>Cargando mesas...</div>;
   }
 
   if (areas.length === 0) {
     return (
-      <div className="p-6 text-center" style={{ color: "#9A9A9A" }}>
+      <div className="p-6 text-center" style={{ color: "rgb(var(--text-3))" }}>
         <p className="text-sm">No hay áreas configuradas</p>
         <p className="text-xs mt-1">Configura las áreas en la sección de Configuración POS</p>
       </div>
@@ -72,7 +72,7 @@ export default function TableLayout({ tenantId, branchId, onSelectTable }: Props
     <div className="p-4 space-y-6">
       {areas.map((area) => (
         <div key={area.id}>
-          <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "#7E7E7E" }}>
+          <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "rgb(var(--text-3))" }}>
             {area.name}
           </h3>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
@@ -98,7 +98,7 @@ export default function TableLayout({ tenantId, branchId, onSelectTable }: Props
                   <div className="text-xs mt-0.5" style={{ color: style.color }}>
                     {style.label}
                   </div>
-                  <div className="text-xs" style={{ color: "#7E7E7E" }}>
+                  <div className="text-xs" style={{ color: "rgb(var(--text-3))" }}>
                     {table.capacity} pax
                   </div>
                 </button>

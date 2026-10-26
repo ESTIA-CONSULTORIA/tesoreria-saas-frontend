@@ -49,25 +49,25 @@ export default function CheckoutFast({ items, total, tableId, tableNumber, onPay
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.8)" }}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ backgroundColor: "rgb(var(--scrim) / 0.8)" }}>
       <div
         className="w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl p-5 space-y-4"
-        style={{ backgroundColor: "#161616", border: "1px solid #2D2D2D", maxHeight: "90vh", overflowY: "auto" }}
+        style={{ backgroundColor: "rgb(var(--surface-1))", border: "1px solid rgb(var(--border))", maxHeight: "90vh", overflowY: "auto" }}
       >
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-semibold" style={{ color: "#F5F5F5" }}>
+            <h3 className="font-semibold" style={{ color: "rgb(var(--text-1))" }}>
               {tableNumber ? `Mesa ${tableNumber}` : "Cobrar"}
             </h3>
-            <p className="text-xs" style={{ color: "#9A9A9A" }}>{items.length} producto(s)</p>
+            <p className="text-xs" style={{ color: "rgb(var(--text-3))" }}>{items.length} producto(s)</p>
           </div>
-          <button onClick={onCancel} style={{ color: "#9A9A9A" }}>✕</button>
+          <button onClick={onCancel} style={{ color: "rgb(var(--text-3))" }}>✕</button>
         </div>
 
         {/* Total */}
         <div className="text-center py-2">
-          <span className="text-3xl font-bold" style={{ color: "#F5F5F5" }}>
+          <span className="text-3xl font-bold" style={{ color: "rgb(var(--text-1))" }}>
             ${total.toLocaleString("es-MX", { minimumFractionDigits: 2 })}
           </span>
         </div>
@@ -80,9 +80,9 @@ export default function CheckoutFast({ items, total, tableId, tableNumber, onPay
               onClick={() => setSelectedMethod(m.key)}
               className="py-2 rounded-lg text-center"
               style={{
-                backgroundColor: selectedMethod === m.key ? "#F5F5F5" : "#1A1A1A",
-                color: selectedMethod === m.key ? "#0A0A0A" : "#9A9A9A",
-                border: `1px solid ${selectedMethod === m.key ? "#F5F5F5" : "#2D2D2D"}`,
+                backgroundColor: selectedMethod === m.key ? "rgb(var(--text-1))" : "rgb(var(--surface-alt))",
+                color: selectedMethod === m.key ? "rgb(var(--bg))" : "rgb(var(--text-3))",
+                border: `1px solid ${selectedMethod === m.key ? "rgb(var(--text-1))" : "rgb(var(--border))"}`,
               }}
             >
               <div className="text-lg">{m.icon}</div>
@@ -94,14 +94,14 @@ export default function CheckoutFast({ items, total, tableId, tableNumber, onPay
         {/* Cash amount input */}
         {selectedMethod === "EFECTIVO" && (
           <div>
-            <label className="text-xs mb-1 block" style={{ color: "#9A9A9A" }}>Monto recibido</label>
+            <label className="text-xs mb-1 block" style={{ color: "rgb(var(--text-3))" }}>Monto recibido</label>
             <input
               type="number"
               value={cash}
               onChange={(e) => setCash(e.target.value)}
               placeholder={`Mínimo $${total.toFixed(2)}`}
               className="w-full text-lg px-3 py-3 rounded-lg"
-              style={{ backgroundColor: "#0A0A0A", border: "1px solid #2D2D2D", color: "#F5F5F5" }}
+              style={{ backgroundColor: "rgb(var(--bg))", border: "1px solid rgb(var(--border))", color: "rgb(var(--text-1))" }}
               autoFocus
             />
             {/* Quick amounts */}
@@ -111,15 +111,15 @@ export default function CheckoutFast({ items, total, tableId, tableNumber, onPay
                   key={a}
                   onClick={() => setCash(String(a))}
                   className="flex-1 py-1.5 rounded text-xs"
-                  style={{ backgroundColor: "#1A1A1A", border: "1px solid #2D2D2D", color: "#9A9A9A" }}
+                  style={{ backgroundColor: "rgb(var(--surface-alt))", border: "1px solid rgb(var(--border))", color: "rgb(var(--text-3))" }}
                 >
                   ${a}
                 </button>
               ))}
             </div>
             {parsedCash >= total && parsedCash > 0 && (
-              <div className="mt-2 p-2 rounded-lg text-center" style={{ backgroundColor: "#22C55E15" }}>
-                <span className="text-sm font-semibold" style={{ color: "#22C55E" }}>
+              <div className="mt-2 p-2 rounded-lg text-center" style={{ backgroundColor: "rgb(var(--st-ok) / 0.082)" }}>
+                <span className="text-sm font-semibold" style={{ color: "rgb(var(--st-ok))" }}>
                   Cambio: ${change.toLocaleString("es-MX", { minimumFractionDigits: 2 })}
                 </span>
               </div>
@@ -129,7 +129,7 @@ export default function CheckoutFast({ items, total, tableId, tableNumber, onPay
 
         {esFormaTarjeta(selectedMethod) && (
           <div>
-            <label className="text-xs mb-1 block" style={{ color: "#9A9A9A" }}>Últimos 4 dígitos de la tarjeta *</label>
+            <label className="text-xs mb-1 block" style={{ color: "rgb(var(--text-3))" }}>Últimos 4 dígitos de la tarjeta *</label>
             <input
               type="text"
               inputMode="numeric"
@@ -139,9 +139,9 @@ export default function CheckoutFast({ items, total, tableId, tableNumber, onPay
               onChange={(e) => setUltimos4(soloUltimos4(e.target.value))}
               placeholder="1234"
               className="w-full text-lg px-3 py-3 rounded-lg"
-              style={{ backgroundColor: "#0A0A0A", border: "1px solid #2D2D2D", color: "#F5F5F5" }}
+              style={{ backgroundColor: "rgb(var(--bg))", border: "1px solid rgb(var(--border))", color: "rgb(var(--text-1))" }}
             />
-            {motivoTarjeta && <p className="mt-1 text-xs" style={{ color: "#F59E0B" }}>{motivoTarjeta}</p>}
+            {motivoTarjeta && <p className="mt-1 text-xs" style={{ color: "rgb(var(--st-warn))" }}>{motivoTarjeta}</p>}
           </div>
         )}
 
@@ -151,8 +151,8 @@ export default function CheckoutFast({ items, total, tableId, tableNumber, onPay
           disabled={processing || !!motivoTarjeta || (selectedMethod === "EFECTIVO" && parsedCash < total && parsedCash > 0)}
           className="w-full py-3 rounded-xl font-semibold text-base"
           style={{
-            backgroundColor: processing ? "#2D2D2D" : "#F5F5F5",
-            color: processing ? "#7E7E7E" : "#0A0A0A",
+            backgroundColor: processing ? "rgb(var(--surface-3))" : "rgb(var(--text-1))",
+            color: processing ? "rgb(var(--text-3))" : "rgb(var(--bg))",
           }}
         >
           {processing ? "Procesando..." : `Cobrar $${total.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`}

@@ -12,7 +12,7 @@ interface Props {
   onError: (m: string) => void;
 }
 
-const inputCls = 'rounded-lg bg-slate-900 border border-slate-700 px-3 py-3 text-base text-white w-full';
+const inputCls = 'rounded-lg !bg-nav border !border-line px-3 py-3 text-base !text-content-1 w-full';
 const btnCls = 'rounded-lg px-4 py-3 text-sm font-semibold min-h-[44px]';
 
 export default function ConfigMesas({ areas, sucursalId, api, onCambio, onError }: Props) {
@@ -34,18 +34,18 @@ export default function ConfigMesas({ areas, sucursalId, api, onCambio, onError 
   }
 
   if (!sucursalId) {
-    return <p className="p-4 text-sm text-amber-300">Selecciona una sucursal activa para configurar áreas y mesas.</p>;
+    return <p className="p-4 text-sm text-tono-amber-300">Selecciona una sucursal activa para configurar áreas y mesas.</p>;
   }
 
   return (
     <div className="space-y-4 p-4">
-      <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-        <h3 className="mb-2 text-base font-semibold text-white">Nueva área</h3>
+      <div className="rounded-xl border !border-line !bg-nav p-4">
+        <h3 className="mb-2 text-base font-semibold !text-content-1">Nueva área</h3>
         <div className="flex gap-2">
           <input className={inputCls} placeholder="Nombre (Salón, Terraza…)" value={nuevaArea} onChange={(e) => setNuevaArea(e.target.value)} />
           <button
             disabled={ocupado || !nuevaArea.trim()}
-            className={`${btnCls} bg-blue-600 text-white disabled:opacity-40`}
+            className={`${btnCls} !bg-btn !text-on-solid disabled:opacity-40`}
             onClick={() => run(async () => { await api.crearArea({ name: nuevaArea.trim(), branchId: sucursalId }); setNuevaArea(''); })}
           >
             Crear
@@ -57,19 +57,19 @@ export default function ConfigMesas({ areas, sucursalId, api, onCambio, onError 
         const f = nuevaMesa[area.id] ?? { number: '', capacity: '4' };
         const nombre = editArea[area.id] ?? area.name;
         return (
-          <div key={area.id} className={`rounded-xl border border-slate-800 bg-slate-900 p-4 ${area.isActive === false ? 'opacity-60' : ''}`}>
+          <div key={area.id} className={`rounded-xl border !border-line !bg-nav p-4 ${area.isActive === false ? 'opacity-60' : ''}`}>
             <div className="mb-3 flex flex-wrap items-center gap-2">
               <input className={`${inputCls} max-w-xs`} value={nombre} onChange={(e) => setEditArea({ ...editArea, [area.id]: e.target.value })} />
               <button
                 disabled={ocupado || !nombre.trim() || nombre === area.name}
-                className={`${btnCls} bg-slate-700 text-white disabled:opacity-40`}
+                className={`${btnCls} !bg-surface-2 !text-content-1 disabled:opacity-40`}
                 onClick={() => run(() => api.editarArea(area.id, { name: nombre.trim() }))}
               >
                 Guardar nombre
               </button>
               <button
                 disabled={ocupado}
-                className={`${btnCls} ${area.isActive === false ? 'bg-green-700' : 'bg-red-800'} text-white`}
+                className={`${btnCls} ${area.isActive === false ? '!bg-ok-solid !text-on-solid' : '!bg-danger-soft !text-danger'}`}
                 onClick={() => run(() => api.editarArea(area.id, { isActive: area.isActive === false }))}
               >
                 {area.isActive === false ? 'Reactivar área' : 'Desactivar área'}
@@ -87,7 +87,7 @@ export default function ConfigMesas({ areas, sucursalId, api, onCambio, onError 
               <input className={`${inputCls} max-w-[8rem]`} inputMode="numeric" placeholder="Personas" value={f.capacity} onChange={(e) => setNuevaMesa({ ...nuevaMesa, [area.id]: { ...f, capacity: e.target.value } })} />
               <button
                 disabled={ocupado || !(Number(f.number) > 0) || !(Number(f.capacity) > 0)}
-                className={`${btnCls} bg-blue-600 text-white disabled:opacity-40`}
+                className={`${btnCls} !bg-btn !text-on-solid disabled:opacity-40`}
                 onClick={() => run(async () => {
                   await api.crearMesa({ number: Number(f.number), capacity: Number(f.capacity), areaId: area.id, branchId: sucursalId });
                   setNuevaMesa({ ...nuevaMesa, [area.id]: { number: '', capacity: f.capacity } });
@@ -99,7 +99,7 @@ export default function ConfigMesas({ areas, sucursalId, api, onCambio, onError 
           </div>
         );
       })}
-      {areas.length === 0 && <p className="text-sm text-slate-400">Aún no hay áreas: crea la primera arriba.</p>}
+      {areas.length === 0 && <p className="text-sm !text-content-3">Aún no hay áreas: crea la primera arriba.</p>}
     </div>
   );
 }
@@ -114,14 +114,14 @@ function MesaFila({ mesa, ocupado, onGuardar }: {
   const cambio = Number(numero) !== mesa.number || Number(cap) !== mesa.capacity;
   const inactiva = mesa.isActive === false;
   return (
-    <div className={`flex items-center gap-2 rounded-lg border border-slate-700 p-2 ${inactiva ? 'opacity-50' : ''}`}>
-      <span className="text-xs text-slate-400">Mesa</span>
+    <div className={`flex items-center gap-2 rounded-lg border !border-line p-2 ${inactiva ? 'opacity-50' : ''}`}>
+      <span className="text-xs !text-content-3">Mesa</span>
       <input className={`${inputCls} max-w-[5rem]`} inputMode="numeric" value={numero} onChange={(e) => setNumero(e.target.value)} />
       <input className={`${inputCls} max-w-[5rem]`} inputMode="numeric" title="Personas" value={cap} onChange={(e) => setCap(e.target.value)} />
-      <button disabled={ocupado || !cambio || !(Number(numero) > 0) || !(Number(cap) > 0)} className={`${btnCls} bg-slate-700 text-white disabled:opacity-40`} onClick={() => onGuardar({ number: Number(numero), capacity: Number(cap) })}>
+      <button disabled={ocupado || !cambio || !(Number(numero) > 0) || !(Number(cap) > 0)} className={`${btnCls} !bg-surface-2 !text-content-1 disabled:opacity-40`} onClick={() => onGuardar({ number: Number(numero), capacity: Number(cap) })}>
         OK
       </button>
-      <button disabled={ocupado || (!inactiva && mesa.status === 'OCCUPIED')} title={mesa.status === 'OCCUPIED' ? 'Tiene una cuenta abierta' : ''} className={`${btnCls} ${inactiva ? 'bg-green-700' : 'bg-red-800'} text-white disabled:opacity-40`} onClick={() => onGuardar({ isActive: inactiva })}>
+      <button disabled={ocupado || (!inactiva && mesa.status === 'OCCUPIED')} title={mesa.status === 'OCCUPIED' ? 'Tiene una cuenta abierta' : ''} className={`${btnCls} ${inactiva ? '!bg-ok-solid !text-on-solid' : '!bg-danger-soft !text-danger'} disabled:opacity-40`} onClick={() => onGuardar({ isActive: inactiva })}>
         {inactiva ? 'Activar' : 'Desactivar'}
       </button>
     </div>

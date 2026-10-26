@@ -7,3 +7,10 @@
     .bg-green-500, .bg-green-600, .bg-green-700, .bg-red-500, .bg-red-600, .bg-red-700, .bg-yellow-500, .bg-amber-500) :is(.text-white, .text-gray-100, .text-slate-100) {
   color: rgb(var(--on-solid)) !important;
 }
+
+/* Lo mismo para los botones ya migrados a tokens (bg-btn, bg-ok-solid… y los tonos sólidos): su texto, y el de sus iconos, es --on-solid salvo que la
+   propia clase diga otra cosa (text-on-yellow, text-on-strong, !text-…). Sin !important, así que una clase de texto explícita gana. */
+:is(.bg-btn, .\!bg-btn, .bg-ok-solid, .\!bg-ok-solid, .bg-danger-solid, .\!bg-danger-solid, .bg-warn-solid, .\!bg-warn-solid,
+    .bg-tono-indigo-700, .bg-tono-amber-700, .bg-tono-yellow-700) {
+  color: rgb(var(--on-solid));
+}

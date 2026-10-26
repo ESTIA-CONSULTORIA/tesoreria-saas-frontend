@@ -1,3 +1,4 @@
+import { IMPRESION } from './impresionClara';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
@@ -375,17 +376,17 @@ export default function CorteCajaLite() {
     if (!win) return;
     win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
-      body { font-family: 'Courier New', monospace; font-size: 13px; padding: 24px; max-width: 320px; color: #111; }
+      body { font-family: 'Courier New', monospace; font-size: 13px; padding: 24px; max-width: 320px; color: ${IMPRESION.tinta}; }
       .center { text-align: center; }
       .bold { font-weight: 700; }
-      .sep { border: none; border-top: 1px dashed #999; margin: 12px 0; }
+      .sep { border: none; border-top: 1px dashed ${IMPRESION.linea}; margin: 12px 0; }
       .row { display: flex; justify-content: space-between; padding: 4px 0; }
       .total { font-size: 16px; font-weight: 700; }
-      .footer { font-size: 10px; color: #999; margin-top: 16px; text-align: center; letter-spacing: 0.1em; }
+      .footer { font-size: 10px; color: ${IMPRESION.tintaTenue}; margin-top: 16px; text-align: center; letter-spacing: 0.1em; }
     </style></head><body>
     <div class="center bold" style="font-size:15px; letter-spacing:0.05em;">${selectedCompany?.tradeName || selectedCompany?.legalName}</div>
-    <div class="center" style="font-size:11px; margin-top:4px; color:#666;">CORTE DEL DÍA</div>
-    <div class="center" style="font-size:11px; color:#666;">${fecha} · ${hora}</div>
+    <div class="center" style="font-size:11px; margin-top:4px; color:${IMPRESION.tintaSuave};">CORTE DEL DÍA</div>
+    <div class="center" style="font-size:11px; color:${IMPRESION.tintaSuave};">${fecha} · ${hora}</div>
     <hr class="sep">
     <div class="row"><span>Efectivo</span><span>$${totales.efectivo.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span></div>
     <div class="row"><span>Tarjeta</span><span>$${totales.tarjeta.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span></div>
@@ -403,22 +404,22 @@ export default function CorteCajaLite() {
   };
 
   if (!tenantId) return (
-    <div style={{ position: 'fixed', inset: 0, background: '#f0f4f8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ fontSize: 13, color: '#94a3b8', letterSpacing: '0.1em', textTransform: 'uppercase' }}>URL incorrecta · Contacta a tu administrador</div>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgb(var(--papel-bg))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ fontSize: 13, color: 'rgb(var(--tinta-3))', letterSpacing: '0.1em', textTransform: 'uppercase' }}>URL incorrecta · Contacta a tu administrador</div>
     </div>
   );
 
   const PIN_KEYS = ['1','2','3','4','5','6','7','8','9','','0','del'];
 
   const shared = {
-    outer: { position: 'fixed' as const, inset: 0, background: '#f0f4f8', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-    wrap: { width: '100%', maxWidth: 420, height: '100%', maxHeight: 860, background: '#ffffff', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', borderRadius: window.innerWidth > 500 ? 20 : 0, boxShadow: '0 4px 40px rgba(0,0,0,0.08)' },
-    header: { padding: '32px 32px 24px', borderBottom: '1px solid #f1f5f9', flexShrink: 0 },
-    logo: { fontSize: 9, letterSpacing: '0.35em', color: '#94a3b8', textTransform: 'uppercase' as const, marginBottom: 8 },
-    title: { fontSize: 22, fontWeight: 600, color: '#111827', letterSpacing: '-0.01em' },
+    outer: { position: 'fixed' as const, inset: 0, background: 'rgb(var(--papel-bg))', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+    wrap: { width: '100%', maxWidth: 420, height: '100%', maxHeight: 860, background: 'rgb(var(--papel))', display: 'flex', flexDirection: 'column' as const, overflow: 'hidden', borderRadius: window.innerWidth > 500 ? 20 : 0, boxShadow: '0 4px 40px rgb(var(--scrim) / 0.08)' },
+    header: { padding: '32px 32px 24px', borderBottom: '1px solid rgb(var(--papel-linea-2))', flexShrink: 0 },
+    logo: { fontSize: 9, letterSpacing: '0.35em', color: 'rgb(var(--tinta-3))', textTransform: 'uppercase' as const, marginBottom: 8 },
+    title: { fontSize: 22, fontWeight: 600, color: 'rgb(var(--tinta-1))', letterSpacing: '-0.01em' },
     content: { flex: 1, overflowY: 'auto' as const, overflowX: 'hidden' as const, padding: '32px' },
-    btnWhatsApp: { width: '100%', padding: 18, borderRadius: 14, border: 'none', background: '#128C7E', color: '#fff', fontSize: 16, fontWeight: 500, cursor: 'pointer', letterSpacing: '0.01em' },
-    btnSecondary: { width: '100%', padding: 17, borderRadius: 14, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#475569', fontSize: 15, cursor: 'pointer', fontWeight: 400 },
+    btnWhatsApp: { width: '100%', padding: 18, borderRadius: 14, border: 'none', background: 'rgb(var(--papel-whats))', color: 'rgb(var(--papel))', fontSize: 16, fontWeight: 500, cursor: 'pointer', letterSpacing: '0.01em' },
+    btnSecondary: { width: '100%', padding: 17, borderRadius: 14, border: '1px solid rgb(var(--papel-linea))', background: 'rgb(var(--papel-soft))', color: 'rgb(var(--tinta-2))', fontSize: 15, cursor: 'pointer', fontWeight: 400 },
   };
 
   return (
@@ -433,15 +434,15 @@ export default function CorteCajaLite() {
             </div>
             <div style={shared.content}>
               {companies.length === 0 ? (
-                <div style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', marginTop: 60, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Cargando...</div>
+                <div style={{ color: 'rgb(var(--tinta-3))', fontSize: 13, textAlign: 'center', marginTop: 60, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Cargando...</div>
               ) : companies.map((c: any) => (
                 <button key={c.id}
                   onClick={() => { setSelectedCompany(c); setPin(''); setError(''); setScreen('pin'); }}
-                  style={{ width: '100%', padding: '22px 24px', marginBottom: 10, border: '1px solid #e2e8f0', borderLeft: '3px solid #3b82f6', background: '#f8fafc', borderRadius: 14, cursor: 'pointer', textAlign: 'left' }}>
-                  <div style={{ fontSize: 18, fontWeight: 600, color: '#111827', letterSpacing: '0em' }}>
+                  style={{ width: '100%', padding: '22px 24px', marginBottom: 10, border: '1px solid rgb(var(--papel-linea))', borderLeft: '3px solid rgb(var(--papel-azul))', background: 'rgb(var(--papel-soft))', borderRadius: 14, cursor: 'pointer', textAlign: 'left' }}>
+                  <div style={{ fontSize: 18, fontWeight: 600, color: 'rgb(var(--tinta-1))', letterSpacing: '0em' }}>
                     {c.tradeName || c.legalName}
                   </div>
-                  <div style={{ fontSize: 12, color: '#3b82f6', marginTop: 6, letterSpacing: '0.05em', fontWeight: 500 }}>
+                  <div style={{ fontSize: 12, color: 'rgb(var(--papel-azul))', marginTop: 6, letterSpacing: '0.05em', fontWeight: 500 }}>
                     Acceder →
                   </div>
                 </button>
@@ -460,25 +461,25 @@ export default function CorteCajaLite() {
               <div style={shared.title}>{selectedCompany?.tradeName || selectedCompany?.legalName}</div>
             </div>
             <div style={{ ...shared.content, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 40 }}>
-              <div style={{ fontSize: 13, color: '#64748b', marginBottom: 36, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Ingresa tu NIP</div>
+              <div style={{ fontSize: 13, color: 'rgb(var(--tinta-3))', marginBottom: 36, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Ingresa tu NIP</div>
               <div style={{ display: 'flex', gap: 20, marginBottom: 48 }}>
                 {[0,1,2,3].map(i => (
-                  <div key={i} style={{ width: 14, height: 14, borderRadius: '50%', background: pin.length > i ? '#1d4ed8' : '#e2e8f0', transition: 'all 0.2s', boxShadow: pin.length > i ? '0 0 12px rgba(29,78,216,0.3)' : 'none' }} />
+                  <div key={i} style={{ width: 14, height: 14, borderRadius: '50%', background: pin.length > i ? 'rgb(var(--papel-azul))' : 'rgb(var(--papel-linea))', transition: 'all 0.2s', boxShadow: pin.length > i ? '0 0 12px rgb(var(--papel-azul) / 0.3)' : 'none' }} />
                 ))}
               </div>
-              {error && <div style={{ color: '#dc2626', fontSize: 14, marginBottom: 20, letterSpacing: '0.02em', fontWeight: 500 }}>{error}</div>}
+              {error && <div style={{ color: 'rgb(var(--papel-rojo))', fontSize: 14, marginBottom: 20, letterSpacing: '0.02em', fontWeight: 500 }}>{error}</div>}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, width: '100%', maxWidth: 300 }}>
                 {PIN_KEYS.map((k, i) => (
                   <button key={i}
-                    style={{ padding: '22px 8px', borderRadius: 14, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#111827', fontSize: 28, fontWeight: 400, cursor: 'pointer', letterSpacing: '-0.02em', opacity: k === '' ? 0 : 1, pointerEvents: k === '' ? 'none' : 'auto' }}
+                    style={{ padding: '22px 8px', borderRadius: 14, border: '1px solid rgb(var(--papel-linea))', background: 'rgb(var(--papel-soft))', color: 'rgb(var(--tinta-1))', fontSize: 28, fontWeight: 400, cursor: 'pointer', letterSpacing: '-0.02em', opacity: k === '' ? 0 : 1, pointerEvents: k === '' ? 'none' : 'auto' }}
                     onClick={() => k !== '' && !loading && handlePin(k)}>
                     {k === 'del' ? '←' : k}
                   </button>
                 ))}
               </div>
-              {loading && <div style={{ color: '#64748b', fontSize: 13, marginTop: 24, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Verificando...</div>}
+              {loading && <div style={{ color: 'rgb(var(--tinta-3))', fontSize: 13, marginTop: 24, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Verificando...</div>}
               <button onClick={() => { setScreen('empresa'); setPin(''); setError(''); }}
-                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: 13, cursor: 'pointer', marginTop: 40, letterSpacing: '0.05em' }}>
+                style={{ background: 'none', border: 'none', color: 'rgb(var(--tinta-3))', fontSize: 13, cursor: 'pointer', marginTop: 40, letterSpacing: '0.05em' }}>
                 Cambiar sucursal
               </button>
             </div>
@@ -488,10 +489,10 @@ export default function CorteCajaLite() {
 
       {/* Modal: Fondo inicial de caja (turno nuevo) */}
       {showFondoModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div style={{ width: '100%', maxWidth: 360, background: '#ffffff', borderRadius: 20, padding: 28, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
-            <div style={{ fontSize: 10, letterSpacing: '0.2em', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 6 }}>Nuevo turno</div>
-            <div style={{ fontSize: 19, fontWeight: 700, color: '#111827', marginBottom: 20 }}>Fondo inicial de caja</div>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgb(var(--papel-navy) / 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ width: '100%', maxWidth: 360, background: 'rgb(var(--papel))', borderRadius: 20, padding: 28, boxShadow: '0 20px 60px rgb(var(--scrim) / 0.2)' }}>
+            <div style={{ fontSize: 10, letterSpacing: '0.2em', color: 'rgb(var(--tinta-3))', textTransform: 'uppercase', marginBottom: 6 }}>Nuevo turno</div>
+            <div style={{ fontSize: 19, fontWeight: 700, color: 'rgb(var(--tinta-1))', marginBottom: 20 }}>Fondo inicial de caja</div>
             <input
               type="number"
               inputMode="decimal"
@@ -499,19 +500,19 @@ export default function CorteCajaLite() {
               placeholder="0.00"
               value={fondoInicialInput}
               onChange={e => setFondoInicialInput(e.target.value)}
-              style={{ width: '100%', padding: '16px 14px', borderRadius: 12, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#111827', fontSize: 22, fontWeight: 600, marginBottom: 16, boxSizing: 'border-box' }}
+              style={{ width: '100%', padding: '16px 14px', borderRadius: 12, border: '1px solid rgb(var(--papel-linea))', background: 'rgb(var(--papel-soft))', color: 'rgb(var(--tinta-1))', fontSize: 22, fontWeight: 600, marginBottom: 16, boxSizing: 'border-box' }}
             />
-            {error && <div style={{ color: '#dc2626', fontSize: 13, marginBottom: 12, fontWeight: 500 }}>{error}</div>}
+            {error && <div style={{ color: 'rgb(var(--papel-rojo))', fontSize: 13, marginBottom: 12, fontWeight: 500 }}>{error}</div>}
             <button onClick={confirmFondoInicial} disabled={loading} style={{
               width: '100%', padding: 16, borderRadius: 12, border: 'none',
-              background: '#1d4ed8', color: '#ffffff', fontSize: 15, fontWeight: 600,
+              background: 'rgb(var(--papel-azul))', color: 'rgb(var(--papel))', fontSize: 15, fontWeight: 600,
               cursor: 'pointer', fontFamily: 'inherit', marginBottom: 10,
             }}>
               {loading ? 'Abriendo turno...' : 'Confirmar y abrir turno'}
             </button>
             <button onClick={cancelFondoInicial} disabled={loading} style={{
               width: '100%', padding: 14, borderRadius: 12, border: 'none',
-              background: 'none', color: '#94a3b8', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
+              background: 'none', color: 'rgb(var(--tinta-3))', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
             }}>
               Cancelar
             </button>
@@ -521,32 +522,32 @@ export default function CorteCajaLite() {
 
       {/* PANTALLA: Corte */}
       {screen === 'corte' && (
-        <div style={{ position: 'fixed', inset: 0, background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgb(var(--papel))', display: 'flex', flexDirection: 'column' }}>
 
           {/* Header */}
-          <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid #f1f5f9', flexShrink: 0 }}>
+          <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid rgb(var(--papel-linea-2))', flexShrink: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <div style={{ fontSize: 10, letterSpacing: '0.2em', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 4 }}>ESTIA ERP</div>
-                <div style={{ fontSize: 19, fontWeight: 700, color: '#111827' }}>
+                <div style={{ fontSize: 10, letterSpacing: '0.2em', color: 'rgb(var(--tinta-3))', textTransform: 'uppercase', marginBottom: 4 }}>ESTIA ERP</div>
+                <div style={{ fontSize: 19, fontWeight: 700, color: 'rgb(var(--tinta-1))' }}>
                   {selectedCompany?.tradeName || selectedCompany?.legalName}
                 </div>
-                <div style={{ fontSize: 13, color: '#64748b', marginTop: 3 }}>
+                <div style={{ fontSize: 13, color: 'rgb(var(--tinta-3))', marginTop: 3 }}>
                   {new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={handleBloquear} style={{
-                  background: 'none', border: '1px solid rgba(0,0,0,0.15)',
-                  color: 'rgba(0,0,0,0.35)', fontSize: 10, padding: '4px 10px',
+                  background: 'none', border: '1px solid rgb(var(--scrim) / 0.15)',
+                  color: 'rgb(var(--scrim) / 0.35)', fontSize: 10, padding: '4px 10px',
                   borderRadius: 8, cursor: 'pointer', letterSpacing: '0.08em',
                   fontFamily: 'inherit',
                 }}>
                   BLOQUEAR
                 </button>
                 <button onClick={() => { setShowInsumos(true); loadInsumos(); loadInsumosCatalogo(); }} style={{
-                  background: '#f1f5f9', border: '1px solid #e2e8f0',
-                  color: '#475569', fontSize: 12, padding: '6px 14px',
+                  background: 'rgb(var(--papel-linea-2))', border: '1px solid rgb(var(--papel-linea))',
+                  color: 'rgb(var(--tinta-2))', fontSize: 12, padding: '6px 14px',
                   borderRadius: 8, cursor: 'pointer', letterSpacing: '0.05em',
                   fontFamily: 'inherit', fontWeight: 500,
                 }}>
@@ -564,17 +565,17 @@ export default function CorteCajaLite() {
                 <div onClick={() => { setActiveField(f.key); setInputValue(''); }}
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '18px 0', borderBottom: '1px solid #f1f5f9',
+                    padding: '18px 0', borderBottom: '1px solid rgb(var(--papel-linea-2))',
                     cursor: 'pointer',
                   }}>
-                  <span style={{ fontSize: 17, fontWeight: activeField === f.key ? 600 : 400, color: activeField === f.key ? '#1d4ed8' : '#374151' }}>
+                  <span style={{ fontSize: 17, fontWeight: activeField === f.key ? 600 : 400, color: activeField === f.key ? 'rgb(var(--papel-azul))' : 'rgb(var(--tinta-5))' }}>
                     {f.label}
                   </span>
                   <span style={{
                     fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em',
-                    color: activeField === f.key ? '#1d4ed8'
-                      : f.resta && totales[f.key] > 0 ? '#dc2626'
-                      : totales[f.key] > 0 ? '#111827' : '#cbd5e1',
+                    color: activeField === f.key ? 'rgb(var(--papel-azul))'
+                      : f.resta && totales[f.key] > 0 ? 'rgb(var(--papel-rojo))'
+                      : totales[f.key] > 0 ? 'rgb(var(--tinta-1))' : 'rgb(var(--tinta-3))',
                   }}>
                     {activeField === f.key
                       ? (inputValue ? `$${inputValue}` : '$')
@@ -591,9 +592,9 @@ export default function CorteCajaLite() {
                           onClick={e => { e.stopPropagation(); k === '←' ? handleMonto('del') : handleMonto(k); }}
                           style={{
                             padding: '16px 8px', borderRadius: 10,
-                            border: '1px solid #e2e8f0',
-                            background: '#f8fafc',
-                            color: k === '←' ? '#94a3b8' : '#111827',
+                            border: '1px solid rgb(var(--papel-linea))',
+                            background: 'rgb(var(--papel-soft))',
+                            color: k === '←' ? 'rgb(var(--tinta-3))' : 'rgb(var(--tinta-1))',
                             fontSize: k === '←' ? 17 : 24, fontWeight: 400, cursor: 'pointer',
                           }}>
                           {k}
@@ -602,7 +603,7 @@ export default function CorteCajaLite() {
                     </div>
                     <button onClick={confirmMonto} style={{
                       width: '100%', padding: '14px', borderRadius: 10, border: 'none',
-                      background: '#1d4ed8', color: '#ffffff',
+                      background: 'rgb(var(--papel-azul))', color: 'rgb(var(--papel))',
                       fontSize: 14, cursor: 'pointer', letterSpacing: '0.04em', fontWeight: 600,
                     }}>
                       {activeFieldOrder.indexOf(f.key) < activeFieldOrder.length - 1 ? 'Siguiente →' : '✓ Listo'}
@@ -614,21 +615,21 @@ export default function CorteCajaLite() {
 
             {/* Total */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 0 16px' }}>
-              <span style={{ fontSize: 13, color: '#64748b', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 500 }}>Total del día</span>
-              <span style={{ fontSize: 36, fontWeight: 700, color: '#16a34a', letterSpacing: '-0.03em' }}>
+              <span style={{ fontSize: 13, color: 'rgb(var(--tinta-3))', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 500 }}>Total del día</span>
+              <span style={{ fontSize: 36, fontWeight: 700, color: 'rgb(var(--papel-verde))', letterSpacing: '-0.03em' }}>
                 ${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
               </span>
             </div>
 
             {/* Error */}
-            {error && <div style={{ color: '#dc2626', fontSize: 14, textAlign: 'center', marginBottom: 12, fontWeight: 500 }}>{error}</div>}
+            {error && <div style={{ color: 'rgb(var(--papel-rojo))', fontSize: 14, textAlign: 'center', marginBottom: 12, fontWeight: 500 }}>{error}</div>}
           </div>
 
           {/* Botón guardar — fijo abajo, siempre visible */}
           <button onClick={guardarCorte} disabled={loading} style={{
             width: '100%', padding: '20px', borderRadius: 0,
-            border: 'none', borderTop: '2px solid #16a34a',
-            background: '#16a34a', color: '#ffffff',
+            border: 'none', borderTop: '2px solid rgb(var(--papel-verde))',
+            background: 'rgb(var(--papel-verde))', color: 'rgb(var(--papel-on-verde))',
             fontSize: 16, fontWeight: 700, cursor: 'pointer',
             letterSpacing: '0.08em', textTransform: 'uppercase' as const,
             flexShrink: 0,
@@ -639,18 +640,18 @@ export default function CorteCajaLite() {
           {/* Modal de insumos */}
           {showInsumos && (
             <div style={{
-              position: 'fixed', inset: 0, background: '#ffffff',
+              position: 'fixed', inset: 0, background: 'rgb(var(--papel))',
               display: 'flex', flexDirection: 'column', zIndex: 50,
             }}>
-              <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ fontSize: 18, fontWeight: 700, color: '#111827' }}>Avisos de Insumos</div>
-                <button onClick={() => setShowInsumos(false)} style={{ background: '#f1f5f9', border: 'none', color: '#475569', fontSize: 16, cursor: 'pointer', borderRadius: 8, width: 36, height: 36, fontWeight: 600 }}>✕</button>
+              <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid rgb(var(--papel-linea-2))', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ fontSize: 18, fontWeight: 700, color: 'rgb(var(--tinta-1))' }}>Avisos de Insumos</div>
+                <button onClick={() => setShowInsumos(false)} style={{ background: 'rgb(var(--papel-linea-2))', border: 'none', color: 'rgb(var(--tinta-2))', fontSize: 16, cursor: 'pointer', borderRadius: 8, width: 36, height: 36, fontWeight: 600 }}>✕</button>
               </div>
 
               <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px' }}>
                 {/* Formulario nuevo aviso */}
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 14, padding: 16, marginBottom: 20 }}>
-                  <div style={{ fontSize: 12, color: '#64748b', letterSpacing: '0.08em', marginBottom: 12, fontWeight: 600 }}>NUEVO AVISO</div>
+                <div style={{ background: 'rgb(var(--papel-soft))', border: '1px solid rgb(var(--papel-linea))', borderRadius: 14, padding: 16, marginBottom: 20 }}>
+                  <div style={{ fontSize: 12, color: 'rgb(var(--tinta-3))', letterSpacing: '0.08em', marginBottom: 12, fontWeight: 600 }}>NUEVO AVISO</div>
                   {insumosCatalogo.length > 0 ? (
                     <select
                       value={newInsumo.insumoId}
@@ -659,7 +660,7 @@ export default function CorteCajaLite() {
                         const found = insumosCatalogo.find(i => i.id === id);
                         setNewInsumo(p => ({ ...p, insumoId: id, nombre: found?.nombre || '' }));
                       }}
-                      style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid #e2e8f0', background: '#ffffff', color: '#111827', fontSize: 15, marginBottom: 10, boxSizing: 'border-box' }}
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid rgb(var(--papel-linea))', background: 'rgb(var(--papel))', color: 'rgb(var(--tinta-1))', fontSize: 15, marginBottom: 10, boxSizing: 'border-box' }}
                     >
                       <option value="">Selecciona un insumo...</option>
                       {insumosCatalogo.map(i => (
@@ -673,23 +674,23 @@ export default function CorteCajaLite() {
                       placeholder="Nombre del insumo o producto"
                       value={newInsumo.nombre}
                       onChange={e => setNewInsumo(p => ({ ...p, nombre: e.target.value }))}
-                      style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid #e2e8f0', background: '#ffffff', color: '#111827', fontSize: 15, marginBottom: 10, boxSizing: 'border-box' }}
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid rgb(var(--papel-linea))', background: 'rgb(var(--papel))', color: 'rgb(var(--tinta-1))', fontSize: 15, marginBottom: 10, boxSizing: 'border-box' }}
                     />
                   )}
                   <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
                     {['insumo', 'producto'].map(tp => (
                       <button key={tp} onClick={() => setNewInsumo(p => ({ ...p, tipo: tp }))} style={{
-                        padding: '8px 16px', borderRadius: 8, border: `2px solid ${newInsumo.tipo === tp ? '#1d4ed8' : '#e2e8f0'}`,
-                        background: newInsumo.tipo === tp ? '#eff6ff' : '#ffffff',
-                        color: newInsumo.tipo === tp ? '#1d4ed8' : '#64748b', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', fontWeight: newInsumo.tipo === tp ? 600 : 400,
+                        padding: '8px 16px', borderRadius: 8, border: `2px solid ${newInsumo.tipo === tp ? 'rgb(var(--papel-azul))' : 'rgb(var(--papel-linea))'}`,
+                        background: newInsumo.tipo === tp ? 'rgb(var(--papel-azul-bg))' : 'rgb(var(--papel))',
+                        color: newInsumo.tipo === tp ? 'rgb(var(--papel-azul))' : 'rgb(var(--tinta-3))', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', fontWeight: newInsumo.tipo === tp ? 600 : 400,
                       }}>{tp === 'insumo' ? 'Insumo' : 'Producto'}</button>
                     ))}
                     {['proximo', 'agotado'].map(est => (
                       <button key={est} onClick={() => setNewInsumo(p => ({ ...p, estado: est }))} style={{
                         padding: '8px 16px', borderRadius: 8,
-                        border: `2px solid ${newInsumo.estado === est ? (est === 'agotado' ? '#dc2626' : '#d97706') : '#e2e8f0'}`,
-                        background: newInsumo.estado === est ? (est === 'agotado' ? '#fef2f2' : '#fffbeb') : '#ffffff',
-                        color: newInsumo.estado === est ? (est === 'agotado' ? '#dc2626' : '#d97706') : '#64748b', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', fontWeight: newInsumo.estado === est ? 600 : 400,
+                        border: `2px solid ${newInsumo.estado === est ? (est === 'agotado' ? 'rgb(var(--papel-rojo))' : 'rgb(var(--papel-ambar))') : 'rgb(var(--papel-linea))'}`,
+                        background: newInsumo.estado === est ? (est === 'agotado' ? 'rgb(var(--papel-rojo-bg))' : 'rgb(var(--papel-ambar-bg))') : 'rgb(var(--papel))',
+                        color: newInsumo.estado === est ? (est === 'agotado' ? 'rgb(var(--papel-rojo))' : 'rgb(var(--papel-ambar))') : 'rgb(var(--tinta-3))', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', fontWeight: newInsumo.estado === est ? 600 : 400,
                       }}>{est === 'proximo' ? 'Próximo a agotarse' : 'Agotado'}</button>
                     ))}
                   </div>
@@ -697,11 +698,11 @@ export default function CorteCajaLite() {
                     placeholder="Notas (cantidad aproximada, etc.)"
                     value={newInsumo.notas}
                     onChange={e => setNewInsumo(p => ({ ...p, notas: e.target.value }))}
-                    style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid #e2e8f0', background: '#ffffff', color: '#111827', fontSize: 14, marginBottom: 12, boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid rgb(var(--papel-linea))', background: 'rgb(var(--papel))', color: 'rgb(var(--tinta-1))', fontSize: 14, marginBottom: 12, boxSizing: 'border-box' }}
                   />
                   <button onClick={saveInsumo} disabled={savingInsumo || !newInsumo.nombre.trim()} style={{
                     width: '100%', padding: 14, borderRadius: 10, border: 'none',
-                    background: '#1d4ed8', color: '#ffffff', fontSize: 15, cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit',
+                    background: 'rgb(var(--papel-azul))', color: 'rgb(var(--papel))', fontSize: 15, cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit',
                   }}>
                     {savingInsumo ? 'Guardando...' : 'Guardar aviso'}
                   </button>
@@ -709,36 +710,36 @@ export default function CorteCajaLite() {
 
                 {/* Lista de insumos */}
                 {insumos.length === 0 ? (
-                  <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 14, padding: 24 }}>Sin avisos registrados</div>
+                  <div style={{ textAlign: 'center', color: 'rgb(var(--tinta-3))', fontSize: 14, padding: 24 }}>Sin avisos registrados</div>
                 ) : insumos.map(ins => (
                   <div key={ins.id} style={{
                     padding: '14px 16px', marginBottom: 10, borderRadius: 12,
-                    border: `1px solid ${ins.estado === 'agotado' ? '#fecaca' : ins.estado === 'proximo' ? '#fde68a' : '#e2e8f0'}`,
-                    background: ins.estado === 'agotado' ? '#fef2f2' : ins.estado === 'proximo' ? '#fffbeb' : '#f8fafc',
+                    border: `1px solid ${ins.estado === 'agotado' ? 'rgb(var(--papel-rojo-linea))' : ins.estado === 'proximo' ? 'rgb(var(--papel-ambar-linea))' : 'rgb(var(--papel-linea))'}`,
+                    background: ins.estado === 'agotado' ? 'rgb(var(--papel-rojo-bg))' : ins.estado === 'proximo' ? 'rgb(var(--papel-ambar-bg))' : 'rgb(var(--papel-soft))',
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
-                        <div style={{ fontSize: 15, color: '#111827', fontWeight: 600 }}>{ins.nombre}</div>
-                        <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{ins.tipo} · {new Date(ins.updatedAt).toLocaleDateString('es-MX')}</div>
-                        {ins.notas && <div style={{ fontSize: 13, color: '#475569', marginTop: 4 }}>{ins.notas}</div>}
+                        <div style={{ fontSize: 15, color: 'rgb(var(--tinta-1))', fontWeight: 600 }}>{ins.nombre}</div>
+                        <div style={{ fontSize: 12, color: 'rgb(var(--tinta-3))', marginTop: 2 }}>{ins.tipo} · {new Date(ins.updatedAt).toLocaleDateString('es-MX')}</div>
+                        {ins.notas && <div style={{ fontSize: 13, color: 'rgb(var(--tinta-2))', marginTop: 4 }}>{ins.notas}</div>}
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
                         <span style={{
                           fontSize: 11, padding: '4px 10px', borderRadius: 99, letterSpacing: '0.06em', fontWeight: 700,
-                          background: ins.estado === 'agotado' ? '#dc2626' : ins.estado === 'proximo' ? '#d97706' : '#16a34a',
-                          color: '#ffffff',
+                          background: ins.estado === 'agotado' ? 'rgb(var(--papel-rojo))' : ins.estado === 'proximo' ? 'rgb(var(--papel-ambar))' : 'rgb(var(--papel-verde))',
+                          color: 'rgb(var(--papel))',
                         }}>
                           {ins.estado === 'agotado' ? 'AGOTADO' : ins.estado === 'proximo' ? 'PRÓXIMO' : 'DISPONIBLE'}
                         </span>
                         <div style={{ display: 'flex', gap: 4 }}>
                           {ins.estado !== 'proximo' && (
-                            <button onClick={() => updateInsumoEstado(ins.id, 'proximo')} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, border: '1px solid #d97706', background: '#fffbeb', color: '#d97706', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>Próximo</button>
+                            <button onClick={() => updateInsumoEstado(ins.id, 'proximo')} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, border: '1px solid rgb(var(--papel-ambar))', background: 'rgb(var(--papel-ambar-bg))', color: 'rgb(var(--papel-ambar))', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>Próximo</button>
                           )}
                           {ins.estado !== 'agotado' && (
-                            <button onClick={() => updateInsumoEstado(ins.id, 'agotado')} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, border: '1px solid #dc2626', background: '#fef2f2', color: '#dc2626', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>Agotado</button>
+                            <button onClick={() => updateInsumoEstado(ins.id, 'agotado')} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, border: '1px solid rgb(var(--papel-rojo))', background: 'rgb(var(--papel-rojo-bg))', color: 'rgb(var(--papel-rojo))', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>Agotado</button>
                           )}
                           {ins.estado !== 'disponible' && (
-                            <button onClick={() => updateInsumoEstado(ins.id, 'disponible')} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, border: '1px solid #16a34a', background: '#f0fdf4', color: '#16a34a', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>Disponible</button>
+                            <button onClick={() => updateInsumoEstado(ins.id, 'disponible')} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, border: '1px solid rgb(var(--papel-verde))', background: 'rgb(var(--papel-verde-bg))', color: 'rgb(var(--papel-verde))', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>Disponible</button>
                           )}
                         </div>
                       </div>
@@ -758,26 +759,26 @@ export default function CorteCajaLite() {
             <div style={shared.header}>
               <div style={shared.logo}>ESTIA ERP</div>
               <div style={shared.title}>Corte registrado ✓</div>
-              <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
+              <div style={{ fontSize: 13, color: 'rgb(var(--tinta-3))', marginTop: 4 }}>
                 {new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
               </div>
             </div>
             <div style={shared.content}>
-              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 16, padding: '24px', marginBottom: 20 }}>
-                <div style={{ fontSize: 12, color: '#64748b', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20, fontWeight: 600 }}>
+              <div style={{ background: 'rgb(var(--papel-soft))', border: '1px solid rgb(var(--papel-linea))', borderRadius: 16, padding: '24px', marginBottom: 20 }}>
+                <div style={{ fontSize: 12, color: 'rgb(var(--tinta-3))', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20, fontWeight: 600 }}>
                   {selectedCompany?.tradeName || selectedCompany?.legalName}
                 </div>
                 {dynamicFields.map(f => (
-                  <div key={f.key} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>
-                    <span style={{ fontSize: 15, fontWeight: 400, color: '#475569' }}>{f.label}</span>
-                    <span style={{ fontSize: 15, fontWeight: 600, color: f.resta ? '#dc2626' : '#111827' }}>
+                  <div key={f.key} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid rgb(var(--papel-linea-2))' }}>
+                    <span style={{ fontSize: 15, fontWeight: 400, color: 'rgb(var(--tinta-2))' }}>{f.label}</span>
+                    <span style={{ fontSize: 15, fontWeight: 600, color: f.resta ? 'rgb(var(--papel-rojo))' : 'rgb(var(--tinta-1))' }}>
                       {f.resta && totales[f.key] > 0 ? '-' : ''}${totales[f.key].toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                 ))}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 18, marginTop: 4 }}>
-                  <span style={{ fontSize: 13, color: '#64748b', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 500 }}>Total</span>
-                  <span style={{ fontSize: 32, fontWeight: 700, color: '#16a34a', letterSpacing: '-0.03em' }}>
+                  <span style={{ fontSize: 13, color: 'rgb(var(--tinta-3))', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 500 }}>Total</span>
+                  <span style={{ fontSize: 32, fontWeight: 700, color: 'rgb(var(--papel-verde))', letterSpacing: '-0.03em' }}>
                     ${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
@@ -788,7 +789,7 @@ export default function CorteCajaLite() {
               <button style={shared.btnSecondary} onClick={imprimir}>Imprimir ticket</button>
               <div style={{ height: 12 }} />
               <button onClick={() => { setScreen('empresa'); setPin(''); setTotales({ efectivo: 0, tarjeta: 0, transferencia: 0, plataformas: 0, promociones: 0, cortesia: 0, descuento: 0, gasto: 0 }); }}
-                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: 13, cursor: 'pointer', width: '100%', textAlign: 'center', padding: '16px 0', letterSpacing: '0.05em' }}>
+                style={{ background: 'none', border: 'none', color: 'rgb(var(--tinta-3))', fontSize: 13, cursor: 'pointer', width: '100%', textAlign: 'center', padding: '16px 0', letterSpacing: '0.05em' }}>
                 Nuevo corte
               </button>
             </div>

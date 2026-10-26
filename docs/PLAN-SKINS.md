@@ -221,3 +221,16 @@ Hecho: **F0** (`src/core/theme/skins.ts`, `contraste.ts`, `aplicarSkin.ts`; prue
 - **Orden de preferencia**: este equipo → preferencia del usuario (`user.uiPrefs.skin`, `PUT /auth/me/ui-prefs`, devuelta en login y refresh) → negocio → ESTIA.
 - **Excepción conocida**: el login conserva su paleta propia (colores por negocio); en Alto contraste 4 textos del login quedan entre 4.6 y 5.7:1 (AA sí, AAA no).
 - Las pantallas aún no migradas (olas 2 a 4) conservan colores fijos y NO se ven bien en Claro: por eso la restricción de rol.
+
+## 13. Ola 2: POS, caja, mesas, Corte Lite y notas de cocina (estado)
+
+**Pantallas migradas (16, cero colores fijos, en `pantallasMigradas.ts`):** `pos/POSPage`, `pos/ModalesCaja`, `pos/CheckoutFast`, `pos/PosChatPanel`, `pos/VentasOfflineFallidas`, `pos/BackfillCortePage`, `pos/TableLayout`, `mesas/{PanelCuenta, MesasScreen, ConfigMesas, MeseroPage, MesasPage, mesasLogic}`, `lite/{CorteCajaLite, NotasCocinaLite}`, `settings/CorteFieldsConfig`. La línea base de colores fijos bajó de 104 a 88 archivos.
+
+**Cómo se migró sin cambiar un píxel en ESTIA/Oscuro:** cada color fijo se cambió por un token con el MISMO valor que ya tenía en ESTIA (las clases que `index.css` ya reescribía llevan `!`, igual que antes; las que Tailwind pintaba tal cual pasaron a «tonos» exactos). Tokens nuevos: `tono*` (rojos, verdes, amarillos, ámbar, azules, morados y grises azulados de Tailwind), `st*` (estados de mesa), `papel*`/`tinta*`/`papelNavy*` (las pantallas Lite son claras de origen), `chat*`, `toggleOn`, `surfaceAlt`, `navAlt`, `onYellow`, `onStrong`. Claro y Alto contraste tienen sus propios valores; Oscuro usa los de ESTIA (salvo `onStrong`).
+- **Lite**: Corte y notas de cocina son pantallas claras de tableta. Con los tokens `papel`/`tinta` siguen claras en ESTIA, Oscuro y Claro, y pasan a negro/blanco/amarillo solo en Alto contraste (la skin Oscuro no las oscurece: sería cambiar píxeles).
+- **Datos, no interfaz**: el color por defecto de una categoría nueva (`#3B82F6`) se guarda en la base y vive en `pos/coloresDatos.ts` (declarado en `DEFINEN_COLORES`).
+- **Estados de mesa** (`ESTADO_MESA`) ahora son `rgb(var(--st-*))` con un campo `fondo`; antes se concatenaba `color + '18'`.
+
+**Recibo**: `window.print()` imprimía en blanco porque el CSS de impresión solo muestra `#print-area` y el recibo no lo tenía. Ahora el recibo lleva `id="print-area"` y `skins.generated.css` incluye `@media print` con los tokens de Claro, de modo que se imprime sobre papel claro con texto oscuro sea cual sea la skin.
+
+**Procedimiento (se repite en las olas 3 y 4):** `scripts/escenas-pos.mjs` define 51 escenas (vacío, con datos, modal, error) y `scripts/capturas-skins.mjs --escenas todas --skins estia,oscuro,claro,contraste` guarda captura, axe-core, orden de Tab, atajos (`atajos.json`), desborde e impresión (`impresion.json`). `scripts/montaje.mjs` arma una hoja de contacto. Un worktree congelado en `main` produce el «antes» mientras se migra.
