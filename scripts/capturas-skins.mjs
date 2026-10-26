@@ -137,7 +137,7 @@ async function capturar(browser, nombre, escena, skin) {
     const nombre = (d.getAttribute('aria-labelledby') || '').split(' ').map((i) => document.getElementById(i)?.textContent || '').join(' ').trim();
     const arriba = document.elementFromPoint(r.left + r.width / 2, r.top + 14);
     const cuerpo = [...panel.querySelectorAll('div')].find((x) => /overflow-y-auto/.test(x.className) && /flex-1/.test(x.className));
-    return { rol: d.getAttribute('role'), modal: d.getAttribute('aria-modal'), nombre, ancho: Math.round(r.width), alto: Math.round(r.height), caben1366: r.width <= 1229.5 && r.height <= 691.5, sobreBarra: !!arriba && d.contains(arriba), focoDentro: d.contains(document.activeElement), scrollInterno: cuerpo ? cuerpo.scrollHeight > cuerpo.clientHeight + 1 : false, botones: [...panel.querySelectorAll('[data-pos-footer] button')].map((b) => (b.textContent || '').trim()) };
+    return { fondoPanel: getComputedStyle(panel).backgroundColor, fondoOverlay: getComputedStyle(d).backgroundColor, clasePanel: panel.className.slice(0, 200), rol: d.getAttribute('role'), modal: d.getAttribute('aria-modal'), nombre, ancho: Math.round(r.width), alto: Math.round(r.height), caben1366: r.width <= 1229.5 && r.height <= 691.5, sobreBarra: !!arriba && d.contains(arriba), focoDentro: d.contains(document.activeElement), scrollInterno: cuerpo ? cuerpo.scrollHeight > cuerpo.clientHeight + 1 : false, botones: [...panel.querySelectorAll('[data-pos-footer] button')].map((b) => (b.textContent || '').trim()) };
   });
   // impresión (recibos): se emula el medio «print»; el papel debe quedar claro y el texto oscuro, sea cual sea la skin
   let impresion = null;

@@ -19,7 +19,7 @@ const entrarPos = async (p) => {
   await clic(p, 'Continuar');
   await ESPERA(1200);
 };
-const digitos = async (p, d) => { for (const c of d) await clic(p, '^' + c + '$'); await ESPERA(900); };
+const digitos = async (p, d) => { for (const c of d) await clic(p, '^' + c + '( ' + c + ')?$'); await ESPERA(900); };
 const tecla = async (p, k) => { await p.keyboard.press(k); await ESPERA(250); };
 
 const categorias = [
@@ -155,7 +155,7 @@ export const ESCENAS_POS = {
   'ventas-offline': { ...BASE, ruta: '/ventas-offline' },
   'corte-campos': { ...BASE, ruta: '/settings/corte-fields' },
   // ── Fase 1 de modales (conjunto de corte): estados de error y teclado en pantalla ──
-  'pos-abrir-turno-error': pos({ sinTurno: true }, async (p) => { await clic(p, 'Abrir Turno'); }),
+  'pos-abrir-turno-error': pos({ sinTurno: true }, async (p) => { await clic(p, '^Abrir Turno$', '[role="dialog"] button'); }),
   'pos-retiro-error': pos({}, async (p) => { await clic(p, 'Retiro'); await clic(p, '^Retirar$'); }),
   'pos-deposito-error': pos({}, async (p) => { await clic(p, 'Depósito'); await clic(p, '^Depositar$'); }),
   'pos-precorte-error': pos({ fallos: ['/pos/shifts/s1/precut'] }, async (p) => { await clic(p, 'Precorte'); await clic(p, 'Guardar Precorte'); }),

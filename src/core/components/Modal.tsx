@@ -124,7 +124,7 @@ export function Modal({ title, subtitle, size = 'md', footer, onClose, atajos = 
 
   return createPortal(
     <div className={CLASES_MODAL.overlay} role="dialog" aria-modal="true" aria-labelledby={idTitulo}>
-      <div ref={panel} className={clasePanel(size, apariencia)} data-modal-size={size}>
+      <div ref={panel} className={clasePanel(size, apariencia)} data-modal-size={size} data-modal-apariencia={apariencia}>
         <div className={`${papel ? CLASES_MODAL_PAPEL.header : CLASES_MODAL.header} flex items-start justify-between gap-3`}>
           <div className="min-w-0">
             <h3 id={idTitulo} className="truncate text-lg font-semibold">{title}</h3>

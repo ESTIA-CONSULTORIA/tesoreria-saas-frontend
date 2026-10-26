@@ -4,8 +4,8 @@ export type VarianteBoton = 'principal' | 'secundario' | 'peligro' | 'exito' | '
 export type TamanoBoton = 'sm' | 'md' | 'lg';
 
 export const CLASES_VARIANTE: Record<VarianteBoton, string> = {
-  principal: '!bg-btn !text-on-solid hover:!bg-btn-hover',
-  secundario: 'border !border-line !bg-surface-2 !text-content-1 hover:!bg-surface-3',
+  principal: '!bg-btn !text-on-solid ring-1 ring-inset ring-accent hover:!bg-btn-hover',
+  secundario: 'border !border-line bg-transparent !text-content-2 hover:!bg-surface-2',
   peligro: '!bg-danger-solid !text-on-solid hover:brightness-110',
   exito: '!bg-ok-solid !text-on-solid hover:brightness-110',
   advertencia: '!bg-warn-solid !text-on-solid hover:brightness-110',
@@ -14,8 +14,8 @@ export const CLASES_VARIANTE: Record<VarianteBoton, string> = {
 
 /** Sobre papel claro (pantallas Lite) los neutros usan los tokens papel-*; los de color (principal, peligro…) ya llevan su propio texto. */
 export const CLASES_NEUTRO_PAPEL: Partial<Record<VarianteBoton, string>> = {
-  secundario: 'border border-papel-linea bg-papel-soft text-tinta-1 hover:bg-papel-linea-2',
-  fantasma: 'bg-transparent text-tinta-2 hover:bg-papel-linea-2',
+  secundario: 'border !border-papel-linea !bg-papel-soft !text-tinta-1 hover:!bg-papel-linea-2',
+  fantasma: 'bg-transparent !text-tinta-2 hover:!bg-papel-linea-2',
 };
 
 export const CLASES_TAMANO_BOTON: Record<TamanoBoton, string> = {

@@ -11,7 +11,7 @@ interface Props {
 export function ErrorCampo({ id, mensaje, apariencia = 'sistema' }: Props) {
   if (!mensaje) return null;
   return (
-    <p id={idErrorCampo(id)} role="alert" className={`mt-1 text-xs font-medium ${apariencia === 'papel' ? 'text-papel-rojo' : '!text-danger'}`}>
+    <p id={idErrorCampo(id)} role="alert" className={`mt-1 text-xs font-medium ${apariencia === 'papel' ? '!text-papel-rojo' : '!text-danger'}`}>
       {mensaje}
     </p>
   );

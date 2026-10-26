@@ -521,8 +521,8 @@ export default function CorteCajaLite() {
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={handleBloquear} style={{
-                  background: 'none', border: '1px solid rgb(var(--scrim) / 0.15)',
-                  color: 'rgb(var(--scrim) / 0.35)', fontSize: 10, padding: '4px 10px',
+                  background: 'none', border: '1px solid rgb(var(--papel-linea))',
+                  color: 'rgb(var(--tinta-3))', fontSize: 10, padding: '4px 10px',
                   borderRadius: 8, cursor: 'pointer', letterSpacing: '0.08em',
                   fontFamily: 'inherit',
                 }}>

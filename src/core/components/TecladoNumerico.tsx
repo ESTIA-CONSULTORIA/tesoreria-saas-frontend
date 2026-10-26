@@ -15,7 +15,7 @@ interface Props {
 
 const TECLA: Record<'sistema' | 'papel', string> = {
   sistema: 'border !border-line !bg-surface-2 !text-content-1 hover:!bg-surface-3',
-  papel: 'border border-papel-linea bg-papel-soft text-tinta-1',
+  papel: 'border !border-papel-linea !bg-papel-soft !text-tinta-1',
 };
 
 export function TecladoNumerico({ onTecla, permitirPunto = false, tamano = 'normal', apariencia = 'sistema', deshabilitado = false, className = '' }: Props) {

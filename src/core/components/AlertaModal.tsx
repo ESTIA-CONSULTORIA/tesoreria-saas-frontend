@@ -12,10 +12,10 @@ const CLASES: Record<'sistema' | 'papel', Record<TipoAlerta, string>> = {
     info: 'border-line !bg-surface-2 !text-content-1',
   },
   papel: {
-    error: 'border-papel-rojo bg-papel-rojo-bg text-tinta-1',
-    aviso: 'border-papel-ambar bg-papel-ambar-bg text-tinta-1',
-    ok: 'border-papel-verde bg-papel-verde-bg text-tinta-1',
-    info: 'border-papel-linea bg-papel-soft text-tinta-1',
+    error: '!border-papel-rojo !bg-papel-rojo-bg !text-tinta-1',
+    aviso: '!border-papel-ambar !bg-papel-ambar-bg !text-tinta-1',
+    ok: '!border-papel-verde !bg-papel-verde-bg !text-tinta-1',
+    info: '!border-papel-linea !bg-papel-soft !text-tinta-1',
   },
 };
 const GLIFO: Record<TipoAlerta, string> = { error: '⚠', aviso: '⚠', ok: '✓', info: 'ℹ' };

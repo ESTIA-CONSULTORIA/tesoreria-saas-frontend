@@ -41,7 +41,7 @@ export function NipPad({ valor, longitud = 4, onTecla, error, cargando = false, 
         {Array.from({ length: longitud }, (_, i) => (
           <span
             key={i}
-            className={`h-3.5 w-3.5 rounded-full transition ${valor.length > i ? (papel ? 'bg-papel-azul' : '!bg-btn') : papel ? 'bg-papel-linea' : '!bg-line'}`}
+            className={`h-3.5 w-3.5 rounded-full transition ${valor.length > i ? (papel ? '!bg-papel-azul' : '!bg-btn') : papel ? '!bg-papel-linea' : '!bg-line'}`}
           />
         ))}
       </div>

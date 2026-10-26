@@ -6,7 +6,7 @@ import { leerFuentes, SRC } from './fuentesApp';
 
 // Spec 3 del estándar de ventanas: el CONTRATO de `Modal` (rol, Esc, foco, capa, tamaño a 1366×768). Aquí se fija lo que se puede
 // comprobar sin navegador; la comprobación en navegador real (rol, Esc, foco y medidas de cada ventana) la hace
-// scripts/contrato-modal.mjs sobre las ventanas de caja.
+// scripts/capturas-skins.mjs (contrato.json) sobre las ventanas de caja.
 const modal = readFileSync(join(SRC, 'core/components/Modal.tsx'), 'utf8');
 const TAMANOS: TamanoModal[] = ['sm', 'md', 'lg', 'xl'];
 

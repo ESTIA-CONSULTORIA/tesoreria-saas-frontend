@@ -36,12 +36,12 @@ export const CLASES_MODAL = {
 export type AparienciaModal = 'sistema' | 'papel';
 
 export const CLASES_MODAL_PAPEL = {
-  panel: 'flex max-h-[90vh] w-[90vw] flex-col overflow-hidden rounded-xl border border-papel-linea bg-papel text-tinta-1 shadow-2xl',
-  header: 'shrink-0 border-b border-papel-linea-2 px-5 py-3',
-  footer: 'flex shrink-0 gap-2 border-t border-papel-linea-2 bg-papel px-5 py-3',
-  leyenda: 'shrink-0 border-t border-papel-linea-2 px-5 py-1.5 text-[11px] text-tinta-3',
-  subtitulo: 'text-xs text-tinta-3',
-  cerrar: 'text-2xl leading-none text-tinta-3 hover:text-tinta-1',
+  panel: 'flex max-h-[90vh] w-[90vw] flex-col overflow-hidden rounded-xl border !border-papel-linea !bg-papel !text-tinta-1 shadow-2xl',
+  header: 'shrink-0 border-b !border-papel-linea-2 px-5 py-3',
+  footer: 'flex shrink-0 gap-2 border-t !border-papel-linea-2 !bg-papel px-5 py-3',
+  leyenda: 'shrink-0 border-t !border-papel-linea-2 px-5 py-1.5 text-[11px] !text-tinta-3',
+  subtitulo: 'text-xs !text-tinta-3',
+  cerrar: 'text-2xl leading-none !text-tinta-3 hover:!text-tinta-1',
 } as const;
 
 export function clasePanel(size: TamanoModal, apariencia: AparienciaModal = 'sistema'): string {

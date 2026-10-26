@@ -24,11 +24,11 @@ export function CampoMoneda({ etiqueta, valor, onCambio, error, requerido, place
   const papel = apariencia === 'papel';
   return (
     <div>
-      <label htmlFor={id} className={`mb-1 block text-sm ${papel ? 'text-tinta-3' : '!text-content-3'}`}>
+      <label htmlFor={id} className={`mb-1 block text-sm ${papel ? '!text-tinta-3' : '!text-content-3'}`}>
         {etiqueta}{requerido ? ' *' : ''}
       </label>
       <div className="relative">
-        <span aria-hidden="true" className={`pointer-events-none absolute inset-y-0 left-3 flex items-center ${papel ? 'text-tinta-3' : '!text-content-3'}`}>$</span>
+        <span aria-hidden="true" className={`pointer-events-none absolute inset-y-0 left-3 flex items-center ${papel ? '!text-tinta-3' : '!text-content-3'}`}>$</span>
         <input
           id={id}
           type="text"
@@ -41,7 +41,7 @@ export function CampoMoneda({ etiqueta, valor, onCambio, error, requerido, place
           aria-describedby={error ? idErrorCampo(id) : undefined}
           placeholder={placeholder}
           onChange={(e) => onCambio(normalizarMonto(e.target.value))}
-          className={`w-full rounded-lg border py-2 pl-7 pr-3 text-lg font-semibold ${papel ? 'border-papel-linea bg-papel-soft text-tinta-1' : '!border-line !bg-nav !text-content-1'} ${error ? (papel ? '!border-papel-rojo' : '!border-danger') : ''}`}
+          className={`w-full rounded-lg border py-2 pl-7 pr-3 text-lg font-semibold ${papel ? '!border-papel-linea !bg-papel-soft !text-tinta-1' : '!border-line !bg-nav !text-content-1'} ${error ? (papel ? '!border-papel-rojo' : '!border-danger') : ''}`}
         />
       </div>
       <ErrorCampo id={id} mensaje={error} apariencia={apariencia} />
