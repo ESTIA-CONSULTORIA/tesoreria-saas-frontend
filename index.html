@@ -8,13 +8,22 @@
     <meta name="theme-color" content="#050B1A" />
     <title>ESTIA ERP</title>
     <script>
-      // Skin antes de pintar (sin parpadeo): equipo > último valor del negocio > ESTIA. Mismas claves que src/core/theme/aplicarSkin.ts.
+      // Skin antes de pintar (sin parpadeo): equipo > preferencia del usuario > último valor del negocio > ESTIA. Mismas claves y misma regla
+      // que src/core/theme/aplicarSkin.ts; 'claro' y 'contraste' (en preparación) solo para los roles ADMIN y SOPORTE de la sesión guardada.
       (function () {
         try {
           var ok = ['estia', 'oscuro'];
-          var s = localStorage.getItem('ui_skin_device');
-          if (ok.indexOf(s) < 0) s = localStorage.getItem('ui_skin');
-          document.documentElement.setAttribute('data-skin', ok.indexOf(s) >= 0 ? s : 'estia');
+          var prep = ['claro', 'contraste'];
+          var rol = null;
+          try { rol = (JSON.parse(localStorage.getItem('user') || 'null') || {}).roleCode; } catch (e) {}
+          if (rol === 'ADMIN' || rol === 'SOPORTE') ok = ok.concat(prep);
+          var skin = 'estia';
+          var claves = ['ui_skin_device', 'ui_skin_user', 'ui_skin'];
+          for (var i = 0; i < claves.length; i++) {
+            var s = localStorage.getItem(claves[i]);
+            if (ok.indexOf(s) >= 0) { skin = s; break; }
+          }
+          document.documentElement.setAttribute('data-skin', skin);
         } catch (e) { document.documentElement.setAttribute('data-skin', 'estia'); }
       })();
     </script>

@@ -121,10 +121,12 @@ async function capturar(browser, nombre, escena, skin) {
   const desborde = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   // contraste AA (axe-core en el navegador real)
   await page.evaluate(AXE);
-  const axe = await page.evaluate(async () => {
-    const r = await window.axe.run(document, { runOnly: { type: 'rule', values: ['color-contrast'] }, resultTypes: ['violations'] });
+  // Alto contraste se mide contra AAA (7:1: regla color-contrast-enhanced); el resto, contra AA (4.5:1)
+  const regla = skin === 'contraste' ? 'color-contrast-enhanced' : 'color-contrast';
+  const axe = await page.evaluate(async (regla) => {
+    const r = await window.axe.run(document, { runOnly: { type: 'rule', values: [regla] }, resultTypes: ['violations'] });
     return r.violations.flatMap((v) => v.nodes.map((n) => ({ objetivo: n.target.join(' '), resumen: (n.any[0]?.message ?? '').replace(/\s+/g, ' ').slice(0, 160) })));
-  });
+  }, regla);
   // teclado: a dónde llega el foco con Tab (hasta 40 pasos)
   await page.evaluate(() => (document.activeElement instanceof HTMLElement ? document.activeElement.blur() : undefined));
   const teclado = [];
@@ -135,7 +137,7 @@ async function capturar(browser, nombre, escena, skin) {
       if (!a || a === document.body) return null;
       const cs = getComputedStyle(a);
       const visible = (cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) > 0) || (cs.boxShadow && cs.boxShadow !== 'none');
-      return { tag: a.tagName.toLowerCase(), id: a.id || undefined, rol: a.getAttribute('role') || undefined, texto: (a.getAttribute('aria-label') || a.textContent || a.getAttribute('placeholder') || '').replace(/\s+/g, ' ').trim().slice(0, 40), focoVisible: !!visible };
+      return { tag: a.tagName.toLowerCase(), id: a.id || undefined, rol: a.getAttribute('role') || undefined, texto: (a.getAttribute('aria-label') || a.textContent || a.getAttribute('placeholder') || '').replace(/\s+/g, ' ').trim().slice(0, 40), focoVisible: !!visible, grosor: parseFloat(cs.outlineWidth) || 0 };
     });
     teclado.push(d);
     if (!d) break;

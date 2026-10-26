@@ -192,6 +192,7 @@ export default function LoginPage() {
         tenantId: user.tenantId,
         companyId: user.companyId ?? null,
         branchId: user.branchId ?? null,
+        uiPrefs: user.uiPrefs ?? {},
       }, finalModulosActivos);
 
       navigate("/");

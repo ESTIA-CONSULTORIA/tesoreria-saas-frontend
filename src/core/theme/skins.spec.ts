@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { PANTALLAS_MIGRADAS } from './pantallasMigradas';
 import { ajustarAcento, aHex, aRgb, colorSobre, luminancia, razon } from './contraste';
-import { canales, cssSkins, esSkinId, nombreVar, resolverSkin, SKINS, SKINS_VISIBLES, type SkinId } from './skins';
+import { canales, cssSkins, esSkinId, nombreVar, puedeVerSkin, resolverSkin, SKINS, SKINS_EN_PREPARACION, SKINS_VISIBLES, skinsParaRol, type SkinId } from './skins';
 
 describe('contraste WCAG', () => {
   it('blanco/negro = 21 y es simétrico', () => {
@@ -80,18 +81,67 @@ describe.each(Object.keys(SKINS) as SkinId[])('skin %s: contraste', (id) => {
     for (const v of [t.viz1, t.viz2, t.viz3, t.viz4]) min(v, t.surface1, 4.5, 'serie de color');
   });
 
-  it('botones con relleno de color llevan texto legible (4.5:1)', () => {
-    for (const fondo of [t.btn, t.btnHover, t.okSolid, t.dangerSolid, t.warnSolid]) min(t.text1, fondo, 4.5, 'texto sobre botón');
+  it('botones con relleno de color llevan su texto «onSolid» legible (4.5:1); los neutros, text1', () => {
+    for (const fondo of [t.btn, t.btnHover, t.okSolid, t.dangerSolid, t.warnSolid]) min(t.onSolid, fondo, 4.5, 'texto sobre botón');
     for (const fondo of [t.surface3, t.surface4]) min(t.text1, fondo, 4.5, 'texto sobre elevado');
+  });
+
+  it('ventanas modales: fondo propio con texto legible y borde visible', () => {
+    min(t.text1, t.modal, 7, 'texto 1 en modal');
+    min(t.text2, t.modal, 4.5, 'texto 2 en modal');
+    min(t.text3, t.modal, 4.5, 'texto 3 en modal');
+    min(t.borderField, t.modal, 3, 'borde de campo en modal');
+    min(t.focus, t.modal, 3, 'foco en modal');
+  });
+
+  it('las skins con fondo claro invierten la base de las transparencias; las oscuras la mantienen', () => {
+    const clara = luminancia(t.bg) > 0.5;
+    expect(luminancia(t.veil) > 0.5, 'veil').toBe(!clara);
   });
 });
 
-describe('skins visibles', () => {
-  it('solo ESTIA y Oscuro; «Claro» no existe todavía', () => {
+// Alto contraste: 7:1 (AAA) en todo texto, controles y foco.
+describe('skin contraste: 7:1', () => {
+  const t = SKINS.contraste.tokens;
+  const min7 = (a: string, b: string, que: string) => expect(razon(a, b), `${que}: ${a} sobre ${b}`).toBeGreaterThanOrEqual(7);
+  const fondos = [t.bg, t.nav, t.surface1, t.field, t.surface2, t.surface3, t.surface4, t.modal, t.canvas, t.panel, t.popover];
+
+  it('los tres textos y el de la cáscara, sobre todos los fondos', () => {
+    for (const f of fondos) for (const c of [t.text1, t.text2, t.text3, t.textSoft, t.textBright]) min7(c, f, 'texto');
+  });
+  it('enlaces, acento, estados y series de color sobre las superficies de lectura', () => {
+    for (const f of [t.bg, t.surface1, t.field, t.modal]) for (const c of [t.link, t.accent, t.ok, t.danger, t.warn, t.accentAlt, t.viz1, t.viz2, t.viz3, t.viz4]) min7(c, f, 'color');
+    min7(t.ok, t.okSoft, 'éxito en insignia');
+    min7(t.danger, t.dangerSoft, 'error en insignia');
+  });
+  it('texto sobre botones de color y sobre el acento', () => {
+    for (const f of [t.btn, t.btnHover, t.okSolid, t.dangerSolid, t.warnSolid, t.accent]) min7(t.onSolid, f, 'texto sobre botón');
+    min7(t.onAccent, t.accent, 'texto sobre acento');
+  });
+  it('bordes de controles y foco: 7:1 también (el foco mide 3 px, ver index.css)', () => {
+    for (const f of [t.bg, t.surface1, t.field, t.modal]) { min7(t.borderField, f, 'borde de campo'); min7(t.focus, f, 'foco'); }
+    for (const f of [t.bg, t.surface1]) expect(razon(t.border, f)).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+describe('skins visibles y en preparación', () => {
+  it('para todos solo ESTIA y Oscuro; Claro y Alto contraste existen pero solo los ven ADMIN y SOPORTE', () => {
     expect(SKINS_VISIBLES).toEqual(['estia', 'oscuro']);
-    expect(esSkinId('claro')).toBe(false);
-    expect(esSkinId('contraste')).toBe(false);
-    for (const id of SKINS_VISIBLES) expect(SKINS[id]).toBeDefined();
+    expect(SKINS_EN_PREPARACION).toEqual(['claro', 'contraste']);
+    expect(esSkinId('claro')).toBe(true);
+    expect(esSkinId('contraste')).toBe(true);
+    for (const id of [...SKINS_VISIBLES, ...SKINS_EN_PREPARACION]) expect(SKINS[id]).toBeDefined();
+    for (const rol of ['ADMIN', 'SOPORTE']) expect(skinsParaRol(rol)).toEqual(['estia', 'oscuro', 'claro', 'contraste']);
+    for (const rol of ['CAJERO', 'GERENTE', 'MESERO', 'USER', '', null, undefined]) expect(skinsParaRol(rol)).toEqual(['estia', 'oscuro']);
+    expect(puedeVerSkin('claro', 'CAJERO')).toBe(false);
+    expect(puedeVerSkin('oscuro', 'CAJERO')).toBe(true);
+  });
+
+  it('ESTIA y Oscuro: onSolid = text1 y modal = surface1 (el texto y las ventanas no cambian de aspecto)', () => {
+    for (const id of ['estia', 'oscuro'] as const) {
+      expect(SKINS[id].tokens.onSolid).toBe(SKINS[id].tokens.text1);
+      expect(SKINS[id].tokens.modal).toBe(SKINS[id].tokens.surface1);
+    }
   });
 
   it('ESTIA conserva los grises de siempre (el fondo, tarjetas y botones no cambian de aspecto)', () => {
@@ -103,13 +153,31 @@ describe('skins visibles', () => {
 });
 
 describe('resolver la skin', () => {
-  it('el equipo manda sobre el negocio', () => {
+  it('el equipo manda sobre el usuario y el usuario sobre el negocio', () => {
     expect(resolverSkin('oscuro', 'estia')).toBe('oscuro');
     expect(resolverSkin(null, 'oscuro')).toBe('oscuro');
+    expect(resolverSkin(null, 'estia', { usuario: 'oscuro' })).toBe('oscuro');
+    expect(resolverSkin('estia', 'oscuro', { usuario: 'oscuro' })).toBe('estia');
   });
-  it('valores viejos o desconocidos caen en ESTIA, incluida «claro»', () => {
-    for (const v of ['dark', 'light', 'claro', '', null, undefined, 'otra']) expect(resolverSkin(undefined, v)).toBe('estia');
-    expect(resolverSkin('claro', 'oscuro')).toBe('oscuro'); // un valor inválido del equipo no tapa al del negocio
+  it('valores viejos o desconocidos caen en ESTIA; «light» NO se convierte en Claro aunque el rol pueda verla', () => {
+    for (const v of ['dark', 'light', '', null, undefined, 'otra', 'LIGHT', 'Claro']) {
+      expect(resolverSkin(undefined, v)).toBe('estia');
+      expect(resolverSkin(undefined, v, { rol: 'ADMIN' })).toBe('estia');
+    }
+  });
+  it('Claro y Alto contraste solo cuentan para ADMIN y SOPORTE; para el resto se salta al siguiente nivel', () => {
+    for (const skin of ['claro', 'contraste'] as const) {
+      for (const rol of ['ADMIN', 'SOPORTE']) {
+        expect(resolverSkin(skin, 'estia', { rol })).toBe(skin);
+        expect(resolverSkin(null, 'estia', { usuario: skin, rol })).toBe(skin);
+        expect(resolverSkin(null, skin, { rol })).toBe(skin);
+      }
+      for (const rol of ['CAJERO', 'GERENTE', undefined, null]) {
+        expect(resolverSkin(skin, 'oscuro', { rol })).toBe('oscuro'); // el equipo no puede forzarlo
+        expect(resolverSkin(null, 'oscuro', { usuario: skin, rol })).toBe('oscuro');
+        expect(resolverSkin(null, skin, { rol })).toBe('estia'); // negocio en Claro: el cajero sigue en ESTIA
+      }
+    }
   });
 });
 
@@ -130,7 +198,20 @@ describe('CSS generado', () => {
     const html = readFileSync(resolve(__dirname, '../../../index.html'), 'utf8');
     expect(html).toContain('ui_skin_device');
     expect(html).toContain('ui_skin');
-    for (const id of SKINS_VISIBLES) expect(html).toContain(`'${id}'`);
+    for (const id of [...SKINS_VISIBLES, ...SKINS_EN_PREPARACION]) expect(html).toContain(`'${id}'`);
+    expect(html).toContain('ui_skin_user');
+    // las skins en preparación solo con un rol que puede verlas
+    expect(html).toMatch(/rol === 'ADMIN' \|\| rol === 'SOPORTE'/);
+  });
+
+  it('index.css: texto sobre botones de color con --on-solid, modales con --modal, foco de 3 px en Alto contraste y prefers-contrast', () => {
+    const css = readFileSync(resolve(__dirname, '../../index.css'), 'utf8').replace(/\r\n/g, '\n');
+    const solidos = readFileSync(resolve(__dirname, 'compatSolidos.css'), 'utf8');
+    expect(css).toContain("@import './core/theme/compatSolidos.css'");
+    expect(solidos).toContain('color: rgb(var(--on-solid)) !important');
+    expect(css).toContain('background-color: rgb(var(--modal)) !important');
+    expect(css).toMatch(/\[data-skin="contraste"\] :focus-visible \{\s*outline: 3px solid rgb\(var\(--focus\)\)/);
+    expect(css).toMatch(/@media \(prefers-contrast: more\)/);
   });
 
   it('index.css ya no tiene colores de skin en hexadecimal fuera de los tokens', () => {
@@ -139,5 +220,39 @@ describe('CSS generado', () => {
     // Se permite la zona del módulo ejecutivo (colores propios) y rgba() de transparencia.
     const hex = sinComentarios.match(/#[0-9A-Fa-f]{6}\b/g) ?? [];
     expect(hex).toEqual([]);
+  });
+});
+
+// Texto translúcido: rgb(var(--veil) / max(A, var(--alfa-texto-min))). Con el piso, la veladura al mínimo debe leerse sobre las superficies.
+describe.each(Object.keys(SKINS) as SkinId[])('skin %s: piso de opacidad del texto translúcido', (id) => {
+  const { tokens: t, alfaTextoMin: piso } = SKINS[id];
+  const mezcla = (frente: string, fondo: string, a: number) => {
+    const [f, g] = [aRgb(frente), aRgb(fondo)];
+    return aHex(f.map((v, i) => v * a + g[i] * (1 - a)) as [number, number, number]);
+  };
+
+  it('las skins oscuras no cambian (piso 0); las demás lo exigen', () => {
+    expect(piso >= 0 && piso <= 1).toBe(true);
+    if (id === 'estia' || id === 'oscuro') expect(piso).toBe(0);
+    else expect(piso).toBeGreaterThan(0);
+  });
+
+  it('veladura al piso sobre fondos y superficies: AA (AAA en Alto contraste)', () => {
+    if (piso === 0) return;
+    const minimo = id === 'contraste' ? 7 : 4.5;
+    for (const fondo of [t.bg, t.nav, t.surface1, t.field, t.surface2, t.surface3, t.canvas, t.panel, t.popover, t.modal])
+      expect(razon(mezcla(t.veil, fondo, piso), fondo), `veil@${piso} sobre ${fondo}`).toBeGreaterThanOrEqual(minimo);
+  });
+});
+
+describe('texto translúcido en las pantallas migradas', () => {
+  it('ninguna veladura con opacidad ≥ 0.3 (texto) se escribe sin el piso max(…, var(--alfa-texto-min))', () => {
+    const SRC = resolve(__dirname, '../..');
+    const malos: string[] = [];
+    for (const rel of PANTALLAS_MIGRADAS) {
+      const texto = readFileSync(resolve(SRC, rel), 'utf8');
+      for (const m of texto.matchAll(/rgb\(var\(--(?:veil|text-1)\) \/ (0\.[3-9]\d*|1)\)/g)) malos.push(`${rel}: ${m[0]}`);
+    }
+    expect(malos).toEqual([]);
   });
 });

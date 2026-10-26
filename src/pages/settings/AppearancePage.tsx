@@ -3,8 +3,9 @@ import MainLayout from '../../core/layout/MainLayout';
 import { api } from '../../core/api/api';
 import { useBrandingStore } from '../../core/store/useBrandingStore';
 import { SplashScreen } from '../../components/SplashScreen';
-import { SKINS, SKINS_VISIBLES, resolverSkin, type SkinId } from '../../core/theme/skins';
-import { fijarSkinDispositivo, fijarSkinNegocio, skinDispositivo } from '../../core/theme/aplicarSkin';
+import { SKINS, skinsParaRol, resolverSkin, type SkinId } from '../../core/theme/skins';
+import { fijarSkinDispositivo, fijarSkinNegocio, fijarSkinUsuario, rolActual, skinDispositivo, skinUsuario } from '../../core/theme/aplicarSkin';
+import { useAuthStore } from '../../core/store/useAuthStore';
 
 const COLOR_PALETTE = [
   // Azules y grises
@@ -46,13 +47,29 @@ export default function AppearancePage() {
     logoUrl: store.logoUrl || '',
     accentColor: store.accentColor || '#8fafd4',
     fontFamily: store.fontFamily || 'Inter',
-    theme: resolverSkin(null, store.theme),
+    theme: resolverSkin(null, store.theme, { rol: rolActual() }),
   });
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
   const [previewSplash, setPreviewSplash] = useState(false);
   const [esteEquipo, setEsteEquipo] = useState<string>(() => skinDispositivo() ?? '');
+  const rol = useAuthStore((st) => st.user?.roleCode);
+  const skinsOfrecidas = skinsParaRol(rol); // Claro y Alto contraste: solo ADMIN y SOPORTE hasta terminar las olas 2 a 4
+  const [miTema, setMiTema] = useState<string>(() => skinUsuario() ?? '');
+  const [errorTema, setErrorTema] = useState('');
+
+  async function elegirMiTema(valor: string) {
+    const previo = miTema;
+    setMiTema(valor); setErrorTema('');
+    fijarSkinUsuario(valor || null); // se ve al instante
+    try {
+      await api.put('/auth/me/ui-prefs', { skin: valor || null });
+    } catch (e: unknown) {
+      setMiTema(previo); fijarSkinUsuario(previo || null);
+      setErrorTema((e as { response?: { data?: { message?: string } } })?.response?.data?.message || 'No se pudo guardar tu tema');
+    }
+  }
   const logoFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -67,7 +84,7 @@ export default function AppearancePage() {
           logoUrl: res.data.logoUrl || '',
           accentColor: res.data.accentColor || '#8fafd4',
           fontFamily: res.data.fontFamily || 'Inter',
-          theme: resolverSkin(null, res.data.theme),
+          theme: resolverSkin(null, res.data.theme, { rol: rolActual() }),
         });
       }
     } catch { /* ignore */ }
@@ -208,7 +225,7 @@ export default function AppearancePage() {
           <div style={s.card}>
             <label style={s.label} htmlFor="tema-negocio">Tema del negocio</label>
             <div id="tema-negocio" role="radiogroup" aria-label="Tema del negocio" style={{ display: 'flex', gap: 10 }}>
-              {SKINS_VISIBLES.map(t => (
+              {skinsOfrecidas.map(t => (
                 <button key={t} type="button" role="radio" aria-checked={form.theme === t} onClick={() => setForm(f => ({ ...f, theme: t }))}
                   style={{
                     flex: 1, padding: '10px 0', borderRadius: 8,
@@ -221,15 +238,21 @@ export default function AppearancePage() {
                 </button>
               ))}
             </div>
+            <label style={{ ...s.label, marginTop: 16 }} htmlFor="tema-usuario">Mi tema (en todos mis equipos)</label>
+            <select id="tema-usuario" value={miTema} onChange={(e) => { void elegirMiTema(e.target.value); }} style={s.input}>
+              <option value="">Igual que el negocio</option>
+              {skinsOfrecidas.map(t => <option key={t} value={t}>{SKINS[t].nombre}</option>)}
+            </select>
+            {errorTema && <div role="alert" style={{ marginTop: 6, fontSize: 12, color: 'rgb(var(--danger))' }}>{errorTema}</div>}
             <label style={{ ...s.label, marginTop: 16 }} htmlFor="tema-equipo">Solo en este equipo</label>
             <select id="tema-equipo" value={esteEquipo}
               onChange={(e) => { const v = e.target.value; setEsteEquipo(v); fijarSkinDispositivo(v ? (v as SkinId) : null); }}
               style={s.input}>
               <option value="">Igual que el negocio</option>
-              {SKINS_VISIBLES.map(t => <option key={t} value={t}>{SKINS[t].nombre}</option>)}
+              {skinsOfrecidas.map(t => <option key={t} value={t}>{SKINS[t].nombre}</option>)}
             </select>
             <div style={{ marginTop: 8, fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
-              El tema del negocio se guarda con «Guardar». La elección de este equipo se aplica al instante y solo vale aquí (útil en una caja que debe verse siempre igual).
+              El tema del negocio se guarda con «Guardar» y es el que ven todos por defecto. «Mi tema» es tu preferencia y se guarda al elegirla. La elección de este equipo se aplica al instante y solo vale aquí (útil en una caja que debe verse siempre igual); gana a las otras dos.
             </div>
           </div>
         </div>

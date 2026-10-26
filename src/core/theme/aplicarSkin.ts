@@ -1,8 +1,11 @@
 // Aplica la skin al documento y recuerda la elección. Las claves de localStorage son las mismas que lee el script de index.html
 // (así la skin está puesta antes de que React pinte y no hay parpadeo).
+// Orden: este equipo → preferencia del usuario → negocio → ESTIA. Las skins en preparación (Claro, Alto contraste) solo cuentan para
+// los roles de ROLES_SKINS_EN_PREPARACION; el rol se lee de la sesión guardada (localStorage «user»).
 import { resolverSkin, SKINS, type SkinId } from './skins';
 
 export const CLAVE_DISPOSITIVO = 'ui_skin_device'; // elección de ESTE equipo (gana a todo)
+export const CLAVE_USUARIO = 'ui_skin_user'; // preferencia propia del usuario (viene de login/refresh y de Apariencia)
 export const CLAVE_NEGOCIO = 'ui_skin'; // último valor del negocio, para pintar rápido en la siguiente carga
 
 function leer(clave: string): string | null {
@@ -12,8 +15,13 @@ function escribir(clave: string, valor: string | null) {
   try { if (valor === null) localStorage.removeItem(clave); else localStorage.setItem(clave, valor); } catch { /* sin almacenamiento: la skin vale solo esta sesión */ }
 }
 
+/** Rol de la sesión guardada (null si no hay). */
+export function rolActual(): string | null {
+  try { return JSON.parse(leer('user') || 'null')?.roleCode ?? null; } catch { return null; }
+}
+
 export function skinActual(): SkinId {
-  return resolverSkin(leer(CLAVE_DISPOSITIVO), leer(CLAVE_NEGOCIO));
+  return resolverSkin(leer(CLAVE_DISPOSITIVO), leer(CLAVE_NEGOCIO), { usuario: leer(CLAVE_USUARIO), rol: rolActual() });
 }
 
 export function aplicarSkin(id: SkinId = skinActual()): SkinId {
@@ -23,13 +31,19 @@ export function aplicarSkin(id: SkinId = skinActual()): SkinId {
   return id;
 }
 
-/** El negocio eligió (o cargó) su skin: se recuerda y se aplica, salvo que este equipo tenga la suya. */
+/** El negocio eligió (o cargó) su skin: se recuerda y se aplica, salvo que este equipo o el usuario tengan la suya. */
 export function fijarSkinNegocio(valor: string | null | undefined): SkinId {
   escribir(CLAVE_NEGOCIO, valor ?? null);
   return aplicarSkin();
 }
 
-/** Elección de este equipo. `null` = usar la del negocio. */
+/** Preferencia propia del usuario (la que devuelven login y refresh, o la que acaba de guardar). `null` = usar la del negocio. */
+export function fijarSkinUsuario(valor: string | null | undefined): SkinId {
+  escribir(CLAVE_USUARIO, valor ?? null);
+  return aplicarSkin();
+}
+
+/** Elección de este equipo. `null` = usar la del negocio / la del usuario. */
 export function fijarSkinDispositivo(id: SkinId | null): SkinId {
   escribir(CLAVE_DISPOSITIVO, id);
   return aplicarSkin();
@@ -37,4 +51,8 @@ export function fijarSkinDispositivo(id: SkinId | null): SkinId {
 
 export function skinDispositivo(): string | null {
   return leer(CLAVE_DISPOSITIVO);
+}
+
+export function skinUsuario(): string | null {
+  return leer(CLAVE_USUARIO);
 }

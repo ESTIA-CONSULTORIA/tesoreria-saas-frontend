@@ -247,7 +247,7 @@ export default function GlobalSearchModal({ open, onClose }: Props) {
                           }}
                           className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
                             globalIndex === selectedIndex
-                              ? "!bg-btn !text-content-1"
+                              ? "!bg-btn !text-on-solid"
                               : "!bg-surface-1 !text-content-1 hover:!bg-surface-2"
                           }`}
                         >

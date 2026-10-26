@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { useCompanyStore } from "./useCompanyStore";
 import { api } from "../api/api";
 import { limpiarSesionNip } from "../api/sesionNip";
+import { aplicarSkin, fijarSkinUsuario } from "../theme/aplicarSkin";
 
 interface User {
   id: string;
@@ -11,6 +12,8 @@ interface User {
   tenantId?: string;
   companyId?: string | null;
   branchId?: string | null;
+  // Preferencias de interfaz propias que devuelven login y refresh. Si no viene (p. ej. el bootstrap /auth/me) no se toca la skin guardada.
+  uiPrefs?: { skin?: string };
 }
 
 interface AuthState {
@@ -92,6 +95,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       companyId,
       branchId,
     });
+
+    // La skin depende del rol (Claro y Alto contraste solo para ADMIN/SOPORTE) y de la preferencia propia: se reevalúa con la sesión ya guardada.
+    if (user.uiPrefs) fijarSkinUsuario(user.uiPrefs.skin ?? null);
+    else aplicarSkin();
   },
 
   logout: async () => {
@@ -120,6 +127,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.removeItem("active_branch_id");
     localStorage.removeItem("active_company_name");
     localStorage.removeItem("active_branch_name");
+    localStorage.removeItem("ui_skin_user");
 
     // Reset in-memory company store (localStorage already cleared above)
     useCompanyStore.getState().setActiveCompany(null);
@@ -144,6 +152,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.removeItem("modulos_activos");
     localStorage.removeItem("user_company_id");
     localStorage.removeItem("user_branch_id");
+    localStorage.removeItem("ui_skin_user");
+    aplicarSkin();
 
     set({
       tenantId: null,

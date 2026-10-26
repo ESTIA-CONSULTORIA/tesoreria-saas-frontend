@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useAuthStore } from "../store/useAuthStore";
 import { encabezadosSesionNip } from "./sesionNip";
+import { fijarSkinUsuario } from "../theme/aplicarSkin";
 
 const baseURL = (import.meta.env.VITE_API_URL ||
   (window.location.hostname === 'localhost'
@@ -103,6 +104,7 @@ api.interceptors.response.use(
       // mismo resultado final que antes (redirect a /login), solo un round-trip extra.
       if (!refreshPromise) {
         refreshPromise = axios.post(`${baseURL}/auth/refresh`, {}, { withCredentials: true })
+          .then((r) => { if (r.data?.uiPrefs) fijarSkinUsuario(r.data.uiPrefs.skin ?? null); return r; })
           .finally(() => { refreshPromise = null; });
       }
 
