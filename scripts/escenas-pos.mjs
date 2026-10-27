@@ -126,7 +126,7 @@ export const ESCENAS_POS = {
   // ── Fase 3: errores dentro de la ventana, confirmaciones y PanelCuenta como pantalla ──
   'pos-login-error': { ...BASE, ruta: '/pos', accion: async (p) => { await p.type('input[type="password"]', '12'); await clic(p, 'Continuar'); } },
   'pos-descuento-error': pos({ teclas: ['Escape'] }, async (p) => { await prod(p, 'Hamburguesa'); await clic(p, '^Descuento$'); await clic(p, 'Aplicar descuento'); }),
-  'pos-cortesia-error': pos({ teclas: ['Escape'] }, async (p) => { await prod(p, 'Hamburguesa'); await clic(p, '^Cortesía$'); await clic(p, 'Aplicar cortesía'); }),
+  'pos-cortesia-error': pos({ teclas: ['Escape'] }, async (p) => { await prod(p, 'Hamburguesa'); await clic(p, '^Cortesía$'); const sel = await p.$$('[role="dialog"] select'); await sel[0].select('otro'); await sel[1].select('admin'); await p.type('[role="dialog"] input[type="password"]', '12'); await clic(p, 'Aplicar cortesía'); }),
   'pos-producto-error': pos({ teclas: ['Escape'] }, async (p) => { await clic(p, '^Productos$'); await clic(p, 'Nuevo|Agregar'); await clic(p, '^Guardar$'); }),
   'pos-eliminar-producto': pos({ teclas: ['Escape'] }, async (p) => { await clic(p, '^Productos$'); await clic(p, '^Eliminar$'); }),
   'mesas-cancelar-cuenta': { ...BASE, ruta: '/mesas', teclas: ['Escape'], accion: async (p) => { await clic(p, 'Ocupada|Mesa 2|^2'); await clic(p, '^Cancelar cuenta$'); } },
