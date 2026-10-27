@@ -4,6 +4,8 @@ import { api } from "../../core/api/api";
 import CreateUserModal from "./CreateUserModal";
 import CreateRoleModal from "../roles/CreateRoleModal";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
+import { useAuthStore } from "../../core/store/useAuthStore";
+import { etiquetaAmbito, etiquetaNegocio } from "./etiquetasUsuario";
 
 interface User {
   id: string;
@@ -14,6 +16,16 @@ interface User {
   isActive: boolean;
   companyId?: string;
   branchId?: string;
+  tenantId?: string;
+  tenantNombre?: string | null;
+  empresaNombre?: string | null;
+  sucursalNombre?: string | null;
+}
+
+interface Negocio {
+  id: string;
+  tradeName?: string;
+  legalName?: string;
 }
 
 interface Permission {
@@ -52,6 +64,10 @@ const MODULE_NAMES: Record<string, string> = {
 
 export default function UsersPage() {
   const { activeCompany } = useCompanyStore();
+  const esSoporte = useAuthStore((s) => s.user?.roleCode) === "SOPORTE";
+  // Solo SOPORTE elige negocio ("" = todos); el servidor ignora ?tenantId= para cualquier otro rol.
+  const [negocios, setNegocios] = useState<Negocio[]>([]);
+  const [negocioSel, setNegocioSel] = useState("");
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,13 +86,17 @@ export default function UsersPage() {
   const [view, setView] = useState<'rol' | 'user' | null>(null);
   const [localPermissions, setLocalPermissions] = useState<Permission[]>([]);
 
-  useEffect(() => { loadData(); }, [activeCompany?.id]);
+  useEffect(() => { loadData(); }, [activeCompany?.id, negocioSel]);
+  useEffect(() => {
+    if (!esSoporte) return;
+    api.get("/tenants").then((r) => setNegocios(Array.isArray(r.data) ? r.data : [])).catch(() => setNegocios([]));
+  }, [esSoporte]);
 
   async function loadData() {
     try {
       setLoading(true);
       setError("");
-      const [usersRes, rolesRes] = await Promise.all([api.get("/users"), api.get("/roles")]);
+      const [usersRes, rolesRes] = await Promise.all([api.get("/users", esSoporte && negocioSel ? { params: { tenantId: negocioSel } } : undefined), api.get("/roles")]);
       const usersList = Array.isArray(usersRes.data) ? usersRes.data : [];
       const rolesList = Array.isArray(rolesRes.data) ? rolesRes.data : [];
       setUsers(usersList.map((u: User) => {
@@ -190,6 +210,20 @@ export default function UsersPage() {
         <div style={{ marginBottom: 12 }}>
           <h2 style={{ fontSize: 16, fontWeight: 600, color: '#c8cdd8', marginBottom: 2 }}>Usuarios y Roles</h2>
           <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>Administración de usuarios y roles</p>
+          {esSoporte && (
+            <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <label htmlFor="usuarios-negocio" className="text-content-3" style={{ fontSize: 11 }}>Negocio</label>
+              <select id="usuarios-negocio" value={negocioSel}
+                onChange={(ev) => { setNegocioSel(ev.target.value); setSelectedUser(null); setView(null); }}
+                className="bg-surface-1 text-content-1 border border-line"
+                style={{ fontSize: 12, padding: '4px 8px', borderRadius: 6, maxWidth: 260 }}>
+                <option value="">Todos los negocios</option>
+                {negocios.map((n) => (
+                  <option key={n.id} value={n.id}>{n.tradeName || n.legalName || "Sin nombre"}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {error && (
@@ -258,6 +292,9 @@ export default function UsersPage() {
                     </div>
                     <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</div>
                     <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.22)' }}>{u.roleCode}</div>
+                    {esSoporte && (
+                      <div className="text-content-3" style={{ fontSize: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{etiquetaNegocio(u.tenantNombre, u.tenantId)}</div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -355,8 +392,9 @@ export default function UsersPage() {
                     {[
                       { label: 'Estado', value: selectedUser.isActive ? 'Activo' : 'Inactivo' },
                       { label: 'Rol', value: selectedUser.roleName || selectedUser.roleCode || '—' },
-                      { label: 'Empresa', value: selectedUser.companyId || 'Todas' },
-                      { label: 'Sucursal', value: selectedUser.branchId || 'Todas' },
+                      { label: 'Negocio', value: etiquetaNegocio(selectedUser.tenantNombre, selectedUser.tenantId) },
+                      { label: 'Empresa', value: etiquetaAmbito(selectedUser.empresaNombre, selectedUser.companyId) },
+                      { label: 'Sucursal', value: etiquetaAmbito(selectedUser.sucursalNombre, selectedUser.branchId) },
                     ].map(item => (
                       <div key={item.label} style={{ padding: '12px 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', background: '#0f1117' }}>
                         <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.label}</div>
