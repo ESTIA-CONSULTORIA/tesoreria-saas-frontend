@@ -271,6 +271,8 @@ export default function POSPage() {
   const [showLoginScreen, setShowLoginScreen] = useState(false);
   const [cashierPin, setCashierPin] = useState<string>("");
   const [selectedCashier, setSelectedCashier] = useState<string>("");
+  // Cajeros activos del negocio para el login (GET /pos/cashiers/lista); null = cargando.
+  const [cajerosLista, setCajerosLista] = useState<Array<{ id: string; nombre: string | null; rol: string }> | null>(null);
   // Auditoría de seguridad (GoodsHabits, cookies httpOnly, Pendiente 1): true solo cuando
   // un cajero se identificó por NIP (handleLogin) — NO cuando el usuario ERP ya ES el
   // cajero (ver el useEffect de "salvaguarda" más abajo, que nunca pasa por handleLogin).
@@ -782,6 +784,13 @@ export default function POSPage() {
   useEffect(() => { if (!showDiscountModal) { setErrDescuento(null); setAutorizadorClave(""); } }, [showDiscountModal]);
   useEffect(() => { if (!showCourtesyModal) { setErrCortesia(null); setAutorizadorClave(""); } }, [showCourtesyModal]);
   useEffect(() => { if (!showLoginScreen) setErrLogin(null); }, [showLoginScreen]);
+  useEffect(() => {
+    if (!showLoginScreen) return;
+    let vivo = true;
+    setCajerosLista(null);
+    api.get("/pos/cashiers/lista").then((r) => { if (vivo) setCajerosLista(Array.isArray(r.data) ? r.data : []); }).catch(() => { if (vivo) setCajerosLista([]); });
+    return () => { vivo = false; };
+  }, [showLoginScreen]);
 
   async function openShift() {
     setErrApertura(null);
@@ -863,7 +872,9 @@ export default function POSPage() {
       // ya existe en este punto, server-verificada), pero mandarlo explícito no cuesta nada
       // y cubre el caso borde de que esa resolución fallara. Confirmado con curl real que
       // sin ninguno de los dos, loginWithNip() buscaba el NIP entre todos los tenants.
-      const response = await api.post("/pos/cashiers/nip", { nip: cashierPin, tenantId });
+      // Con un cajero elegido de la lista, el NIP se verifica SOLO contra él (y los intentos fallidos se cuentan por usuario).
+      const elegido = cajerosLista?.some((c) => c.id === selectedCashier) ? selectedCashier : undefined;
+      const response = await api.post("/pos/cashiers/nip", { nip: cashierPin, tenantId, ...(elegido ? { userId: elegido } : {}) });
       const cajeroId = response.data?.user?.id || '';
       setSelectedCashier(cajeroId);
       setCajeroNip({ id: cajeroId, nombre: response.data?.user?.name || response.data?.user?.email || "Usuario" });
@@ -874,8 +885,9 @@ export default function POSPage() {
       if (!openShift) {
         setShowOpenShiftModal(true);
       }
-    } catch {
-      setErrLogin("PIN incorrecto o cajero no autorizado");
+    } catch (e) {
+      const status = (e as { response?: { status?: number } })?.response?.status;
+      setErrLogin(status === 400 ? motivoDeRechazo(e) : status === 429 ? motivoDeRechazo(e) : "PIN incorrecto o cajero no autorizado");
     }
   }
 
@@ -2780,19 +2792,23 @@ export default function POSPage() {
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm !text-content-3 mb-1">Seleccionar Cajero</label>
+                <label htmlFor="pos-login-cajero" className="block text-sm !text-content-3 mb-1">Seleccionar Cajero</label>
                 <select
+                  id="pos-login-cajero"
                   value={selectedCashier}
                   onChange={(e) => {
                     setSelectedCashier(e.target.value);
                   }}
                   className="w-full px-4 py-2 rounded-lg border !border-line !bg-nav !text-content-1"
                 >
-                  <option value="">Seleccionar...</option>
-                  <option value="cajero1">Juan Pérez</option>
-                  <option value="cajero2">María García</option>
-                  <option value="cajero3">Carlos López</option>
+                  <option value="">{cajerosLista === null ? "Cargando…" : cajerosLista.length === 0 ? "No hay cajeros activos" : "Cualquiera (solo con mi PIN)"}</option>
+                  {(cajerosLista ?? []).map((c) => (
+                    <option key={c.id} value={c.id}>{c.nombre ?? "Sin nombre"}</option>
+                  ))}
                 </select>
+                {cajerosLista !== null && cajerosLista.length === 0 ? (
+                  <p className="mt-1 text-xs !text-content-3">Crea el cajero en Usuarios (rol Cajero, con empresa, sucursal y PIN de 4 dígitos).</p>
+                ) : null}
               </div>
               <div>
                 <label className="block text-sm !text-content-3 mb-1">PIN de Cajero</label>
