@@ -18,7 +18,6 @@ import {
 import { OFFLINE_SYNC_COMPLETED_EVENT } from "../../core/offline/syncEngine";
 import PosChatPanel from "./PosChatPanel";
 import TableLayout from "./TableLayout";
-import CheckoutFast from "./CheckoutFast";
 import { desgloseTicket, esTasaIva, etiquetaTasa, lineasDeIva, tasaEfectiva, TASAS_IVA, type IvaConfig, type TasaIva, etiquetaIvaUnica } from "../../core/utils/iva";
 import { propsTextoLibre } from "../../core/utils/inputBusqueda";
 import { esFormaTarjeta, ultimos4Validos } from '../../core/utils/tarjeta';
@@ -27,6 +26,8 @@ import { motivoDeRechazo } from '../../core/offline/saleDuplicate';
 import { ModalPOS } from "../../core/components/ModalPOS";
 import { useAviso, useConfirm } from "../../core/components/confirmContext";
 import { AlertaModal } from "../../core/components/AlertaModal";
+import { Boton } from "../../core/components/Boton";
+import { ModalFooter } from "../../core/components/ModalFooter";
 import { AperturaTurnoModal, CierreTurnoModal, CobroPOS, MovimientoEfectivoModal, PrecorteModal, efectivoEsperado } from "./ModalesCaja";
 import { totalContado } from "./cajaTurno";
 import { InputBusqueda } from "../../core/components/InputBusqueda";
@@ -167,10 +168,8 @@ export default function POSPage() {
   const [giro, setGiro] = useState<string>("");
   const [selectedTableForPOS, setSelectedTableForPOS] = useState<{ id: string; numero: number } | null>(null);
   const [showTableSelect, setShowTableSelect] = useState(false);
-  const [showRetailCheckout, setShowRetailCheckout] = useState(false);
 
   const isRestaurant = /restaurante|food|bar|cocina|cafeteria|cafe|bistro/i.test(giro);
-  const isRetail = /retail|comercio|tienda|boutique|abarrotes/i.test(giro);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -1874,18 +1873,6 @@ export default function POSPage() {
             </div>
           )}
 
-          {/* RETAIL: cobro rápido (CobroModal único) */}
-          {isRetail && shift && showRetailCheckout && ticket.length > 0 && (
-            <CheckoutFast
-              items={ticket}
-              total={ticket.reduce((s, i) => s + i.subtotal, 0)}
-              onPay={(formasPago) => {
-                setShowRetailCheckout(false);
-              }}
-              onCancel={() => setShowRetailCheckout(false)}
-            />
-          )}
-
           {/* MAIN CONTENT - 2 ZONES */}
           <div className="flex-1 flex overflow-hidden">
             {/* ZONA IZQUIERDA - PRODUCTOS (75%) */}
@@ -2585,12 +2572,9 @@ export default function POSPage() {
                   />
                 </div>
               </div>
-              <button
-                onClick={() => void avisar({ tipo: "info", mensaje: "Probando conexión con impresora..." })}
-                className="mt-3 px-4 py-2 rounded !bg-btn !text-on-solid text-sm hover:!bg-btn-hover"
-              >
-                Probar Conexión
-              </button>
+              <Boton variante="secundario" tamano="sm" confirma={false} disabled className="mt-3" title="Disponible próximamente">
+                Probar conexión · Próximamente
+              </Boton>
             </div>
 
             {/* Terminal Bancaria */}
@@ -2624,12 +2608,9 @@ export default function POSPage() {
                   />
                 </div>
               </div>
-              <button
-                onClick={() => void avisar({ tipo: "info", mensaje: "Probando conexión con terminal..." })}
-                className="mt-3 px-4 py-2 rounded !bg-btn !text-on-solid text-sm hover:!bg-btn-hover"
-              >
-                Probar Conexión
-              </button>
+              <Boton variante="secundario" tamano="sm" confirma={false} disabled className="mt-3" title="Disponible próximamente">
+                Probar conexión · Próximamente
+              </Boton>
             </div>
 
             {/* Lector Código de Barras */}
@@ -2649,12 +2630,9 @@ export default function POSPage() {
                   <option value="BLUETOOTH">Bluetooth</option>
                 </select>
               </div>
-              <button
-                onClick={() => void avisar({ tipo: "info", mensaje: "Probando conexión con lector..." })}
-                className="mt-3 px-4 py-2 rounded !bg-btn !text-on-solid text-sm hover:!bg-btn-hover"
-              >
-                Probar Conexión
-              </button>
+              <Boton variante="secundario" tamano="sm" confirma={false} disabled className="mt-3" title="Disponible próximamente">
+                Probar conexión · Próximamente
+              </Boton>
             </div>
 
             {/* Cajón de Dinero */}
@@ -2673,12 +2651,9 @@ export default function POSPage() {
                   className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
                 />
               </div>
-              <button
-                onClick={() => void avisar({ tipo: "info", mensaje: "Probando conexión con cajón..." })}
-                className="mt-3 px-4 py-2 rounded !bg-btn !text-on-solid text-sm hover:!bg-btn-hover"
-              >
-                Probar Conexión
-              </button>
+              <Boton variante="secundario" tamano="sm" confirma={false} disabled className="mt-3" title="Disponible próximamente">
+                Probar conexión · Próximamente
+              </Boton>
             </div>
           </div>
         </div>
@@ -2975,12 +2950,9 @@ export default function POSPage() {
               </div>
             </div>
 
-            <button
-              onClick={() => void avisar({ tipo: "ok", mensaje: "Parámetros guardados" })}
-              className="w-full py-3 rounded !bg-ok-solid !text-on-solid font-medium hover:bg-tono-ok-700"
-            >
-              Guardar Parámetros
-            </button>
+            <Boton variante="secundario" tamano="lg" confirma={false} completo disabled title="Disponible próximamente">
+              Guardar parámetros · Próximamente
+            </Boton>
           </div>
         </div>
       )}
@@ -3145,7 +3117,18 @@ export default function POSPage() {
 
       {/* MODAL DESCUENTO */}
       {showDiscountModal && (
-        <ModalPOS size="md" title={"Aplicar Descuento"} onClose={() => setShowDiscountModal(false)} etiquetaEnter="Aplicar">
+        <ModalPOS
+          size="md"
+          title={"Aplicar Descuento"}
+          onClose={() => setShowDiscountModal(false)}
+          etiquetaEnter="Aplicar"
+          footer={
+            <ModalFooter
+              secundario={<Boton variante="secundario" confirma={false} onClick={() => setShowDiscountModal(false)}>Cancelar</Boton>}
+              principal={<Boton onClick={applyGlobalDiscount}>Aplicar descuento</Boton>}
+            />
+          }
+        >
             {errDescuento ? <AlertaModal className="mb-3">{errDescuento}</AlertaModal> : null}
             <div className="space-y-4">
               {/* Sección 1: Descuentos predefinidos */}
@@ -3253,29 +3236,24 @@ export default function POSPage() {
                   <option value="otro">Otro</option>
                 </select>
               </div>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowDiscountModal(false)}
-                  className="flex-1 py-2 rounded !bg-surface-2 !text-content-1 hover:!bg-surface-2"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={applyGlobalDiscount}
-                  data-primary
-                  className="flex-1 py-2 rounded !bg-btn !text-on-solid hover:!bg-btn-hover"
-                >
-                  Aplicar descuento
-                </button>
-              </div>
             </div>
         </ModalPOS>
       )}
 
       {/* MODAL CORTESÍA */}
       {showCourtesyModal && (
-        <ModalPOS size="md" title={"Cortesía"} onClose={() => setShowCourtesyModal(false)} etiquetaEnter="Aplicar">
+        <ModalPOS
+          size="md"
+          title={"Cortesía"}
+          onClose={() => setShowCourtesyModal(false)}
+          etiquetaEnter="Aplicar"
+          footer={
+            <ModalFooter
+              secundario={<Boton variante="secundario" confirma={false} onClick={() => setShowCourtesyModal(false)}>Cancelar</Boton>}
+              principal={<Boton disabled={!courtesyReason || !courtesyAuthUser || !courtesyAuthPin} onClick={applyCourtesy}>Aplicar cortesía</Boton>}
+            />
+          }
+        >
             {errCortesia ? <AlertaModal className="mb-3">{errCortesia}</AlertaModal> : null}
             <div className="space-y-4">
               {/* Sección 1: Selección de productos */}
@@ -3359,23 +3337,6 @@ export default function POSPage() {
                   placeholder="PIN de autorización (4 dígitos)"
                   className="w-full px-4 py-2 rounded-lg border !border-line !bg-nav !text-content-1 text-center"
                 />
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowCourtesyModal(false)}
-                  className="flex-1 py-2 rounded !bg-surface-2 !text-content-1 hover:!bg-surface-2"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={applyCourtesy}
-                  data-primary
-                  disabled={!courtesyReason || !courtesyAuthUser || !courtesyAuthPin}
-                  className="flex-1 py-2 rounded bg-tono-purple-600 !text-on-strong hover:bg-tono-purple-700 disabled:bg-tono-slate-700 disabled:text-tinta-3"
-                >
-                  Aplicar cortesía
-                </button>
               </div>
             </div>
         </ModalPOS>

@@ -39,7 +39,6 @@ export const PANTALLAS_MIGRADAS: readonly string[] = [
   // Ola 2: POS, caja, mesas, Corte Lite y notas de cocina
   'pages/pos/POSPage.tsx',
   'pages/pos/ModalesCaja.tsx',
-  'pages/pos/CheckoutFast.tsx',
   'pages/pos/PosChatPanel.tsx',
   'pages/pos/VentasOfflineFallidas.tsx',
   'pages/pos/BackfillCortePage.tsx',
