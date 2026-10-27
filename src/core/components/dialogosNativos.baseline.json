@@ -5,7 +5,6 @@
  "pages/integrations/IntegrationsPage.tsx": 3,
  "pages/ocr/OCRPage.tsx": 1,
  "pages/pos/PosChatPanel.tsx": 1,
- "pages/pos/POSPage.tsx": 24,
  "pages/reconciliation/ImportModal.tsx": 1,
  "pages/settings/LoginConfigPage.tsx": 3,
  "pages/soporte/PlanesModulos.tsx": 1,

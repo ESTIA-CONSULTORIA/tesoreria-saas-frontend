@@ -123,6 +123,13 @@ export const ESCENAS_POS = {
   'pos-cobro-pago-parcial': pos({ teclas: ['Escape'] }, async (p) => { await prod(p, 'Hamburguesa'); await tecla(p, 'F4'); await p.keyboard.type('50'); await clic(p, 'Agregar pago'); }),
   'mesas-cobro': { ...BASE, ruta: '/mesas', teclas: ['F3', 'F6', 'F8', 'F2', 'Escape'], accion: async (p) => { await clic(p, 'Ocupada|Mesa 2|^2'); await clic(p, '^Cobrar$'); } },
   'mesas-dividir': { ...BASE, ruta: '/mesas', teclas: ['Escape'], accion: async (p) => { await clic(p, 'Ocupada|Mesa 2|^2'); await clic(p, '^Dividir$'); } },
+  // ── Fase 3: errores dentro de la ventana, confirmaciones y PanelCuenta como pantalla ──
+  'pos-login-error': { ...BASE, ruta: '/pos', accion: async (p) => { await p.type('input[type="password"]', '12'); await clic(p, 'Continuar'); } },
+  'pos-descuento-error': pos({ teclas: ['Escape'] }, async (p) => { await prod(p, 'Hamburguesa'); await clic(p, '^Descuento$'); await clic(p, 'Aplicar descuento'); }),
+  'pos-cortesia-error': pos({ teclas: ['Escape'] }, async (p) => { await prod(p, 'Hamburguesa'); await clic(p, '^Cortesía$'); await clic(p, 'Aplicar cortesía'); }),
+  'pos-producto-error': pos({ teclas: ['Escape'] }, async (p) => { await clic(p, '^Productos$'); await clic(p, 'Nuevo|Agregar'); await clic(p, '^Guardar$'); }),
+  'pos-eliminar-producto': pos({ teclas: ['Escape'] }, async (p) => { await clic(p, '^Productos$'); await clic(p, '^Eliminar$'); }),
+  'mesas-cancelar-cuenta': { ...BASE, ruta: '/mesas', teclas: ['Escape'], accion: async (p) => { await clic(p, 'Ocupada|Mesa 2|^2'); await clic(p, '^Cancelar cuenta$'); } },
   'pos-recibo': pos({ imprimible: true }, async (p) => { await prod(p, 'Hamburguesa'); await tecla(p, 'F4'); await tecla(p, 'F8'); await clic(p, 'Agregar pago'); await clic(p, 'CONFIRMAR COBRO'); await ESPERA(1200); }),
   // ── POS: caja ──
   'pos-abrir-turno': pos({ sinTurno: true, teclas: ['F4', 'Escape'] }),
