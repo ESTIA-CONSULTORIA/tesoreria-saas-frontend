@@ -27,13 +27,15 @@ import { ModalPOS } from "../../core/components/ModalPOS";
 import { useAviso, useConfirm } from "../../core/components/confirmContext";
 import { AlertaModal } from "../../core/components/AlertaModal";
 import { Boton } from "../../core/components/Boton";
+import { AutorizacionGerente, type Autorizador } from "./AutorizacionGerente";
+import { descuentoPedidoPct as calcularDescuentoPct, firmaTicket, ticketRequiereAutorizacion, topeDescuento } from "./reglasAutorizacion";
 import { ModalFooter } from "../../core/components/ModalFooter";
 import { AperturaTurnoModal, CierreTurnoModal, CobroPOS, MovimientoEfectivoModal, PrecorteModal, efectivoEsperado } from "./ModalesCaja";
 import { totalContado } from "./cajaTurno";
 import { InputBusqueda } from "../../core/components/InputBusqueda";
 import { OPCIONES_POLITICA_COBRO, OPCIONES_POLITICA_DIVISION, type PoliticaCobro, type PoliticaDivision } from "../mesas/mesasLogic";
 
-type TabType = "terminal" | "productos" | "categorias" | "areas" | "turnos" | "hardware" | "parametros";
+type TabType = "terminal" | "productos" | "categorias" | "areas" | "turnos" | "parametros";
 
 interface TicketItem {
   productoId: string;
@@ -217,7 +219,6 @@ export default function POSPage() {
   const [showDiscountModal, setShowDiscountModal] = useState(false);
   const [showCourtesyModal, setShowCourtesyModal] = useState(false);
   const [courtesyReason, setCourtesyReason] = useState("");
-  const [courtesyAuthorizedBy, setCourtesyAuthorizedBy] = useState("");
   const [cardValidationError, setCardValidationError] = useState("");
   const [showReturnSaleModal, setShowReturnSaleModal] = useState(false);
   const [returnSaleId, setReturnSaleId] = useState<string | null>(null);
@@ -249,8 +250,12 @@ export default function POSPage() {
   // Enhanced courtesy modal state
   const [courtesyProductIds, setCourtesyProductIds] = useState<Set<string>>(new Set());
   const [selectAllCourtesy, setSelectAllCourtesy] = useState(true);
-  const [courtesyAuthUser, setCourtesyAuthUser] = useState<string>("");
-  const [courtesyAuthPin, setCourtesyAuthPin] = useState<string>("");
+  // Autorización de un gerente/admin (cortesía, o descuento sobre el límite del rol): token de un solo uso ligado a las líneas del ticket.
+  const [autorizadores, setAutorizadores] = useState<Autorizador[] | null>(null);
+  const [autorizadorId, setAutorizadorId] = useState<string>("");
+  const [autorizadorClave, setAutorizadorClave] = useState<string>("");
+  const [autorizando, setAutorizando] = useState(false);
+  const [autorizacionPOS, setAutorizacionPOS] = useState<{ tipo: "CORTESIA" | "DESCUENTO"; motivo: string; token?: string; firma: string; vence?: number; autorizadoPor?: string } | null>(null);
   
   // Retiro/Depósito modals
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
@@ -434,26 +439,6 @@ export default function POSPage() {
     horaInicio: "",
     horaFin: "",
     diasActivos: ["L", "M", "X", "J", "V", "S", "D"]
-  });
-
-  // Hardware tab state
-  const [hardwareConfig, setHardwareConfig] = useState({
-    impresora: { ip: "", puerto: "9100", modelo: "" },
-    terminal: { modelo: "", serie: "" },
-    lector: { tipo: "USB" },
-    cajon: { puerto: "" }
-  });
-
-  // Parámetros tab state
-  const [posParams, setPosParams] = useState({
-    nombreNegocio: "",
-    rfc: "",
-    mensajePie: "",
-    propinaSugerida: { activo: false, tipo: "PORCENTAJE", valor: "10" },
-    requerirTurno: true,
-    imprimirAuto: true,
-    copiasTicket: "1",
-    moneda: "MXN"
   });
 
   // Auditoría de producto (GoodsHabits, Hallazgo 0): stockPolicy se movió aquí desde
@@ -787,9 +772,15 @@ export default function POSPage() {
   useEffect(() => { if (!showPrecutModal) setErrPrecorte(null); }, [showPrecutModal]);
   useEffect(() => { if (!showCloseShiftModal) setErrCierre(null); }, [showCloseShiftModal]);
 
+  useEffect(() => {
+    if (!(showCourtesyModal || showDiscountModal) || puedeCortesia) return;
+    let vivo = true;
+    api.get("/pos/autorizaciones/autorizadores").then((r) => { if (vivo) setAutorizadores(Array.isArray(r.data) ? r.data : []); }).catch(() => { if (vivo) setAutorizadores([]); });
+    return () => { vivo = false; };
+  }, [showCourtesyModal, showDiscountModal, puedeCortesia]);
   useEffect(() => { if (!showProductModal) setErrProducto(null); }, [showProductModal]);
-  useEffect(() => { if (!showDiscountModal) setErrDescuento(null); }, [showDiscountModal]);
-  useEffect(() => { if (!showCourtesyModal) setErrCortesia(null); }, [showCourtesyModal]);
+  useEffect(() => { if (!showDiscountModal) { setErrDescuento(null); setAutorizadorClave(""); } }, [showDiscountModal]);
+  useEffect(() => { if (!showCourtesyModal) { setErrCortesia(null); setAutorizadorClave(""); } }, [showCourtesyModal]);
   useEffect(() => { if (!showLoginScreen) setErrLogin(null); }, [showLoginScreen]);
 
   async function openShift() {
@@ -1076,7 +1067,7 @@ export default function POSPage() {
     setCardBank("");
     setSpeiKey("");
     setCourtesyReason("");
-    setCourtesyAuthUser("");
+    setAutorizadorId("");
   }
 
   function calculateTotalCash() {
@@ -1217,77 +1208,125 @@ export default function POSPage() {
     setPaymentForms(paymentForms.filter(pf => pf.id !== id));
   }
 
-  function applyGlobalDiscount() {
+  // Autorización de un gerente/admin para la cortesía y para el descuento que pasa del límite del rol. El servidor decide todo (rol,
+  // tope, motivo, contraseña, vigencia, un solo uso); aquí solo se pide y se manda el token junto con la venta.
+  // Descuento por ítem, en %, que produciría el descuento que se está pidiendo (mismo cálculo que applyGlobalDiscount).
+  function descuentoPedidoPct(): number {
+    const objetivo = selectAllProducts ? ticket : ticket.filter((t) => selectedProductIds.has(t.productoId));
+    return calcularDescuentoPct(discountType, Number(customDiscountValue) || Number(discountPercent), objetivo);
+  }
+  const topeDescuentoRol = topeDescuento(user?.roleCode);
+  const descuentoRequiereAutorizacion = descuentoPedidoPct() > topeDescuentoRol;
+
+  async function pedirAutorizacion(
+    nuevoTicket: TicketItem[],
+    tipo: "CORTESIA" | "DESCUENTO",
+    motivo: string,
+    mostrarError: (m: string) => void,
+    idBase: "cortesia" | "descuento",
+  ): Promise<boolean> {
+    if (!autorizadorId || !autorizadorClave) {
+      mostrarError("Elige quién autoriza y escribe su contraseña.");
+      return false;
+    }
+    setAutorizando(true);
+    try {
+      const r = await api.post("/pos/autorizaciones", {
+        tipo,
+        motivo,
+        autorizadorId,
+        contrasena: autorizadorClave,
+        items: nuevoTicket.map((i) => ({ productoId: i.productoId, cantidad: i.cantidad, descuento: i.descuento })),
+      });
+      setAutorizacionPOS({
+        tipo,
+        motivo,
+        token: r.data.token,
+        firma: firmaTicket(nuevoTicket),
+        vence: new Date(r.data.expiraEn).getTime(),
+        autorizadoPor: r.data.autorizadoPor?.nombre || r.data.autorizadoPor?.email,
+      });
+      return true;
+    } catch (e) {
+      mostrarError(motivoDeRechazo(e));
+      // La contraseña se borra tras cada intento: el foco vuelve a su campo para reintentar sin tocar el ratón.
+      setTimeout(() => document.getElementById(idBase + "-contrasena")?.focus(), 0);
+      return false;
+    } finally {
+      setAutorizando(false);
+      setAutorizadorClave("");
+    }
+  }
+
+  async function applyGlobalDiscount() {
     setErrDescuento(null);
     if (ticket.length > 0 && discountReason) {
       const discount = Number(customDiscountValue) || Number(discountPercent);
       const targetIds = selectAllProducts ? new Set(ticket.map(t => t.productoId)) : selectedProductIds;
-      
-      setTicket(
-        ticket.map((item) => {
-          if (targetIds.has(item.productoId)) {
-            if (discountType === 'percentage') {
-              return {
-                ...item,
-                descuento: discount,
-                subtotal: item.cantidad * Number(item.precioUnitario) * (1 - discount / 100),
-              };
-            } else {
-              const discountAmount = discount;
-              const newSubtotal = Math.max(0, item.cantidad * Number(item.precioUnitario) - discountAmount);
-              return {
-                ...item,
-                descuento: (discountAmount / (item.cantidad * Number(item.precioUnitario))) * 100,
-                subtotal: newSubtotal,
-              };
-            }
+
+      const nuevoTicket = ticket.map((item) => {
+        if (targetIds.has(item.productoId)) {
+          if (discountType === 'percentage') {
+            return {
+              ...item,
+              descuento: discount,
+              subtotal: item.cantidad * Number(item.precioUnitario) * (1 - discount / 100),
+            };
           }
-          return item;
-        })
-      );
+          const discountAmount = discount;
+          const newSubtotal = Math.max(0, item.cantidad * Number(item.precioUnitario) - discountAmount);
+          return {
+            ...item,
+            descuento: (discountAmount / (item.cantidad * Number(item.precioUnitario))) * 100,
+            subtotal: newSubtotal,
+          };
+        }
+        return item;
+      });
+
+      // Por encima del límite del rol hace falta un gerente o administrador (el servidor lo vuelve a exigir). Si el ticket ya tiene una
+      // cortesía, la autorización nueva sigue siendo de cortesía (cubre también el descuento) y conserva su motivo.
+      if (descuentoRequiereAutorizacion) {
+        const hayCortesia = nuevoTicket.some((i) => Number(i.descuento) >= 100);
+        const ok = hayCortesia
+          ? await pedirAutorizacion(nuevoTicket, "CORTESIA", autorizacionPOS?.motivo ?? "otro", setErrDescuento, "descuento")
+          : await pedirAutorizacion(nuevoTicket, "DESCUENTO", discountReason, setErrDescuento, "descuento");
+        if (!ok) return;
+      }
+      setTicket(nuevoTicket);
       setShowDiscountModal(false);
       setDiscountPercent("");
       setCustomDiscountValue("");
       setDiscountReason("");
       setSelectedProductIds(new Set());
       setSelectAllProducts(true);
+      setAutorizadorId("");
     } else {
       setErrDescuento("Debe ingresar un motivo para el descuento");
     }
   }
 
-  function applyCourtesy() {
+  async function applyCourtesy() {
     setErrCortesia(null);
-    if (ticket.length > 0 && courtesyReason && courtesyAuthUser && courtesyAuthPin) {
-      // Simple PIN validation (in production, validate against backend)
-      if (courtesyAuthPin.length < 4) {
-        setErrCortesia("El PIN debe tener al menos 4 dígitos");
+    if (ticket.length > 0 && courtesyReason) {
+      const targetIds = selectAllCourtesy ? new Set(ticket.map(t => t.productoId)) : courtesyProductIds;
+      const nuevoTicket = ticket.map((item) =>
+        targetIds.has(item.productoId) ? { ...item, descuento: 100, subtotal: 0, esCortesia: true } : item,
+      );
+      if (puedeCortesia) {
+        // Gerente o administrador: autoriza con su propia sesión; el motivo queda para la venta y la bitácora.
+        setAutorizacionPOS({ tipo: "CORTESIA", motivo: courtesyReason, firma: firmaTicket(nuevoTicket) });
+      } else if (!(await pedirAutorizacion(nuevoTicket, "CORTESIA", courtesyReason, setErrCortesia, "cortesia"))) {
         return;
       }
-      
-      const targetIds = selectAllCourtesy ? new Set(ticket.map(t => t.productoId)) : courtesyProductIds;
-      
-      setTicket(
-        ticket.map((item) => {
-          if (targetIds.has(item.productoId)) {
-            return {
-              ...item,
-              descuento: 100,
-              subtotal: 0,
-              esCortesia: true,
-            };
-          }
-          return item;
-        })
-      );
+      setTicket(nuevoTicket);
       setShowCourtesyModal(false);
       setCourtesyReason("");
-      setCourtesyAuthUser("");
-      setCourtesyAuthPin("");
+      setAutorizadorId("");
       setCourtesyProductIds(new Set());
       setSelectAllCourtesy(true);
     } else {
-      setErrCortesia("Debe completar todos los campos obligatorios (motivo, autorizador y PIN).");
+      setErrCortesia("Elige el motivo de la cortesía.");
     }
   }
 
@@ -1320,18 +1359,46 @@ export default function POSPage() {
       return;
     }
 
+    // Cortesías y descuentos sobre el límite del rol: el servidor pide la autorización de un gerente/admin (token de un solo uso, 2 min,
+    // ligado a estas líneas). Un gerente o administrador no la necesita: autoriza con su sesión, pero la cortesía lleva siempre su motivo.
+    const hayCortesiaEnTicket = ticket.some((i) => Number(i.descuento) >= 100);
+    let formasPagoVenta: PaymentForm[] = paymentForms;
+    if (formasPagoVenta.length === 0 && getTotal() === 0 && hayCortesiaEnTicket) {
+      // Un ticket todo en cortesía no tiene nada que cobrar: se registra como forma CORTESIA por $0 (si no, el servidor lo dejaría abierto).
+      formasPagoVenta = [{ id: "cortesia-total", forma: "CORTESIA", monto: 0 }];
+    }
+    const motivoCortesia = courtesyReason || autorizacionPOS?.motivo || "";
+    if (formasPagoVenta.some((pf) => pf.forma === "CORTESIA") && !motivoCortesia) {
+      setCardValidationError("Elige el motivo de la cortesía.");
+      return;
+    }
+    formasPagoVenta = formasPagoVenta.map((pf) => (pf.forma === "CORTESIA" ? { ...pf, motivo: pf.motivo || motivoCortesia } : pf));
+    const necesitaToken = ticketRequiereAutorizacion({ puedeCortesia, hayFormaCortesia: formasPagoVenta.some((pf) => pf.forma === "CORTESIA"), items: ticket, rol: user?.roleCode });
+    if (necesitaToken) {
+      const aut = autorizacionPOS;
+      if (!aut?.token || aut.firma !== firmaTicket(ticket)) {
+        setCardValidationError("El ticket cambió después de la autorización. Vuelve a aplicar el descuento o la cortesía con la autorización de un gerente.");
+        return;
+      }
+      if (aut.vence && aut.vence <= Date.now()) {
+        setCardValidationError("La autorización venció (dura 2 minutos). Vuelve a aplicar el descuento o la cortesía con la autorización de un gerente.");
+        return;
+      }
+    }
+
     const saleData = {
       items: ticket,
       subtotal: getSubtotal(),
       descuento: getTotalDiscount(),
       impuestos: getTaxes(),
       total: getTotal(),
-      formasPago: paymentForms,
+      formasPago: formasPagoVenta,
       cajero: selectedCashier || user?.id,
       turnoId: shift.id,
       sucursalId: user?.branchId || branchId,
       tableId: selectedTableForPOS?.id || undefined,
       ...(socioPOS ? { socioId: socioPOS.id } : {}),
+      ...(necesitaToken && autorizacionPOS?.token ? { autorizacion: { token: autorizacionPOS.token } } : {}),
     };
 
     try {
@@ -1339,6 +1406,7 @@ export default function POSPage() {
       const sale = response.data;
 
       paymentFailureCountRef.current = 0;
+      setAutorizacionPOS(null);
       setCurrentSale(sale);
       setShowReceipt(true);
       setShowPaymentModal(false);
@@ -1354,6 +1422,12 @@ export default function POSPage() {
       // nunca entra a la cola offline, se rechaza con el mensaje de conexión.
       if (saleData.tableId && isNetworkOrTimeoutError(error)) {
         setCardValidationError("Sin conexión: las cuentas de mesa no se pueden cobrar sin internet. Reintenta cuando vuelva la conexión.");
+        return;
+      }
+
+      // Una cortesía o un descuento autorizado necesita internet: el token vence en 2 minutos y no se puede encolar.
+      if (saleData.autorizacion && isNetworkOrTimeoutError(error)) {
+        setCardValidationError("Sin conexión: una cortesía o un descuento con autorización necesita internet. Reintenta cuando vuelva la conexión.");
         return;
       }
 
@@ -1675,16 +1749,6 @@ export default function POSPage() {
                 }`}
               >
                 Turnos
-              </button>
-              <button
-                onClick={() => setActiveTab("hardware")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === "hardware"
-                    ? "!bg-btn !text-on-solid"
-                    : "!bg-surface-1 !text-content-3 hover:!bg-surface-2"
-                }`}
-              >
-                Hardware
               </button>
               <button
                 onClick={() => setActiveTab("parametros")}
@@ -2524,181 +2588,10 @@ export default function POSPage() {
         </div>
       )}
 
-      {activeTab === "hardware" && (
-        <div className="p-6">
-          <h2 className="text-2xl font-bold mb-4">Hardware</h2>
-          <div className="space-y-6">
-            {/* Impresora Térmica */}
-            <div className="rounded-xl border !border-line !bg-nav p-4">
-              <h3 className="text-lg font-semibold mb-3">Impresora Térmica</h3>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm !text-content-3 mb-1">IP</label>
-                  <input
-                    type="text"
-                    value={hardwareConfig.impresora.ip}
-                    onChange={(e) => setHardwareConfig({
-                      ...hardwareConfig,
-                      impresora: { ...hardwareConfig.impresora, ip: e.target.value }
-                    })}
-                    placeholder="192.168.1.100"
-                    className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm !text-content-3 mb-1">Puerto</label>
-                  <input
-                    type="text"
-                    value={hardwareConfig.impresora.puerto}
-                    onChange={(e) => setHardwareConfig({
-                      ...hardwareConfig,
-                      impresora: { ...hardwareConfig.impresora, puerto: e.target.value }
-                    })}
-                    placeholder="9100"
-                    className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm !text-content-3 mb-1">Modelo</label>
-                  <input
-                    type="text"
-                    value={hardwareConfig.impresora.modelo}
-                    onChange={(e) => setHardwareConfig({
-                      ...hardwareConfig,
-                      impresora: { ...hardwareConfig.impresora, modelo: e.target.value }
-                    })}
-                    placeholder="Ej: EPSON TM-T20"
-                    className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
-                  />
-                </div>
-              </div>
-              <Boton variante="secundario" tamano="sm" confirma={false} disabled className="mt-3" title="Disponible próximamente">
-                Probar conexión · Próximamente
-              </Boton>
-            </div>
-
-            {/* Terminal Bancaria */}
-            <div className="rounded-xl border !border-line !bg-nav p-4">
-              <h3 className="text-lg font-semibold mb-3">Terminal Bancaria</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm !text-content-3 mb-1">Modelo</label>
-                  <input
-                    type="text"
-                    value={hardwareConfig.terminal.modelo}
-                    onChange={(e) => setHardwareConfig({
-                      ...hardwareConfig,
-                      terminal: { ...hardwareConfig.terminal, modelo: e.target.value }
-                    })}
-                    placeholder="Ej: Verifone VX520"
-                    className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm !text-content-3 mb-1">Número de Serie</label>
-                  <input
-                    type="text"
-                    value={hardwareConfig.terminal.serie}
-                    onChange={(e) => setHardwareConfig({
-                      ...hardwareConfig,
-                      terminal: { ...hardwareConfig.terminal, serie: e.target.value }
-                    })}
-                    placeholder="Serie del equipo"
-                    className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
-                  />
-                </div>
-              </div>
-              <Boton variante="secundario" tamano="sm" confirma={false} disabled className="mt-3" title="Disponible próximamente">
-                Probar conexión · Próximamente
-              </Boton>
-            </div>
-
-            {/* Lector Código de Barras */}
-            <div className="rounded-xl border !border-line !bg-nav p-4">
-              <h3 className="text-lg font-semibold mb-3">Lector Código de Barras</h3>
-              <div className="w-1/2">
-                <label className="block text-sm !text-content-3 mb-1">Tipo</label>
-                <select
-                  value={hardwareConfig.lector.tipo}
-                  onChange={(e) => setHardwareConfig({
-                    ...hardwareConfig,
-                    lector: { ...hardwareConfig.lector, tipo: e.target.value }
-                  })}
-                  className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
-                >
-                  <option value="USB">USB</option>
-                  <option value="BLUETOOTH">Bluetooth</option>
-                </select>
-              </div>
-              <Boton variante="secundario" tamano="sm" confirma={false} disabled className="mt-3" title="Disponible próximamente">
-                Probar conexión · Próximamente
-              </Boton>
-            </div>
-
-            {/* Cajón de Dinero */}
-            <div className="rounded-xl border !border-line !bg-nav p-4">
-              <h3 className="text-lg font-semibold mb-3">Cajón de Dinero</h3>
-              <div className="w-1/2">
-                <label className="block text-sm !text-content-3 mb-1">Puerto</label>
-                <input
-                  type="text"
-                  value={hardwareConfig.cajon.puerto}
-                  onChange={(e) => setHardwareConfig({
-                    ...hardwareConfig,
-                    cajon: { ...hardwareConfig.cajon, puerto: e.target.value }
-                  })}
-                  placeholder="COM1, USB, etc."
-                  className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
-                />
-              </div>
-              <Boton variante="secundario" tamano="sm" confirma={false} disabled className="mt-3" title="Disponible próximamente">
-                Probar conexión · Próximamente
-              </Boton>
-            </div>
-          </div>
-        </div>
-      )}
-
       {activeTab === "parametros" && (
         <div className="p-6">
           <h2 className="text-2xl font-bold mb-4">Parámetros</h2>
           <div className="max-w-2xl space-y-6">
-            <div className="rounded-xl border !border-line !bg-nav p-4">
-              <h3 className="text-lg font-semibold mb-3">Información del Negocio</h3>
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-sm !text-content-3 mb-1">Nombre del Negocio</label>
-                  <input
-                    type="text"
-                    value={posParams.nombreNegocio}
-                    onChange={(e) => setPosParams({ ...posParams, nombreNegocio: e.target.value })}
-                    placeholder="Mi Negocio"
-                    className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm !text-content-3 mb-1">RFC</label>
-                  <input
-                    type="text"
-                    value={posParams.rfc}
-                    onChange={(e) => setPosParams({ ...posParams, rfc: e.target.value })}
-                    placeholder="RFC del negocio"
-                    className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm !text-content-3 mb-1">Mensaje Pie de Ticket</label>
-                  <input
-                    type="text"
-                    value={posParams.mensajePie}
-                    onChange={(e) => setPosParams({ ...posParams, mensajePie: e.target.value })}
-                    placeholder="¡Gracias por su compra!"
-                    className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
-                  />
-                </div>
-              </div>
-            </div>
-
             <div className="rounded-xl border !border-line !bg-nav p-4">
               <h3 className="text-lg font-semibold mb-3">Stock insuficiente al vender</h3>
               <p className="text-xs !text-content-3 mb-4">
@@ -2857,102 +2750,6 @@ export default function POSPage() {
               </div>
             </div>
 
-            <div className="rounded-xl border !border-line !bg-nav p-4">
-              <h3 className="text-lg font-semibold mb-3">Propina Sugerida</h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={posParams.propinaSugerida.activo}
-                    onChange={(e) => setPosParams({
-                      ...posParams,
-                      propinaSugerida: { ...posParams.propinaSugerida, activo: e.target.checked }
-                    })}
-                    className="rounded"
-                  />
-                  <label className="text-sm !text-content-3">Activar propina sugerida</label>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm !text-content-3 mb-1">Tipo</label>
-                    <select
-                      value={posParams.propinaSugerida.tipo}
-                      onChange={(e) => setPosParams({
-                        ...posParams,
-                        propinaSugerida: { ...posParams.propinaSugerida, tipo: e.target.value }
-                      })}
-                      className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
-                    >
-                      <option value="PORCENTAJE">Porcentaje</option>
-                      <option value="MONTO">Monto Fijo</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm !text-content-3 mb-1">Valor</label>
-                    <input
-                      type="text"
-                      value={posParams.propinaSugerida.valor}
-                      onChange={(e) => setPosParams({
-                        ...posParams,
-                        propinaSugerida: { ...posParams.propinaSugerida, valor: e.target.value }
-                      })}
-                      placeholder="10"
-                      className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-xl border !border-line !bg-nav p-4">
-              <h3 className="text-lg font-semibold mb-3">Operación</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm !text-content-3">Requerir apertura de turno para vender</label>
-                  <input
-                    type="checkbox"
-                    checked={posParams.requerirTurno}
-                    onChange={(e) => setPosParams({ ...posParams, requerirTurno: e.target.checked })}
-                    className="rounded"
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <label className="text-sm !text-content-3">Imprimir ticket automáticamente al cobrar</label>
-                  <input
-                    type="checkbox"
-                    checked={posParams.imprimirAuto}
-                    onChange={(e) => setPosParams({ ...posParams, imprimirAuto: e.target.checked })}
-                    className="rounded"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm !text-content-3 mb-1">Número de copias del ticket</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={posParams.copiasTicket}
-                    onChange={(e) => setPosParams({ ...posParams, copiasTicket: e.target.value })}
-                    className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm !text-content-3 mb-1">Moneda</label>
-                  <select
-                    value={posParams.moneda}
-                    onChange={(e) => setPosParams({ ...posParams, moneda: e.target.value })}
-                    className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
-                  >
-                    <option value="MXN">MXN - Peso Mexicano</option>
-                    <option value="USD">USD - Dólar Americano</option>
-                    <option value="EUR">EUR - Euro</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <Boton variante="secundario" tamano="lg" confirma={false} completo disabled title="Disponible próximamente">
-              Guardar parámetros · Próximamente
-            </Boton>
           </div>
         </div>
       )}
@@ -3125,7 +2922,7 @@ export default function POSPage() {
           footer={
             <ModalFooter
               secundario={<Boton variante="secundario" confirma={false} onClick={() => setShowDiscountModal(false)}>Cancelar</Boton>}
-              principal={<Boton onClick={applyGlobalDiscount}>Aplicar descuento</Boton>}
+              principal={<Boton cargando={autorizando} onClick={applyGlobalDiscount}>Aplicar descuento</Boton>}
             />
           }
         >
@@ -3236,6 +3033,18 @@ export default function POSPage() {
                   <option value="otro">Otro</option>
                 </select>
               </div>
+
+              {descuentoRequiereAutorizacion ? (
+                <AutorizacionGerente
+                  idBase="descuento"
+                  autorizadores={autorizadores}
+                  autorizadorId={autorizadorId}
+                  onAutorizador={setAutorizadorId}
+                  contrasena={autorizadorClave}
+                  onContrasena={setAutorizadorClave}
+                  motivoAutorizacion={`Este descuento (${descuentoPedidoPct()} %) supera tu límite (${topeDescuentoRol} %).`}
+                />
+              ) : null}
             </div>
         </ModalPOS>
       )}
@@ -3250,7 +3059,7 @@ export default function POSPage() {
           footer={
             <ModalFooter
               secundario={<Boton variante="secundario" confirma={false} onClick={() => setShowCourtesyModal(false)}>Cancelar</Boton>}
-              principal={<Boton disabled={!courtesyReason || !courtesyAuthUser || !courtesyAuthPin} onClick={applyCourtesy}>Aplicar cortesía</Boton>}
+              principal={<Boton cargando={autorizando} disabled={!courtesyReason || (!puedeCortesia && (!autorizadorId || !autorizadorClave))} onClick={applyCourtesy}>Aplicar cortesía</Boton>}
             />
           }
         >
@@ -3318,26 +3127,19 @@ export default function POSPage() {
               </div>
 
               {/* Sección 3: Autorización */}
-              <div>
-                <label className="block text-sm !text-content-3 mb-1">Autorización *</label>
-                <select
-                  value={courtesyAuthUser}
-                  onChange={(e) => setCourtesyAuthUser(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border !border-line !bg-nav !text-content-1 mb-2"
-                >
-                  <option value="">Seleccionar autorizador...</option>
-                  <option value="admin">Administrador</option>
-                  <option value="soporte">Soporte</option>
-                </select>
-                <input
-                  type="password"
-                  maxLength={4}
-                  value={courtesyAuthPin}
-                  onChange={(e) => setCourtesyAuthPin(e.target.value)}
-                  placeholder="PIN de autorización (4 dígitos)"
-                  className="w-full px-4 py-2 rounded-lg border !border-line !bg-nav !text-content-1 text-center"
+              {puedeCortesia ? (
+                <p className="text-sm !text-content-3">Autorizas con tu sesión{user?.email ? ` (${user.email})` : ""}. La cortesía queda en la bitácora con su motivo.</p>
+              ) : (
+                <AutorizacionGerente
+                  idBase="cortesia"
+                  autorizadores={autorizadores}
+                  autorizadorId={autorizadorId}
+                  onAutorizador={setAutorizadorId}
+                  contrasena={autorizadorClave}
+                  onContrasena={setAutorizadorClave}
+                  motivoAutorizacion="Una cortesía solo la autoriza un gerente o administrador."
                 />
-              </div>
+              )}
             </div>
         </ModalPOS>
       )}
@@ -3383,8 +3185,6 @@ export default function POSPage() {
           setSpeiKey={setSpeiKey}
           courtesyReason={courtesyReason}
           setCourtesyReason={setCourtesyReason}
-          courtesyAuthUser={courtesyAuthUser}
-          setCourtesyAuthUser={setCourtesyAuthUser}
           error={cardValidationError}
           onCancel={cerrarCobro}
           onConfirm={processPayment}

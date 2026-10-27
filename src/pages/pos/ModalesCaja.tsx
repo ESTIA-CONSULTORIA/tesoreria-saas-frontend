@@ -416,8 +416,6 @@ export function CobroPOS(p: {
   setSpeiKey: (v: string) => void;
   courtesyReason: string;
   setCourtesyReason: (v: string) => void;
-  courtesyAuthUser: string;
-  setCourtesyAuthUser: (v: string) => void;
   /** Motivo real con el que el servidor (o la validación local) rechazó el cobro. */
   error?: string;
   onCancel: () => void;
@@ -555,14 +553,7 @@ export function CobroPOS(p: {
                   <option value="otro">Otro</option>
                 </select>
               </div>
-              <div>
-                <label htmlFor="cobro-autoriza" className="mb-1 block text-sm !text-content-3">Autorizado por *</label>
-                <select id="cobro-autoriza" value={p.courtesyAuthUser} onChange={(e) => p.setCourtesyAuthUser(e.target.value)} className={campo}>
-                  <option value="">Seleccionar autorizador...</option>
-                  <option value="admin">Administrador</option>
-                  <option value="soporte">Soporte</option>
-                </select>
-              </div>
+              <p className="text-xs !text-content-3">Autoriza tu sesión de gerente o administrador; queda en la bitácora con el motivo.</p>
             </div>
           )}
         </>
