@@ -25,7 +25,8 @@ import { esFormaTarjeta, ultimos4Validos } from '../../core/utils/tarjeta';
 import { esReintentable } from '../../core/utils/monto';
 import { motivoDeRechazo } from '../../core/offline/saleDuplicate';
 import { ModalPOS } from "../../core/components/ModalPOS";
-import { useAviso } from "../../core/components/confirmContext";
+import { useAviso, useConfirm } from "../../core/components/confirmContext";
+import { AlertaModal } from "../../core/components/AlertaModal";
 import { AperturaTurnoModal, CierreTurnoModal, CobroPOS, MovimientoEfectivoModal, PrecorteModal, efectivoEsperado } from "./ModalesCaja";
 import { totalContado } from "./cajaTurno";
 import { InputBusqueda } from "../../core/components/InputBusqueda";
@@ -313,6 +314,11 @@ export default function POSPage() {
   const [showCloseShiftModal, setShowCloseShiftModal] = useState(false);
   // Errores dentro de las ventanas de caja (antes alert()): de validación por campo y de la operación (servidor). Se limpian al cerrar la ventana.
   const avisar = useAviso();
+  const confirmar = useConfirm();
+  const [errProducto, setErrProducto] = useState<string | null>(null);
+  const [errLogin, setErrLogin] = useState<string | null>(null);
+  const [errDescuento, setErrDescuento] = useState<string | null>(null);
+  const [errCortesia, setErrCortesia] = useState<string | null>(null);
   const [errApertura, setErrApertura] = useState<string | null>(null);
   const [errAperturaFondo, setErrAperturaFondo] = useState<string | null>(null);
   const [errMovimiento, setErrMovimiento] = useState<string | null>(null);
@@ -462,10 +468,11 @@ export default function POSPage() {
   // Guarda el producto en el servidor. El precio y la tasa de IVA que cobra el POS salen siempre de aquí, no del cliente.
   const [guardandoProducto, setGuardandoProducto] = useState(false);
   async function guardarProducto() {
+    setErrProducto(null);
     const nombre = productForm.nombre.trim();
     const precio = Number(productForm.precio);
     if (!nombre || !Number.isFinite(precio) || precio < 0) {
-      alert("Escribe el nombre y un precio válido.");
+      setErrProducto("Escribe el nombre y un precio válido.");
       return;
     }
     const categoria = categories.find((c: any) => c.name === productForm.categoria.trim());
@@ -495,7 +502,7 @@ export default function POSPage() {
     } catch (error) {
       const e = error as ApiErrorLike;
       const msg = e?.response?.data?.message;
-      alert(Array.isArray(msg) ? msg.join(". ") : msg || "No se pudo guardar el producto.");
+      setErrProducto(Array.isArray(msg) ? msg.join(". ") : msg || "No se pudo guardar el producto.");
     } finally {
       setGuardandoProducto(false);
     }
@@ -781,6 +788,11 @@ export default function POSPage() {
   useEffect(() => { if (!showPrecutModal) setErrPrecorte(null); }, [showPrecutModal]);
   useEffect(() => { if (!showCloseShiftModal) setErrCierre(null); }, [showCloseShiftModal]);
 
+  useEffect(() => { if (!showProductModal) setErrProducto(null); }, [showProductModal]);
+  useEffect(() => { if (!showDiscountModal) setErrDescuento(null); }, [showDiscountModal]);
+  useEffect(() => { if (!showCourtesyModal) setErrCortesia(null); }, [showCourtesyModal]);
+  useEffect(() => { if (!showLoginScreen) setErrLogin(null); }, [showLoginScreen]);
+
   async function openShift() {
     setErrApertura(null);
     if (!initialFund || Number(initialFund) <= 0) {
@@ -850,8 +862,9 @@ export default function POSPage() {
   }
 
   async function handleLogin() {
+    setErrLogin(null);
     if (cashierPin.length < 4) {
-      alert("PIN debe tener al menos 4 dígitos");
+      setErrLogin("PIN debe tener al menos 4 dígitos");
       return;
     }
     try {
@@ -872,7 +885,7 @@ export default function POSPage() {
         setShowOpenShiftModal(true);
       }
     } catch {
-      alert("PIN incorrecto o cajero no autorizado");
+      setErrLogin("PIN incorrecto o cajero no autorizado");
     }
   }
 
@@ -1206,6 +1219,7 @@ export default function POSPage() {
   }
 
   function applyGlobalDiscount() {
+    setErrDescuento(null);
     if (ticket.length > 0 && discountReason) {
       const discount = Number(customDiscountValue) || Number(discountPercent);
       const targetIds = selectAllProducts ? new Set(ticket.map(t => t.productoId)) : selectedProductIds;
@@ -1239,15 +1253,16 @@ export default function POSPage() {
       setSelectedProductIds(new Set());
       setSelectAllProducts(true);
     } else {
-      alert("Debe ingresar un motivo para el descuento");
+      setErrDescuento("Debe ingresar un motivo para el descuento");
     }
   }
 
   function applyCourtesy() {
+    setErrCortesia(null);
     if (ticket.length > 0 && courtesyReason && courtesyAuthUser && courtesyAuthPin) {
       // Simple PIN validation (in production, validate against backend)
       if (courtesyAuthPin.length < 4) {
-        alert("El PIN debe tener al menos 4 dígitos");
+        setErrCortesia("El PIN debe tener al menos 4 dígitos");
         return;
       }
       
@@ -1273,7 +1288,7 @@ export default function POSPage() {
       setCourtesyProductIds(new Set());
       setSelectAllCourtesy(true);
     } else {
-      alert("Debe completar todos los campos obligatorios");
+      setErrCortesia("Debe completar todos los campos obligatorios (motivo, autorizador y PIN).");
     }
   }
 
@@ -1291,15 +1306,15 @@ export default function POSPage() {
 
   async function processPayment() {
     if (ticket.length === 0) {
-      alert("El ticket está vacío");
+      setCardValidationError("El ticket está vacío");
       return;
     }
     if (!shift) {
-      alert("No hay turno abierto");
+      setCardValidationError("No hay turno abierto");
       return;
     }
     if (getTotalCovered() < getTotal()) {
-      alert("El monto cubierto es insuficiente");
+      setCardValidationError("El monto cubierto es insuficiente");
       return;
     }
     if (!validateCardPayments()) {
@@ -1339,7 +1354,7 @@ export default function POSPage() {
       // Una venta ligada a una mesa es una cuenta de mesa (el backend estampa mesero y turno y revisa saldo/roles):
       // nunca entra a la cola offline, se rechaza con el mensaje de conexión.
       if (saleData.tableId && isNetworkOrTimeoutError(error)) {
-        alert("Sin conexión: las cuentas de mesa no se pueden cobrar sin internet. Reintenta cuando vuelva la conexión.");
+        setCardValidationError("Sin conexión: las cuentas de mesa no se pueden cobrar sin internet. Reintenta cuando vuelva la conexión.");
         return;
       }
 
@@ -1389,7 +1404,7 @@ export default function POSPage() {
       paymentFailureCountRef.current += 1;
       setCardValidationError(`El servidor tuvo un problema (${motivo}). Reintenta el cobro; no se registró ninguna venta.`);
       if (paymentFailureCountRef.current >= 2) {
-        alert("No se pudo procesar la venta después de varios intentos. Reporta esto a soporte antes de continuar — no se realizó ningún cobro.");
+        void avisar({ tipo: "error", titulo: "Cobro no registrado", mensaje: "No se pudo procesar la venta después de varios intentos. Reporta esto a soporte antes de continuar — no se realizó ningún cobro." });
       }
     }
   }
@@ -1594,7 +1609,7 @@ export default function POSPage() {
       };
       reader.readAsText(posCsvFile);
     } catch (err: any) {
-      alert(err.response?.data?.message || "Error al importar productos");
+      void avisar({ tipo: "error", mensaje: err.response?.data?.message || "Error al importar productos" });
     } finally {
       setIsPosImporting(false);
     }
@@ -1797,7 +1812,7 @@ export default function POSPage() {
                         setShowCloseShiftModal(true);
                       } catch (error) {
                         console.error("Error loading shift summary:", error);
-                        alert("Error al cargar resumen del turno");
+                        void avisar({ tipo: "error", mensaje: "No se pudo cargar el resumen del turno. Inténtalo de nuevo." });
                       }
                     }}
                     disabled={!shift?.precorteGuardado}
@@ -2196,8 +2211,8 @@ export default function POSPage() {
                           Editar
                         </button>
                         <button
-                          onClick={() => {
-                            if (confirm("¿Eliminar este producto?")) {
+                          onClick={async () => {
+                            if (await confirmar({ titulo: "Eliminar producto", mensaje: "¿Eliminar este producto?", textoConfirmar: "Eliminar", destructiva: true })) {
                               setProducts(products.filter(p => p.id !== product.id));
                             }
                           }}
@@ -2259,8 +2274,8 @@ export default function POSPage() {
                         Editar
                       </button>
                       <button
-                        onClick={() => {
-                          if (confirm("¿Eliminar esta categoría?")) {
+                        onClick={async () => {
+                          if (await confirmar({ titulo: "Eliminar categoría", mensaje: "¿Eliminar esta categoría?", textoConfirmar: "Eliminar", destructiva: true })) {
                             setPosCategories(posCategories.filter(c => c.id !== cat.id));
                           }
                         }}
@@ -2324,9 +2339,9 @@ export default function POSPage() {
                         Editar
                       </button>
                       <button
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
-                          if (confirm("¿Eliminar esta área?")) {
+                          if (await confirmar({ titulo: "Eliminar área", mensaje: "¿Eliminar esta área?", textoConfirmar: "Eliminar", destructiva: true })) {
                             setAreas(areas.filter(a => a.id !== area.id));
                           }
                         }}
@@ -2369,8 +2384,8 @@ export default function POSPage() {
                               </div>
                               <p className="text-xs !text-content-3">Capacidad: {mesa.capacity}</p>
                               <button
-                                onClick={() => {
-                                  if (confirm("¿Eliminar esta mesa?")) {
+                                onClick={async () => {
+                                  if (await confirmar({ titulo: "Eliminar mesa", mensaje: "¿Eliminar esta mesa?", textoConfirmar: "Eliminar", destructiva: true })) {
                                     setAreas(areas.map(a => 
                                       a.id === area.id 
                                         ? { ...a, mesas: a.mesas.filter((m: any) => m.id !== mesa.id) }
@@ -2460,8 +2475,8 @@ export default function POSPage() {
                             Editar
                           </button>
                           <button
-                            onClick={() => {
-                              if (confirm("¿Eliminar este turno?")) {
+                            onClick={async () => {
+                              if (await confirmar({ titulo: "Eliminar turno", mensaje: "¿Eliminar este turno?", textoConfirmar: "Eliminar", destructiva: true })) {
                                 setShiftConfigs(shiftConfigs.filter(c => c.id !== config.id));
                               }
                             }}
@@ -2571,7 +2586,7 @@ export default function POSPage() {
                 </div>
               </div>
               <button
-                onClick={() => alert("Probando conexión con impresora...")}
+                onClick={() => void avisar({ tipo: "info", mensaje: "Probando conexión con impresora..." })}
                 className="mt-3 px-4 py-2 rounded !bg-btn !text-on-solid text-sm hover:!bg-btn-hover"
               >
                 Probar Conexión
@@ -2610,7 +2625,7 @@ export default function POSPage() {
                 </div>
               </div>
               <button
-                onClick={() => alert("Probando conexión con terminal...")}
+                onClick={() => void avisar({ tipo: "info", mensaje: "Probando conexión con terminal..." })}
                 className="mt-3 px-4 py-2 rounded !bg-btn !text-on-solid text-sm hover:!bg-btn-hover"
               >
                 Probar Conexión
@@ -2635,7 +2650,7 @@ export default function POSPage() {
                 </select>
               </div>
               <button
-                onClick={() => alert("Probando conexión con lector...")}
+                onClick={() => void avisar({ tipo: "info", mensaje: "Probando conexión con lector..." })}
                 className="mt-3 px-4 py-2 rounded !bg-btn !text-on-solid text-sm hover:!bg-btn-hover"
               >
                 Probar Conexión
@@ -2659,7 +2674,7 @@ export default function POSPage() {
                 />
               </div>
               <button
-                onClick={() => alert("Probando conexión con cajón...")}
+                onClick={() => void avisar({ tipo: "info", mensaje: "Probando conexión con cajón..." })}
                 className="mt-3 px-4 py-2 rounded !bg-btn !text-on-solid text-sm hover:!bg-btn-hover"
               >
                 Probar Conexión
@@ -2961,7 +2976,7 @@ export default function POSPage() {
             </div>
 
             <button
-              onClick={() => alert("Parámetros guardados")}
+              onClick={() => void avisar({ tipo: "ok", mensaje: "Parámetros guardados" })}
               className="w-full py-3 rounded !bg-ok-solid !text-on-solid font-medium hover:bg-tono-ok-700"
             >
               Guardar Parámetros
@@ -3018,8 +3033,11 @@ export default function POSPage() {
                   value={cashierPin}
                   onChange={(e) => setCashierPin(e.target.value)}
                   placeholder="****"
+                  aria-invalid={errLogin ? true : undefined}
+                  aria-describedby={errLogin ? "pos-login-error" : undefined}
                   className="w-full px-4 py-2 rounded-lg border !border-line !bg-nav !text-content-1 text-center text-2xl tracking-widest"
                 />
+                {errLogin ? <p id="pos-login-error" role="alert" className="mt-1 text-center text-sm font-medium !text-danger">{errLogin}</p> : null}
               </div>
               <button
                 onClick={handleLogin}
@@ -3128,6 +3146,7 @@ export default function POSPage() {
       {/* MODAL DESCUENTO */}
       {showDiscountModal && (
         <ModalPOS size="md" title={"Aplicar Descuento"} onClose={() => setShowDiscountModal(false)} etiquetaEnter="Aplicar">
+            {errDescuento ? <AlertaModal className="mb-3">{errDescuento}</AlertaModal> : null}
             <div className="space-y-4">
               {/* Sección 1: Descuentos predefinidos */}
               <div>
@@ -3257,6 +3276,7 @@ export default function POSPage() {
       {/* MODAL CORTESÍA */}
       {showCourtesyModal && (
         <ModalPOS size="md" title={"Cortesía"} onClose={() => setShowCourtesyModal(false)} etiquetaEnter="Aplicar">
+            {errCortesia ? <AlertaModal className="mb-3">{errCortesia}</AlertaModal> : null}
             <div className="space-y-4">
               {/* Sección 1: Selección de productos */}
               <div>
@@ -3539,6 +3559,7 @@ export default function POSPage() {
       {/* MODAL PRODUCTO */}
       {showProductModal && (
         <ModalPOS size="md" title={editingProduct ? "Editar Producto" : "Nuevo Producto"} onClose={() => setShowProductModal(false)}>
+            {errProducto ? <AlertaModal className="mb-3">{errProducto}</AlertaModal> : null}
             <div className="space-y-4">
               <div>
                 <label className="block text-sm !text-content-3 mb-1">Código</label>

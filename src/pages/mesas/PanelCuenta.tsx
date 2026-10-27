@@ -5,6 +5,9 @@ import type { IvaConfig } from '../../core/utils/iva';
 import { textoAtiende } from '../../core/utils/nombreUsuario';
 import { InputBusqueda } from '../../core/components/InputBusqueda';
 import { Boton } from '../../core/components/Boton';
+import { AlertaModal } from '../../core/components/AlertaModal';
+import { Modal } from '../../core/components/Modal';
+import { ModalFooter } from '../../core/components/ModalFooter';
 import { CobroModal } from '../../core/components/cobro/CobroModal';
 import type { ClaveForma } from '../../core/components/cobro/reglasCobro';
 import type { FormaPago, MesasApi, Producto } from './mesasApi';
@@ -131,24 +134,16 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
   const sinCuenta = !cuenta;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-scrim/70 sm:items-center">
-      <div className="relative flex max-h-[96vh] w-full max-w-5xl flex-col overflow-hidden rounded-t-2xl border !border-line !bg-bg !text-content-1 sm:rounded-2xl">
-        <header className="flex items-center justify-between border-b !border-line p-4">
-          <div>
-            <h2 className="text-lg font-bold">
-              Mesa {mesa.number}
-              {cuenta?.folio ? ` · ${cuenta.folio}` : ''}
-            </h2>
-            <p className="text-xs !text-content-3">{textoAtiende(sinCuenta, nombreMesero)}</p>
-          </div>
-          <button className={`${btn} !bg-surface-1`} onClick={onCerrar}>Cerrar</button>
-        </header>
-
-        {error && !cobrando && !cancelando && (
-          <div role="alert" className="border-b border-tono-danger-900 bg-tono-danger-950 px-4 py-3 text-sm text-tono-danger-200">{error}</div>
-        )}
-
-        <div className="grid flex-1 grid-cols-1 gap-4 overflow-y-auto p-4 md:grid-cols-2">
+    <Modal
+      size="xl"
+      title={`Mesa ${mesa.number}${cuenta?.folio ? ` · ${cuenta.folio}` : ''}`}
+      subtitle={textoAtiende(sinCuenta, nombreMesero)}
+      onClose={onCerrar}
+      enterModo="avanzar"
+      footer={<ModalFooter principal={<Boton variante="secundario" onClick={onCerrar}>Cerrar</Boton>} />}
+    >
+      {error && !cobrando && !cancelando ? <AlertaModal className="mb-3">{error}</AlertaModal> : null}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <section>
             <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide !text-content-3">Cuenta</h3>
             {cuenta && (
@@ -208,13 +203,16 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
                     {ivaCfg.preciosIncluyenIva ? ' (precios con IVA incluido)' : ''}
                   </span>
                 </div>
-                <button
+                <Boton
+                  tamano="lg"
+                  completo
+                  confirma={false}
+                  className="mt-2"
                   disabled={ocupado || (sinCuenta && !sucursalId)}
-                  className={`${btn} mt-2 w-full !bg-btn disabled:opacity-40`}
                   onClick={sinCuenta ? abrir : sumar}
                 >
                   {sinCuenta ? `Abrir cuenta · ${dinero(desgloseIva(carrito, ivaCfg).total)}` : `Agregar a la cuenta · ${dinero(desgloseIva(carrito, ivaCfg).total)}`}
-                </button>
+                </Boton>
                 {sinCuenta && !sucursalId && <p className="mt-1 text-xs text-tono-amber-300">Falta la sucursal de la sesión.</p>}
               </div>
             )}
@@ -222,19 +220,19 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
             {cuenta && (
               <div className="flex flex-wrap gap-2">
                 {acc.cobrar && (
-                  <button disabled={ocupado} className={`${btn} !bg-ok-solid disabled:opacity-40`} onClick={() => { setModo('completo'); setCobrando(true); }}>
+                  <Boton variante="exito" tamano="lg" confirma={false} disabled={ocupado} onClick={() => { setModo('completo'); setCobrando(true); }}>
                     Cobrar
-                  </button>
+                  </Boton>
                 )}
                 {acc.dividir && (
-                  <button disabled={ocupado} className={`${btn} bg-tono-indigo-700 text-on-solid disabled:opacity-40`} onClick={() => { setModo('parcial'); setCobrando(true); }}>
+                  <Boton tamano="lg" confirma={false} disabled={ocupado} onClick={() => { setModo('parcial'); setCobrando(true); }}>
                     Dividir
-                  </button>
+                  </Boton>
                 )}
                 {acc.cancelar && (
-                  <button disabled={ocupado} className={`${btn} !bg-danger-soft !text-danger disabled:opacity-40`} onClick={() => setCancelando(true)}>
+                  <Boton variante="peligro" tamano="lg" confirma={false} disabled={ocupado} onClick={() => setCancelando(true)}>
                     Cancelar cuenta
-                  </button>
+                  </Boton>
                 )}
                 {!acc.cobrar && <p className="w-full text-xs !text-content-3">El cobro de esta cuenta se hace en caja.</p>}
               </div>
@@ -261,7 +259,7 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
               {visibles.length === 0 && <p className="col-span-full text-sm !text-content-3">Sin productos.</p>}
             </div>
           </section>
-        </div>
+      </div>
 
         {cobrando && cuenta && (
           <CobroModal
@@ -347,25 +345,38 @@ export default function PanelCuenta({ mesa, cuenta, productos, politicas, api, s
         )}
 
         {cancelando && cuenta && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-scrim/70 p-4">
-            <div className="w-full max-w-md space-y-3 rounded-2xl border !border-line !bg-nav p-5">
-              <h3 className="text-lg font-bold">Cancelar la cuenta de la mesa {mesa.number}</h3>
-              {error && <div role="alert" className="rounded-lg bg-tono-danger-950 p-2 text-sm text-tono-danger-200">{error}</div>}
-              <input className="w-full rounded-lg border !border-line !bg-bg px-3 py-3 text-base" placeholder="Motivo (obligatorio)" value={motivo} onChange={(e) => setMotivo(e.target.value)} />
-              <div className="flex gap-2">
-                <button className={`${btn} flex-1 !bg-surface-1`} onClick={() => { setCancelando(false); setError(''); }}>Volver</button>
-                <button
-                  disabled={ocupado || !motivo.trim()}
-                  className={`${btn} flex-1 !bg-danger-soft !text-danger disabled:opacity-40`}
-                  onClick={() => run(() => api.cancelar(cuenta.id, motivo.trim()), () => { setCancelando(false); onCerrar(); })}
-                >
-                  Cancelar cuenta
-                </button>
-              </div>
-            </div>
-          </div>
+          <Modal
+            size="sm"
+            title={`Cancelar la cuenta de la mesa ${mesa.number}`}
+            onClose={() => { setCancelando(false); setError(''); }}
+            footer={
+              <ModalFooter
+                secundario={<Boton variante="secundario" onClick={() => { setCancelando(false); setError(''); }}>Volver</Boton>}
+                principal={
+                  <Boton
+                    variante="peligro"
+                    disabled={ocupado || !motivo.trim()}
+                    onClick={() => run(() => api.cancelar(cuenta.id, motivo.trim()), () => { setCancelando(false); onCerrar(); })}
+                  >
+                    Cancelar cuenta
+                  </Boton>
+                }
+              />
+            }
+          >
+            {error ? <AlertaModal className="mb-3">{error}</AlertaModal> : null}
+            <label htmlFor="mesa-motivo-cancelar" className="mb-1 block text-sm !text-content-3">Motivo (obligatorio) *</label>
+            <input
+              id="mesa-motivo-cancelar"
+              className="w-full rounded-lg border !border-line !bg-bg px-3 py-3 text-base"
+              placeholder="¿Por qué se cancela la cuenta?"
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+              data-autofocus=""
+            />
+            {!motivo.trim() ? <p className="mt-1 text-xs !text-content-3">Escribe el motivo para poder cancelar la cuenta.</p> : null}
+          </Modal>
         )}
-      </div>
-    </div>
+    </Modal>
   );
 }
