@@ -23,6 +23,8 @@ export const PANTALLAS_MIGRADAS: readonly string[] = [
   'core/components/NipPad.tsx',
   'core/components/ConfirmDialog.tsx',
   'core/components/reglasBoton.ts',
+  'core/components/cobro/CobroModal.tsx',
+  'core/components/cobro/reglasCobro.ts',
   // Ola 1: dashboard, centro de soluciones y guía de la prueba (el login conserva su paleta propia por negocio: ver PLAN-SKINS §11)
   'pages/Dashboard/DashboardPage.tsx',
   'pages/Dashboard/DashboardLite.tsx',

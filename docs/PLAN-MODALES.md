@@ -18,7 +18,7 @@ viva: lo que está hecho, la regla y cómo se vigila.
 
 ## 2. Estándar por tipo de tarea
 
-- **Cobro** (`CobroModal`, pendiente): `xl`, 3 columnas (formas de pago · importe con teclado · resumen), total siempre visible, F2/F3/F6/F8/F4.
+- **Cobro** (`CobroModal`, hecho en la fase 2): `xl`, 3 columnas (formas de pago · importe con teclado · resumen), total siempre visible, F2/F3/F6/F8/F4.
 - **Monto / NIP**: `sm` o `md`. `CampoMoneda` con `TecladoNumerico` (7-8-9 arriba, 0 abajo, un solo glifo ⌫). NIP con `NipPad` (puntos de avance, error anunciado, teclado físico).
 - **Confirmación**: `sm`, `useConfirm()`. Texto con la consecuencia concreta; si es destructiva, botón `peligro` y foco inicial en Cancelar.
 - **Formulario**: `md` o `lg`, `<label>` visible por campo, error por campo, alta y edición con el mismo componente.
@@ -46,4 +46,5 @@ scroll interno, botones del pie) además de contraste, teclado y desborde.
 ## 5. Avance
 
 - **Fase 1** (esta): componentes y specs; conjunto de corte (apertura, retiro/depósito, precorte, cierre, Corte Lite: PIN, fondo inicial, monto con teclado, avisos de insumos); Esc y capa de las ventanas `Create*` y afines (16).
-- **Siguiente** (no iniciado): `CobroModal` único; confirmaciones y `alert()` restantes de `POSPage`; formularios del POS y de mesas; formularios del ERP sobre `FormModal`.
+- **Fase 2** (hecha): `CobroModal` único (`core/components/cobro/`) sobre el POS (`CobroPOS`, con el recibo en la misma ventana), el cobro de la cuenta de mesas (`PanelCuenta`) y el cobro rápido de retail (`CheckoutFast`). Cada pantalla conserva su lógica de precios, IVA, descuentos y tarjeta; el componente solo pinta las 3 columnas, el total siempre visible y F2/F3/F4/F6/F8.
+- **Siguiente** (no iniciado): confirmaciones y `alert()` restantes de `POSPage`; formularios del POS y de mesas; formularios del ERP sobre `FormModal`.

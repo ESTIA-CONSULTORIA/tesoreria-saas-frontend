@@ -1,5 +1,4 @@
-import { useEffect, type ChangeEvent, type RefObject } from 'react';
-import { normalizarMonto } from '../../core/utils/monto';
+import { type ChangeEvent, type ReactNode, type RefObject } from 'react';
 import { esFormaTarjeta, motivoBloqueoCobro, motivoFaltaTarjeta, soloUltimos4 } from '../../core/utils/tarjeta';
 import { ModalPOS } from '../../core/components/ModalPOS';
 import { AlertaModal } from '../../core/components/AlertaModal';
@@ -7,6 +6,8 @@ import { Boton } from '../../core/components/Boton';
 import { CampoMoneda } from '../../core/components/CampoMoneda';
 import { ErrorCampo } from '../../core/components/ErrorCampo';
 import { ModalFooter } from '../../core/components/ModalFooter';
+import { CobroModal } from '../../core/components/cobro/CobroModal';
+import { ICONO_FORMA, type ClaveForma, type OpcionForma } from '../../core/components/cobro/reglasCobro';
 import { DENOMINACIONES, conciliacionTurno, diferenciasPrecorte, efectivoEsperado, totalContado, type TurnoCaja } from './cajaTurno';
 
 // Ventanas de caja de uso diario (apertura, retiro, depósito, precorte, corte, cobro). Presentacionales: el estado y las
@@ -388,10 +389,11 @@ export function CierreTurnoModal(p: {
 }
 
 // ───────────────────────── Cobro ─────────────────────────
-export type FormaPago = 'EFECTIVO' | 'TARJETA' | 'DEBITO' | 'CREDITO' | 'TRANSFERENCIA' | 'CORTESIA';
-const ICONO: Record<string, string> = { EFECTIVO: '◈', DEBITO: '▣', CREDITO: '◉', TRANSFERENCIA: '⇄', CORTESIA: '✦', TARJETA: '▣' };
+// Adaptador del POS sobre el CobroModal único (core/components/cobro). El estado y el cálculo (total, pagado, pendiente, cambio, validación
+// de tarjeta) viven en POSPage; aquí solo se arman las columnas.
+export type FormaPago = ClaveForma;
 
-export function CobroModal(p: {
+export function CobroPOS(p: {
   total: number;
   pagado: number;
   pendiente: number;
@@ -420,163 +422,94 @@ export function CobroModal(p: {
   error?: string;
   onCancel: () => void;
   onConfirm: () => void;
+  /** Tras cobrar, la MISMA ventana pasa a mostrar el recibo. */
+  recibo?: ReactNode;
+  onCerrarRecibo?: () => void;
+  onImprimirRecibo?: () => void;
 }) {
-  // Foco en el campo de monto al abrir y cada vez que cambia la forma de pago: el cajero teclea sin tocar la pantalla.
-  useEffect(() => {
-    const t = setTimeout(() => {
-      p.inputRef.current?.focus();
-      p.inputRef.current?.select();
-    }, 0);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [p.formaActiva]);
-  const formas: [FormaPago, string][] = [
-    ['EFECTIVO', 'Efectivo'],
-    ['DEBITO', 'Tarjeta Débito'],
-    ['CREDITO', 'Tarjeta Crédito'],
-    ['TRANSFERENCIA', 'SPEI'],
-    ...(p.puedeCortesia ? ([['CORTESIA', 'Cortesía']] as [FormaPago, string][]) : []),
+  const formas: OpcionForma[] = [
+    { clave: 'EFECTIVO', etiqueta: 'Efectivo' },
+    { clave: 'DEBITO', etiqueta: 'Tarjeta Débito' },
+    { clave: 'CREDITO', etiqueta: 'Tarjeta Crédito' },
+    { clave: 'TRANSFERENCIA', etiqueta: 'SPEI' },
+    ...(p.puedeCortesia ? ([{ clave: 'CORTESIA', etiqueta: 'Cortesía' }] as OpcionForma[]) : []),
   ];
   const campo = 'w-full px-3 py-2 rounded !bg-nav !text-content-1 border !border-line';
   const motivoTarjeta = motivoFaltaTarjeta(p.formaActiva, p.cardLast4);
   const motivoConfirmar = motivoBloqueoCobro({ pagado: p.pagado, total: p.total, pagos: p.pagos, formaActiva: p.formaActiva, ultimos4Activo: p.cardLast4 });
   return (
-    <ModalPOS
-      size="xl"
-      title="Cobro"
-      subtitle={`Total a cobrar ${money(p.total)}`}
-      onClose={p.onCancel}
-      etiquetaEnter="Agregar pago"
-      atajos={[
-        { tecla: 'F2', etiqueta: 'Efectivo', accion: () => p.onElegirForma('EFECTIVO') },
-        { tecla: 'F3', etiqueta: 'Tarjeta', accion: () => p.onElegirForma(p.formaActiva === 'DEBITO' ? 'CREDITO' : 'DEBITO') },
-        { tecla: 'F6', etiqueta: 'SPEI', accion: () => p.onElegirForma('TRANSFERENCIA') },
-        { tecla: 'F8', etiqueta: 'Exacto', accion: p.onExacto },
-        { tecla: 'F4', etiqueta: 'Cobrar', accion: p.onConfirm, deshabilitado: !!motivoConfirmar },
-      ]}
-      footer={
+    <CobroModal
+      fase={p.recibo ? 'recibo' : 'cobro'}
+      recibo={p.recibo}
+      onCerrarRecibo={p.onCerrarRecibo}
+      onImprimirRecibo={p.onImprimirRecibo}
+      totalTexto={money(p.total)}
+      formas={formas}
+      formaActiva={p.formaActiva}
+      onElegirForma={p.onElegirForma}
+      columnaFormas={
         <>
-          <button onClick={p.onCancel} className="px-6 py-3 rounded-lg !bg-surface-2 !text-content-2 hover:!bg-surface-2">Cancelar</button>
-          {motivoConfirmar ? <span role="status" className="self-center text-xs text-tono-amber-300">{motivoConfirmar}</span> : null}
-          <button
-            onClick={p.onConfirm}
-            disabled={!!motivoConfirmar}
-            className="flex-1 py-3 rounded-lg !bg-ok-solid !text-on-solid font-bold hover:bg-tono-ok-700 disabled:bg-tono-slate-700 disabled:text-tinta-3"
-          >
-            CONFIRMAR COBRO →
-          </button>
-        </>
-      }
-    >
-      <div className="grid gap-4 lg:grid-cols-[1fr_1.15fr_1fr]">
-        <div className="flex flex-col gap-2">
-          <p className="text-xs !text-content-3">FORMA DE PAGO</p>
-          {formas.map(([forma, etiqueta]) => (
-            <button
-              key={forma}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => p.onElegirForma(forma)}
-              className={`w-full h-11 rounded-lg flex items-center gap-3 px-4 transition-colors ${
-                p.formaActiva === forma ? '!bg-btn border-2 border-tono-blue-400' : '!bg-surface-2 border !border-line hover:!bg-surface-2'
-              }`}
-            >
-              <span className="text-xl">{ICONO[forma]}</span>
-              <span className="font-medium">{etiqueta}</span>
-            </button>
-          ))}
-          <p className="text-xs !text-content-3 mt-1">PAGOS AGREGADOS</p>
-          <div className="max-h-28 overflow-y-auto space-y-2">
+          <p className="mt-1 text-xs !text-content-3">PAGOS AGREGADOS</p>
+          <div className="max-h-28 space-y-2 overflow-y-auto">
             {p.pagos.length === 0 && <p className="text-sm !text-content-3">Ninguno todavía</p>}
             {p.pagos.map((pf) => (
-              <div key={pf.id} className="flex items-center justify-between p-2 rounded !bg-nav border !border-line">
+              <div key={pf.id} className="flex items-center justify-between rounded border !border-line !bg-nav p-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">{ICONO[pf.forma] ?? '✦'}</span>
+                  <span aria-hidden="true" className="text-lg">{ICONO_FORMA[pf.forma] ?? '✦'}</span>
                   <span className="text-sm">{money(pf.monto)}</span>
                   {pf.ultimos4Digitos ? <span className="text-xs !text-content-3">****{pf.ultimos4Digitos}</span> : null}
                 </div>
-                <button onClick={() => p.onQuitar(pf.id)} className="!text-danger hover:text-tono-danger-300 text-lg">×</button>
+                <button type="button" aria-label={`Quitar pago de ${money(pf.monto)}`} onClick={() => p.onQuitar(pf.id)} className="text-lg !text-danger">×</button>
               </div>
             ))}
           </div>
+        </>
+      }
+      cuerpoImporte={<p className="mb-2 text-sm !text-content-3">{p.formaActiva || 'Seleccionar forma de pago'}</p>}
+      campos={[
+        {
+          id: 'monto',
+          etiqueta: 'Monto del pago',
+          valor: p.monto,
+          onCambio: p.setMonto,
+          grande: true,
+          inputRef: p.inputRef,
+          // Enter confirma: con un monto lo agrega como pago; sin monto y con todo cubierto, confirma el cobro.
+          onEnter: () => {
+            if (Number(p.monto) > 0) {
+              if (!motivoTarjeta) p.onAgregar();
+            } else if (!motivoConfirmar) {
+              p.onConfirm();
+            }
+          },
+        },
+      ]}
+      accionesImporte={
+        <div className="grid grid-cols-2 gap-2">
+          <Boton variante="exito" confirma={false} onClick={p.onExacto}>Exacto {money(p.pendiente)}</Boton>
+          <Boton confirma={false} onClick={p.onAgregar} disabled={!p.formaActiva || Number(p.monto) <= 0 || !!motivoTarjeta} title={motivoTarjeta ?? undefined}>
+            + Agregar pago
+          </Boton>
         </div>
-
-        <div className="flex flex-col">
-          <p className="text-sm !text-content-3 mb-2">{p.formaActiva || 'Seleccionar forma de pago'}</p>
-          <div className="!bg-nav rounded-lg px-4 py-2 border !border-line mb-3">
-            <input
-              ref={p.inputRef}
-              type="text"
-              value={p.monto}
-              inputMode="decimal"
-              autoComplete="off"
-              aria-label="Monto del pago"
-              onChange={(e) => p.setMonto(normalizarMonto(e.target.value))}
-              onKeyDown={(e) => {
-                // Enter confirma: con un monto lo agrega como pago; sin monto y con todo cubierto, confirma el cobro.
-                // Escape lo atiende ModalPOS (cancela). Backspace y dígitos los maneja el propio input.
-                if (e.key !== 'Enter') return;
-                e.preventDefault();
-                if (Number(p.monto) > 0) {
-                  if (!motivoTarjeta) p.onAgregar();
-                } else if (!motivoConfirmar) {
-                  p.onConfirm();
-                }
-              }}
-              placeholder="0.00"
-              className="w-full bg-transparent text-4xl font-bold !text-content-1 text-right outline-none"
-            />
-          </div>
-          <div className="grid grid-cols-3 gap-2 mb-3">
-            {['7', '8', '9', '4', '5', '6', '1', '2', '3', '.', '0', '⌫'].map((key) => (
-              <button
-                key={key}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  if (key === '⌫') return p.setMonto(p.monto.slice(0, -1));
-                  p.setMonto(normalizarMonto(p.monto + key));
-                  p.inputRef.current?.focus();
-                }}
-                className="h-12 rounded-lg !bg-surface-2 hover:!bg-surface-2 text-xl font-medium transition-colors"
-              >
-                {key}
-              </button>
-            ))}
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <button onClick={p.onExacto} className="py-2.5 rounded-lg !bg-ok-solid !text-on-solid font-medium hover:bg-tono-ok-700">
-              Exacto {money(p.pendiente)}
-            </button>
-            <button
-              onClick={p.onAgregar}
-              disabled={!p.formaActiva || Number(p.monto) <= 0 || !!motivoTarjeta}
-              title={motivoTarjeta ?? undefined}
-              className="py-2.5 rounded-lg !bg-btn !text-on-solid font-medium hover:!bg-btn-hover disabled:bg-tono-slate-700 disabled:text-tinta-3"
-            >
-              + Agregar pago
-            </button>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-3">
-          <div className="rounded-lg !bg-nav border !border-line p-3">
-            <p className="text-xs !text-content-3">TOTAL</p>
-            <p className="text-4xl font-bold !text-ok">{money(p.total)}</p>
-            <div className="mt-2 space-y-1 text-sm">
-              <div className="!text-ok">Pagado: {money(p.pagado)}</div>
-              <div className={p.pendiente > 0 ? '!text-danger' : '!text-content-3'}>Pendiente: {money(p.pendiente)}</div>
-              <div className={p.cambio > 0 ? '!text-ok' : '!text-content-3'}>Cambio: {money(p.cambio)}</div>
-            </div>
-          </div>
-
-          {p.error ? (
-            <div role="alert" className="rounded-lg border border-tono-danger-700 bg-tono-danger-950 p-2 text-sm text-tono-danger-200">{p.error}</div>
-          ) : null}
-
+      }
+      onExacto={p.onExacto}
+      lineas={[
+        { etiqueta: 'Pagado', valor: money(p.pagado), tono: 'ok' },
+        { etiqueta: 'Pendiente', valor: money(p.pendiente), tono: p.pendiente > 0 ? 'peligro' : 'tenue' },
+        { etiqueta: 'Cambio', valor: money(p.cambio), tono: p.cambio > 0 ? 'ok' : 'tenue' },
+      ]}
+      error={p.error}
+      motivoBloqueo={motivoConfirmar}
+      onCancel={p.onCancel}
+      onConfirm={p.onConfirm}
+      detalle={
+        <>
           {esFormaTarjeta(p.formaActiva) && (
             <div className="space-y-3">
               <div>
-                <label className="text-sm !text-content-3 mb-1 block">Últimos 4 dígitos de la tarjeta *</label>
+                <label htmlFor="cobro-ultimos4" className="mb-1 block text-sm !text-content-3">Últimos 4 dígitos de la tarjeta *</label>
                 <input
+                  id="cobro-ultimos4"
                   type="text"
                   inputMode="numeric"
                   autoComplete="off"
@@ -587,11 +520,11 @@ export function CobroModal(p: {
                   aria-invalid={!!motivoTarjeta}
                   className={campo}
                 />
-                {motivoTarjeta ? <p className="mt-1 text-xs text-tono-amber-300">{motivoTarjeta}</p> : null}
+                {motivoTarjeta ? <p className="mt-1 text-xs !text-content-2">⚠ {motivoTarjeta}</p> : null}
               </div>
               <div>
-                <label className="text-sm !text-content-3 mb-1 block">Banco emisor</label>
-                <input type="text" value={p.cardBank} onChange={(e) => p.setCardBank(e.target.value)} placeholder="Banco" className={campo} />
+                <label htmlFor="cobro-banco" className="mb-1 block text-sm !text-content-3">Banco emisor</label>
+                <input id="cobro-banco" type="text" value={p.cardBank} onChange={(e) => p.setCardBank(e.target.value)} placeholder="Banco" className={campo} />
               </div>
             </div>
           )}
@@ -599,23 +532,20 @@ export function CobroModal(p: {
           {p.formaActiva === 'TRANSFERENCIA' && (
             <div className="space-y-3">
               <div>
-                <label className="text-sm !text-content-3 mb-1 block">Clave de rastreo SPEI *</label>
-                <input type="text" value={p.speiKey} onChange={(e) => p.setSpeiKey(e.target.value)} placeholder="Clave de rastreo" className={campo} />
+                <label htmlFor="cobro-spei" className="mb-1 block text-sm !text-content-3">Clave de rastreo SPEI *</label>
+                <input id="cobro-spei" type="text" value={p.speiKey} onChange={(e) => p.setSpeiKey(e.target.value)} placeholder="Clave de rastreo" className={campo} />
               </div>
-              <button
-                onClick={() => window.open('https://www.banxico.org.mx/cep/', '_blank')}
-                className="w-full py-2 rounded !bg-btn !text-on-solid text-sm hover:!bg-btn-hover"
-              >
+              <Boton confirma={false} tamano="sm" completo onClick={() => window.open('https://www.banxico.org.mx/cep/', '_blank')}>
                 Verificar en BANXICO →
-              </button>
+              </Boton>
             </div>
           )}
 
           {p.formaActiva === 'CORTESIA' && (
             <div className="space-y-3">
               <div>
-                <label className="text-sm !text-content-3 mb-1 block">Motivo *</label>
-                <select value={p.courtesyReason} onChange={(e) => p.setCourtesyReason(e.target.value)} className={campo}>
+                <label htmlFor="cobro-motivo" className="mb-1 block text-sm !text-content-3">Motivo *</label>
+                <select id="cobro-motivo" value={p.courtesyReason} onChange={(e) => p.setCourtesyReason(e.target.value)} className={campo}>
                   <option value="">Seleccionar motivo...</option>
                   <option value="cortesia_ejecutiva">Cortesía ejecutiva</option>
                   <option value="error_pedido">Error en pedido</option>
@@ -626,8 +556,8 @@ export function CobroModal(p: {
                 </select>
               </div>
               <div>
-                <label className="text-sm !text-content-3 mb-1 block">Autorizado por *</label>
-                <select value={p.courtesyAuthUser} onChange={(e) => p.setCourtesyAuthUser(e.target.value)} className={campo}>
+                <label htmlFor="cobro-autoriza" className="mb-1 block text-sm !text-content-3">Autorizado por *</label>
+                <select id="cobro-autoriza" value={p.courtesyAuthUser} onChange={(e) => p.setCourtesyAuthUser(e.target.value)} className={campo}>
                   <option value="">Seleccionar autorizador...</option>
                   <option value="admin">Administrador</option>
                   <option value="soporte">Soporte</option>
@@ -635,9 +565,9 @@ export function CobroModal(p: {
               </div>
             </div>
           )}
-        </div>
-      </div>
-    </ModalPOS>
+        </>
+      }
+    />
   );
 }
 
