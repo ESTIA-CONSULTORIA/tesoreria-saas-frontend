@@ -88,6 +88,7 @@ export function responderPos(metodo, ruta, escena) {
   if (metodo === 'POST' && ruta.startsWith('/pos/sales')) return [200, venta];
   if (ruta.startsWith('/pos/sales')) return [200, vacio ? [] : ventas];
   if (ruta.startsWith('/pos/corte-fields')) return [200, campos];
+  if (metodo === 'GET' && ruta.startsWith('/pos/cashiers/lista')) return [200, [{ id: 'u2', nombre: 'Luis Cajero', rol: 'CAJERO' }, { id: 'u3', nombre: null, rol: 'MESERO' }]];
   if (metodo === 'GET' && ruta.startsWith('/pos/autorizaciones/autorizadores')) return [200, [{ id: 'g1', nombre: 'Gina Gerente', email: 'gerente@negocio-demo.mx', rol: 'GERENTE' }, { id: 'a1', nombre: 'Ana Demo', email: 'ana@negocio-demo.mx', rol: 'ADMIN' }]];
   if (metodo === 'POST' && ruta.startsWith('/pos/autorizaciones')) return escena.autorizacionRechazo ? [403, { message: 'Autorizador o contraseña incorrectos.' }] : [200, { token: 'tok-demo', expiraEn: '2099-01-01T00:00:00Z', autorizadoPor: { nombre: 'Gina Gerente', email: 'gerente@negocio-demo.mx', rol: 'GERENTE' } }];
   if (ruta.startsWith('/pos/cashiers/me')) return [200, { id: 'u1', nombre: 'Ana Demo', email: 'ana@negocio-demo.mx', roleCode: 'CAJERO', tenantId: 't1' }];
@@ -131,6 +132,7 @@ export const ESCENAS_POS = {
   'mesas-cobro': { ...BASE, ruta: '/mesas', teclas: ['F3', 'F6', 'F8', 'F2', 'Escape'], accion: async (p) => { await clic(p, 'Ocupada|Mesa 2|^2'); await clic(p, '^Cobrar$'); } },
   'mesas-dividir': { ...BASE, ruta: '/mesas', teclas: ['Escape'], accion: async (p) => { await clic(p, 'Ocupada|Mesa 2|^2'); await clic(p, '^Dividir$'); } },
   // ── Fase 3: errores dentro de la ventana, confirmaciones y PanelCuenta como pantalla ──
+  'pos-login-cajeros': { ...BASE, ruta: '/pos', accion: async (p) => { await ESPERA(600); } },
   'pos-login-error': { ...BASE, ruta: '/pos', accion: async (p) => { await p.type('input[type="password"]', '12'); await clic(p, 'Continuar'); } },
   'pos-descuento-error': pos({ teclas: ['Escape'] }, async (p) => { await prod(p, 'Hamburguesa'); await clic(p, '^Descuento$'); await clic(p, 'Aplicar descuento'); }),
   'pos-cortesia-error': pos({ teclas: ['Escape'] }, async (p) => { await prod(p, 'Hamburguesa'); await clic(p, '^Cortesía$'); await elegir(p, 0, 3); await p.type('[role="dialog"] input[type="password"]', '12').catch(() => {}); await clic(p, 'Aplicar cortesía').catch(() => {}); }),
