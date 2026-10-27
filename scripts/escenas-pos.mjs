@@ -88,6 +88,8 @@ export function responderPos(metodo, ruta, escena) {
   if (metodo === 'POST' && ruta.startsWith('/pos/sales')) return [200, venta];
   if (ruta.startsWith('/pos/sales')) return [200, vacio ? [] : ventas];
   if (ruta.startsWith('/pos/corte-fields')) return [200, campos];
+  if (metodo === 'GET' && ruta.startsWith('/pos/autorizaciones/autorizadores')) return [200, [{ id: 'g1', nombre: 'Gina Gerente', email: 'gerente@negocio-demo.mx', rol: 'GERENTE' }, { id: 'a1', nombre: 'Ana Demo', email: 'ana@negocio-demo.mx', rol: 'ADMIN' }]];
+  if (metodo === 'POST' && ruta.startsWith('/pos/autorizaciones')) return escena.autorizacionRechazo ? [403, { message: 'Autorizador o contraseña incorrectos.' }] : [200, { token: 'tok-demo', expiraEn: '2099-01-01T00:00:00Z', autorizadoPor: { nombre: 'Gina Gerente', email: 'gerente@negocio-demo.mx', rol: 'GERENTE' } }];
   if (ruta.startsWith('/pos/cashiers/me')) return [200, { id: 'u1', nombre: 'Ana Demo', email: 'ana@negocio-demo.mx', roleCode: 'CAJERO', tenantId: 't1' }];
   if (ruta.startsWith('/pos/notas-cocina')) return [200, vacio ? [] : notasCocina];
   if (ruta.startsWith('/pos/insumo-alerts')) return [200, []];
@@ -101,7 +103,12 @@ export function responderPos(metodo, ruta, escena) {
 }
 
 const BASE = { pos: true };
+// Elige la opción n-ésima del select i-ésimo de la ventana abierta (si ese select no existe en esta versión de la pantalla, no hace nada).
+const elegir = async (p, i, n) => { const sels = await p.$$('[role="dialog"] select'); if (sels[i]) await sels[i].evaluate((el, k) => { el.selectedIndex = k; el.dispatchEvent(new Event('change', { bubbles: true })); }, n); };
+const escribirClave = async (p, v) => { const c = await p.$('[role="dialog"] input[type="password"]'); if (c) await c.type(v); };
 const pos = (extra = {}, pasos = null) => ({ ...BASE, ruta: '/pos', ...extra, accion: async (p) => { await entrarPos(p); if (pasos) await pasos(p); } });
+// Un CAJERO con sesión entra directo a la terminal (sin re-identificarse con NIP como el ADMIN).
+const posCajero = (extra = {}, pasos = null) => ({ ...BASE, ruta: '/pos', ...extra, accion: async (p) => { await ESPERA(1500); if (pasos) await pasos(p); } });
 const prod = (p, n) => clic(p, n, 'button,div[role="button"],div');
 const venta = { id: 'v9', folio: 'V-0103', total: 193, subtotal: 166.38, impuestos: 26.62, status: 'COMPLETADA', formaPago: 'EFECTIVO', createdAt: '2026-10-25T11:05:00Z', items: [{ productoId: 'p1', nombre: 'Hamburguesa clásica', cantidad: 1, precioUnitario: 95, descuento: 0, subtotal: 95, tasaIva: '16' }], cajero: 'u1' };
 export const VENTA_MOCK = venta;
@@ -126,7 +133,11 @@ export const ESCENAS_POS = {
   // ── Fase 3: errores dentro de la ventana, confirmaciones y PanelCuenta como pantalla ──
   'pos-login-error': { ...BASE, ruta: '/pos', accion: async (p) => { await p.type('input[type="password"]', '12'); await clic(p, 'Continuar'); } },
   'pos-descuento-error': pos({ teclas: ['Escape'] }, async (p) => { await prod(p, 'Hamburguesa'); await clic(p, '^Descuento$'); await clic(p, 'Aplicar descuento'); }),
-  'pos-cortesia-error': pos({ teclas: ['Escape'] }, async (p) => { await prod(p, 'Hamburguesa'); await clic(p, '^Cortesía$'); const sel = await p.$$('[role="dialog"] select'); await sel[0].select('otro'); await sel[1].select('admin'); await p.type('[role="dialog"] input[type="password"]', '12'); await clic(p, 'Aplicar cortesía'); }),
+  'pos-cortesia-error': pos({ teclas: ['Escape'] }, async (p) => { await prod(p, 'Hamburguesa'); await clic(p, '^Cortesía$'); await elegir(p, 0, 3); await p.type('[role="dialog"] input[type="password"]', '12').catch(() => {}); await clic(p, 'Aplicar cortesía').catch(() => {}); }),
+  // ── Fase 5: cortesía y descuento sobre el límite con la autorización de un gerente (sesión de CAJERO) ──
+  'pos-cortesia-cajero': posCajero({ usuario: { roleCode: 'CAJERO' }, teclas: ['Escape'] }, async (p) => { await prod(p, 'Hamburguesa'); await clic(p, '^Cortesía$'); await ESPERA(500); await elegir(p, 0, 3); await elegir(p, 1, 1); await escribirClave(p, 'clave-demo'); }),
+  'pos-cortesia-cajero-rechazo': posCajero({ usuario: { roleCode: 'CAJERO' }, autorizacionRechazo: true, teclas: ['Escape'] }, async (p) => { await prod(p, 'Hamburguesa'); await clic(p, '^Cortesía$'); await ESPERA(500); await elegir(p, 0, 3); await elegir(p, 1, 1); await escribirClave(p, 'mala'); await clic(p, 'Aplicar cortesía'); await ESPERA(500); }),
+  'pos-descuento-sobre-tope': posCajero({ usuario: { roleCode: 'CAJERO' }, teclas: ['Escape'] }, async (p) => { await prod(p, 'Hamburguesa'); await clic(p, '^Descuento$'); await clic(p, '^15%$'); await ESPERA(500); await elegir(p, 0, 1); await elegir(p, 1, 1); await escribirClave(p, 'clave-demo'); }),
   'pos-producto-error': pos({ teclas: ['Escape'] }, async (p) => { await clic(p, '^Productos$'); await clic(p, 'Nuevo|Agregar'); await clic(p, '^Guardar$'); }),
   'pos-eliminar-producto': pos({ teclas: ['Escape'] }, async (p) => { await clic(p, '^Productos$'); await clic(p, '^Eliminar$'); }),
   'mesas-cancelar-cuenta': { ...BASE, ruta: '/mesas', teclas: ['Escape'], accion: async (p) => { await clic(p, 'Ocupada|Mesa 2|^2'); await clic(p, '^Cancelar cuenta$'); } },
@@ -143,7 +154,6 @@ export const ESCENAS_POS = {
   'pos-productos': pos({}, async (p) => { await clic(p, '^Productos$'); }),
   'pos-categorias': pos({}, async (p) => { await clic(p, '^Categorías$'); }),
   'pos-turnos': pos({}, async (p) => { await clic(p, '^Turnos$'); }),
-  'pos-hardware': pos({}, async (p) => { await clic(p, '^Hardware$'); }),
   'pos-parametros': pos({}, async (p) => { await clic(p, '^Parámetros$'); }),
   'pos-producto-nuevo': pos({}, async (p) => { await clic(p, '^Productos$'); await clic(p, 'Nuevo|Agregar'); }),
   // ── Mesas ──

@@ -161,7 +161,7 @@ async function capturar(browser, nombre, escena, skin) {
   const regla = skin === 'contraste' ? 'color-contrast-enhanced' : 'color-contrast';
   const axe = await page.evaluate(async (regla) => {
     const r = await window.axe.run(document, { runOnly: { type: 'rule', values: [regla] }, resultTypes: ['violations'] });
-    return r.violations.flatMap((v) => v.nodes.map((n) => ({ objetivo: n.target.join(' '), resumen: (n.any[0]?.message ?? '').replace(/\s+/g, ' ').slice(0, 160) })));
+    return r.violations.flatMap((v) => v.nodes.map((n) => ({ objetivo: n.target.join(' '), enDialogo: !!n.element?.closest('[role="dialog"]'), resumen: (n.any[0]?.message ?? '').replace(/\s+/g, ' ').slice(0, 160) })));
   }, regla);
   // atajos de la escena (F2/F3/F4/F6/F8/F10, Esc…): tras cada tecla, qué hay abierto y dónde está el foco (se compara antes/después)
   const atajos = [];
