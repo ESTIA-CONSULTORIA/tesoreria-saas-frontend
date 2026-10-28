@@ -29,6 +29,7 @@ import { AlertaModal } from "../../core/components/AlertaModal";
 import { Boton } from "../../core/components/Boton";
 import { AutorizacionGerente, type Autorizador } from "./AutorizacionGerente";
 import ModalTema from "./ModalTema";
+import { aperturaDelTurno, formatoFechaHora, formatoHora } from "../../core/utils/tiempo";
 import { descuentoPedidoPct as calcularDescuentoPct, firmaTicket, ticketRequiereAutorizacion, topeDescuento } from "./reglasAutorizacion";
 import { ModalFooter } from "../../core/components/ModalFooter";
 import { AperturaTurnoModal, CierreTurnoModal, CobroPOS, MovimientoEfectivoModal, PrecorteModal, efectivoEsperado } from "./ModalesCaja";
@@ -66,6 +67,11 @@ interface Shift {
   id: string;
   fecha: string;
   horaApertura: string;
+  /** Instantes reales del turno (el servidor los guarda en timestamptz); se muestran siempre con core/utils/tiempo. */
+  abiertoEn?: string | null;
+  cerradoEn?: string | null;
+  /** Folio corto del negocio (T-0001). */
+  folio?: string | null;
   fondoInicial: number;
   totalVentas: number;
   totalEfectivo: number;
@@ -175,6 +181,8 @@ export default function POSPage() {
   const isRestaurant = /restaurante|food|bar|cocina|cafeteria|cafe|bistro/i.test(giro);
 
   const [products, setProducts] = useState<Product[]>([]);
+  // Ya se intentó cargar el catálogo (con o sin éxito): distingue «cargando» de «esta sucursal no tiene productos».
+  const [productosCargados, setProductosCargados] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   // Fase C1: true cuando ese dato de referencia vino de la copia local (Dexie) porque
   // el GET falló por red/timeout — no por otra razón (permisos, servidor, etc.).
@@ -659,6 +667,8 @@ export default function POSPage() {
         setProducts(mapProducts(cached));
         setUsingCachedProducts(true);
       }
+    } finally {
+      setProductosCargados(true);
     }
   }
 
@@ -846,6 +856,7 @@ export default function POSPage() {
         id: localId,
         fondoInicial: body.fondoInicial,
         fecha: clientTimestamp,
+        abiertoEn: clientTimestamp,
         horaApertura: new Date(clientTimestamp).toTimeString().slice(0, 8),
         totalVentas: 0,
         totalEfectivo: 0,
@@ -1807,7 +1818,7 @@ export default function POSPage() {
               </div>
               {shift && (
                 <div className="text-sm !text-content-3">
-                  Turno: <span className="!text-ok">Abierto</span> ({shift.horaApertura || new Date(shift.fecha).toLocaleTimeString('es-MX', { timeZone: 'America/Tijuana' })})
+                  Turno{shift.folio ? ` ${shift.folio}` : ''}: <span className="!text-ok">Abierto</span> ({formatoHora(aperturaDelTurno(shift) ?? shift.fecha)})
                 </div>
               )}
               {(usingCachedCategories || usingCachedProducts || usingCachedAreas) && (
@@ -2005,6 +2016,9 @@ export default function POSPage() {
               </div>
 
               <div className="flex-1 overflow-y-auto p-4">
+                {productosCargados && products.length === 0 && (
+                  <p role="status" className="py-10 text-center text-sm !text-content-3">No hay productos en tu sucursal</p>
+                )}
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                   {filteredProducts.map((product) => {
                     // Auditoría de producto (GoodsHabits, Punto 1): stockPolicy la elige
@@ -3229,7 +3243,7 @@ export default function POSPage() {
               <p className="text-xs text-content-3">Tel: (555) 123-4567</p>
               <div className="border-t border-tono-slate-300 my-2"></div>
               <p className="text-sm font-semibold">Ticket #{currentSale.folio}</p>
-              <p className="text-xs text-content-3">{new Date(currentSale.fecha).toLocaleString('es-MX')}</p>
+              <p className="text-xs text-content-3">{formatoFechaHora(currentSale.fecha)}</p>
             </div>
 
             {/* Productos */}
