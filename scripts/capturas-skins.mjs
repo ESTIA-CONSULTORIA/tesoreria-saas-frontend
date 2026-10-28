@@ -1,7 +1,10 @@
 // Capturas, contraste (axe-core) y recorrido de teclado de las pantallas por skin, en Chrome real a 1366×768, con la API SIMULADA
 // (los mismos datos antes y después, así que una diferencia es del código y no de los datos). Procedimiento de oleada: docs/PLAN-SKINS.md.
 //
-//   node scripts/capturas-skins.mjs --salida capturas-skins/ola0-antes --escenas todas --skins estia,oscuro
+//   node scripts/capturas-skins.mjs --salida capturas-skins/ola0-antes --escenas todas --skins estia,oscuro [--rol ADMIN]
+//
+// Registra el data-skin que de verdad quedó aplicado (skins-aplicadas.json) y termina con error si no es el pedido. Claro y Alto contraste solo
+// los ven ADMIN/SOPORTE: con otro rol esa captura se OMITE (se listaría como omitida, no como medida); --rol fuerza el rol de todas las escenas.
 //
 // Por escena y skin guarda: <escena>__<skin>.png, y en <salida>/axe.json el contraste (reglas color-contrast de WCAG 2 AA) y en
 // <salida>/teclado.json el orden de foco al pulsar Tab. Requiere Chrome (CHROME_PATH o la ruta de Windows por defecto).
@@ -18,6 +21,12 @@ const SALIDA = resolve(args.salida ?? 'capturas-skins/prueba');
 const SKINS = (args.skins ?? 'estia,oscuro').split(',');
 const PUERTO = Number(args.puerto ?? 5199);
 const API = 'http://api.mock.test';
+// Skins en preparación: solo las ven estos roles (src/core/theme/skins.ts). Con otro rol la app cae en ESTIA, así que esa captura no mostraría la skin pedida.
+const SKINS_EN_PREPARACION = ['claro', 'contraste'];
+const ROLES_SKINS_EN_PREPARACION = ['ADMIN', 'SOPORTE'];
+const ROL_FORZADO = args.rol; // --rol ADMIN: todas las escenas con ese rol (en vez del suyo)
+const rolDe = (escena) => ROL_FORZADO ?? usuario(escena.usuario).roleCode;
+const usuarioDe = (escena) => usuario({ ...escena.usuario, ...(ROL_FORZADO ? { roleCode: ROL_FORZADO } : {}) });
 const CHROME = process.env.CHROME_PATH ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const AXE = readFileSync(join(RAIZ, 'node_modules/axe-core/axe.min.js'), 'utf8');
 
@@ -49,7 +58,7 @@ function responder(metodo, ruta, escena) {
   if (escena.fallos?.some((r) => ruta.startsWith(r))) return [500, { message: 'Error simulado' }];
   const rp = responderPos(metodo, ruta, escena);
   if (rp) return rp;
-  if (ruta.startsWith('/auth/me')) return escena.sinSesion ? [401, { message: 'No autenticado' }] : [200, usuario(escena.usuario)];
+  if (ruta.startsWith('/auth/me')) return escena.sinSesion ? [401, { message: 'No autenticado' }] : [200, usuarioDe(escena)];
   if (ruta.startsWith('/tenants/resolve')) return [200, { id: 't1', slug: 'demo', tradeName: 'Negocio Demo' }];
   if (/^\/tenants\/t1/.test(ruta)) return [200, { id: 't1', plan: escena.plan ?? 'BUSINESS', giro: escena.giro ?? 'generico', isOnboarded: true }];
   if (ruta.startsWith('/tenant-settings')) return [200, { theme: 'estia', tenantId: 't1' }];
@@ -120,10 +129,13 @@ async function capturar(browser, nombre, escena, skin) {
         if (!e.guia) localStorage.setItem('prueba_guia_vista_t1', '1');
       }
     } catch { /* nada */ }
-  }, skin, escena, JSON.stringify(usuario(escena.usuario)));
+  }, skin, escena, JSON.stringify(usuarioDe(escena)));
   await page.goto(`http://localhost:${PUERTO}${escena.ruta}`, { waitUntil: 'networkidle2', timeout: 45000 });
   await page.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}' });
   await ESPERA(900);
+  // La skin que de verdad quedó puesta: si no es la pedida, la captura y el contraste serían de otra skin y no valen.
+  const skinAplicada = await page.evaluate(() => document.documentElement.getAttribute('data-skin'));
+  if (skinAplicada !== skin) { await page.close(); throw Object.assign(new Error(`skin pedida «${skin}» pero aplicada «${skinAplicada}»`), { desajuste: true }); }
   if (escena.accion) await escena.accion(page);
   await ESPERA(300);
   await page.screenshot({ path: join(SALIDA, `${nombre}__${skin}.png`), type: 'png' });
@@ -190,18 +202,21 @@ async function capturar(browser, nombre, escena, skin) {
     if (!d) break;
   }
   await page.close();
-  return { axe, teclado, desborde, atajos, impresion, contrato };
+  return { axe, teclado, desborde, atajos, impresion, contrato, skinAplicada };
 }
 
 mkdirSync(SALIDA, { recursive: true });
 const nombres = args.escenas && args.escenas !== 'todas' ? args.escenas.split(',') : Object.keys(ESCENAS);
 const srv = await servidor();
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, protocolTimeout: 60000, args: ['--no-sandbox', '--force-color-profile=srgb', '--font-render-hinting=none', '--disable-lcd-text'] });
+const aplicadas = {}, omitidas = [], desajustes = [];
 const axeTodo = {}, tecladoTodo = {}, desbordes = {}, atajosTodo = {}, impresionTodo = {}, contratoTodo = {};
 try {
   for (const n of nombres) for (const skin of SKINS) {
     let r;
-    try { r = await capturar(browser, n, ESCENAS[n], skin); } catch (e) { console.log(`${n.padEnd(20)} ${skin.padEnd(7)} ESCENA FALLÓ: ${String(e.message).slice(0, 90)}`); continue; }
+    if (SKINS_EN_PREPARACION.includes(skin) && !ROLES_SKINS_EN_PREPARACION.includes(rolDe(ESCENAS[n]))) { omitidas.push(`${n}__${skin}`); console.log(`${n.padEnd(20)} ${skin.padEnd(7)} OMITIDA: el rol ${rolDe(ESCENAS[n])} no ve esta skin (usa --rol ADMIN)`); continue; }
+    try { r = await capturar(browser, n, ESCENAS[n], skin); } catch (e) { if (e.desajuste) desajustes.push(`${n}__${skin}: ${e.message}`); console.log(`${n.padEnd(20)} ${skin.padEnd(7)} ESCENA FALLÓ: ${String(e.message).slice(0, 90)}`); continue; }
+    aplicadas[`${n}__${skin}`] = r.skinAplicada;
     axeTodo[`${n}__${skin}`] = r.axe; tecladoTodo[`${n}__${skin}`] = r.teclado; desbordes[`${n}__${skin}`] = r.desborde; atajosTodo[`${n}__${skin}`] = r.atajos; contratoTodo[`${n}__${skin}`] = r.contrato; if (r.impresion) impresionTodo[`${n}__${skin}`] = r.impresion;
     console.log(`${n.padEnd(20)} ${skin.padEnd(7)} contraste: ${String(r.axe.length).padStart(3)} fallos | foco: ${r.teclado.length} pasos | desborde: ${r.desborde ? 'SÍ' : 'no'}`);
   }
@@ -215,4 +230,7 @@ writeFileSync(join(SALIDA, 'desborde.json'), JSON.stringify(desbordes, null, 1))
 writeFileSync(join(SALIDA, 'atajos.json'), JSON.stringify(atajosTodo, null, 1));
 writeFileSync(join(SALIDA, 'impresion.json'), JSON.stringify(impresionTodo, null, 1));
 writeFileSync(join(SALIDA, 'contrato.json'), JSON.stringify(contratoTodo, null, 1));
+writeFileSync(join(SALIDA, 'skins-aplicadas.json'), JSON.stringify({ aplicadas, omitidas, desajustes }, null, 1));
+if (omitidas.length) console.log(`\n${omitidas.length} captura(s) omitidas porque el rol no ve esa skin.`);
+if (desajustes.length) { console.log(`\nFALLO: la skin aplicada no es la pedida en ${desajustes.length} captura(s):\n  ` + desajustes.join('\n  ')); process.exit(1); }
 process.exit(0);

@@ -28,6 +28,7 @@ import { useAviso, useConfirm } from "../../core/components/confirmContext";
 import { AlertaModal } from "../../core/components/AlertaModal";
 import { Boton } from "../../core/components/Boton";
 import { AutorizacionGerente, type Autorizador } from "./AutorizacionGerente";
+import ModalTema from "./ModalTema";
 import { descuentoPedidoPct as calcularDescuentoPct, firmaTicket, ticketRequiereAutorizacion, topeDescuento } from "./reglasAutorizacion";
 import { ModalFooter } from "../../core/components/ModalFooter";
 import { AperturaTurnoModal, CierreTurnoModal, CobroPOS, MovimientoEfectivoModal, PrecorteModal, efectivoEsperado } from "./ModalesCaja";
@@ -203,6 +204,7 @@ export default function POSPage() {
   const [ticket, setTicket] = useState<TicketItem[]>([]);
   const [shift, setShift] = useState<Shift | null>(null);
   const [showSalesHistory, setShowSalesHistory] = useState(false);
+  const [showTema, setShowTema] = useState(false);
   const [salesHistory, setSalesHistory] = useState<Sale[]>([]);
   const [salesFilter, setSalesFilter] = useState<string>("all");
   const [showReceipt, setShowReceipt] = useState(false);
@@ -1842,6 +1844,14 @@ export default function POSPage() {
               )}
             </div>
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowTema(true)}
+                aria-label="Cambiar el tema de la pantalla"
+                title="Tema"
+                className="px-3 py-2 rounded text-sm !bg-surface-2 !text-content-1 border !border-line"
+              >
+                🎨 Tema
+              </button>
               {!shift ? (
                 <button
                   onClick={() => setShowOpenShiftModal(true)}
@@ -1908,6 +1918,8 @@ export default function POSPage() {
               </button>
             </div>
           </header>
+
+          {showTema && <ModalTema onClose={() => setShowTema(false)} />}
 
           {/* RESTAURANT: tabla selector overlay */}
           {isRestaurant && shift && showTableSelect && (

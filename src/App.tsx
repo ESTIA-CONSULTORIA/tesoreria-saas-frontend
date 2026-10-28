@@ -454,7 +454,9 @@ function App() {
         element={
           <ProtectedRoute>
             <ModuloRoute modulo="configuracion">
-              <AppearancePage />
+              <RoleRoute roles={['ADMIN', 'SOPORTE']}>
+                <AppearancePage />
+              </RoleRoute>
             </ModuloRoute>
           </ProtectedRoute>
         }
