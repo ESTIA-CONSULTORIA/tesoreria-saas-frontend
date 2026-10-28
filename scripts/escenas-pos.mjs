@@ -151,6 +151,9 @@ export const ESCENAS_POS = {
   'pos-precorte': pos({ teclas: ['F4', 'Escape'] }, async (p) => { await clic(p, 'Precorte'); }),
   'pos-cierre': pos({ precorte: true, teclas: ['F10', 'Escape'] }, async (p) => { await clic(p, 'Cerrar Turno'); }),
   'pos-historial': pos({ teclas: ['Escape'] }, async (p) => { await clic(p, 'Historial de Ventas'); }),
+  // ── Acceso al tema desde la barra del POS (ADMIN: las 4 skins; CAJERO: ESTIA y Oscuro) ──
+  'pos-tema': pos({ teclas: ['Escape'] }, async (p) => { await clic(p, 'Tema'); await ESPERA(400); }),
+  'pos-tema-cajero': posCajero({ usuario: { roleCode: 'CAJERO' }, teclas: ['Escape'] }, async (p) => { await ESPERA(3000); await clic(p, 'Tema'); await ESPERA(400); }),
   'pos-historial-vacio': pos({ vacio: true, teclas: ['Escape'] }, async (p) => { await clic(p, 'Historial de Ventas'); }),
   // ── POS: pestañas ──
   'pos-productos': pos({}, async (p) => { await clic(p, '^Productos$'); }),
