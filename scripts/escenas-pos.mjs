@@ -37,7 +37,7 @@ const productos = [
 ];
 const turno = {
   id: 's1', cajero: 'u1', sucursalId: 'b1', status: 'ABIERTO', fondoInicial: 1000, totalVentas: 2450.5, totalEfectivo: 1500, totalTarjeta: 800.5,
-  totalTransferencia: 150, totalCortesia: 0, totalDevoluciones: 45, totalRetiros: 200, totalDepositos: 0, fecha: '2026-10-25T08:00:00Z', horaApertura: '08:00', precorteGuardado: false,
+  totalTransferencia: 150, totalCortesia: 0, totalDevoluciones: 45, totalRetiros: 200, totalDepositos: 0, fecha: '2026-10-25', horaApertura: '22:00:00', abiertoEn: '2026-10-25T22:00:00.000Z', folio: 'T-0007', precorteGuardado: false,
 };
 const mesas = [
   { id: 't1', number: 1, capacity: 4, status: 'AVAILABLE', isActive: true, areaId: 'a1' },

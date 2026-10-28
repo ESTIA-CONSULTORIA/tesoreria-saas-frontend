@@ -9,6 +9,7 @@ import { ModalFooter } from '../../core/components/ModalFooter';
 import { CobroModal } from '../../core/components/cobro/CobroModal';
 import { ICONO_FORMA, type ClaveForma, type OpcionForma } from '../../core/components/cobro/reglasCobro';
 import { DENOMINACIONES, conciliacionTurno, diferenciasPrecorte, efectivoEsperado, totalContado, type TurnoCaja } from './cajaTurno';
+import { aperturaDelTurno, formatoDuracion, formatoFechaHora, formatoHora } from '../../core/utils/tiempo';
 
 // Ventanas de caja de uso diario (apertura, retiro, depósito, precorte, corte, cobro). Presentacionales: el estado y las
 // llamadas a la API viven en POSPage. Todas usan ModalPOS (90vw × 90vh, botones fijos, columnas, sin scroll a 1366×768).
@@ -54,7 +55,7 @@ export function AperturaTurnoModal(p: {
           </div>
           <div>
             <span className="mb-1 block text-sm !text-content-3">Fecha y Hora</span>
-            <div className="!text-content-1">{new Date().toLocaleString()}</div>
+            <div className="!text-content-1">{formatoFechaHora(new Date())}</div>
           </div>
           <div>
             <label htmlFor="apertura-notas" className="mb-1 block text-sm !text-content-3">Notas (opcional)</label>
@@ -305,7 +306,7 @@ export function PrecorteModal(p: {
 
 // ───────────────────────── Corte de caja (Z) ─────────────────────────
 export function CierreTurnoModal(p: {
-  turno: TurnoCaja & { id: string; horaApertura?: string; totalVentas?: number | string; precorteDeclaracion?: Record<string, unknown> };
+  turno: TurnoCaja & { id: string; folio?: string | null; fecha?: string; horaApertura?: string; horaCierre?: string | null; abiertoEn?: string | null; cerradoEn?: string | null; totalVentas?: number | string; precorteDeclaracion?: Record<string, unknown> };
   totalesServidor?: Record<string, number>;
   /** Error de la operación (ventas sin sincronizar, servidor) que se muestra dentro de la ventana, en vez de un alert(). */
   error?: string | null;
@@ -318,7 +319,7 @@ export function CierreTurnoModal(p: {
   return (
     <ModalPOS
       size="lg"
-      title={`🔒 Corte de Caja — Turno #${t.id.slice(0, 8)}`}
+      title={`🔒 Corte de Caja — Turno ${t.folio ?? `#${t.id.slice(0, 8)}`}`}
       onClose={p.onCancel}
       enterModo="avanzar"
       atajos={[{ tecla: 'F10', etiqueta: 'Cerrar turno', accion: p.onClose }]}
@@ -340,8 +341,9 @@ export function CierreTurnoModal(p: {
           <h4 className="font-semibold mb-3">Resumen del Turno</h4>
           <dl className="space-y-1.5 text-sm">
             {([
-              ['Hora apertura', String(t.horaApertura ?? '')],
-              ['Hora cierre', new Date().toLocaleTimeString()],
+              ['Hora apertura', formatoHora(aperturaDelTurno(t))],
+              ['Hora cierre', formatoHora(new Date())],
+              ['Duración', formatoDuracion(aperturaDelTurno(t), new Date())],
               ['Fondo inicial', money(t.fondoInicial)],
               ['Total ventas', money(t.totalVentas)],
               ['Total retiros', money(t.totalRetiros)],

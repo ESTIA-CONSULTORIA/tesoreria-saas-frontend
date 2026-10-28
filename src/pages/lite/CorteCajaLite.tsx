@@ -9,6 +9,7 @@ import { Modal } from '../../core/components/Modal';
 import { ModalFooter } from '../../core/components/ModalFooter';
 import { NipPad } from '../../core/components/NipPad';
 import { TecladoNumerico } from '../../core/components/TecladoNumerico';
+import { ZONA_NEGOCIO, formatoHora } from '../../core/utils/tiempo';
 
 const API = ((import.meta.env.VITE_API_URL as string) ||
   'https://api.estiaconsultoria.com') + '/api/v1';
@@ -360,8 +361,8 @@ export default function CorteCajaLite() {
   };
 
   const sendWhatsApp = () => {
-    const fecha = new Date().toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
-    const hora = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+    const fecha = new Date().toLocaleDateString('es-MX', { timeZone: ZONA_NEGOCIO, day: 'numeric', month: 'long', year: 'numeric' });
+    const hora = formatoHora(new Date());
     const msg = encodeURIComponent(
       `CORTE DEL DÍA — ${selectedCompany?.tradeName || selectedCompany?.legalName}\n` +
       `${fecha} · ${hora}\n\n` +
@@ -380,8 +381,8 @@ export default function CorteCajaLite() {
   };
 
   const imprimir = () => {
-    const fecha = new Date().toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
-    const hora = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+    const fecha = new Date().toLocaleDateString('es-MX', { timeZone: ZONA_NEGOCIO, day: 'numeric', month: 'long', year: 'numeric' });
+    const hora = formatoHora(new Date());
     const win = window.open('', '_blank');
     if (!win) return;
     win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><style>
