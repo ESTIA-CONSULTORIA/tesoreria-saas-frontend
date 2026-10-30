@@ -37,3 +37,6 @@ tsconfig.node.tsbuildinfo
 
 # Capturas de las oleadas de skins (se regeneran con scripts/capturas-skins.mjs; no se versionan)
 capturas-skins/
+
+# Capturas locales de modales
+/capturas-modales/
