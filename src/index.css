@@ -1,10 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
-/* Montserrat: solo la usan /prueba y /prueba/activar (src/pages/prueba/prueba.css). */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+/* Inter y Montserrat son locales (src/core/theme/fuentes.css): no dependen de Google Fonts. Montserrat: /prueba y la skin ESTIA Isotipo. */
+@import './core/theme/fuentes.css';
 /* Variables de las skins (ESTIA, Oscuro). Generado desde src/core/theme/skins.ts: npm run skins:css */
 @import './core/theme/skins.generated.css';
 /* Texto sobre botones de color (--on-solid): reglas de compatibilidad que nombran clases de Tailwind, en su propio archivo para no subir el tope de colores fijos de este */
 @import './core/theme/compatSolidos.css';
+/* Identidad de la skin ESTIA Isotipo (biseles, rejilla, teclas hexagonales); sin efecto en las demás skins */
+@import './core/theme/isotipo.css';
 
 @tailwind base;
 @tailwind components;

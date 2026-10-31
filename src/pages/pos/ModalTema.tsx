@@ -3,7 +3,7 @@ import { api } from "../../core/api/api";
 import { Boton } from "../../core/components/Boton";
 import { Modal } from "../../core/components/Modal";
 import { ModalFooter } from "../../core/components/ModalFooter";
-import { skinDispositivo, skinUsuario } from "../../core/theme/aplicarSkin";
+import { fijarPosHex, posHexActivo, skinActual, skinDispositivo, skinUsuario } from "../../core/theme/aplicarSkin";
 import { elegirMiTema, elegirTemaEquipo, opcionesTema } from "../../core/theme/miTema";
 import { SKINS } from "../../core/theme/skins";
 import { useAuthStore } from "../../core/store/useAuthStore";
@@ -17,6 +17,8 @@ export default function ModalTema({ onClose }: { onClose: () => void }) {
   const [miTema, setMiTema] = useState(skinUsuario() ?? "");
   const [esteEquipo, setEsteEquipo] = useState(skinDispositivo() ?? "");
   const [error, setError] = useState("");
+  const [hex, setHex] = useState(posHexActivo());
+  const [skinVista, setSkinVista] = useState(skinActual());
 
   async function cambiarMiTema(valor: string) {
     const previo = miTema;
@@ -27,6 +29,7 @@ export default function ModalTema({ onClose }: { onClose: () => void }) {
       setMiTema(previo);
       setError(r.mensaje ?? "");
     }
+    setSkinVista(skinActual());
   }
 
   function cambiarEquipo(valor: string) {
@@ -34,6 +37,12 @@ export default function ModalTema({ onClose }: { onClose: () => void }) {
     const r = elegirTemaEquipo(valor, rol);
     if (r.ok) setEsteEquipo(valor);
     else setError(r.mensaje ?? "");
+    setSkinVista(skinActual());
+  }
+
+  function cambiarHex(activo: boolean) {
+    setHex(activo);
+    fijarPosHex(activo);
   }
 
   return (
@@ -59,6 +68,12 @@ export default function ModalTema({ onClose }: { onClose: () => void }) {
             {opciones.map((t) => <option key={t} value={t}>{SKINS[t].nombre}</option>)}
           </select>
         </div>
+        {skinVista === "isotipo" && (
+          <label className="flex items-start gap-2 text-sm !text-content-1">
+            <input type="checkbox" checked={hex} onChange={(e) => cambiarHex(e.target.checked)} className="mt-1" />
+            <span>Teclas hexagonales en el POS <span className="block text-xs !text-content-3">Solo en este equipo. Si no te acomoda, desmárcala y vuelve la cuadrícula de siempre.</span></span>
+          </label>
+        )}
         <p className="text-xs !text-content-3">«Mi tema» se guarda al elegirlo. «Solo en este equipo» vale únicamente aquí y gana a las otras dos (útil en una caja que debe verse siempre igual).</p>
         {error && <div role="alert" className="text-sm !text-danger">{error}</div>}
       </div>

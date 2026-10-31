@@ -7,6 +7,7 @@ import { resolverSkin, SKINS, type SkinId } from './skins';
 export const CLAVE_DISPOSITIVO = 'ui_skin_device'; // elección de ESTE equipo (gana a todo)
 export const CLAVE_USUARIO = 'ui_skin_user'; // preferencia propia del usuario (viene de login/refresh y de Apariencia)
 export const CLAVE_NEGOCIO = 'ui_skin'; // último valor del negocio, para pintar rápido en la siguiente carga
+export const CLAVE_POS_HEX = 'ui_pos_hex'; // «Teclas hexagonales» del POS (solo se ven con la skin ESTIA Isotipo); '1' = activada, en este equipo
 
 function leer(clave: string): string | null {
   try { return localStorage.getItem(clave); } catch { return null; }
@@ -27,6 +28,7 @@ export function skinActual(): SkinId {
 export function aplicarSkin(id: SkinId = skinActual()): SkinId {
   if (typeof document === 'undefined') return id;
   document.documentElement.setAttribute('data-skin', id);
+  if (posHexActivo()) document.documentElement.setAttribute('data-pos-hex', '1'); else document.documentElement.removeAttribute('data-pos-hex');
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', SKINS[id].tokens.bg);
   return id;
 }
@@ -55,4 +57,14 @@ export function skinDispositivo(): string | null {
 
 export function skinUsuario(): string | null {
   return leer(CLAVE_USUARIO);
+}
+
+/** ¿Teclas hexagonales en el POS? Es una opción de este equipo (apagada por defecto); solo tiene efecto con la skin ESTIA Isotipo (isotipo.css). */
+export function posHexActivo(): boolean {
+  return leer(CLAVE_POS_HEX) === '1';
+}
+
+export function fijarPosHex(activo: boolean): void {
+  escribir(CLAVE_POS_HEX, activo ? '1' : null);
+  aplicarSkin();
 }

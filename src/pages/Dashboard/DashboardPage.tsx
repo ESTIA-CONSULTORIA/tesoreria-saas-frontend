@@ -5,7 +5,9 @@ import { useNavigate } from "react-router-dom";
 import DashboardInfoModal from "./DashboardInfoModal";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
-import { useDashboardFilterStore } from "../../core/store/useDashboardFilterStore";
+import { useDashboardFilterStore, type DashboardPeriod } from "../../core/store/useDashboardFilterStore";
+import { useSkinActiva } from "../../core/theme/useSkinActiva";
+import DashboardIsotipo from "./DashboardIsotipo";
 
 
 export default function DashboardPage() {
@@ -18,6 +20,7 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
   const [infoOpen, setInfoOpen] = useState(false);
   const [pendingShifts, setPendingShifts] = useState<any[]>([]);
+  const skin = useSkinActiva();
 
   // Guard contra respuestas fuera de orden: cada llamada a loadData() se identifica con
   // un id incremental. Si para cuando su GET /dashboard/kpis resuelve ya se disparó una
@@ -178,6 +181,34 @@ export default function DashboardPage() {
   const formatPercentDecimal = (value: number) => {
     return `${Math.round(value)}%`;
   };
+
+  // Skin ESTIA Isotipo: misma información, otra composición (sin tarjetas). Las demás skins siguen con el tablero de siempre.
+  if (skin === 'isotipo') {
+    const atencion = [
+      ...(pendingShifts.length > 0 ? [{ id: 'cortes', texto: `${pendingShifts.length} cortes pendientes de revisión`, ir: '/pos' }] : []),
+      ...(kpis?.cxpVencidas > 0 ? [{ id: 'cxp', texto: `${kpis.cxpVencidas} facturas vencidas`, ir: '/treasury' }] : []),
+      ...(kpis?.saldoDisponible && kpis.saldoDisponible < 10000 ? [{ id: 'saldo', texto: 'Saldo bajo en cuentas', ir: '/banks' }] : []),
+    ];
+    return (
+      <MainLayout>
+        <DashboardIsotipo
+          cargando={loading}
+          error={error}
+          ambito={activeBranch ? activeBranch.name : activeCompany ? activeCompany.name : 'Vista Global'}
+          periodo={period}
+          periodos={[{ value: 'today', label: 'Hoy' }, { value: 'week', label: 'Semana' }, { value: 'month', label: 'Mes' }, { value: 'quarter', label: 'Trimestre' }, { value: 'year', label: 'Año' }]}
+          onPeriodo={(v) => setPeriod(v as DashboardPeriod)}
+          ventas={ventasDisplay}
+          egresos={egresosDisplay}
+          saldo={Number(kpis?.saldoDisponible ?? saldoDisplay)}
+          variacionVentas={typeof kpis?.incomeVariation === 'number' ? kpis.incomeVariation : null}
+          filas={companyBarChartData.map((d: { name?: string; Ingresos: number; Egresos: number }) => ({ nombre: String(d.name ?? ''), ingresos: d.Ingresos, egresos: d.Egresos }))}
+          atencion={atencion}
+          onIr={(ruta) => navigate(ruta)}
+        />
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>

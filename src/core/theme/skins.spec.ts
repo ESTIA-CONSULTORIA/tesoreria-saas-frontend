@@ -125,13 +125,14 @@ describe('skin contraste: 7:1', () => {
 });
 
 describe('skins visibles y en preparación', () => {
-  it('para todos solo ESTIA y Oscuro; Claro y Alto contraste existen pero solo los ven ADMIN y SOPORTE', () => {
+  it('para todos solo ESTIA y Oscuro; Claro, Alto contraste e Isotipo existen pero solo los ven ADMIN y SOPORTE', () => {
     expect(SKINS_VISIBLES).toEqual(['estia', 'oscuro']);
-    expect(SKINS_EN_PREPARACION).toEqual(['claro', 'contraste']);
+    expect(SKINS_EN_PREPARACION).toEqual(['claro', 'contraste', 'isotipo']);
+    expect(esSkinId('isotipo')).toBe(true);
     expect(esSkinId('claro')).toBe(true);
     expect(esSkinId('contraste')).toBe(true);
     for (const id of [...SKINS_VISIBLES, ...SKINS_EN_PREPARACION]) expect(SKINS[id]).toBeDefined();
-    for (const rol of ['ADMIN', 'SOPORTE']) expect(skinsParaRol(rol)).toEqual(['estia', 'oscuro', 'claro', 'contraste']);
+    for (const rol of ['ADMIN', 'SOPORTE']) expect(skinsParaRol(rol)).toEqual(['estia', 'oscuro', 'claro', 'contraste', 'isotipo']);
     for (const rol of ['CAJERO', 'GERENTE', 'MESERO', 'USER', '', null, undefined]) expect(skinsParaRol(rol)).toEqual(['estia', 'oscuro']);
     expect(puedeVerSkin('claro', 'CAJERO')).toBe(false);
     expect(puedeVerSkin('oscuro', 'CAJERO')).toBe(true);
@@ -166,7 +167,7 @@ describe('resolver la skin', () => {
     }
   });
   it('Claro y Alto contraste solo cuentan para ADMIN y SOPORTE; para el resto se salta al siguiente nivel', () => {
-    for (const skin of ['claro', 'contraste'] as const) {
+    for (const skin of ['claro', 'contraste', 'isotipo'] as const) {
       for (const rol of ['ADMIN', 'SOPORTE']) {
         expect(resolverSkin(skin, 'estia', { rol })).toBe(skin);
         expect(resolverSkin(null, 'estia', { usuario: skin, rol })).toBe(skin);
@@ -233,7 +234,7 @@ describe.each(Object.keys(SKINS) as SkinId[])('skin %s: piso de opacidad del tex
 
   it('las skins oscuras no cambian (piso 0); las demás lo exigen', () => {
     expect(piso >= 0 && piso <= 1).toBe(true);
-    if (id === 'estia' || id === 'oscuro') expect(piso).toBe(0);
+    if (id === 'estia' || id === 'oscuro' || id === 'isotipo') expect(piso).toBe(0);
     else expect(piso).toBeGreaterThan(0);
   });
 

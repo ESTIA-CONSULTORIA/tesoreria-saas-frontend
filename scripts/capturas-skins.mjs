@@ -20,9 +20,11 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((a, x, i, arr) => (
 const SALIDA = resolve(args.salida ?? 'capturas-skins/prueba');
 const SKINS = (args.skins ?? 'estia,oscuro').split(',');
 const PUERTO = Number(args.puerto ?? 5199);
+// --movimiento reduce|no-preference: emula esa preferencia del sistema, NO apaga las animaciones y registra en movimiento.json lo que de verdad se anima
+const MOVIMIENTO = args.movimiento;
 const API = 'http://api.mock.test';
 // Skins en preparación: solo las ven estos roles (src/core/theme/skins.ts). Con otro rol la app cae en ESTIA, así que esa captura no mostraría la skin pedida.
-const SKINS_EN_PREPARACION = ['claro', 'contraste'];
+const SKINS_EN_PREPARACION = ['claro', 'contraste', 'isotipo'];
 const ROLES_SKINS_EN_PREPARACION = ['ADMIN', 'SOPORTE'];
 const ROL_FORZADO = args.rol; // --rol ADMIN: todas las escenas con ese rol (en vez del suyo)
 const rolDe = (escena) => ROL_FORZADO ?? usuario(escena.usuario).roleCode;
@@ -40,8 +42,8 @@ const empresas = [
 const kpis = {
   income: 482350.5, expense: 311200.25, totalBalance: 1245890.75, incomeVariation: 12.4, expenseVariation: -3.1, cxpVencidas: 3, saldoDisponible: 8200,
   companiesBreakdown: [
-    { id: 'c1', name: 'Grupo Demo', income: 301000, expense: 190000, balance: 820000, ventas: 301000 },
-    { id: 'c2', name: 'Norte', income: 181350.5, expense: 121200.25, balance: 425890.75, ventas: 181350.5 },
+    { id: 'c1', name: 'Grupo Demo', companyName: 'Grupo Demo', income: 301000, expense: 190000, balance: 820000, ventas: 301000 },
+    { id: 'c2', name: 'Norte', companyName: 'Norte', income: 181350.5, expense: 121200.25, balance: 425890.75, ventas: 181350.5 },
   ],
   branchesBreakdown: [],
 };
@@ -64,7 +66,7 @@ function responder(metodo, ruta, escena) {
   if (ruta.startsWith('/tenant-settings')) return [200, { theme: 'estia', tenantId: 't1' }];
   if (ruta.startsWith('/companies')) return [200, empresas];
   if (ruta.startsWith('/branches')) return [200, [{ id: 'b1', name: 'Matriz', companyId: 'c1', code: 'MATRIZ' }]];
-  if (ruta.startsWith('/dashboard/kpis')) return [200, kpis];
+  if (ruta.startsWith('/dashboard/kpis')) return [200, escena.kpis ? { ...kpis, ...escena.kpis } : kpis];
   if (ruta.startsWith('/pos/shifts')) return [200, escena.turnos ?? turnoPendiente];
   if (ruta === '/modules' || ruta.startsWith('/modules?')) return [200, modulosCatalogo];
   if (ruta.startsWith('/modules/tenant/')) return [200, ['dashboard', 'tesoreria', 'pos']];
@@ -80,6 +82,7 @@ export const ESCENAS = {
   login: { ruta: '/login', sinSesion: true },
   'login-negocio': { ruta: '/login?t=demo', sinSesion: true },
   dashboard: { ruta: '/dashboard' },
+  'dashboard-sin-pendientes': { ruta: '/dashboard', turnos: [], kpis: { cxpVencidas: 0, saldoDisponible: 50000 } },
   'dashboard-lite': { ruta: '/dashboard', usuario: { modulosActivos: ['dashboard', 'pos-sin-inventario', 'corte-caja-lite'] } },
   'centro-soluciones': { ruta: '/solutions' },
   guia: { ruta: '/dashboard', plan: 'PRUEBA', giro: 'restaurante', guia: true, accion: async (p) => { const b = await p.evaluateHandle(() => [...document.querySelectorAll('button')].find((x) => /Guía de la prueba/.test(x.textContent || ''))); await b.asElement()?.click(); await ESPERA(400); } },
@@ -117,6 +120,7 @@ async function capturar(browser, nombre, escena, skin) {
   });
   await page.evaluateOnNewDocument((skinId, e, usuarioJson) => {
     try {
+      localStorage.removeItem('ui_pos_hex'); // el navegador es el mismo entre escenas: la opción solo vale en las que la piden
       localStorage.setItem('ui_skin_device', skinId);
       for (const [k, v] of Object.entries(e.localStorage ?? {})) localStorage.setItem(k, v);
       for (const [k, v] of Object.entries(e.sessionStorage ?? {})) sessionStorage.setItem(k, v);
@@ -130,14 +134,16 @@ async function capturar(browser, nombre, escena, skin) {
       }
     } catch { /* nada */ }
   }, skin, escena, JSON.stringify(usuarioDe(escena)));
+  if (MOVIMIENTO) await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: MOVIMIENTO }]);
   await page.goto(`http://localhost:${PUERTO}${escena.ruta}`, { waitUntil: 'networkidle2', timeout: 45000 });
-  await page.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}' });
+  if (!MOVIMIENTO) await page.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}' });
   await ESPERA(900);
   // La skin que de verdad quedó puesta: si no es la pedida, la captura y el contraste serían de otra skin y no valen.
   const skinAplicada = await page.evaluate(() => document.documentElement.getAttribute('data-skin'));
   if (skinAplicada !== skin) { await page.close(); throw Object.assign(new Error(`skin pedida «${skin}» pero aplicada «${skinAplicada}»`), { desajuste: true }); }
   if (escena.accion) await escena.accion(page);
   await ESPERA(300);
+  const movimiento = MOVIMIENTO ? await page.evaluate(() => ['.iso-entrada', '.iso-pestana', '.iso-bisel', '.iso-hex', '.iso-columna'].map((sel) => { const el = document.querySelector(sel); if (!el) return { sel, hay: false }; const cs = getComputedStyle(el); return { sel, hay: true, animacion: cs.animationName, transicion: cs.transitionDuration }; })) : null;
   await page.screenshot({ path: join(SALIDA, `${nombre}__${skin}.png`), type: 'png' });
   const desborde = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   // contrato de la ventana de arriba (estándar de modales): rol, nombre accesible, medidas a 1366×768, capa sobre la barra y foco dentro
@@ -202,7 +208,7 @@ async function capturar(browser, nombre, escena, skin) {
     if (!d) break;
   }
   await page.close();
-  return { axe, teclado, desborde, atajos, impresion, contrato, skinAplicada };
+  return { axe, teclado, desborde, atajos, impresion, contrato, skinAplicada, movimiento };
 }
 
 mkdirSync(SALIDA, { recursive: true });
@@ -210,6 +216,7 @@ const nombres = args.escenas && args.escenas !== 'todas' ? args.escenas.split(',
 const srv = await servidor();
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, protocolTimeout: 60000, args: ['--no-sandbox', '--force-color-profile=srgb', '--font-render-hinting=none', '--disable-lcd-text'] });
 const aplicadas = {}, omitidas = [], desajustes = [];
+const movTodo = {};
 const axeTodo = {}, tecladoTodo = {}, desbordes = {}, atajosTodo = {}, impresionTodo = {}, contratoTodo = {};
 try {
   for (const n of nombres) for (const skin of SKINS) {
@@ -217,6 +224,7 @@ try {
     if (SKINS_EN_PREPARACION.includes(skin) && !ROLES_SKINS_EN_PREPARACION.includes(rolDe(ESCENAS[n]))) { omitidas.push(`${n}__${skin}`); console.log(`${n.padEnd(20)} ${skin.padEnd(7)} OMITIDA: el rol ${rolDe(ESCENAS[n])} no ve esta skin (usa --rol ADMIN)`); continue; }
     try { r = await capturar(browser, n, ESCENAS[n], skin); } catch (e) { if (e.desajuste) desajustes.push(`${n}__${skin}: ${e.message}`); console.log(`${n.padEnd(20)} ${skin.padEnd(7)} ESCENA FALLÓ: ${String(e.message).slice(0, 90)}`); continue; }
     aplicadas[`${n}__${skin}`] = r.skinAplicada;
+    if (r.movimiento) movTodo[`${n}__${skin}`] = r.movimiento;
     axeTodo[`${n}__${skin}`] = r.axe; tecladoTodo[`${n}__${skin}`] = r.teclado; desbordes[`${n}__${skin}`] = r.desborde; atajosTodo[`${n}__${skin}`] = r.atajos; contratoTodo[`${n}__${skin}`] = r.contrato; if (r.impresion) impresionTodo[`${n}__${skin}`] = r.impresion;
     console.log(`${n.padEnd(20)} ${skin.padEnd(7)} contraste: ${String(r.axe.length).padStart(3)} fallos | foco: ${r.teclado.length} pasos | desborde: ${r.desborde ? 'SÍ' : 'no'}`);
   }
@@ -230,6 +238,7 @@ writeFileSync(join(SALIDA, 'desborde.json'), JSON.stringify(desbordes, null, 1))
 writeFileSync(join(SALIDA, 'atajos.json'), JSON.stringify(atajosTodo, null, 1));
 writeFileSync(join(SALIDA, 'impresion.json'), JSON.stringify(impresionTodo, null, 1));
 writeFileSync(join(SALIDA, 'contrato.json'), JSON.stringify(contratoTodo, null, 1));
+if (MOVIMIENTO) writeFileSync(join(SALIDA, 'movimiento.json'), JSON.stringify(movTodo, null, 1));
 writeFileSync(join(SALIDA, 'skins-aplicadas.json'), JSON.stringify({ aplicadas, omitidas, desajustes }, null, 1));
 if (omitidas.length) console.log(`\n${omitidas.length} captura(s) omitidas porque el rol no ve esa skin.`);
 if (desajustes.length) { console.log(`\nFALLO: la skin aplicada no es la pedida en ${desajustes.length} captura(s):\n  ` + desajustes.join('\n  ')); process.exit(1); }

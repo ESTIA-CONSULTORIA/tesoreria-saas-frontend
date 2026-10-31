@@ -6,7 +6,7 @@
 // pantallas migradas (olas 0 y 1), y en una skin clara esos colores se verían mal. Solo las ven ADMIN y SOPORTE (SKINS_EN_PREPARACION)
 // hasta terminar las olas 2 a 4 (ver docs/PLAN-SKINS.md).
 
-export type SkinId = 'estia' | 'oscuro' | 'claro' | 'contraste';
+export type SkinId = 'estia' | 'oscuro' | 'claro' | 'contraste' | 'isotipo';
 
 export const SKIN_POR_DEFECTO: SkinId = 'estia';
 
@@ -132,6 +132,26 @@ export interface Tokens {
   onStrong: string; // texto sobre los botones morado y ámbar
   papelOnVerde: string; // texto sobre botones verdes (papelVerde)
   tintaNavyTx: string; // texto secundario sobre fondo azul marino (cocina)
+  // ── Identidad del isotipo (solo ESTIA Isotipo las usa; en las demás skins llevan el color de su propio acento y nada las lee) ──
+  marcaCian: string; // extremo suroeste del degradado del isotipo: SOLO decorativo (texto blanco sobre él no llega a 3:1)
+  marcaAzul: string; // tramo medio del degradado
+  marcaCobalto: string; // extremo noreste
+  marcaFaceta: string; // faceta clara de los giros
+  marcaFacetaOsc: string; // faceta oscura
+}
+
+/**
+ * Tokens que NO son color: forma, elevación, tipografía y movimiento. Se publican tal cual (no como canales RGB).
+ * Las skins existentes llevan valores neutros (esquinas rectas, sin desplazamiento, Inter, 150 ms): no cambian de aspecto.
+ */
+export interface Forma {
+  biselL: string; // bisel de esquina, lado largo (0px = sin bisel)
+  biselA: string; // bisel de esquina, lado corto: con L:A = 1.73 el corte cae a 30°
+  elevX: string; // desplazamiento duro de la elevación (sin desenfoque)
+  elevY: string;
+  fuenteUi: string;
+  fuenteNum: string; // cifras grandes (importes)
+  movDur: string; // duración base de las transiciones; con prefers-reduced-motion se anula en isotipo.css
 }
 
 /**
@@ -139,7 +159,8 @@ export interface Tokens {
  * rgb(var(--veil) / 0.5) se publica como rgb(var(--veil) / max(0.5, var(--alfa-texto-min))): con piso 0 (skins oscuras) nada cambia; en una
  * skin clara, una veladura oscura al 50 % sobre blanco da 3.4:1, así que el piso la sube hasta cumplir el contraste.
  */
-export const SKINS: Record<SkinId, { nombre: string; descripcion: string; alfaTextoMin: number; tokens: Tokens }> = {
+type DefSkin = { nombre: string; descripcion: string; alfaTextoMin: number; tokens: Tokens };
+const SKINS_BASE: Record<Exclude<SkinId, 'isotipo'>, DefSkin> = {
   estia: {
     nombre: 'ESTIA',
     descripcion: 'La de siempre: grafito sobrio.',
@@ -186,6 +207,7 @@ export const SKINS: Record<SkinId, { nombre: string; descripcion: string; alfaTe
       onStrong: '#F5F5F5',
       papelOnVerde: '#0B1F13',
       tintaNavyTx: '#94A3B8',
+      marcaCian: '#8FAFD4', marcaAzul: '#2D2D2D', marcaCobalto: '#2D2D2D', marcaFaceta: '#7B9CCC', marcaFacetaOsc: '#222222',
     },
   },
   oscuro: {
@@ -234,6 +256,7 @@ export const SKINS: Record<SkinId, { nombre: string; descripcion: string; alfaTe
       onStrong: '#FFFFFF',
       papelOnVerde: '#0B1F13',
       tintaNavyTx: '#94A3B8',
+      marcaCian: '#6EA8FE', marcaAzul: '#2F5FB5', marcaCobalto: '#2B3040', marcaFaceta: '#7B9CCC', marcaFacetaOsc: '#1F232D',
     },
   },
   claro: {
@@ -282,6 +305,7 @@ export const SKINS: Record<SkinId, { nombre: string; descripcion: string; alfaTe
       onStrong: '#FFFFFF',
       papelOnVerde: '#0B1F13',
       tintaNavyTx: '#94A3B8',
+      marcaCian: '#1D4ED8', marcaAzul: '#1D4ED8', marcaCobalto: '#DDE3EB', marcaFaceta: '#2563EB', marcaFacetaOsc: '#E8EDF3',
     },
   },
   contraste: {
@@ -330,7 +354,53 @@ export const SKINS: Record<SkinId, { nombre: string; descripcion: string; alfaTe
       onStrong: '#000000',
       papelOnVerde: '#000000',
       tintaNavyTx: '#F0F0F0',
+      marcaCian: '#FFD60A', marcaAzul: '#FFD60A', marcaCobalto: '#262626', marcaFaceta: '#8AD0FF', marcaFacetaOsc: '#1A1A1A',
     },
+  },
+};
+
+/**
+ * ESTIA Isotipo: la identidad geométrica del isotipo oficial (rejilla isométrica 30°/90°, bisel a 30° en vez de radio, elevación dura,
+ * degradado cian→cobalto solo decorativo). Parte de ESTIA para los tonos de estado/papel (mismos valores) y cambia la paleta azul marino.
+ * Ver docs/IDENTIDAD-ISOTIPO.md. En preparación: solo ADMIN y SOPORTE (SKINS_EN_PREPARACION).
+ */
+const ISOTIPO: DefSkin = {
+  nombre: 'ESTIA Isotipo',
+  descripcion: 'Azul marino con la geometría del isotipo: biseles a 30°, rejilla isométrica y degradado cian a cobalto.',
+  alfaTextoMin: 0,
+  tokens: {
+    ...SKINS_BASE.estia.tokens,
+    bg: '#050B1A', nav: '#071231', surface1: '#0A1838', field: '#0E2048', surface2: '#12285A', surface3: '#1C3A7C', surface4: '#2448A0',
+    border: '#24407F', borderField: '#7C9AE0',
+    text1: '#F2F6FF', text2: '#BCC9E8', text3: '#9AAAD2',
+    accent: '#35C8E0', onAccent: '#04101F', link: '#6ED7EC',
+    btn: '#0A63E6', btnHover: '#0A3FA8', onSolid: '#FFFFFF',
+    ok: '#4CC38A', danger: '#FF8A80', warn: '#F2B84B',
+    okSolid: '#1B7450', dangerSolid: '#B3372F', warnSolid: '#8A5A0A',
+    okSoft: '#0B2A25', dangerSoft: '#34141C',
+    focus: '#FFD60A',
+    canvas: '#060E24', panel: '#081433', popover: '#0C1C45', textSoft: '#C9D6F2', textBright: '#F2F6FF',
+    accentAlt: '#6C98F2', chip: '#12306B', modal: '#0A1838', viz5: '#7E8AA8', viz6: '#4A5578',
+    marcaCian: '#00ABC6', marcaAzul: '#0057A6', marcaCobalto: '#0A2BA5', marcaFaceta: '#3973F9', marcaFacetaOsc: '#004281',
+  },
+};
+
+export const SKINS: Record<SkinId, DefSkin> = { ...SKINS_BASE, isotipo: ISOTIPO };
+
+const FORMA_NEUTRA: Forma = {
+  biselL: '0px', biselA: '0px', elevX: '0px', elevY: '0px',
+  fuenteUi: "'Inter', system-ui, sans-serif", fuenteNum: "'Inter', system-ui, sans-serif", movDur: '150ms',
+};
+
+/** Forma de cada skin. Las existentes, neutras; Isotipo: bisel 24×14 (30°), elevación dura a 30° de 8 px, Montserrat en las cifras. */
+export const FORMAS: Record<SkinId, Forma> = {
+  estia: FORMA_NEUTRA,
+  oscuro: FORMA_NEUTRA,
+  claro: FORMA_NEUTRA,
+  contraste: FORMA_NEUTRA,
+  isotipo: {
+    biselL: '24px', biselA: '14px', elevX: '7px', elevY: '4px',
+    fuenteUi: "'Inter', system-ui, sans-serif", fuenteNum: "'Montserrat', 'Inter', system-ui, sans-serif", movDur: '160ms',
   },
 };
 
@@ -338,7 +408,7 @@ export const SKINS: Record<SkinId, { nombre: string; descripcion: string; alfaTe
 export const SKINS_VISIBLES: SkinId[] = ['estia', 'oscuro'];
 
 /** Skins ya definidas pero aún no ofrecidas a todos: solo para estos roles hasta terminar las olas 2 a 4. (El backend repite la lista: users/ui-prefs.util.ts.) */
-export const SKINS_EN_PREPARACION: SkinId[] = ['claro', 'contraste'];
+export const SKINS_EN_PREPARACION: SkinId[] = ['claro', 'contraste', 'isotipo'];
 export const ROLES_SKINS_EN_PREPARACION: string[] = ['ADMIN', 'SOPORTE'];
 
 /** ¿Este rol puede ver / elegir esta skin? */
@@ -365,6 +435,7 @@ export function nombreVar(token: string): string {
 export function cssSkins(): string {
   const bloque = (selector: string, id: SkinId) =>
     `${selector} {\n` + Object.entries(SKINS[id].tokens).map(([k, v]) => `  ${nombreVar(k)}: ${canales(v)};`).join('\n') +
+    '\n' + Object.entries(FORMAS[id]).map(([k, v]) => `  ${nombreVar(k)}: ${v};`).join('\n') +
     `\n  --alfa-texto-min: ${SKINS[id].alfaTextoMin};\n}\n`;
   return (
     '/* GENERADO desde src/core/theme/skins.ts — no editar a mano. Para regenerar: npm run skins:css */\n' +
@@ -372,6 +443,7 @@ export function cssSkins(): string {
     bloque('[data-skin="oscuro"]', 'oscuro') +
     bloque('[data-skin="claro"]', 'claro') +
     bloque('[data-skin="contraste"]', 'contraste') +
+    bloque('[data-skin="isotipo"]', 'isotipo') +
     // Impresión (recibos, cortes): siempre sobre papel claro, sea cual sea la skin. Gana a [data-skin=…] por especificidad (html[data-skin]).
     '@media print {\n' + bloque('html, html[data-skin]', 'claro') + '}\n'
   );
