@@ -9,11 +9,11 @@
     <title>ESTIA ERP</title>
     <script>
       // Skin antes de pintar (sin parpadeo): equipo > preferencia del usuario > último valor del negocio > ESTIA. Mismas claves y misma regla
-      // que src/core/theme/aplicarSkin.ts; 'claro' y 'contraste' (en preparación) solo para los roles ADMIN y SOPORTE de la sesión guardada.
+      // que src/core/theme/aplicarSkin.ts; 'claro', 'contraste' e 'isotipo' (en preparación) solo para los roles ADMIN y SOPORTE de la sesión guardada.
       (function () {
         try {
           var ok = ['estia', 'oscuro'];
-          var prep = ['claro', 'contraste'];
+          var prep = ['claro', 'contraste', 'isotipo'];
           var rol = null;
           try { rol = (JSON.parse(localStorage.getItem('user') || 'null') || {}).roleCode; } catch (e) {}
           if (rol === 'ADMIN' || rol === 'SOPORTE') ok = ok.concat(prep);
@@ -24,6 +24,7 @@
             if (ok.indexOf(s) >= 0) { skin = s; break; }
           }
           document.documentElement.setAttribute('data-skin', skin);
+          if (localStorage.getItem('ui_pos_hex') === '1') document.documentElement.setAttribute('data-pos-hex', '1');
         } catch (e) { document.documentElement.setAttribute('data-skin', 'estia'); }
       })();
     </script>

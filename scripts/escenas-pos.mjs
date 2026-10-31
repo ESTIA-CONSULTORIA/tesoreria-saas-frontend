@@ -119,6 +119,9 @@ export const ESCENAS_POS = {
   'pos-sin-turno': pos({ sinTurno: true }),
   'pos-terminal-vacio': pos({ vacio: true }),
   'pos-terminal': pos(),
+  // «Teclas hexagonales» activadas (opción del Tema; solo se ven con la skin ESTIA Isotipo)
+  'pos-terminal-hex': pos({ localStorage: { ui_pos_hex: '1' } }),
+  'pos-ticket-hex': pos({ localStorage: { ui_pos_hex: '1' }, teclas: ['F2', 'Escape'] }, async (p) => { await prod(p, 'Hamburguesa'); await prod(p, 'Refresco'); }),
   'pos-error': pos({ fallos: ['/pos/products', '/pos/categories'] }),
   'pos-ticket': pos({ teclas: ['F2', 'Escape'] }, async (p) => { await prod(p, 'Hamburguesa'); await prod(p, 'Refresco'); }),
   'pos-descuento': pos({}, async (p) => { await prod(p, 'Hamburguesa'); await clic(p, '^Descuento$'); }),

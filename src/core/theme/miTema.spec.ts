@@ -22,9 +22,9 @@ describe('opcionesTema: qué skins ofrece el selector del POS', () => {
   it.each(['CAJERO', 'RECEPCION', 'MESERO', 'CAPITAN', 'GERENTE'])('%s: 2 opciones (ESTIA y Oscuro)', (rol) => {
     expect(opcionesTema(rol)).toEqual(['estia', 'oscuro']);
   });
-  it.each(['ADMIN', 'SOPORTE'])('%s: las 4', (rol) => {
-    expect(opcionesTema(rol)).toHaveLength(4);
-    expect(opcionesTema(rol)).toEqual(expect.arrayContaining(['estia', 'oscuro', 'claro', 'contraste']));
+  it.each(['ADMIN', 'SOPORTE'])('%s: las 5', (rol) => {
+    expect(opcionesTema(rol)).toHaveLength(5);
+    expect(opcionesTema(rol)).toEqual(expect.arrayContaining(['estia', 'oscuro', 'claro', 'contraste', 'isotipo']));
   });
   it('sin rol: solo las 2 de siempre', () => {
     expect(opcionesTema(null)).toEqual(['estia', 'oscuro']);

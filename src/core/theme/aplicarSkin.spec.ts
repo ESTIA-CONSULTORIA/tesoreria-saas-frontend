@@ -38,7 +38,7 @@ describe('aplicarSkin: equipo → usuario → negocio, con el rol', () => {
   });
 
   it('Claro y Alto contraste: ADMIN y SOPORTE sí, el resto no (aunque lo tengan guardado)', () => {
-    for (const skin of ['claro', 'contraste']) {
+    for (const skin of ['claro', 'contraste', 'isotipo']) {
       sesion('ADMIN'); expect(fijarSkinUsuario(skin)).toBe(skin);
       sesion('SOPORTE'); expect(aplicarSkin()).toBe(skin);
       sesion('CAJERO'); expect(aplicarSkin()).toBe('estia');

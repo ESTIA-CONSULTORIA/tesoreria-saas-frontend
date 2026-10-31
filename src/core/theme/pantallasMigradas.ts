@@ -28,6 +28,7 @@ export const PANTALLAS_MIGRADAS: readonly string[] = [
   // Ola 1: dashboard, centro de soluciones y guía de la prueba (el login conserva su paleta propia por negocio: ver PLAN-SKINS §11)
   'pages/Dashboard/DashboardPage.tsx',
   'pages/Dashboard/DashboardLite.tsx',
+  'pages/Dashboard/DashboardIsotipo.tsx',
   'pages/Dashboard/DashboardInfoModal.tsx',
   'pages/solutions/SolutionsCenter.tsx',
   'pages/prueba/PruebaWizard.tsx',

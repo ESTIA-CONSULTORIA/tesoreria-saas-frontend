@@ -1991,7 +1991,7 @@ export default function POSPage() {
                 <div className="flex gap-2 overflow-x-auto pb-1">
                   <button
                     onClick={() => setSelectedCategory("all")}
-                    className={`px-3 py-1 rounded text-sm whitespace-nowrap ${
+                    className={`iso-pestana px-3 py-1 rounded text-sm whitespace-nowrap ${
                       selectedCategory === "all"
                         ? "!bg-btn !text-on-solid"
                         : "!bg-surface-2 !text-content-2 hover:!bg-surface-2"
@@ -2003,7 +2003,7 @@ export default function POSPage() {
                     <button
                       key={cat.id}
                       onClick={() => setSelectedCategory(cat.name)}
-                      className={`px-3 py-1 rounded text-sm whitespace-nowrap ${
+                      className={`iso-pestana px-3 py-1 rounded text-sm whitespace-nowrap ${
                         selectedCategory === cat.name
                           ? "!bg-btn !text-on-solid"
                           : "!bg-surface-2 !text-content-2 hover:!bg-surface-2"
@@ -2015,11 +2015,11 @@ export default function POSPage() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="iso-fondo flex-1 overflow-y-auto p-4">
                 {productosCargados && products.length === 0 && (
                   <p role="status" className="py-10 text-center text-sm !text-content-3">No hay productos en tu sucursal</p>
                 )}
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                <div className="iso-hex-grid grid grid-cols-3 sm:grid-cols-4 gap-3">
                   {filteredProducts.map((product) => {
                     // Auditoría de producto (GoodsHabits, Punto 1): stockPolicy la elige
                     // el tenant en PosConfigPage.tsx — bajo PERMITIR_NEGATIVO (default) el
@@ -2037,23 +2037,23 @@ export default function POSPage() {
                       key={product.id}
                       onClick={() => !isBlocked && addToTicket(product)}
                       disabled={isBlocked}
-                      className={`max-w-[120px] max-h-[120px] p-3 rounded-lg border text-left transition-colors flex flex-col relative ${
+                      className={`iso-hex iso-bisel iso-bisel-sm max-w-[120px] max-h-[120px] p-3 rounded-lg border text-left transition-colors flex flex-col relative ${
                         isBlocked
                           ? '!bg-nav !border-line opacity-40 grayscale cursor-not-allowed'
                           : '!bg-surface-1 hover:!bg-surface-2 !border-line'
                       }`}
                     >
-                      <div className="w-full aspect-square !bg-surface-2 rounded mb-2 flex items-center justify-center overflow-hidden">
+                      <div className="iso-hex-img w-full aspect-square !bg-surface-2 rounded mb-2 flex items-center justify-center overflow-hidden">
                         {product.imageUrl ? (
                           <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
                         ) : (
                           <span className="text-3xl">🛒</span>
                         )}
                       </div>
-                      <p className="font-medium text-xs line-clamp-2 h-8 overflow-hidden">{product.name}</p>
-                      <p className="!text-ok font-bold text-sm">${product.price.toFixed(2)}</p>
+                      <p className="iso-hex-nombre font-medium text-xs line-clamp-2 h-8 overflow-hidden">{product.name}</p>
+                      <p className="iso-numero !text-ok font-bold text-sm">${product.price.toFixed(2)}</p>
                       {product.stock !== null && product.stock !== undefined && (
-                        <div className={`absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                        <div className={`iso-stock absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${
                           product.stock <= 0
                             ? '!bg-danger-solid !text-on-solid'
                             : product.stock <= (product.stockMinimo || 0)
@@ -2083,7 +2083,7 @@ export default function POSPage() {
                     <p className="!text-content-3 text-center py-8">Ticket vacío</p>
                   ) : (
                     ticket.map((item) => (
-                      <div key={item.productoId} className="p-3 rounded-lg !bg-surface-1 border !border-line">
+                      <div key={item.productoId} className="iso-bisel iso-bisel-sm p-3 rounded-lg !bg-surface-1 border !border-line">
                         <div className="flex justify-between items-start mb-2">
                           <p className="font-medium text-sm flex-1">{item.nombre}</p>
                           <button
@@ -2169,7 +2169,7 @@ export default function POSPage() {
                   )}
                   <div className="flex justify-between text-xl font-bold pt-2 border-t !border-line">
                     <span>TOTAL</span>
-                    <span className="!text-ok">${getTotal().toFixed(2)}</span>
+                    <span className="iso-numero !text-ok">${getTotal().toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -2197,7 +2197,7 @@ export default function POSPage() {
                   onClick={abrirCobro}
                   title="Cobrar (F4)"
                   disabled={!ticket || ticket.length === 0}
-                  className="w-full py-4 rounded-lg !bg-ok-solid !text-on-solid font-bold text-xl hover:bg-tono-ok-700 disabled:bg-tono-slate-700 disabled:text-tinta-3"
+                  className="iso-bisel w-full py-4 rounded-lg !bg-ok-solid !text-on-solid font-bold text-xl hover:bg-tono-ok-700 disabled:bg-tono-slate-700 disabled:text-tinta-3"
                 >
                   COBRAR
                 </button>

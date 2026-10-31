@@ -1,0 +1,161 @@
+/*
+  ESTIA Isotipo: la identidad geométrica del isotipo oficial (docs/IDENTIDAD-ISOTIPO.md).
+  Las reglas con [data-skin="isotipo"] solo existen en esa skin; las clases iso-* no tienen efecto en las demás.
+  Colores: únicamente tokens (rgb(var(--…))): coloresFijos.spec lo exige. Valores de forma: --bisel-l/--bisel-a, --elev-x/--elev-y (skins.ts › FORMAS).
+  Foco: contorno rectangular amarillo de 3 px; en las piezas con bisel se quita el recorte mientras tienen el foco para que el contorno se vea entero.
+  Movimiento: todo lo animado va dentro de prefers-reduced-motion: no-preference; con «reducir» no hay animaciones ni transiciones.
+*/
+
+[data-skin="isotipo"] * { font-family: var(--fuente-ui); }
+[data-skin="isotipo"] .iso-numero { font-family: var(--fuente-num); font-variant-numeric: tabular-nums; }
+
+[data-skin="isotipo"] :focus-visible {
+  outline: 3px solid rgb(var(--focus)) !important;
+  outline-offset: 2px !important;
+}
+
+/* Rejilla isométrica (30° / 150°) muy tenue detrás de las zonas de trabajo; nunca detrás de texto largo. Decorativa. */
+[data-skin="isotipo"] .iso-fondo {
+  background-image:
+    repeating-linear-gradient(30deg, rgb(var(--marca-cian) / 0.06) 0 1px, transparent 1px 34px),
+    repeating-linear-gradient(150deg, rgb(var(--marca-cian) / 0.06) 0 1px, transparent 1px 34px);
+}
+
+/* Bisel a 30° en lugar de radio: esquinas arriba-izquierda y abajo-derecha cortadas. La faceta clara (borde superior) da el volumen. */
+[data-skin="isotipo"] .iso-bisel {
+  border-radius: 0 !important;
+  clip-path: polygon(var(--bisel-l) 0, 100% 0, 100% calc(100% - var(--bisel-a)), calc(100% - var(--bisel-l)) 100%, 0 100%, 0 var(--bisel-a));
+  box-shadow: inset 0 2px 0 rgb(var(--marca-faceta) / 0.55);
+}
+[data-skin="isotipo"] .iso-bisel-sm {
+  --bisel-l: 14px;
+  --bisel-a: 8px;
+}
+[data-skin="isotipo"] .iso-bisel:focus-visible,
+[data-skin="isotipo"] .iso-hex:focus-visible,
+[data-skin="isotipo"] .iso-pestana:focus-visible { clip-path: none; }
+
+/* Elevación: desplazamiento duro a 30°, sin desenfoque (para piezas sin recorte). */
+[data-skin="isotipo"] .iso-elev { box-shadow: var(--elev-x) var(--elev-y) 0 rgb(var(--marca-cobalto) / 0.7); }
+
+/* Ventanas modales: el mismo bisel; el recorte solo afecta a las dos esquinas, donde nunca hay controles. */
+[data-skin="isotipo"] [data-modal-size] {
+  border-radius: 0 !important;
+  clip-path: polygon(var(--bisel-l) 0, 100% 0, 100% calc(100% - var(--bisel-a)), calc(100% - var(--bisel-l)) 100%, 0 100%, 0 var(--bisel-a));
+  border-top: 3px solid rgb(var(--marca-faceta));
+}
+
+/* Pestañas (categorías): borde derecho inclinado a 30°. */
+[data-skin="isotipo"] .iso-pestana {
+  border-radius: 0 !important;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 0 100%);
+  padding-right: 1.6rem !important;
+}
+
+/* Divisor con escalón a 30° (trazo hecho con máscara: el color lo pone el fondo). */
+[data-skin="isotipo"] .iso-divisor {
+  display: block;
+  height: 10px;
+  background: rgb(var(--border-field));
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10' preserveAspectRatio='none'%3E%3Cpath d='M0 8H30L36 2H100' fill='none' stroke='black' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10' preserveAspectRatio='none'%3E%3Cpath d='M0 8H30L36 2H100' fill='none' stroke='black' stroke-width='1.5' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+}
+
+/* El isotipo como marca (estados vacíos, firma): el color es el degradado de 30° del isotipo; el trazo viene de public/marca/isotipo-plano.svg. */
+[data-skin="isotipo"] .iso-marca {
+  background: linear-gradient(60deg, rgb(var(--marca-cian)), rgb(var(--marca-azul)) 50%, rgb(var(--marca-cobalto)));
+  -webkit-mask: url('/marca/isotipo-plano.svg') center / contain no-repeat;
+  mask: url('/marca/isotipo-plano.svg') center / contain no-repeat;
+}
+
+/* Marcador triangular de las listas de atención. */
+[data-skin="isotipo"] .iso-marcador {
+  display: inline-block;
+  width: 10px;
+  height: 12px;
+  background: currentColor;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+  flex: none;
+}
+
+/* ── POS: teclas hexagonales (solo con la opción «Teclas hexagonales» del Tema; la cuadrícula normal sigue siendo la predeterminada) ── */
+[data-skin="isotipo"][data-pos-hex="1"] .iso-hex-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 120px);
+  gap: 8px;
+  justify-content: center;
+  padding-bottom: 36px;
+}
+@media (max-width: 639px) {
+  [data-skin="isotipo"][data-pos-hex="1"] .iso-hex-grid { grid-template-columns: repeat(3, 120px); }
+}
+/* panal: cada segunda fila corre media tecla */
+@media (min-width: 640px) {
+  [data-skin="isotipo"][data-pos-hex="1"] .iso-hex-grid > .iso-hex:nth-child(8n+5),
+  [data-skin="isotipo"][data-pos-hex="1"] .iso-hex-grid > .iso-hex:nth-child(8n+6),
+  [data-skin="isotipo"][data-pos-hex="1"] .iso-hex-grid > .iso-hex:nth-child(8n+7),
+  [data-skin="isotipo"][data-pos-hex="1"] .iso-hex-grid > .iso-hex:nth-child(8n) { translate: 64px 0; }
+}
+@media (max-width: 639px) {
+  [data-skin="isotipo"][data-pos-hex="1"] .iso-hex-grid > .iso-hex:nth-child(6n+4),
+  [data-skin="isotipo"][data-pos-hex="1"] .iso-hex-grid > .iso-hex:nth-child(6n+5),
+  [data-skin="isotipo"][data-pos-hex="1"] .iso-hex-grid > .iso-hex:nth-child(6n) { translate: 64px 0; }
+}
+[data-skin="isotipo"][data-pos-hex="1"] .iso-hex {
+  --hex: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  position: relative;
+  width: 120px !important;
+  height: 139px !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin-bottom: -35px;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none;
+  clip-path: var(--hex);
+  background: rgb(var(--border-field)) !important; /* el borde de 3 px es el color de borde de controles (≥ 3:1) */
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+[data-skin="isotipo"][data-pos-hex="1"] .iso-hex::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  clip-path: var(--hex);
+  background: rgb(var(--surface-1));
+  z-index: 0;
+}
+[data-skin="isotipo"][data-pos-hex="1"] .iso-hex:hover:not(:disabled)::before { background: rgb(var(--surface-2)); }
+[data-skin="isotipo"][data-pos-hex="1"] .iso-hex:hover:not(:disabled) {
+  background: linear-gradient(60deg, rgb(var(--marca-cian)), rgb(var(--marca-azul)) 50%, rgb(var(--marca-cobalto))) !important;
+}
+[data-skin="isotipo"][data-pos-hex="1"] .iso-hex > *:not(.iso-stock) { position: relative; z-index: 1; }
+[data-skin="isotipo"][data-pos-hex="1"] .iso-hex .iso-hex-img { display: none; }
+[data-skin="isotipo"][data-pos-hex="1"] .iso-hex .iso-hex-nombre { height: auto; max-width: 84px; font-size: 11px; line-height: 1.2; }
+[data-skin="isotipo"][data-pos-hex="1"] .iso-hex .iso-stock {
+  position: relative !important;
+  z-index: 1;
+  inset: auto !important;
+  margin-top: 3px;
+}
+/* con foco: sin recorte, para que el contorno amarillo rodee la tecla entera; la tecla se vuelve a ver rectangular un instante */
+[data-skin="isotipo"][data-pos-hex="1"] .iso-hex:focus-visible::before { clip-path: none; inset: 0; }
+
+/* Movimiento (solo si el sistema no pide reducirlo): aparición de piezas y cambio suave de color. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-skin="isotipo"] .iso-entrada { animation: iso-entrada calc(var(--mov-dur) * 2) ease-out both; }
+  [data-skin="isotipo"] .iso-hex,
+  [data-skin="isotipo"] .iso-bisel,
+  [data-skin="isotipo"] .iso-pestana { transition: background-color var(--mov-dur), color var(--mov-dur); }
+  [data-skin="isotipo"] .iso-columna { transition: height calc(var(--mov-dur) * 3) ease-out; }
+}
+@keyframes iso-entrada { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
+@media (prefers-reduced-motion: reduce) {
+  [data-skin="isotipo"] *, [data-skin="isotipo"] *::before, [data-skin="isotipo"] *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
