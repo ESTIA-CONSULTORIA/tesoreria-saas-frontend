@@ -6,6 +6,7 @@ import CreateRoleModal from "../roles/CreateRoleModal";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
 import { useAuthStore } from "../../core/store/useAuthStore";
 import { etiquetaAmbito, etiquetaNegocio } from "./etiquetasUsuario";
+import { leerNegocioActivo } from "../../core/api/negocioActivo";
 
 interface User {
   id: string;
@@ -67,7 +68,8 @@ export default function UsersPage() {
   const esSoporte = useAuthStore((s) => s.user?.roleCode) === "SOPORTE";
   // Solo SOPORTE elige negocio ("" = todos); el servidor ignora ?tenantId= para cualquier otro rol.
   const [negocios, setNegocios] = useState<Negocio[]>([]);
-  const [negocioSel, setNegocioSel] = useState("");
+  // Arranca en el negocio activo global de SOPORTE (barra superior); aquí además existe «Todos» ("")
+  const [negocioSel, setNegocioSel] = useState(() => (esSoporte ? leerNegocioActivo(localStorage)?.id ?? "" : ""));
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,7 +98,7 @@ export default function UsersPage() {
     try {
       setLoading(true);
       setError("");
-      const [usersRes, rolesRes] = await Promise.all([api.get("/users", esSoporte && negocioSel ? { params: { tenantId: negocioSel } } : undefined), api.get("/roles")]);
+      const [usersRes, rolesRes] = await Promise.all([api.get("/users", esSoporte ? { params: { tenantId: negocioSel } } : undefined), api.get("/roles")]);
       const usersList = Array.isArray(usersRes.data) ? usersRes.data : [];
       const rolesList = Array.isArray(rolesRes.data) ? rolesRes.data : [];
       setUsers(usersList.map((u: User) => {

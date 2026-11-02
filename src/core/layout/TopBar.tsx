@@ -6,6 +6,7 @@ import { useModulo } from "../hooks/useModulo";
 import { api } from "../api/api";
 import { itemsConfiguracion, rutaConfiguracion, SUBNAV_CONFIGURACION, veConfiguracion } from "./navConfiguracion";
 import { repartirNav } from "./navOverflow";
+import SelectorNegocio from "./SelectorNegocio";
 
 // Espacio entre módulos de la barra principal (compacto, para que quepan más a 1366 px).
 const SEPARACION_NAV = 4;
@@ -546,6 +547,9 @@ export default function TopBar() {
 
         {/* Right section */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, marginLeft: 12 }}>
+
+          {/* Negocio activo (solo SOPORTE): el servidor exige un negocio explícito en listados y altas */}
+          <SelectorNegocio />
 
           {/* Context switcher */}
           <div ref={ctxRef} style={{ position: 'relative' }}>
