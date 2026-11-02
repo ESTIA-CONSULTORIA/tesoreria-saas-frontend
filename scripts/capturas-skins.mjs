@@ -53,6 +53,13 @@ const modulosCatalogo = [
   { code: 'costos', name: 'Costos y Producción', description: 'Recetas e inventario', category: 'operaciones', isAddon: true, defaultPrice: 499 },
   { code: 'tesoreria', name: 'Tesorería', description: 'Bancos y movimientos', category: 'finanzas', isAddon: false, defaultPrice: 0 },
 ];
+// Catálogo de negocios para el selector de SOPORTE: uno con nombre muy largo para comprobar que no desborda la barra
+const NEGOCIO_LARGO = 'Corporativo de Alimentos y Bebidas del Pacífico Norte SA de CV';
+const NEGOCIOS_SOPORTE = [
+  { id: 't1', tradeName: 'Gimnasio Demo', legalName: 'Gimnasio Demo SA de CV' },
+  { id: 't2', tradeName: NEGOCIO_LARGO, legalName: NEGOCIO_LARGO },
+  { id: 't3', tradeName: 'Cafetería Central', legalName: 'Cafetería Central SA' },
+];
 const turnoPendiente = [{ id: 's1', status: 'PENDIENTE_APROBACION', cashierName: 'Luis', difference: -45.5, closedAt: '2026-10-24T20:10:00Z', branchName: 'Matriz' }];
 
 function responder(metodo, ruta, escena) {
@@ -61,6 +68,7 @@ function responder(metodo, ruta, escena) {
   const rp = responderPos(metodo, ruta, escena);
   if (rp) return rp;
   if (ruta.startsWith('/auth/me')) return escena.sinSesion ? [401, { message: 'No autenticado' }] : [200, usuarioDe(escena)];
+  if (ruta === '/tenants') return [200, NEGOCIOS_SOPORTE];
   if (ruta.startsWith('/tenants/resolve')) return [200, { id: 't1', slug: 'demo', tradeName: 'Negocio Demo' }];
   if (/^\/tenants\/t1/.test(ruta)) return [200, { id: 't1', plan: escena.plan ?? 'BUSINESS', giro: escena.giro ?? 'generico', isOnboarded: true }];
   if (ruta.startsWith('/tenant-settings')) return [200, { theme: 'estia', tenantId: 't1' }];
@@ -78,6 +86,50 @@ function responder(metodo, ruta, escena) {
 
 // ── escenas ──
 const ESPERA = (ms) => new Promise((r) => setTimeout(r, ms));
+// Mide el selector de negocio de SOPORTE en la barra superior: que quepa en la barra y en el viewport, que no pise la navegación y
+// el contraste del texto (WCAG 1.4.3, ≥4.5:1; ≥7:1 en Alto contraste) y del borde del control (1.4.11, ≥3:1) contra el fondo real.
+async function medirSelectorNegocio(page) {
+  return page.evaluate(() => {
+    const sel = document.querySelector('select[aria-label^="Negocio activo"]');
+    if (!sel) return { hay: false };
+    const num = (c) => (c.match(/[0-9.]+/g) || []).map(Number);
+    const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+    const lum = ([r, g, b]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+    const mezcla = (fg, bg) => { const [r, g, b, a = 1] = fg; return [r * a + bg[0] * (1 - a), g * a + bg[1] * (1 - a), b * a + bg[2] * (1 - a)]; };
+    const razon = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+    // fondo real: el primer ancestro con fondo no transparente
+    let el = sel.parentElement, fondo = [255, 255, 255];
+    while (el) { const c = num(getComputedStyle(el).backgroundColor); if (c.length >= 3 && (c[3] === undefined || c[3] > 0.99)) { fondo = c.slice(0, 3); break; } el = el.parentElement; }
+    const cs = getComputedStyle(sel);
+    const fondoSel = num(cs.backgroundColor); const fondoControl = fondoSel.length >= 3 ? mezcla(fondoSel, fondo) : fondo;
+    const texto = mezcla(num(cs.color), fondoControl);
+    const borde = mezcla(num(cs.borderTopColor), fondo);
+    const etiqueta = sel.closest('label');
+    const etiquetaColor = etiqueta ? mezcla(num(getComputedStyle(etiqueta).color), fondo) : null;
+    const rs = sel.getBoundingClientRect();
+    const derecha = etiqueta?.parentElement; // contenedor de la zona derecha de la barra
+    const barra = [...document.querySelectorAll('div')].find((d) => d.contains(sel) && Math.round(d.getBoundingClientRect().height) === 52);
+    const nav = document.querySelector('nav[aria-label="Módulos"]');
+    const rb = barra?.getBoundingClientRect();
+    const rn = nav?.getBoundingClientRect();
+    const rd = derecha?.getBoundingClientRect();
+    return {
+      hay: true,
+      depuracion: { fondoCalculado: cs.backgroundColor, colorCalculado: cs.color, esquema: cs.colorScheme, apariencia: cs.appearance, guardado: localStorage.getItem('soporte_tenant_id'), valor: sel.value, opciones: [...sel.options].map((o) => o.value + '=' + o.textContent.slice(0, 12)) },
+      opcionElegida: sel.options[sel.selectedIndex]?.textContent,
+      ancho: Math.round(rs.width), alto: Math.round(rs.height), izquierda: Math.round(rs.left), derecha: Math.round(rs.right),
+      dentroDelViewport: rs.left >= 0 && rs.right <= window.innerWidth,
+      dentroDeLaBarra: !!rb && rs.top >= rb.top - 0.5 && rs.bottom <= rb.bottom + 0.5,
+      barraSinDesborde: !!barra && barra.scrollWidth <= barra.clientWidth + 1,
+      navNoPisaZonaDerecha: !!rn && !!rd ? rn.right <= rd.left + 1 : null,
+      contrasteTexto: +razon(texto, fondoControl).toFixed(2),
+      contrasteBorde: +razon(borde, fondo).toFixed(2),
+      contrasteEtiqueta: etiquetaColor ? +razon(etiquetaColor, fondo).toFixed(2) : null,
+      tieneNombreAccesible: !!(sel.getAttribute('aria-label') || '').trim(),
+      alturaMinima24: rs.height >= 24,
+    };
+  });
+}
 export const ESCENAS = {
   login: { ruta: '/login', sinSesion: true },
   'login-negocio': { ruta: '/login?t=demo', sinSesion: true },
@@ -89,6 +141,9 @@ export const ESCENAS = {
   'topbar-mas-modulos': { ruta: '/dashboard', accion: async (p) => { await p.keyboard.down('Alt'); await p.keyboard.press('KeyM'); await p.keyboard.up('Alt'); await ESPERA(300); } },
   'topbar-contexto': { ruta: '/dashboard', accion: async (p) => { const b = await p.evaluateHandle(() => [...document.querySelectorAll('button')].find((x) => /empresa|vista|grupo|global/i.test(x.textContent || '') && x.closest('header,div'))); await b.asElement()?.click(); await ESPERA(300); } },
   ...ESCENAS_POS,
+  // Selector de negocio de SOPORTE (barra superior). Con --rol SOPORTE; el nombre largo comprueba que no desborda la barra a 1366 px
+  'topbar-negocio-soporte': { ruta: '/dashboard', usuario: { roleCode: 'SOPORTE' }, localStorage: { soporte_tenant_id: 't2', soporte_tenant_name: NEGOCIO_LARGO }, medir: medirSelectorNegocio },
+  'topbar-negocio-soporte-vacio': { ruta: '/dashboard', usuario: { roleCode: 'SOPORTE' }, medir: medirSelectorNegocio },
   'busqueda-global': { ruta: '/dashboard', accion: async (p) => { await p.keyboard.down('Control'); await p.keyboard.press('KeyK'); await p.keyboard.up('Control'); await ESPERA(300); } },
 };
 
@@ -121,6 +176,8 @@ async function capturar(browser, nombre, escena, skin) {
   await page.evaluateOnNewDocument((skinId, e, usuarioJson) => {
     try {
       localStorage.removeItem('ui_pos_hex'); // el navegador es el mismo entre escenas: la opción solo vale en las que la piden
+      localStorage.removeItem('soporte_tenant_id'); // idem: el negocio activo de SOPORTE solo existe en las escenas que lo piden
+      localStorage.removeItem('soporte_tenant_name');
       localStorage.setItem('ui_skin_device', skinId);
       for (const [k, v] of Object.entries(e.localStorage ?? {})) localStorage.setItem(k, v);
       for (const [k, v] of Object.entries(e.sessionStorage ?? {})) sessionStorage.setItem(k, v);
@@ -207,8 +264,9 @@ async function capturar(browser, nombre, escena, skin) {
     teclado.push(d);
     if (!d) break;
   }
+  const medidas = escena.medir ? await escena.medir(page) : null;
   await page.close();
-  return { axe, teclado, desborde, atajos, impresion, contrato, skinAplicada, movimiento };
+  return { axe, teclado, desborde, atajos, impresion, contrato, skinAplicada, movimiento, medidas };
 }
 
 mkdirSync(SALIDA, { recursive: true });
@@ -217,6 +275,7 @@ const srv = await servidor();
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, protocolTimeout: 60000, args: ['--no-sandbox', '--force-color-profile=srgb', '--font-render-hinting=none', '--disable-lcd-text'] });
 const aplicadas = {}, omitidas = [], desajustes = [];
 const movTodo = {};
+const medidasTodo = {};
 const axeTodo = {}, tecladoTodo = {}, desbordes = {}, atajosTodo = {}, impresionTodo = {}, contratoTodo = {};
 try {
   for (const n of nombres) for (const skin of SKINS) {
@@ -225,6 +284,7 @@ try {
     try { r = await capturar(browser, n, ESCENAS[n], skin); } catch (e) { if (e.desajuste) desajustes.push(`${n}__${skin}: ${e.message}`); console.log(`${n.padEnd(20)} ${skin.padEnd(7)} ESCENA FALLÓ: ${String(e.message).slice(0, 90)}`); continue; }
     aplicadas[`${n}__${skin}`] = r.skinAplicada;
     if (r.movimiento) movTodo[`${n}__${skin}`] = r.movimiento;
+    if (r.medidas) medidasTodo[`${n}__${skin}`] = r.medidas;
     axeTodo[`${n}__${skin}`] = r.axe; tecladoTodo[`${n}__${skin}`] = r.teclado; desbordes[`${n}__${skin}`] = r.desborde; atajosTodo[`${n}__${skin}`] = r.atajos; contratoTodo[`${n}__${skin}`] = r.contrato; if (r.impresion) impresionTodo[`${n}__${skin}`] = r.impresion;
     console.log(`${n.padEnd(20)} ${skin.padEnd(7)} contraste: ${String(r.axe.length).padStart(3)} fallos | foco: ${r.teclado.length} pasos | desborde: ${r.desborde ? 'SÍ' : 'no'}`);
   }
@@ -238,6 +298,7 @@ writeFileSync(join(SALIDA, 'desborde.json'), JSON.stringify(desbordes, null, 1))
 writeFileSync(join(SALIDA, 'atajos.json'), JSON.stringify(atajosTodo, null, 1));
 writeFileSync(join(SALIDA, 'impresion.json'), JSON.stringify(impresionTodo, null, 1));
 writeFileSync(join(SALIDA, 'contrato.json'), JSON.stringify(contratoTodo, null, 1));
+if (Object.keys(medidasTodo).length) writeFileSync(join(SALIDA, 'medidas.json'), JSON.stringify(medidasTodo, null, 1));
 if (MOVIMIENTO) writeFileSync(join(SALIDA, 'movimiento.json'), JSON.stringify(movTodo, null, 1));
 writeFileSync(join(SALIDA, 'skins-aplicadas.json'), JSON.stringify({ aplicadas, omitidas, desajustes }, null, 1));
 if (omitidas.length) console.log(`\n${omitidas.length} captura(s) omitidas porque el rol no ve esa skin.`);
