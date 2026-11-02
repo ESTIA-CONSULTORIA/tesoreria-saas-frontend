@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { AlertaApi } from './alertasTesoreria';
 import { conteoTexto, dichoDias, diasDesde, filasDeAlertas, formatoMonto, resumenDeFilas, textoDias } from './alertasTesoreria';
 
 const AHORA = new Date('2026-11-02T12:00:00Z');
@@ -39,7 +40,7 @@ describe('filas de alertas', () => {
     expect(filas.find((f) => f.concepto === 'X')!.monto).toBe(0);
     expect(filasDeAlertas(null, AHORA)).toEqual([]);
     expect(filasDeAlertas(undefined, AHORA)).toEqual([]);
-    expect(filasDeAlertas('no es lista' as any, AHORA)).toEqual([]);
+    expect(filasDeAlertas('no es lista' as unknown as AlertaApi[], AHORA)).toEqual([]);
   });
 });
 
