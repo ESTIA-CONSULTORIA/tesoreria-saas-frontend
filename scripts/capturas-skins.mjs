@@ -60,6 +60,19 @@ const NEGOCIOS_SOPORTE = [
   { id: 't2', tradeName: NEGOCIO_LARGO, legalName: NEGOCIO_LARGO },
   { id: 't3', tradeName: 'Cafetería Central', legalName: 'Cafetería Central SA' },
 ];
+// Alertas de Tesorería con el caso real reportado: 10 «facturas vencidas» de $3,616 a $10,860 y una transferencia pendiente de $25,000
+const diasAtras = (d) => new Date(Date.now() - d * 86400000).toISOString();
+const FACTURAS_VENCIDAS = [
+  ['Pago de nómina', 3616, 95], ['Renta de local', 4100.5, 88], ['Compra de insumos', 4875.25, 76], ['Servicios básicos', 5200, 64],
+  ['Mantenimiento preventivo anual de equipos de refrigeración y cocina industrial de la sucursal matriz', 5990.75, 52], ['Publicidad digital', 6420, 41],
+  ['Compra materias primas', 7310.4, 33], ['Asesoría contable', 8150, 21], ['Impuesto predial', 9275.9, 14], ['Transporte y logística', 10860, 6],
+].map(([concept, amount, d]) => ({ type: 'OVERDUE', message: 'Pago vencido: ' + concept, concept, amount, date: diasAtras(d), severity: 'ERROR' }));
+const alertasConDatos = () => ({
+  lowBalanceAccounts: [], upcomingAlerts: [], overdueAlerts: FACTURAS_VENCIDAS,
+  pendingAlerts: [{ type: 'PENDING', message: 'Traslado pendiente de autorización: Préstamo intercompañía', concept: 'Préstamo intercompañía', amount: 25000, date: diasAtras(3), severity: 'WARNING' }],
+  totalAlerts: 11,
+});
+const alertasVacias = () => ({ lowBalanceAccounts: [], upcomingAlerts: [], overdueAlerts: [], pendingAlerts: [], totalAlerts: 0 });
 const turnoPendiente = [{ id: 's1', status: 'PENDIENTE_APROBACION', cashierName: 'Luis', difference: -45.5, closedAt: '2026-10-24T20:10:00Z', branchName: 'Matriz' }];
 
 function responder(metodo, ruta, escena) {
@@ -69,6 +82,8 @@ function responder(metodo, ruta, escena) {
   if (rp) return rp;
   if (ruta.startsWith('/auth/me')) return escena.sinSesion ? [401, { message: 'No autenticado' }] : [200, usuarioDe(escena)];
   if (ruta === '/tenants') return [200, NEGOCIOS_SOPORTE];
+  if (ruta.startsWith('/treasury/alerts')) return [200, escena.alertasVacias ? alertasVacias() : alertasConDatos()];
+  if (ruta.startsWith('/treasury/alert-config')) return [200, { saldoMinimo: 0, diasAnticipacionAlerta: 7, alertasActivas: true }];
   if (ruta.startsWith('/tenants/resolve')) return [200, { id: 't1', slug: 'demo', tradeName: 'Negocio Demo' }];
   if (/^\/tenants\/t1/.test(ruta)) return [200, { id: 't1', plan: escena.plan ?? 'BUSINESS', giro: escena.giro ?? 'generico', isOnboarded: true }];
   if (ruta.startsWith('/tenant-settings')) return [200, { theme: 'estia', tenantId: 't1' }];
@@ -88,6 +103,43 @@ function responder(metodo, ruta, escena) {
 const ESPERA = (ms) => new Promise((r) => setTimeout(r, ms));
 // Mide el selector de negocio de SOPORTE en la barra superior: que quepa en la barra y en el viewport, que no pise la navegación y
 // el contraste del texto (WCAG 1.4.3, ≥4.5:1; ≥7:1 en Alto contraste) y del borde del control (1.4.11, ≥3:1) contra el fondo real.
+// Mide «Facturas vencidas» y «Transferencias pendientes» en la pestaña Alertas de Tesorería (antes y después del rediseño): alto que ocupa cada
+// bloque, filas, desborde horizontal y, si el bloque nuevo existe, contraste axe SOLO dentro de él y elementos enfocables.
+async function medirAlertasTesoreria(page) {
+  const base = await page.evaluate(() => {
+    const bloque = (re) => {
+      const h = [...document.querySelectorAll('h3')].find((x) => re.test(x.textContent || ''));
+      if (!h) return { hay: false };
+      const cont = h.closest('[data-bloque-alertas]') || h.parentElement;
+      const r = cont.getBoundingClientRect();
+      const nuevo = !!cont.hasAttribute('data-bloque-alertas');
+      const filas = nuevo ? cont.querySelectorAll('[data-fila-alerta]') : cont.querySelectorAll('div[style*="border"]');
+      return {
+        hay: true, nuevo, alto: Math.round(r.height), ancho: Math.round(r.width), filas: filas.length, desborde: cont.scrollWidth > cont.clientWidth + 1,
+        enfocables: cont.querySelectorAll('a, button, input, select, textarea, [tabindex]').length,
+        textoEncabezado: (h.parentElement.textContent || '').replace(/s+/g, ' ').trim().slice(0, 90),
+        etiquetaVencido: (cont.textContent.match(/VENCIDO|PENDIENTE/g) || []).length,
+        primeraFila: nuevo ? (cont.querySelector('[data-fila-alerta]')?.textContent || '').replace(/s+/g, ' ').trim().slice(0, 90) : null,
+        columnas: nuevo ? new Set([...cont.querySelectorAll('[data-fila-alerta]')].map((x) => Math.round(x.getBoundingClientRect().left))).size : null,
+        alturaFila: nuevo && filas[0] ? Math.round(filas[0].getBoundingClientRect().height) : null,
+      };
+    };
+    return { facturas: bloque(/facturas vencidas/i), transferencias: bloque(/transferencias pendientes/i) };
+  });
+  const regla = (await page.evaluate(() => document.documentElement.getAttribute('data-skin'))) === 'contraste' ? 'color-contrast-enhanced' : 'color-contrast';
+  const axeBloques = await page.evaluate(async (regla) => {
+    const out = {};
+    for (const [k, re] of [['facturas', /facturas vencidas/i], ['transferencias', /transferencias pendientes/i]]) {
+      const h = [...document.querySelectorAll('h3')].find((x) => re.test(x.textContent || ''));
+      const cont = h && (h.closest('[data-bloque-alertas]') || h.parentElement);
+      if (!cont) { out[k] = null; continue; }
+      const r = await window.axe.run(cont, { runOnly: { type: 'rule', values: [regla] }, resultTypes: ['violations'] });
+      out[k] = r.violations.flatMap((v) => v.nodes.map((n) => (n.any[0]?.message ?? '').replace(/s+/g, ' ').slice(0, 120)));
+    }
+    return out;
+  }, regla);
+  return { ...base, contrasteBloques: axeBloques };
+}
 async function medirSelectorNegocio(page) {
   return page.evaluate(() => {
     const sel = document.querySelector('select[aria-label^="Negocio activo"]');
@@ -144,6 +196,9 @@ export const ESCENAS = {
   // Selector de negocio de SOPORTE (barra superior). Con --rol SOPORTE; el nombre largo comprueba que no desborda la barra a 1366 px
   'topbar-negocio-soporte': { ruta: '/dashboard', usuario: { roleCode: 'SOPORTE' }, localStorage: { soporte_tenant_id: 't2', soporte_tenant_name: NEGOCIO_LARGO }, medir: medirSelectorNegocio },
   'topbar-negocio-soporte-vacio': { ruta: '/dashboard', usuario: { roleCode: 'SOPORTE' }, medir: medirSelectorNegocio },
+  // Pestaña Alertas de Tesorería: con los datos del caso reportado (11 alertas) y sin alertas
+  'tesoreria-alertas': { ruta: '/treasury', accion: async (p) => { const b = await p.evaluateHandle(() => [...document.querySelectorAll('button')].find((x) => /^Alertas$/.test((x.textContent || '').trim()))); await b.asElement()?.click(); await ESPERA(700); }, medir: medirAlertasTesoreria },
+  'tesoreria-alertas-vacio': { ruta: '/treasury', alertasVacias: true, accion: async (p) => { const b = await p.evaluateHandle(() => [...document.querySelectorAll('button')].find((x) => /^Alertas$/.test((x.textContent || '').trim()))); await b.asElement()?.click(); await ESPERA(700); }, medir: medirAlertasTesoreria },
   'busqueda-global': { ruta: '/dashboard', accion: async (p) => { await p.keyboard.down('Control'); await p.keyboard.press('KeyK'); await p.keyboard.up('Control'); await ESPERA(300); } },
 };
 
