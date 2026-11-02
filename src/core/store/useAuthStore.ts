@@ -87,7 +87,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem("user_branch_id", branchId);
     } else {
       localStorage.removeItem("user_branch_id");
-    limpiarNegocioActivo(localStorage); // el negocio activo de SOPORTE no sobrevive al cierre de sesión
     }
 
     set({

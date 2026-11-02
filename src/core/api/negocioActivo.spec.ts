@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   CLAVE_NEGOCIO_ID,
@@ -52,5 +53,27 @@ describe('negocio activo de SOPORTE', () => {
     // pero una ruta que solo EMPIEZA parecido sí lleva negocio
     expect(parametrosConNegocio('/tenant-settings/x', undefined, 'n-1')).toEqual({ tenantId: 'n-1' });
     expect(parametrosConNegocio('/authorizations', undefined, 'n-1')).toEqual({ tenantId: 'n-1' });
+  });
+});
+
+// Regresión: login() corre en cada carga de página (bootstrap con /auth/me). Si limpiara el negocio activo, el selector de SOPORTE
+// se reiniciaría al recargar. Solo el cierre de sesión (logout) y clearSession deben limpiarlo.
+describe('el negocio activo solo se limpia al cerrar sesión', () => {
+  const fuente = readFileSync(new URL('../store/useAuthStore.ts', import.meta.url), 'utf8');
+  const bloque = (desde: string, hasta: string) => {
+    const a = fuente.indexOf(desde);
+    const b = fuente.indexOf(hasta, a + desde.length);
+    expect(a).toBeGreaterThan(-1);
+    expect(b).toBeGreaterThan(a);
+    return fuente.slice(a, b);
+  };
+
+  it('login() no lo limpia', () => {
+    expect(bloque('  login: (user, modulosActivos = []) => {', '  logout: async () => {')).not.toContain('limpiarNegocioActivo');
+  });
+
+  it('logout y clearSession sí lo limpian', () => {
+    expect(bloque('  logout: async () => {', '  clearSession: () => {')).toContain('limpiarNegocioActivo(localStorage)');
+    expect(fuente.slice(fuente.indexOf('  clearSession: () => {'))).toContain('limpiarNegocioActivo(localStorage)');
   });
 });

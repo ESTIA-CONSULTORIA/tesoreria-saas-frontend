@@ -167,6 +167,12 @@ input:focus, select:focus, textarea:focus {
   box-shadow: none !important;
   ring: none !important;
 }
+
+/* Selector de negocio de SOPORTE (barra superior): anillo de foco visible con teclado (el campo común solo cambia el borde) */
+select.selector-negocio:focus-visible {
+  outline: 2px solid rgb(var(--focus)) !important;
+  outline-offset: 2px !important;
+}
 input::placeholder, textarea::placeholder {
   color: rgb(var(--text-3)) !important;
 }
