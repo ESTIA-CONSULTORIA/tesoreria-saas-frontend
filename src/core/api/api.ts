@@ -2,6 +2,7 @@ import axios from "axios";
 import { useAuthStore } from "../store/useAuthStore";
 import { encabezadosSesionNip } from "./sesionNip";
 import { fijarSkinUsuario } from "../theme/aplicarSkin";
+import { leerNegocioActivo, parametrosConNegocio } from "./negocioActivo";
 
 const baseURL = (import.meta.env.VITE_API_URL ||
   (window.location.hostname === 'localhost'
@@ -47,6 +48,10 @@ api.interceptors.request.use((config) => {
   if (activeBranchId && activeBranchId !== '') {
     config.headers["X-Branch-Id"] = activeBranchId;
   }
+
+  // «Negocio activo» de SOPORTE (selector de la barra superior): el servidor exige un negocio explícito (?tenantId=) en listados y
+  // altas para quien no pertenece a ninguno. Solo SOPORTE escribe esta marca, y para los demás roles el servidor ignora el parámetro.
+  config.params = parametrosConNegocio(config.url, config.params, leerNegocioActivo(localStorage)?.id ?? null);
 
   return config;
 });

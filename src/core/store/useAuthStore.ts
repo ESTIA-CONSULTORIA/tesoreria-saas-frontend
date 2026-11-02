@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { useCompanyStore } from "./useCompanyStore";
 import { api } from "../api/api";
 import { limpiarSesionNip } from "../api/sesionNip";
+import { limpiarNegocioActivo } from "../api/negocioActivo";
 import { aplicarSkin, fijarSkinUsuario } from "../theme/aplicarSkin";
 
 interface User {
@@ -86,6 +87,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem("user_branch_id", branchId);
     } else {
       localStorage.removeItem("user_branch_id");
+    limpiarNegocioActivo(localStorage); // el negocio activo de SOPORTE no sobrevive al cierre de sesión
     }
 
     set({
@@ -123,6 +125,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.removeItem("modulos_activos");
     localStorage.removeItem("user_company_id");
     localStorage.removeItem("user_branch_id");
+    limpiarNegocioActivo(localStorage); // el negocio activo de SOPORTE no sobrevive al cierre de sesión
     localStorage.removeItem("active_company_id");
     localStorage.removeItem("active_branch_id");
     localStorage.removeItem("active_company_name");
@@ -152,6 +155,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.removeItem("modulos_activos");
     localStorage.removeItem("user_company_id");
     localStorage.removeItem("user_branch_id");
+    limpiarNegocioActivo(localStorage); // el negocio activo de SOPORTE no sobrevive al cierre de sesión
     localStorage.removeItem("ui_skin_user");
     aplicarSkin();
 
