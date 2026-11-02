@@ -9,6 +9,8 @@ import { useCompanyStore } from "../../core/store/useCompanyStore";
 import { useDirectorioUsuarios } from "../../core/hooks/useDirectorioUsuarios";
 import { nombreUsuario } from "../../core/utils/nombreUsuario";
 import { useAuthStore } from "../../core/store/useAuthStore";
+import BloqueAlertas from './BloqueAlertas';
+import { filasDeAlertas } from './alertasTesoreria';
 
 
 type TabType = "resumen" | "posicion" | "traslados" | "cxp" | "cxc" | "alertas" | "antiguedad" | "depositos";
@@ -1097,51 +1099,27 @@ export default function TreasuryPage() {
                     </div>
                   )}
 
-                  {alerts.overdueAlerts?.length > 0 && (
-                    <div style={{ backgroundColor: '#161616', border: '1px solid #C53030', borderRadius: '6px', padding: '24px' }}>
-                      <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#C53030', marginBottom: '16px' }}>📄 Facturas Vencidas</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {alerts.overdueAlerts.map((alert: any, index: number) => (
-                          <div key={index} style={{ padding: '16px', borderRadius: '4px', backgroundColor: '#0F0F0F', border: '1px solid #C53030' }}>
-                            <div className="flex items-center gap-3 mb-2">
-                              <span style={{ fontSize: '20px' }}>📄</span>
-                              <div>
-                                <p style={{ fontWeight: 500, color: '#F5F5F5', fontSize: '13px' }}>{alert.concept}</p>
-                                <p style={{ fontSize: '12px', color: '#C53030' }}>Monto: ${Number(alert.amount).toFixed(2)}</p>
-                              </div>
-                            </div>
-                            <span style={{ fontSize: '11px', fontWeight: 600, color: '#C53030' }}>VENCIDO</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {alerts.pendingAlerts?.length > 0 && (
-                    <div style={{ backgroundColor: '#161616', border: '1px solid #B7791F', borderRadius: '6px', padding: '24px' }}>
-                      <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#B7791F', marginBottom: '16px' }}>🔄 Transferencias Pendientes</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {alerts.pendingAlerts.map((alert: any, index: number) => (
-                          <div key={index} style={{ padding: '16px', borderRadius: '4px', backgroundColor: '#0F0F0F', border: '1px solid #B7791F' }}>
-                            <div className="flex items-center gap-3 mb-2">
-                              <span style={{ fontSize: '20px' }}>💸</span>
-                              <div>
-                                <p style={{ fontWeight: 500, color: '#F5F5F5', fontSize: '13px' }}>{alert.concept}</p>
-                                <p style={{ fontSize: '12px', color: '#B7791F' }}>Monto: ${Number(alert.amount).toFixed(2)}</p>
-                              </div>
-                            </div>
-                            <span style={{ fontSize: '11px', fontWeight: 600, color: '#B7791F' }}>PENDIENTE</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {alerts.totalAlerts === 0 && (
-                    <div style={{ backgroundColor: '#161616', border: '1px solid #2F855A', borderRadius: '6px', padding: '24px', textAlign: 'center' }}>
-                      <p style={{ color: '#2F855A', fontSize: '16px' }}>✅ No hay alertas activas</p>
-                    </div>
-                  )}
+                  {/* Facturas vencidas y transferencias pendientes: lista densa a dos columnas (BloqueAlertas), siempre visible; sin alertas muestra un estado vacío de una línea */}
+                  <BloqueAlertas
+                    titulo="Facturas vencidas"
+                    subtitulo="Concepto, monto y días de vencida; las más antiguas primero."
+                    tono="danger"
+                    singular="factura"
+                    plural="facturas"
+                    adjetivo="vencida"
+                    vacio="Sin facturas vencidas."
+                    filas={filasDeAlertas(alerts.overdueAlerts)}
+                  />
+                  <BloqueAlertas
+                    titulo="Transferencias pendientes"
+                    subtitulo="Concepto, monto y días pendiente de autorización."
+                    tono="warn"
+                    singular="transferencia"
+                    plural="transferencias"
+                    adjetivo="pendiente"
+                    vacio="Sin transferencias pendientes."
+                    filas={filasDeAlertas(alerts.pendingAlerts)}
+                  />
                 </div>
               )}
             </div>
