@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../core/api/api';
 import MainLayout from '../../core/layout/MainLayout';
+import { useAlturaRestante } from '../../core/hooks/useAlturaRestante';
 
 interface Patient {
   id: string;
@@ -28,6 +29,7 @@ interface Consulta {
 }
 
 export default function PatientsPage() {
+  const [refPagina, alturaPagina] = useAlturaRestante<HTMLDivElement>();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selected, setSelected] = useState<Patient | null>(null);
   const [consultas, setConsultas] = useState<Consulta[]>([]);
@@ -92,7 +94,7 @@ export default function PatientsPage() {
   const saldo = consultas.reduce((s, c) => s + (Number(c.importe) - Number(c.pagado)), 0);
 
   const s = {
-    container: { display: 'flex', height: 'calc(100vh - 120px)', gap: 0, border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, overflow: 'hidden' },
+    container: { display: 'flex', flex: 1, minHeight: 0, gap: 0, border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, overflow: 'hidden' },
     left: { width: 280, borderRight: '1px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column' as const, background: '#0f1117' },
     right: { flex: 1, display: 'flex', flexDirection: 'column' as const, background: '#141820', overflowY: 'auto' as const },
     header: { padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.07)' },
@@ -105,7 +107,7 @@ export default function PatientsPage() {
 
   return (
     <MainLayout>
-      <div style={{ padding: '0 0 20px' }}>
+      <div ref={refPagina} style={{ display: 'flex', flexDirection: 'column', height: alturaPagina ?? 'calc(100vh - 52px)', padding: '0 0 20px', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div>
             <h1 style={{ fontSize: 18, fontWeight: 500, color: '#c8cdd8', marginBottom: 2 }}>Pacientes</h1>
