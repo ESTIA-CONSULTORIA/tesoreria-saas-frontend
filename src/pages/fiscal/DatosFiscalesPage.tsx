@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import MainLayout from '../../core/layout/MainLayout';
+import { useAlturaRestante } from '../../core/hooks/useAlturaRestante';
 import { api } from '../../core/api/api';
 import { useAuthStore } from '../../core/store/useAuthStore';
 import { ETIQUETA_PESTANA, mensajeErrorApi, pasosPreparacion, PESTANAS, pestanaDeAtajo, pestanaRelativa, type Pestana, type ResumenFiscal } from './fiscalLogic';
@@ -25,6 +26,7 @@ export default function DatosFiscalesPage() {
   const [resumen, setResumen] = useState<ResumenFiscal | null>(null);
   const [error, setError] = useState('');
   const lista = useRef<HTMLDivElement>(null);
+  const [refPagina, alturaPagina] = useAlturaRestante<HTMLDivElement>();
 
   const cargarResumen = useCallback(async () => {
     try {
@@ -67,7 +69,7 @@ export default function DatosFiscalesPage() {
 
   return (
     <MainLayout>
-      <div className="mx-auto flex w-full max-w-[1366px] flex-col gap-2 overflow-hidden px-4 py-2 text-white" style={{ height: 'calc(100vh - 96px)' }}>
+      <div ref={refPagina} className="mx-auto flex w-full max-w-[1366px] flex-col gap-2 overflow-hidden px-4 py-2 text-white" style={{ height: alturaPagina ?? 'calc(100vh - 92px)' }}>
         <div className="flex items-baseline justify-between gap-4">
           <h1 className="text-lg font-bold leading-tight">Datos fiscales</h1>
           <p className="truncate text-xs text-slate-400">Los datos deben coincidir con tu Constancia de Situación Fiscal. Confírmalos con tu contador.</p>
