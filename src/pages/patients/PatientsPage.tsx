@@ -110,8 +110,8 @@ export default function PatientsPage() {
       <div ref={refPagina} style={{ display: 'flex', flexDirection: 'column', height: alturaPagina ?? 'calc(100vh - 52px)', padding: '0 0 20px', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div>
-            <h1 style={{ fontSize: 18, fontWeight: 500, color: '#c8cdd8', marginBottom: 2 }}>Pacientes</h1>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>{patients.length} pacientes registrados</div>
+            <h1 style={{ fontSize: 18, fontWeight: 500, color: 'rgb(var(--text-1))', marginBottom: 2 }}>Pacientes</h1>
+            <div style={{ fontSize: 12, color: 'rgb(var(--text-3))' }}>{patients.length} pacientes registrados</div>
           </div>
           <button style={s.btnGreen} onClick={() => { setSelected(null); setView('new-patient'); }}>+ Nuevo Paciente</button>
         </div>
