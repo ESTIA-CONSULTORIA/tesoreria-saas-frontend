@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   alturaMinimaProductos, completarGenerico, contieneUuid, FORM_PRODUCTO_VACIO, FORM_RECEPTOR_VACIO, formDeSugerencia, hayCambios, mensajeErrorApi,
   MENSAJE_CLAVE_CONTADOR, normalizarRfc, opcionesRegimen, paginaAnterior, paginaSiguiente, pasosPreparacion, pestanaDeAtajo, pestanaRelativa,
-  puedeActivarFacturacion, textoPagina, validarFormEmisor, validarFormProducto, validarFormReceptor, validarRfc, type ResumenFiscal,
+  puedeActivarFacturacion, selectorEmpresaVisible, textoPagina, validarFormEmisor, validarFormProducto, validarFormReceptor, validarRfc, type ResumenFiscal,
 } from './fiscalLogic';
 
 describe('RFC en vivo: formato y dígito verificador', () => {
@@ -179,4 +179,9 @@ describe('varios', () => {
   it('presupuesto: la pestaña de productos con 15 filas cabe en 768 px de alto', () => {
     expect(alturaMinimaProductos()).toBeLessThanOrEqual(768);
   });
+});
+
+describe('selector Empresa de Datos fiscales', () => {
+  it('se oculta con una sola empresa (nada que elegir; no repite el nombre de la barra)', () => expect(selectorEmpresaVisible([{ empresa: 'RIOVA DENTAL' }])).toBe(false));
+  it('se muestra con varias empresas', () => expect(selectorEmpresaVisible([{ empresa: 'A' }, { empresa: 'B' }])).toBe(true));
 });
