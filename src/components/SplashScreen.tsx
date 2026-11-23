@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
-import LogoConsultoria from '../core/components/LogoConsultoria';
 
-const ESTIA_LOGO = '/logo-estia-splash.png';
+const ESTIA_LOGO = '/marca/logo-estia-consultoria-splash.png';
+// Ancho mostrado a 1366×768 (el archivo mide 970 px: ≥ 2× este valor)
+const LOGO_ANCHO = 470;
 
 interface Props {
   onDone: () => void;
@@ -116,31 +117,28 @@ export function SplashScreen({ onDone }: Props) {
         {/* Halo detrás del logo */}
         <div style={{
           position: 'absolute',
-          width: 860, height: 320,
+          width: 640, height: 560,
           borderRadius: '50%',
           background: 'radial-gradient(ellipse, rgba(45,106,142,0.18) 0%, transparent 70%)',
           animation: 'pulse-halo 2.5s ease-in-out infinite',
         }} />
 
-        {/* ESTIA Consultoría (izquierda) y ESTIA Systems (derecha), lado a lado; en pantallas angostas se apilan */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: 28, position: 'relative', zIndex: 1, maxWidth: '92vw', animation: 'logo-float 4s ease-in-out infinite' }}>
-          <LogoConsultoria lado={220} recuadro />
+        {/* Logo de ESTIA Consultoría: PNG con fondo transparente, recortado al dibujo (970×928, ≥2× lo mostrado); se funde con el fondo, sin recuadro ni borde */}
+        <div style={{ position: 'relative', width: LOGO_ANCHO, maxWidth: '86vw', animation: 'logo-float 4s ease-in-out infinite' }}>
+          {/* Fondo ligeramente más oscuro detrás de las letras, para que ESTI se lea limpio */}
+          <div aria-hidden style={{ position: 'absolute', left: '4%', width: '92%', top: '64%', height: '32%', background: 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 72%)', filter: 'blur(6px)' }} />
           <img
             src={ESTIA_LOGO}
-            alt="ESTIA Systems"
-            width={1600}
-            height={581}
-            style={{
-              width: 'min(420px, 80vw)', height: 'auto',
-              objectFit: 'contain',
-              filter: 'drop-shadow(0 0 40px rgba(60,120,200,0.4)) drop-shadow(0 0 80px rgba(30,80,150,0.2))',
-            }}
+            alt="Logotipo de ESTIA Consultoría"
+            width={970}
+            height={928}
+            style={{ display: 'block', width: '100%', height: 'auto', position: 'relative', zIndex: 1 }}
           />
         </div>
 
         {/* Tipografía destacada */}
         <div style={{
-          marginTop: 8,
+          marginTop: 22,
           fontSize: 11,
           letterSpacing: '0.5em',
           color: 'rgba(180,210,235,0.55)',
