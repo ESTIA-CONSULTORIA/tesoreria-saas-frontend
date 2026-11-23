@@ -227,3 +227,30 @@ export function marcarGuiaVista(a: Almacen | null, tenantId: string) {
 
 /** Mueve la selección con las flechas, sin salirse de la lista. */
 export const moverSeleccion = (actual: number, delta: number, total: number): number => Math.max(0, Math.min(total - 1, actual + delta));
+
+export interface SesionActivacion {
+  user: { id: string; email: string; name: string; roleCode?: string; tenantId?: string; companyId: string | null; branchId: string | null; uiPrefs: Record<string, unknown> };
+  modulosActivos: string[];
+}
+
+/**
+ * Si /prueba/activar ya abrió la sesión (cookies httpOnly), devuelve lo que necesita el store para arrancar; si no (sesion:false,
+ * respuesta rara o sin usuario) devuelve null y la persona entra a mano con su correo y contraseña. Nunca lee tokens.
+ */
+export function sesionDeActivacion(data: any): SesionActivacion | null {
+  if (!data || data.sesion !== true || !data.user || !data.user.id) return null;
+  const u = data.user;
+  return {
+    user: {
+      id: String(u.id),
+      email: String(u.email ?? ''),
+      name: String(u.name ?? 'Administrador'),
+      roleCode: u.roleCode,
+      tenantId: u.tenantId,
+      companyId: u.companyId ?? null,
+      branchId: u.branchId ?? null,
+      uiPrefs: u.uiPrefs ?? {},
+    },
+    modulosActivos: Array.isArray(data.modulosActivos) ? data.modulosActivos : [],
+  };
+}

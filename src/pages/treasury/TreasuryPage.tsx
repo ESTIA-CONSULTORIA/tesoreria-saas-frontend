@@ -256,7 +256,7 @@ export default function TreasuryPage() {
           { id: 'posicion', label: 'Posición Bancaria' },
           { id: 'traslados', label: 'Traslado de Fondos' },
           { id: 'cxp', label: 'CxP' },
-          { id: 'cxc', label: 'CxC' },
+          { id: 'cxc', label: 'Cobros' },
           { id: 'alertas', label: 'Alertas' },
           { id: 'antiguedad', label: 'Antigüedad' },
           { id: 'depositos', label: 'Depósitos' },
@@ -937,14 +937,15 @@ export default function TreasuryPage() {
             </div>
           )}
 
-          {/* TAB 6: CxC - Cuentas por cobrar */}
+          {/* TAB 6: ingresos YA cobrados (últimos 90 días). No son cuentas por cobrar pendientes: el sistema aún no tiene facturas de venta a crédito. */}
           {activeTab === "cxc" && (
             <div className="space-y-6">
-              <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '16px' }}>Cuentas por Cobrar (CxC)</h3>
+              <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '4px' }}>Ingresos cobrados (últimos 90 días)</h3>
+              <p className="text-content-2" style={{ fontSize: '12px', marginTop: 0, marginBottom: '16px' }}>Son cobros que ya entraron a tus cuentas, no saldos pendientes de clientes.</p>
 
               {accountsReceivable.length === 0 ? (
                 <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '32px', textAlign: 'center', color: '#7E7E7E' }}>
-                  No hay cuentas por cobrar
+                  No hay ingresos cobrados en los últimos 90 días
                 </div>
               ) : (
                 <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px' }}>
@@ -954,9 +955,9 @@ export default function TreasuryPage() {
                       <tr>
                         <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Concepto</th>
                         <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Monto</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Fecha Esperada</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Días</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Status</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Fecha de cobro</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Hace</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Estado</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -975,10 +976,10 @@ export default function TreasuryPage() {
                             ${Number(cxc.monto).toFixed(2)}
                           </td>
                           <td style={{ padding: '12px 16px', fontSize: '13px', color: '#A3A3A3' }}>
-                            {new Date(cxc.fechaEsperada).toLocaleDateString()}
+                            {new Date(cxc.fechaCobro ?? cxc.fechaEsperada).toLocaleDateString('es-MX')}
                           </td>
                           <td style={{ padding: '12px 16px', textAlign: 'center', fontSize: '13px', color: '#A3A3A3' }}>
-                            {cxc.diasHastaCobro} días
+                            {cxc.diasDesdeCobro ?? Math.abs(cxc.diasHastaCobro ?? 0)} días
                           </td>
                           <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                             <span style={{
@@ -990,7 +991,7 @@ export default function TreasuryPage() {
                               color: '#A3A3A3',
                               border: '1px solid #2D2D2D'
                             }}>
-                              Pendiente
+                              Cobrado
                             </span>
                           </td>
                         </tr>
