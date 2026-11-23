@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import LogoConsultoria from '../core/components/LogoConsultoria';
 
 const ESTIA_LOGO = '/logo-estia-splash.png';
 
@@ -115,23 +116,27 @@ export function SplashScreen({ onDone }: Props) {
         {/* Halo detrás del logo */}
         <div style={{
           position: 'absolute',
-          width: 520, height: 300,
+          width: 860, height: 320,
           borderRadius: '50%',
           background: 'radial-gradient(ellipse, rgba(45,106,142,0.18) 0%, transparent 70%)',
           animation: 'pulse-halo 2.5s ease-in-out infinite',
         }} />
 
-        <img
-          src={ESTIA_LOGO}
-          alt="ESTIA Systems"
-          style={{
-            width: 460, height: 'auto',
-            objectFit: 'contain',
-            position: 'relative', zIndex: 1,
-            filter: 'drop-shadow(0 0 40px rgba(60,120,200,0.4)) drop-shadow(0 0 80px rgba(30,80,150,0.2))',
-            animation: 'logo-float 4s ease-in-out infinite',
-          }}
-        />
+        {/* ESTIA Consultoría (izquierda) y ESTIA Systems (derecha), lado a lado; en pantallas angostas se apilan */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: 28, position: 'relative', zIndex: 1, maxWidth: '92vw', animation: 'logo-float 4s ease-in-out infinite' }}>
+          <LogoConsultoria lado={220} recuadro />
+          <img
+            src={ESTIA_LOGO}
+            alt="ESTIA Systems"
+            width={1600}
+            height={581}
+            style={{
+              width: 'min(420px, 80vw)', height: 'auto',
+              objectFit: 'contain',
+              filter: 'drop-shadow(0 0 40px rgba(60,120,200,0.4)) drop-shadow(0 0 80px rgba(30,80,150,0.2))',
+            }}
+          />
+        </div>
 
         {/* Tipografía destacada */}
         <div style={{
