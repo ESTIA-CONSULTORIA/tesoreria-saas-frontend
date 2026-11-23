@@ -124,7 +124,7 @@ export function SplashScreen({ onDone }: Props) {
 
         {/* ESTIA Consultoría (izquierda) y ESTIA Systems (derecha), lado a lado; en pantallas angostas se apilan */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: 28, position: 'relative', zIndex: 1, maxWidth: '92vw', animation: 'logo-float 4s ease-in-out infinite' }}>
-          <LogoConsultoria lado={220} />
+          <LogoConsultoria lado={220} recuadro />
           <img
             src={ESTIA_LOGO}
             alt="ESTIA Systems"
