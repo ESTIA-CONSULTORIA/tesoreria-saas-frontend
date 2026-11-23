@@ -220,11 +220,11 @@ export default function TreasuryPage() {
 
   return (
     <MainLayout>
-        <div className="space-y-6">
+        <div className="space-y-6 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold" style={{ color: '#F5F5F5' }}>Tesorería</h1>
-            <p style={{ color: '#A3A3A3', fontSize: '14px' }}>Gestión financiera integral</p>
+            <h1 className="text-3xl font-bold text-content-1">Tesorería</h1>
+            <p className="text-content-2" style={{ fontSize: '14px' }}>Gestión financiera integral</p>
           </div>
           <select
             value={period}
@@ -264,14 +264,8 @@ export default function TreasuryPage() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as TabType)}
-            className="px-4 py-2 font-medium transition-colors text-sm"
-            style={{
-              color: activeTab === tab.id ? '#C0C0C0' : '#A3A3A3',
-              borderBottom: activeTab === tab.id ? '2px solid #C0C0C0' : '2px solid transparent',
-              backgroundColor: 'transparent',
-            }}
-            onMouseEnter={(e) => { if (activeTab !== tab.id) e.currentTarget.style.color = '#F5F5F5'; }}
-            onMouseLeave={(e) => { if (activeTab !== tab.id) e.currentTarget.style.color = '#A3A3A3'; }}
+            aria-current={activeTab === tab.id ? 'page' : undefined}
+            className={`px-4 py-2 font-medium transition-colors text-sm bg-transparent border-b-2 ${activeTab === tab.id ? 'text-content-1 border-current' : 'text-content-2 border-transparent hover:text-content-1'}`}
           >
             {tab.label}
           </button>
