@@ -68,6 +68,7 @@ import GestionClientes from "./pages/soporte/GestionClientes";
 import PlanesModulos from "./pages/soporte/PlanesModulos";
 import Monitoreo from "./pages/soporte/Monitoreo";
 import ConfiguracionGlobal from "./pages/soporte/ConfiguracionGlobal";
+import PruebasSoporte from "./pages/soporte/PruebasSoporte";
 
 function DashboardRouter() {
   const modulosActivos = useAuthStore(s => s.modulosActivos);
@@ -624,6 +625,17 @@ function App() {
         element={
           <ProtectedRoute>
             <Monitoreo />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/soporte/pruebas"
+        element={
+          <ProtectedRoute>
+            <RoleRoute roles={['SOPORTE']}>
+              <PruebasSoporte />
+            </RoleRoute>
           </ProtectedRoute>
         }
       />
