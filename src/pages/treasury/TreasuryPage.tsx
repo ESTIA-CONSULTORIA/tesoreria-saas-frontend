@@ -947,7 +947,7 @@ export default function TreasuryPage() {
           {activeTab === "cxc" && (
             <div className="space-y-6">
               <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '4px' }}>Ingresos cobrados (últimos 90 días)</h3>
-              <p style={{ fontSize: '12px', color: '#A3A3A3', marginTop: 0, marginBottom: '16px' }}>Son cobros que ya entraron a tus cuentas, no saldos pendientes de clientes.</p>
+              <p className="text-content-2" style={{ fontSize: '12px', marginTop: 0, marginBottom: '16px' }}>Son cobros que ya entraron a tus cuentas, no saldos pendientes de clientes.</p>
 
               {accountsReceivable.length === 0 ? (
                 <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '32px', textAlign: 'center', color: '#7E7E7E' }}>
