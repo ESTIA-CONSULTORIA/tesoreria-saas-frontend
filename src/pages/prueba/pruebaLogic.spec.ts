@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DIAS_PRUEBA, INCLUYE,
-  GIROS_FORM, GIROS_OTROS, GIROS_TARJETA, LIMITES, alternarPaso, cargarProgreso, cuerpoSolicitud, guardarProgreso, leerConfigPrueba, leerTokenDeHash, marcarGuiaVista,
+  GIROS_FORM, GIROS_OTROS, GIROS_TARJETA, LIMITES, alternarPaso, cargarProgreso, cuerpoSolicitud, guardarProgreso, leerConfigPrueba, leerTokenDeHash, marcarGuiaVista, sesionDeActivacion,
   mensajeDeError, moverSeleccion, pasoActual, pasosHechos, primerCampoConError, validarActivacion, validarPassword, validarSolicitud, yaVioLaGuia, type SolicitudForm,
 } from './pruebaLogic';
 
@@ -202,5 +202,22 @@ describe('duración de la prueba (un solo lugar)', () => {
   it('son 30 días y los textos salen de la constante, sin un número fijo', () => {
     expect(DIAS_PRUEBA).toBe(30);
     expect(INCLUYE[0]).toBe(`${DIAS_PRUEBA} días con tu propio negocio de prueba`);
+  });
+});
+
+describe('sesionDeActivacion (login automático tras activar)', () => {
+  it('con sesion:true devuelve usuario y módulos para el store', () => {
+    const s = sesionDeActivacion({ slug: 'p', venceEn: 'x', sesion: true, user: { id: 'u1', email: 'a@b.mx', name: 'Ana', roleCode: 'ADMIN', tenantId: 't1' }, modulosActivos: ['pos'] });
+    expect(s).toMatchObject({ user: { id: 'u1', email: 'a@b.mx', roleCode: 'ADMIN', tenantId: 't1', companyId: null, branchId: null }, modulosActivos: ['pos'] });
+  });
+  it('sin sesión abierta, sin usuario o con basura devuelve null (se entra a mano)', () => {
+    expect(sesionDeActivacion({ sesion: false })).toBeNull();
+    expect(sesionDeActivacion({ sesion: true })).toBeNull();
+    expect(sesionDeActivacion({ sesion: true, user: {} })).toBeNull();
+    expect(sesionDeActivacion(null)).toBeNull();
+    expect(sesionDeActivacion('x')).toBeNull();
+  });
+  it('módulos inválidos quedan como lista vacía', () => {
+    expect(sesionDeActivacion({ sesion: true, user: { id: 'u' }, modulosActivos: 'pos' })?.modulosActivos).toEqual([]);
   });
 });
