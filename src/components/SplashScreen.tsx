@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 
-const ESTIA_LOGO = '/marca/logo-estia-consultoria-splash.png';
-// Ancho mostrado a 1366×768 (el archivo mide 970 px: ≥ 2× este valor)
-const LOGO_ANCHO = 470;
+const ESTIA_LOGO = '/marca/logo-estia-systems.png';
+// Ancho mostrado a 1366×768 (el archivo mide 1446 px: ≥ 3× este valor)
+const LOGO_ANCHO = 460;
 
 interface Props {
   onDone: () => void;
@@ -117,28 +117,24 @@ export function SplashScreen({ onDone }: Props) {
         {/* Halo detrás del logo */}
         <div style={{
           position: 'absolute',
-          width: 640, height: 560,
+          width: 720, height: 300,
           borderRadius: '50%',
           background: 'radial-gradient(ellipse, rgba(45,106,142,0.18) 0%, transparent 70%)',
           animation: 'pulse-halo 2.5s ease-in-out infinite',
         }} />
 
-        {/* Logo de ESTIA Consultoría: PNG con fondo transparente, recortado al dibujo (970×928, ≥2× lo mostrado); se funde con el fondo, sin recuadro ni borde */}
-        <div style={{ position: 'relative', width: LOGO_ANCHO, maxWidth: '86vw', animation: 'logo-float 4s ease-in-out infinite' }}>
-          {/* Fondo ligeramente más oscuro detrás de las letras, para que ESTI se lea limpio */}
-          <div aria-hidden style={{ position: 'absolute', left: '4%', width: '92%', top: '64%', height: '32%', background: 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 72%)', filter: 'blur(6px)' }} />
-          <img
-            src={ESTIA_LOGO}
-            alt="Logotipo de ESTIA Consultoría"
-            width={970}
-            height={928}
-            style={{ display: 'block', width: '100%', height: 'auto', position: 'relative', zIndex: 1 }}
-          />
-        </div>
+        {/* Logo de ESTIA Systems: PNG con fondo transparente (1446×455, ≥ 3× lo mostrado); sin recuadro, borde, delineado ni sombra */}
+        <img
+          src={ESTIA_LOGO}
+          alt="Logotipo de ESTIA Systems"
+          width={1446}
+          height={455}
+          style={{ display: 'block', width: LOGO_ANCHO, maxWidth: '86vw', height: 'auto', position: 'relative', zIndex: 1, animation: 'logo-float 4s ease-in-out infinite' }}
+        />
 
         {/* Tipografía destacada */}
         <div style={{
-          marginTop: 22,
+          marginTop: 18,
           fontSize: 11,
           letterSpacing: '0.5em',
           color: 'rgba(180,210,235,0.55)',
