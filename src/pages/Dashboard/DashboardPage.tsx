@@ -8,6 +8,7 @@ import { useCompanyStore } from "../../core/store/useCompanyStore";
 import { useDashboardFilterStore, type DashboardPeriod } from "../../core/store/useDashboardFilterStore";
 import { useSkinActiva } from "../../core/theme/useSkinActiva";
 import DashboardIsotipo from "./DashboardIsotipo";
+import { useAlturaRestante } from "../../core/hooks/useAlturaRestante";
 import { participacion, textoPorcentaje, SIN_DATOS } from "./dashboardLogic";
 
 
@@ -22,6 +23,7 @@ export default function DashboardPage() {
   const [infoOpen, setInfoOpen] = useState(false);
   const [pendingShifts, setPendingShifts] = useState<any[]>([]);
   const skin = useSkinActiva();
+  const [refPagina, alturaPagina] = useAlturaRestante<HTMLDivElement>();
 
   // Guard contra respuestas fuera de orden: cada llamada a loadData() se identifica con
   // un id incremental. Si para cuando su GET /dashboard/kpis resuelve ya se disparó una
@@ -201,7 +203,7 @@ export default function DashboardPage() {
   return (
     <MainLayout>
       <DashboardInfoModal open={infoOpen} onClose={() => setInfoOpen(false)} />
-      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 48px)', backgroundColor: 'rgb(var(--bg))', overflowX: 'hidden' }}>
+      <div ref={refPagina} style={{ display: 'flex', flexDirection: 'column', height: alturaPagina ?? 'calc(100vh - 92px)', backgroundColor: 'rgb(var(--bg))', overflowX: 'hidden' }}>
         {/* Header del módulo */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 24px', borderBottom: '1px solid rgb(var(--border))', backgroundColor: 'rgb(var(--bg))' }}>
           <div>

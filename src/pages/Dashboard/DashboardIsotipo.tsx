@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useAlturaRestante } from "../../core/hooks/useAlturaRestante";
 
 // Dashboard de la skin ESTIA Isotipo (docs/IDENTIDAD-ISOTIPO.md): mismos datos que DashboardPage, otra composición. Sin tarjetas con radio:
 // una cifra protagonista, una cinta de datos con bisel a 30°, prismas isométricos por empresa/sucursal y una lista de atención.
@@ -89,6 +90,7 @@ function Prismas({ filas }: { filas: FilaDesglose[] }) {
 }
 
 export default function DashboardIsotipo(p: Props) {
+  const [refPagina, alturaPagina] = useAlturaRestante<HTMLDivElement>();
   const utilidad = p.ventas - p.egresos;
   const margen = p.ventas > 0 ? Math.round((utilidad / p.ventas) * 100) : 0;
   const variacion = p.variacionVentas;
@@ -191,7 +193,7 @@ export default function DashboardIsotipo(p: Props) {
   );
 
   return (
-    <div className="iso-fondo overflow-y-auto" style={{ height: 'calc(100vh - 48px)', backgroundColor: 'rgb(var(--bg))' }}>
+    <div ref={refPagina} className="iso-fondo overflow-y-auto" style={{ height: alturaPagina ?? 'calc(100vh - 92px)', backgroundColor: 'rgb(var(--bg))' }}>
       <header className="flex items-center justify-between px-8 pt-5">
         <div>
           <h1 className="text-lg font-semibold !text-content-1">Dashboard Ejecutivo</h1>
