@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 
-const ESTIA_LOGO = '/logo-estia-splash.png';
+const ESTIA_LOGO = '/marca/logo-estia-systems.png';
+// Ancho mostrado a 1366×768 (el archivo mide 1446 px: ≥ 3× este valor)
+const LOGO_ANCHO = 460;
 
 interface Props {
   onDone: () => void;
@@ -115,27 +117,24 @@ export function SplashScreen({ onDone }: Props) {
         {/* Halo detrás del logo */}
         <div style={{
           position: 'absolute',
-          width: 520, height: 300,
+          width: 720, height: 300,
           borderRadius: '50%',
           background: 'radial-gradient(ellipse, rgba(45,106,142,0.18) 0%, transparent 70%)',
           animation: 'pulse-halo 2.5s ease-in-out infinite',
         }} />
 
+        {/* Logo de ESTIA Systems: PNG con fondo transparente (1446×455, ≥ 3× lo mostrado); sin recuadro, borde, delineado ni sombra */}
         <img
           src={ESTIA_LOGO}
-          alt="ESTIA Systems"
-          style={{
-            width: 460, height: 'auto',
-            objectFit: 'contain',
-            position: 'relative', zIndex: 1,
-            filter: 'drop-shadow(0 0 40px rgba(60,120,200,0.4)) drop-shadow(0 0 80px rgba(30,80,150,0.2))',
-            animation: 'logo-float 4s ease-in-out infinite',
-          }}
+          alt="Logotipo de ESTIA Systems"
+          width={1446}
+          height={455}
+          style={{ display: 'block', width: LOGO_ANCHO, maxWidth: '86vw', height: 'auto', position: 'relative', zIndex: 1, animation: 'logo-float 4s ease-in-out infinite' }}
         />
 
         {/* Tipografía destacada */}
         <div style={{
-          marginTop: 8,
+          marginTop: 18,
           fontSize: 11,
           letterSpacing: '0.5em',
           color: 'rgba(180,210,235,0.55)',

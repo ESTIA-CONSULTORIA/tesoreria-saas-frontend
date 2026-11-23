@@ -7,8 +7,9 @@ import { api } from "../api/api";
 import { itemsConfiguracion, rutaConfiguracion, SUBNAV_CONFIGURACION, veConfiguracion } from "./navConfiguracion";
 import { repartirNav } from "./navOverflow";
 import SelectorNegocio from "./SelectorNegocio";
-import LogoConsultoria from "../components/LogoConsultoria";
-import { useSkinActiva } from "../theme/useSkinActiva";
+import EtiquetaCampo from "./EtiquetaCampo";
+import { etiquetaContexto } from "./etiquetaContexto";
+import { leerNegocioActivo } from "../api/negocioActivo";
 
 // Espacio entre módulos de la barra principal (compacto, para que quepan más a 1366 px).
 const SEPARACION_NAV = 4;
@@ -135,7 +136,6 @@ function isSubActive(item: { path: string }, loc: { pathname: string; search: st
 }
 
 export default function TopBar() {
-  const skinActiva = useSkinActiva();
   const loc = useLocation();
   const { user, triggerLogout } = useAuthStore();
   const { companyId: userCompanyId } = useAuthStore();
@@ -179,6 +179,8 @@ export default function TopBar() {
   // tocar el contexto local en ambos.
   const [ctxSwitching, setCtxSwitching]     = useState(false);
   const ctxRef = useRef<HTMLDivElement>(null);
+  const ctxBtnRef = useRef<HTMLButtonElement>(null);
+  const ctxMenuRef = useRef<HTMLDivElement>(null);
 
   const isRestricted = !!userCompanyId && !isAdmin;
 
@@ -321,11 +323,39 @@ export default function TopBar() {
     setCtxSwitching(false);
   }
 
-  const ctxLabel = activeCompany
-    ? activeBranch
-      ? `${activeCompany.name} — ${activeBranch.name}`
-      : activeCompany.name
-    : "Vista Global";
+  // Solo SOPORTE tiene «Negocio» elegido; para los demás roles no hay nombre de negocio que repetir.
+  const negocioNombre = user?.roleCode === 'SOPORTE' ? leerNegocioActivo(localStorage)?.nombre : null;
+  const ctxEtiqueta = etiquetaContexto({ negocioNombre, empresa: activeCompany, sucursal: activeBranch, totalEmpresas: companies.length > 0 ? companies.length : null });
+  const ctxLabel = ctxEtiqueta.texto;
+
+  // SOPORTE: para decidir si el nombre de la empresa repite al del negocio hace falta saber cuántas empresas tiene (mismo GET /companies que el menú).
+  useEffect(() => {
+    if (user?.roleCode !== 'SOPORTE' || !negocioNombre || !activeCompany || companies.length > 0) return;
+    let vivo = true;
+    api.get('/companies').then((r) => { if (vivo) setCompanies(Array.isArray(r.data) ? r.data : []); }).catch(() => {});
+    return () => { vivo = false; };
+  }, [user?.roleCode, negocioNombre, activeCompany?.id, companies.length]);
+
+  // Teclado del menú de empresa/sucursal: flechas, Inicio/Fin, Escape (devuelve el foco al botón) y Tab (cierra)
+  const itemsCtx = () => Array.from(ctxMenuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
+  const teclaMenuCtx = (e: React.KeyboardEvent) => {
+    const items = itemsCtx();
+    const i = items.indexOf(document.activeElement as HTMLElement);
+    if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length]?.focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i - 1 + items.length) % items.length]?.focus(); }
+    else if (e.key === 'Home') { e.preventDefault(); items[0]?.focus(); }
+    else if (e.key === 'End') { e.preventDefault(); items[items.length - 1]?.focus(); }
+    else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setCtxOpen(false); setCtxPhase('company'); ctxBtnRef.current?.focus(); }
+    else if (e.key === 'Tab') { setCtxOpen(false); setCtxPhase('company'); }
+  };
+  // Al abrir el menú (y al pasar de empresa a sucursal) el foco entra al primer elemento
+  useEffect(() => {
+    if (!ctxOpen) return;
+    const id = requestAnimationFrame(() => {
+      if (ctxMenuRef.current && !ctxMenuRef.current.contains(document.activeElement)) itemsCtx()[0]?.focus();
+    });
+    return () => cancelAnimationFrame(id);
+  }, [ctxOpen, ctxPhase, companies.length, branches.length]);
 
   const activeKey  = getActiveKey(loc.pathname);
   const visibleNav = NAV.filter(m => modAccess[m.key]);
@@ -494,8 +524,9 @@ export default function TopBar() {
         position: 'relative', zIndex: 100,
       }}>
         {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', marginRight: 24, flexShrink: 0 }}>
-          <LogoConsultoria lado={44} recuadro={skinActiva === 'claro'} />
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 1, marginRight: 28, flexShrink: 0 }}>
+          <span style={{ fontSize: 13.5, fontWeight: 700, color: 'rgb(var(--text-soft))', letterSpacing: '0.1em' }}>ESTIA</span>
+          <span style={{ fontSize: 13.5, fontWeight: 700, color: 'rgb(var(--accent-alt))', letterSpacing: '0.1em' }}>ERP</span>
         </div>
 
         {/* Nav: lo que no cabe va al menú «Más» (se mide el ancho real de cada módulo, ver navOverflow.ts) */}
@@ -554,7 +585,8 @@ export default function TopBar() {
           {/* Negocio activo (solo SOPORTE): el servidor exige un negocio explícito en listados y altas */}
           <SelectorNegocio />
 
-          {/* Context switcher */}
+          {/* Context switcher: misma etiqueta que «Negocio»; «Sucursal» si la empresa repite el nombre del negocio */}
+          <EtiquetaCampo texto={ctxEtiqueta.etiqueta} activo={ctxEtiqueta.activo} />
           <div ref={ctxRef} style={{ position: 'relative' }}>
             {isRestricted ? (
               <div style={{
@@ -565,7 +597,7 @@ export default function TopBar() {
                 {ctxLabel}
               </div>
             ) : (
-              <button onClick={openCtx} style={{
+              <button ref={ctxBtnRef} onClick={openCtx} aria-haspopup="menu" aria-expanded={ctxOpen} aria-label={`${ctxEtiqueta.etiqueta}: ${ctxEtiqueta.texto}`} style={{
                 display: 'flex', alignItems: 'center', gap: 6,
                 padding: '5px 10px', background: 'rgb(var(--veil) / 0.04)',
                 border: '1px solid rgb(var(--veil) / 0.08)', borderRadius: 6,
@@ -579,7 +611,7 @@ export default function TopBar() {
             )}
 
             {ctxOpen && (
-              <div style={{
+              <div ref={ctxMenuRef} role="menu" aria-label={ctxEtiqueta.etiqueta} onKeyDown={teclaMenuCtx} style={{
                 position: 'absolute', top: 'calc(100% + 4px)', right: 0,
                 background: 'rgb(var(--popover))', border: '1px solid rgb(var(--veil) / 0.09)',
                 borderRadius: 8, width: 230, zIndex: 1000,
@@ -611,6 +643,8 @@ export default function TopBar() {
                   <>
                     <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, borderBottom: '1px solid rgb(var(--veil) / 0.06)' }}>
                       <button
+                        role="menuitem"
+                        tabIndex={-1}
                         onClick={() => { setCtxPhase('company'); setPendingCo(null); }}
                         disabled={ctxSwitching}
                         style={{
@@ -718,7 +752,17 @@ function CtxItem({
   active?: boolean; disabled?: boolean; onClick: () => void;
 }) {
   return (
-    <div onClick={disabled ? undefined : onClick} style={{
+    <div
+      role="menuitem"
+      tabIndex={disabled ? undefined : -1}
+      aria-disabled={disabled || undefined}
+      aria-current={active ? 'true' : undefined}
+      onClick={disabled ? undefined : onClick}
+      onKeyDown={(e) => { if (!disabled && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onClick(); } }}
+      onFocus={(e) => { e.currentTarget.style.background = 'rgb(var(--veil) / 0.1)'; e.currentTarget.style.outline = '2px solid rgb(var(--accent-alt))'; e.currentTarget.style.outlineOffset = '-2px'; }}
+      onBlur={(e) => { e.currentTarget.style.background = active ? 'rgb(var(--veil) / 0.04)' : 'transparent'; e.currentTarget.style.outline = 'none'; }}
+      style={{
+      outline: 'none',
       padding: '8px 12px', fontSize: 12.5, cursor: disabled ? 'default' : 'pointer',
       color: active ? 'rgb(var(--text-soft))' : 'rgb(var(--veil) / max(0.55, var(--alfa-texto-min)))',
       background: active ? 'rgb(var(--veil) / 0.04)' : 'transparent',

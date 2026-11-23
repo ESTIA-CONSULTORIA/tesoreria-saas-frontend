@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '../../core/api/api';
 import type { Atajo } from '../../core/components/reglasTeclado';
-import { hayCambios, mensajeErrorApi, opcionesRegimen, puedeActivarFacturacion, validarFormEmisor, validarRfc, type FormEmisor, type PasoPreparacion, type ResumenFiscal } from './fiscalLogic';
+import { hayCambios, mensajeErrorApi, opcionesRegimen, puedeActivarFacturacion, selectorEmpresaVisible, validarFormEmisor, validarRfc, type FormEmisor, type PasoPreparacion, type ResumenFiscal } from './fiscalLogic';
 import { Aviso, btn, CampoRfc, etiqueta, inp, Leyenda, useAtajos } from './ui';
 
 interface EmisorApi {
@@ -16,6 +16,7 @@ const VACIO: FormEmisor = { rfc: '', nombreFiscal: '', regimenFiscal: '', serie:
 
 export default function EmisorTab({ resumen, regimenes, pasos, alGuardar }: { resumen: ResumenFiscal | null; regimenes: Record<string, string>; pasos: PasoPreparacion[]; alGuardar: () => void }) {
   const empresas = resumen?.empresas ?? [];
+  const verSelector = selectorEmpresaVisible(empresas);
   const [companyId, setCompanyId] = useState('');
   const [original, setOriginal] = useState<FormEmisor>(VACIO);
   const [form, setForm] = useState<FormEmisor>(VACIO);
@@ -88,6 +89,7 @@ export default function EmisorTab({ resumen, regimenes, pasos, alGuardar }: { re
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
       <div className="flex items-end gap-3">
+        {verSelector && (
         <div className="w-72">
           <label htmlFor="fiscal-empresa" className={etiqueta}>
             Empresa
@@ -100,7 +102,8 @@ export default function EmisorTab({ resumen, regimenes, pasos, alGuardar }: { re
             ))}
           </select>
         </div>
-        <p className="pb-1 text-xs text-slate-400">Datos de quien emite las facturas de «{nombreEmpresa}».</p>
+        )}
+        <p className="pb-1 text-xs text-slate-400">{`Datos de quien emite las facturas de «${nombreEmpresa}».`}</p>
       </div>
 
       <div className="grid min-h-0 flex-1 grid-cols-2 gap-x-6 gap-y-1 content-start">
