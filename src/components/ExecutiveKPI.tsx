@@ -43,7 +43,7 @@ export default function ExecutiveKPI({
         <p style={{ fontSize: '12px', color: '#A3A3A3', letterSpacing: '0.05em', fontWeight: 500 }}>
           {label.toUpperCase()}
         </p>
-        {icon && <div style={{ color: '#7E7E7E' }}>{icon}</div>}
+        {icon && <div style={{ color: '#8F8F8F' }}>{icon}</div>}
       </div>
 
       <div className="mb-2">
@@ -60,7 +60,7 @@ export default function ExecutiveKPI({
             </span>
           )}
           {secondary && (
-            <span style={{ fontSize: '12px', color: '#7E7E7E' }}>
+            <span style={{ fontSize: '12px', color: '#8F8F8F' }}>
               {typeof secondary === 'number' ? secondary.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : secondary}
             </span>
           )}
@@ -68,7 +68,7 @@ export default function ExecutiveKPI({
       )}
 
       {context && (
-        <p style={{ fontSize: '11px', color: '#7E7E7E', lineHeight: 1.3 }}>
+        <p style={{ fontSize: '12px', color: '#8F8F8F', lineHeight: 1.3 }}>
           {context}
         </p>
       )}

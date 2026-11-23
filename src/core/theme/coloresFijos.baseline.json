@@ -312,8 +312,8 @@
   "nombrados": 0
  },
  "pages/Login/LoginPage.tsx": {
-  "hex": 41,
-  "rgb": 68,
+  "hex": 38,
+  "rgb": 67,
   "tw": 0,
   "nombrados": 0
  },
@@ -504,7 +504,7 @@
   "nombrados": 0
  },
  "pages/treasury/TreasuryPage.tsx": {
-  "hex": 329,
+  "hex": 322,
   "rgb": 0,
   "tw": 6,
   "nombrados": 0
@@ -516,8 +516,8 @@
   "nombrados": 0
  },
  "pages/users/UsersPage.tsx": {
-  "hex": 25,
-  "rgb": 52,
+  "hex": 24,
+  "rgb": 50,
   "tw": 0,
   "nombrados": 0
  },

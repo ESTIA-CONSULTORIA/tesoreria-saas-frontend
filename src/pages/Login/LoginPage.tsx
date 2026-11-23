@@ -5,6 +5,12 @@ import { useAuthStore } from "../../core/store/useAuthStore";
 import { limpiarSesionNip, marcarSesionNip } from "../../core/api/sesionNip";
 import { useLoginConfigStore } from "../../core/store/useLoginConfigStore";
 import { useBrandingStore } from "../../core/store/useBrandingStore";
+import LogoConsultoria from "../../core/components/LogoConsultoria";
+
+// Colores de apoyo del login (siempre oscuro): contraste ≥ 4.5:1 sobre el fondo.
+const LOGIN_TXT_SUAVE = 'rgb(154,168,189)';
+const LOGIN_TXT_PANEL = 'rgb(142,155,176)';
+const LOGIN_FOCO = 'rgb(96,165,250)';
 
 // Clave dedicada y exclusiva del tab "Punto de Venta" — a propósito NO es 'tenant_id'.
 // Esa otra clave la escribe useAuthStore.login() (sesión central del ERP: login de
@@ -359,7 +365,7 @@ export default function LoginPage() {
           </div>
 
           {/* Badge — justo debajo del isotipo */}
-          <div style={{ fontSize: 10, letterSpacing: '0.28em', color: '#7C8BA1', textTransform: 'uppercase', marginBottom: 24 }}>
+          <div style={{ fontSize: 12, letterSpacing: '0.24em', color: LOGIN_TXT_PANEL, textTransform: 'uppercase', marginBottom: 24 }}>
             Inteligencia Empresarial
           </div>
 
@@ -404,7 +410,7 @@ export default function LoginPage() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>{f.icon}</div>
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#F8FAFC' }}>{f.title}</div>
-                <div style={{ fontSize: 11, color: '#7C8BA1', lineHeight: 1.5 }}>{f.desc}</div>
+                <div style={{ fontSize: 12, color: LOGIN_TXT_PANEL, lineHeight: 1.5 }}>{f.desc}</div>
               </div>
             ))}
           </div>
@@ -427,11 +433,7 @@ export default function LoginPage() {
             <>
               {/* Logo ERP justo arriba del título */}
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 28 }}>
-                <img
-                  src="/logo-estia-erp.png"
-                  alt="ESTIA ERP"
-                  style={{ height: 88, objectFit: 'contain', mixBlendMode: 'screen' }}
-                />
+                <LogoConsultoria lado={192} />
               </div>
 
               <h2 style={{ fontSize: 22, fontWeight: 500, color: '#F8FAFC', textAlign: 'center', marginBottom: 8 }}>
@@ -458,6 +460,12 @@ export default function LoginPage() {
                 <div
                   key={item.mode}
                   onClick={() => { setMode(item.mode); setError(""); }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${item.title}: ${item.desc}`}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMode(item.mode); setError(""); } }}
+                  onFocus={(e) => { e.currentTarget.style.outline = `2px solid ${LOGIN_FOCO}`; e.currentTarget.style.outlineOffset = '2px'; }}
+                  onBlur={(e) => { e.currentTarget.style.outline = 'none'; }}
                   style={{
                     borderRadius: 20, padding: '28px 24px',
                     background: 'rgba(15,23,42,0.35)',
@@ -498,7 +506,7 @@ export default function LoginPage() {
             <div>
               <button
                 onClick={() => { setMode(null); setError(""); }}
-                style={{ marginBottom: '24px', fontSize: '14px', color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                style={{ marginBottom: '24px', fontSize: '14px', color: LOGIN_TXT_SUAVE, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
               >
                 ← Volver
               </button>
@@ -552,7 +560,7 @@ export default function LoginPage() {
             <div>
               <button
                 onClick={() => { setMode(null); setError(""); setNip(""); }}
-                style={{ marginBottom: '24px', fontSize: '14px', color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                style={{ marginBottom: '24px', fontSize: '14px', color: LOGIN_TXT_SUAVE, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
               >
                 ← Volver
               </button>
@@ -571,7 +579,7 @@ export default function LoginPage() {
                 posConfirmPending ? (
                   /* ── Confirmación de empresa resuelta ── */
                   <div>
-                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginBottom: '12px', textAlign: 'center' }}>
+                    <p style={{ fontSize: '13px', color: LOGIN_TXT_SUAVE, marginBottom: '12px', textAlign: 'center' }}>
                       ¿Es esta tu empresa?
                     </p>
                     <div style={{
@@ -629,7 +637,7 @@ export default function LoginPage() {
               <>
               <button
                 onClick={handleChangeCompany}
-                style={{ display: 'block', margin: '0 auto 20px', fontSize: '12px', color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center' }}
+                style={{ display: 'block', margin: '0 auto 20px', fontSize: '12px', color: LOGIN_TXT_SUAVE, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center' }}
               >
                 {posTenantName ? `${posTenantName} · Cambiar empresa` : 'Cambiar empresa'}
               </button>
@@ -740,7 +748,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <div style={{ position: 'absolute', bottom: 24, fontSize: 11, color: '#6B7B93', letterSpacing: '0.05em' }}>
+        <div style={{ position: 'absolute', bottom: 24, fontSize: 12, color: LOGIN_TXT_PANEL, letterSpacing: '0.05em' }}>
           © 2026 ESTIA Consultoría · Todos los derechos reservados
         </div>
       </div>
