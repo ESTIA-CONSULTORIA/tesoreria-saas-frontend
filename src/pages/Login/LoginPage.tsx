@@ -5,6 +5,7 @@ import { useAuthStore } from "../../core/store/useAuthStore";
 import { limpiarSesionNip, marcarSesionNip } from "../../core/api/sesionNip";
 import { useLoginConfigStore } from "../../core/store/useLoginConfigStore";
 import { useBrandingStore } from "../../core/store/useBrandingStore";
+import LogoConsultoria from "../../core/components/LogoConsultoria";
 
 // Colores de apoyo del login (siempre oscuro): contraste ≥ 4.5:1 sobre el fondo.
 const LOGIN_TXT_SUAVE = 'rgb(154,168,189)';
@@ -432,11 +433,7 @@ export default function LoginPage() {
             <>
               {/* Logo ERP justo arriba del título */}
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 28 }}>
-                <img
-                  src="/logo-estia-erp.png"
-                  alt="ESTIA ERP"
-                  style={{ height: 88, objectFit: 'contain', mixBlendMode: 'screen' }}
-                />
+                <LogoConsultoria lado={192} />
               </div>
 
               <h2 style={{ fontSize: 22, fontWeight: 500, color: '#F8FAFC', textAlign: 'center', marginBottom: 8 }}>
