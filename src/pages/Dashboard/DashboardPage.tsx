@@ -3,11 +3,12 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { api } from "../../core/api/api";
 import { useNavigate } from "react-router-dom";
 import DashboardInfoModal from "./DashboardInfoModal";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
 import { useDashboardFilterStore, type DashboardPeriod } from "../../core/store/useDashboardFilterStore";
 import { useSkinActiva } from "../../core/theme/useSkinActiva";
 import DashboardIsotipo from "./DashboardIsotipo";
+import { participacion, textoPorcentaje, SIN_DATOS } from "./dashboardLogic";
 
 
 export default function DashboardPage() {
@@ -93,28 +94,12 @@ export default function DashboardPage() {
     }];
   }, [activeCompany, kpis?.branchesBreakdown, kpis?.companiesBreakdown, kpis?.income, kpis?.expense, kpis?.totalBalance]);
 
-  const trendLineChartData = useMemo(() => {
-    const data = [];
-    const now = new Date();
-
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date(now);
-      date.setDate(now.getDate() - i);
-      data.push({
-        date: date.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }),
-        value: 0,
-      });
-    }
-    return data;
-  }, []);
-
   const safePercent = (num: number, den: number) => {
     return den > 0 ? ((num / den) * 100).toFixed(1) : '0';
   };
 
-  // Total de ventas del grupo para cálculo de Participación %
-  const totalVentasGrupo = kpis?.companiesBreakdown
-    ?.reduce((sum: number, c: any) => sum + (c.income || 0), 0) || 0;
+  // La participación solo es real en Vista Global (sin empresa ni sucursal elegida): ver dashboardLogic.participacion.
+  const vistaGlobal = !activeCompany && !activeBranch;
 
   // Lógica limpia de display
   const displayTotals = useMemo(() => {
@@ -152,19 +137,22 @@ export default function DashboardPage() {
   const ventasDisplay = displayTotals.income;
   const egresosDisplay = displayTotals.expense;
   const saldoDisplay = displayTotals.balance;
-  const costo = Number(egresosDisplay) * 0.6;
-  const gasto = Number(egresosDisplay) * 0.4;
+  // El sistema solo registra ingresos y egresos: no separa costo de gasto ni calcula impuestos.
+  // Costo, Gasto y UDI se muestran como «Sin datos» hasta que exista una fuente real (antes eran 60 % / 40 % / 75 % supuestos).
   const uaiDisplay = ventasDisplay - egresosDisplay;
-  const udiDisplay = uaiDisplay * 0.75;
 
   // Panel derecho usando displayTotals
   const panelVentas = displayTotals.income;
   const panelEgresos = displayTotals.expense;
   const panelUAI = panelVentas - panelEgresos;
-  const panelUDI = panelUAI * 0.75;
   const panelMargen = panelVentas > 0
     ? Number(((panelUAI / panelVentas) * 100).toFixed(1))
     : 0;
+
+  const sinDatosTitulo = 'El sistema aún no tiene esta cifra: solo registra ingresos y egresos, sin separar costo de gasto ni impuestos.';
+  const sinDatos = (
+    <span title={sinDatosTitulo} style={{ color: 'rgb(var(--text-2))', fontSize: '13px', fontStyle: 'italic' }}>{SIN_DATOS}</span>
+  );
 
   const formatCurrency = (value: number) => {
     return `$${Math.round(value).toLocaleString('es-MX')}`;
@@ -364,13 +352,13 @@ export default function DashboardPage() {
 
                   <div style={{ width: '1px', height: '32px', backgroundColor: 'rgb(var(--surface-3))', margin: '0 16px' }} />
 
-                  {/* Costo */}
+                  {/* Egresos (total real de movimientos EXPENSE) */}
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
-                      Costo
+                      Egresos
                     </div>
                     <div style={{ fontSize: '22px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
-                      {formatCurrency(costo)}
+                      {formatCurrency(egresosDisplay)}
                     </div>
                     <div style={{ fontSize: '11px', color: 'rgb(var(--danger))', letterSpacing: '0.01em' }}>
                       {formatPercent(kpis?.expenseVariation || 0)}
@@ -379,17 +367,22 @@ export default function DashboardPage() {
 
                   <div style={{ width: '1px', height: '32px', backgroundColor: 'rgb(var(--surface-3))', margin: '0 16px' }} />
 
-                  {/* Gasto */}
-                  <div style={{ flex: 1 }}>
+                  {/* Costo: sin fuente real */}
+                  <div style={{ flex: 1 }} data-testid="kpi-costo">
+                    <div style={{ fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
+                      Costo
+                    </div>
+                    <div style={{ minHeight: '26px', display: 'flex', alignItems: 'center', marginBottom: '2px' }}>{sinDatos}</div>
+                  </div>
+
+                  <div style={{ width: '1px', height: '32px', backgroundColor: 'rgb(var(--surface-3))', margin: '0 16px' }} />
+
+                  {/* Gasto: sin fuente real */}
+                  <div style={{ flex: 1 }} data-testid="kpi-gasto">
                     <div style={{ fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
                       Gasto
                     </div>
-                    <div style={{ fontSize: '22px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
-                      {formatCurrency(gasto)}
-                    </div>
-                    <div style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>
-                      {formatPercent(kpis?.expenseVariation || 0)}
-                    </div>
+                    <div style={{ minHeight: '26px', display: 'flex', alignItems: 'center', marginBottom: '2px' }}>{sinDatos}</div>
                   </div>
 
                   <div style={{ width: '1px', height: '32px', backgroundColor: 'rgb(var(--surface-3))', margin: '0 16px' }} />
@@ -414,12 +407,7 @@ export default function DashboardPage() {
                     <div style={{ fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
                       UDI
                     </div>
-                    <div style={{ fontSize: '22px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
-                      {formatCurrency(udiDisplay)}
-                    </div>
-                    <div style={{ fontSize: '11px', color: udiDisplay >= 0 ? 'rgb(var(--ok))' : 'rgb(var(--danger))', letterSpacing: '0.01em' }}>
-                      {formatPercent(Number(safePercent(udiDisplay, ventasDisplay)))}
-                    </div>
+                    <div style={{ minHeight: '26px', display: 'flex', alignItems: 'center', marginBottom: '2px' }} data-testid="kpi-udi">{sinDatos}</div>
                   </div>
                 </div>
 
@@ -508,12 +496,9 @@ export default function DashboardPage() {
                     <tbody>
                       {(kpis?.companiesBreakdown || []).map((company: any) => {
                         const compVentas = Number(company.income);
-                        const compCosto = Number(company.expense) * 0.6;
-                        const compGasto = Number(company.expense) * 0.4;
                         const compUai = compVentas - Number(company.expense);
-                        const compUdi = compUai * 0.75;
                         const compMargen = compVentas > 0 ? (compUai / compVentas) * 100 : 0;
-                        const compPart = ventasDisplay > 0 ? (compVentas / ventasDisplay) * 100 : 0;
+                        const compPart = participacion(compVentas, kpis?.companiesBreakdown, vistaGlobal);
 
                         return (
                           <tr
@@ -529,22 +514,22 @@ export default function DashboardPage() {
                               {formatCurrency(compVentas)}
                             </td>
                             <td style={{ padding: '10px 12px', textAlign: 'right', color: 'rgb(var(--text-1))', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(compCosto)}
+                              {sinDatos}
                             </td>
                             <td style={{ padding: '10px 12px', textAlign: 'right', color: 'rgb(var(--text-1))', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(compGasto)}
+                              {sinDatos}
                             </td>
                             <td style={{ padding: '10px 12px', textAlign: 'right', color: compUai >= 0 ? 'rgb(var(--ok))' : 'rgb(var(--danger))', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatCurrency(compUai)}
                             </td>
-                            <td style={{ padding: '10px 12px', textAlign: 'right', color: compUdi >= 0 ? 'rgb(var(--ok))' : 'rgb(var(--danger))', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(compUdi)}
+                            <td style={{ padding: '10px 12px', textAlign: 'right', color: 'rgb(var(--text-1))', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
+                              {sinDatos}
                             </td>
                             <td style={{ padding: '10px 12px', textAlign: 'right', color: 'rgb(var(--text-1))', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatPercentDecimal(compMargen)}
                             </td>
                             <td style={{ padding: '10px 12px', textAlign: 'right', color: 'rgb(var(--text-1))', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatPercentDecimal(compPart)}
+                              {compPart === null ? <span title="La participación se calcula solo en Vista Global, con todas las empresas del grupo." style={{ color: 'rgb(var(--text-2))', fontSize: '12px', fontStyle: 'italic' }}>{SIN_DATOS}</span> : textoPorcentaje(compPart)}
                             </td>
                           </tr>
                         );
@@ -563,7 +548,7 @@ export default function DashboardPage() {
                           {activeCompany.name}
                         </h2>
                         <p style={{ fontSize: '11px', color: 'rgb(var(--text-3))', marginBottom: '8px', letterSpacing: '0.01em' }}>
-                          Restaurantes y Servicios
+                          Detalle de la empresa
                         </p>
 
                         <div style={{ borderBottom: '1px solid rgb(var(--border))', marginBottom: '10px' }} />
@@ -576,16 +561,18 @@ export default function DashboardPage() {
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Costo</span>
+                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Egresos</span>
                             <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(panelEgresos * 0.6)}
+                              {formatCurrency(panelEgresos)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Costo</span>
+                            {sinDatos}
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Gasto</span>
-                            <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(panelEgresos * 0.4)}
-                            </span>
+                            {sinDatos}
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>UAI</span>
@@ -595,12 +582,10 @@ export default function DashboardPage() {
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>UDI</span>
-                            <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(panelUDI)}
-                            </span>
+                            {sinDatos}
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Margen Neto</span>
+                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Margen (UAI / ventas)</span>
                             <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatPercentDecimal(panelMargen)}
                             </span>
@@ -608,25 +593,13 @@ export default function DashboardPage() {
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Participación %</span>
                             <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatPercentDecimal(Number(safePercent(panelVentas, totalVentasGrupo)))}
+                              {textoPorcentaje(participacion(panelVentas, kpis?.companiesBreakdown, vistaGlobal))}
                             </span>
                           </div>
                         </div>
 
-                        <div style={{ height: '80px', marginBottom: '10px', minWidth: 0 }}>
-                          <ResponsiveContainer width="100%" height={80}>
-                            <LineChart data={trendLineChartData}>
-                              <CartesianGrid strokeDasharray="4 4" stroke="rgb(var(--border))" vertical={false} />
-                              <XAxis dataKey="date" stroke="rgb(var(--text-3))" fontSize="10" tick={{ fill: 'rgb(var(--text-3))' }} />
-                              <YAxis stroke="rgb(var(--text-3))" fontSize="10" tick={{ fill: 'rgb(var(--text-3))' }} />
-                              <Tooltip
-                                contentStyle={{ backgroundColor: 'rgb(var(--field))', border: '1px solid rgb(var(--border))', borderRadius: '2px', color: 'rgb(var(--text-1))', fontSize: '11px', padding: '6px 10px' }}
-                                itemStyle={{ color: 'rgb(var(--text-1))', fontSize: '10px' }}
-                                formatter={(value) => [`$${Number(value).toLocaleString('es-MX')}`, 'Ventas']}
-                              />
-                              <Line type="monotone" dataKey="value" stroke="rgb(var(--text-2))" strokeWidth={1.5} dot={false} />
-                            </LineChart>
-                          </ResponsiveContainer>
+                        <div style={{ height: '80px', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed rgb(var(--border))', borderRadius: '4px' }} data-testid="tendencia-sin-datos">
+                          <span style={{ fontSize: '12px', color: 'rgb(var(--text-2))' }}>Tendencia diaria: sin datos</span>
                         </div>
 
                         <button
@@ -667,16 +640,18 @@ export default function DashboardPage() {
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Costo Total</span>
+                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Egresos Totales</span>
                             <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(costo)}
+                              {formatCurrency(egresosDisplay)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Costo Total</span>
+                            {sinDatos}
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Gasto Total</span>
-                            <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(gasto)}
-                            </span>
+                            {sinDatos}
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>UAI Consolidada</span>
@@ -686,26 +661,12 @@ export default function DashboardPage() {
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>UDI Consolidada</span>
-                            <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatCurrency(udiDisplay)}
-                            </span>
+                            {sinDatos}
                           </div>
                         </div>
 
-                        <div style={{ height: '80px', marginBottom: '10px', minWidth: 0 }}>
-                          <ResponsiveContainer width="100%" height={80}>
-                            <LineChart data={trendLineChartData}>
-                              <CartesianGrid strokeDasharray="4 4" stroke="rgb(var(--border))" vertical={false} />
-                              <XAxis dataKey="date" stroke="rgb(var(--text-3))" fontSize="10" tick={{ fill: 'rgb(var(--text-3))' }} />
-                              <YAxis stroke="rgb(var(--text-3))" fontSize="10" tick={{ fill: 'rgb(var(--text-3))' }} />
-                              <Tooltip
-                                contentStyle={{ backgroundColor: 'rgb(var(--field))', border: '1px solid rgb(var(--border))', borderRadius: '2px', color: 'rgb(var(--text-1))', fontSize: '11px', padding: '6px 10px' }}
-                                itemStyle={{ color: 'rgb(var(--text-1))', fontSize: '10px' }}
-                                formatter={(value) => [`$${Number(value).toLocaleString('es-MX')}`, 'Ventas']}
-                              />
-                              <Line type="monotone" dataKey="value" stroke="rgb(var(--text-2))" strokeWidth={1.5} dot={false} />
-                            </LineChart>
-                          </ResponsiveContainer>
+                        <div style={{ height: '80px', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed rgb(var(--border))', borderRadius: '4px' }} data-testid="tendencia-sin-datos">
+                          <span style={{ fontSize: '12px', color: 'rgb(var(--text-2))' }}>Tendencia diaria: sin datos</span>
                         </div>
 
                         <p style={{ fontSize: '12px', color: 'rgb(var(--text-3))', textAlign: 'center', letterSpacing: '0.01em' }}>
