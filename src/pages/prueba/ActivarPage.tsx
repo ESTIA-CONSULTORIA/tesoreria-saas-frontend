@@ -2,7 +2,9 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../core/api/api';
 import { CONFIG_PRUEBA, PruebaLayout, PruebaNoDisponible, cls } from './PruebaLayout';
-import { DIAS_PRUEBA, fechaLarga, leerTokenDeHash, mensajeDeError, validarActivacion } from './pruebaLogic';
+import { useAuthStore } from '../../core/store/useAuthStore';
+import { limpiarSesionNip } from '../../core/api/sesionNip';
+import { DIAS_PRUEBA, fechaLarga, leerTokenDeHash, mensajeDeError, sesionDeActivacion, validarActivacion } from './pruebaLogic';
 
 // /prueba/activar#token=… — la persona elige su contraseña y se crea su negocio de prueba. El token se lee del fragmento y se BORRA
 // de la barra de direcciones en cuanto se lee (no queda en el historial ni se comparte por accidente). Si la prueba está apagada,
@@ -16,6 +18,7 @@ type Estado = { tipo: 'sin-token' } | { tipo: 'formulario' } | { tipo: 'listo'; 
 
 function Activacion() {
   const navigate = useNavigate();
+  const { login } = useAuthStore();
   const [token, setToken] = useState<string | null>(null);
   const [estado, setEstado] = useState<Estado>({ tipo: 'formulario' });
   const [password, setPassword] = useState('');
@@ -54,6 +57,14 @@ function Activacion() {
       const r = await api.post('/prueba/activar', { token, password });
       setPassword(''); setConfirmacion('');
       setToken(null); // de un solo uso: ya no sirve
+      // El backend ya abrió la sesión (cookies httpOnly): se entra directo a la guía. Si no se pudo, queda la pantalla «Entrar a mi prueba».
+      const sesion = sesionDeActivacion(r.data);
+      if (sesion) {
+        limpiarSesionNip();
+        login(sesion.user as any, sesion.modulosActivos);
+        navigate('/', { replace: true });
+        return;
+      }
       setEstado({ tipo: 'listo', slug: String(r.data?.slug ?? ''), venceEn: String(r.data?.venceEn ?? '') });
     } catch (err: any) {
       const status = err?.response?.status;
@@ -110,7 +121,7 @@ function Activacion() {
             <section className="rounded-2xl border border-line bg-surface-1 p-6 shadow-[0_8px_30px_rgba(0,0,0,0.25)]" aria-labelledby="titulo-listo">
               <h1 id="titulo-listo" className="text-2xl font-bold tracking-tight">¡Tu prueba está lista!</h1>
               <p className="text-sm text-content-2 mt-1">
-                Dura hasta el <strong className="text-content-1">{estado.venceEn ? fechaLarga(estado.venceEn) : `${DIAS_PRUEBA} días`}</strong>. Entra con tu correo y la contraseña que acabas de elegir.
+                Dura hasta el <strong className="text-content-1">{estado.venceEn ? fechaLarga(estado.venceEn) : `${DIAS_PRUEBA} días`}</strong>. No pudimos abrir tu sesión automáticamente: entra con tu correo y la contraseña que acabas de elegir.
               </p>
               <h2 className="text-xs font-semibold text-content-2 uppercase tracking-wider mt-4 mb-2">Al entrar te guiaremos paso a paso</h2>
               <p className="text-sm text-content-2 mb-4">Tu negocio nace vacío y listo para configurar: una guía paso a paso te lleva a tus categorías, productos, usuarios, primer turno, primera venta y corte. Si prefieres ver datos, la guía te deja cargar unos de ejemplo.</p>
