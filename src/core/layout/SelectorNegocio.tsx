@@ -3,6 +3,7 @@ import { api } from '../api/api';
 import { useAuthStore } from '../store/useAuthStore';
 import { useCompanyStore } from '../store/useCompanyStore';
 import { guardarNegocioActivo, leerNegocioActivo } from '../api/negocioActivo';
+import EtiquetaCampo from './EtiquetaCampo';
 
 interface Negocio {
   id: string;
@@ -48,13 +49,7 @@ export default function SelectorNegocio() {
 
   return (
     <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'rgb(var(--text-1))' }}>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}>
-        <span
-          aria-hidden="true"
-          style={{ width: 7, height: 7, borderRadius: '50%', background: actual ? 'rgb(var(--accent-alt))' : 'transparent', border: '1px solid rgb(var(--accent-alt))', flexShrink: 0 }}
-        />
-        Negocio
-      </span>
+      <EtiquetaCampo texto="Negocio" activo={!!actual} />
       <span style={{ position: 'relative', display: 'inline-flex' }}>
         <select
           className="selector-negocio"

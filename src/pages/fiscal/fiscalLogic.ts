@@ -115,6 +115,11 @@ export interface ResumenFiscal {
   empresas: { companyId: string; empresa: string; emisorCompleto: boolean; facturacionActiva: boolean; sucursalesTotal: number; sucursalesConCp: number }[];
   productos: { total: number; conClaves: number; pendientes: number };
 }
+/** Con una sola empresa el selector «Empresa» no ofrece nada que elegir (y repite el nombre que ya muestra la barra). Solo SOPORTE conoce el nombre del negocio en el cliente, y SOPORTE no entra a esta pantalla, así que la regla se aplica por conteo. */
+export function selectorEmpresaVisible(empresas: { empresa: string }[]): boolean {
+  return empresas.length !== 1;
+}
+
 export interface PasoPreparacion {
   clave: 'emisor' | 'sucursales' | 'productos' | 'csd' | 'proveedor';
   texto: string;
