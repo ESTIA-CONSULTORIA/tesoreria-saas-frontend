@@ -7,8 +7,6 @@ import { api } from "../api/api";
 import { itemsConfiguracion, rutaConfiguracion, SUBNAV_CONFIGURACION, veConfiguracion } from "./navConfiguracion";
 import { repartirNav } from "./navOverflow";
 import SelectorNegocio from "./SelectorNegocio";
-import LogoConsultoria from "../components/LogoConsultoria";
-import { useSkinActiva } from "../theme/useSkinActiva";
 
 // Espacio entre módulos de la barra principal (compacto, para que quepan más a 1366 px).
 const SEPARACION_NAV = 4;
@@ -135,7 +133,6 @@ function isSubActive(item: { path: string }, loc: { pathname: string; search: st
 }
 
 export default function TopBar() {
-  const skinActiva = useSkinActiva();
   const loc = useLocation();
   const { user, triggerLogout } = useAuthStore();
   const { companyId: userCompanyId } = useAuthStore();
@@ -494,8 +491,9 @@ export default function TopBar() {
         position: 'relative', zIndex: 100,
       }}>
         {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', marginRight: 24, flexShrink: 0 }}>
-          <LogoConsultoria lado={44} recuadro={skinActiva === 'claro'} />
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 1, marginRight: 28, flexShrink: 0 }}>
+          <span style={{ fontSize: 13.5, fontWeight: 700, color: 'rgb(var(--text-soft))', letterSpacing: '0.1em' }}>ESTIA</span>
+          <span style={{ fontSize: 13.5, fontWeight: 700, color: 'rgb(var(--accent-alt))', letterSpacing: '0.1em' }}>ERP</span>
         </div>
 
         {/* Nav: lo que no cabe va al menú «Más» (se mide el ancho real de cada módulo, ver navOverflow.ts) */}
