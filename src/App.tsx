@@ -653,7 +653,9 @@ function App() {
         path="/patients"
         element={
           <ProtectedRoute>
-            <PatientsPage />
+            <ModuloRoute modulo="pacientes">
+              <PatientsPage />
+            </ModuloRoute>
           </ProtectedRoute>
         }
       />
