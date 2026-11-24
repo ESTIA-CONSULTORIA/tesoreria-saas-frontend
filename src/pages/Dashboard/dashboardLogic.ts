@@ -26,3 +26,26 @@ export function textoPorcentaje(valor: number | null): string {
 export function textoMoneda(valor: number | null): string {
   return valor === null || !Number.isFinite(valor) ? SIN_DATOS : `$${Math.round(valor).toLocaleString('es-MX')}`;
 }
+
+export const SIN_COMPARAR = 'Sin datos para comparar';
+
+/**
+ * Variación (%) frente al periodo anterior, o null si no se puede comparar.
+ * El servidor manda 0 cuando el periodo anterior vale $0 (no se puede dividir entre cero): eso NO es «+0 %», es «sin datos para comparar».
+ * `anterior` (opcional, lo manda el servidor nuevo) es el total del periodo anterior; sin él, 0 con ventas en $0 se toma como sin datos.
+ */
+export function variacionComparable(variacion: number | null | undefined, actual: number, anterior?: number | null): number | null {
+  if (typeof variacion !== 'number' || !Number.isFinite(variacion)) return null;
+  if (typeof anterior === 'number') return anterior > 0 ? variacion : null;
+  return variacion === 0 && !(actual > 0) ? null : variacion;
+}
+
+/** Margen (utilidad / ventas, en %) o null cuando las ventas son $0 o menos (no hay base para calcularlo). */
+export function margenSobreVentas(utilidad: number, ventas: number): number | null {
+  return ventas > 0 && Number.isFinite(utilidad) ? (utilidad / ventas) * 100 : null;
+}
+
+/** Nombre de la barra de respaldo (cuando el servidor no manda desglose): el ámbito que eligió la persona. */
+export function nombreRespaldoGrafica(sucursal?: string | null, empresa?: string | null): string {
+  return sucursal || empresa || 'Grupo Consolidado';
+}

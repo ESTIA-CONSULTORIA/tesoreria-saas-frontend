@@ -9,7 +9,7 @@ import { useDashboardFilterStore, type DashboardPeriod } from "../../core/store/
 import { useSkinActiva } from "../../core/theme/useSkinActiva";
 import DashboardIsotipo from "./DashboardIsotipo";
 import { useAlturaRestante } from "../../core/hooks/useAlturaRestante";
-import { participacion, textoPorcentaje, SIN_DATOS } from "./dashboardLogic";
+import { participacion, textoPorcentaje, SIN_DATOS, SIN_COMPARAR, variacionComparable, margenSobreVentas, nombreRespaldoGrafica } from "./dashboardLogic";
 
 
 export default function DashboardPage() {
@@ -89,16 +89,12 @@ export default function DashboardPage() {
     }
     // Fallback consolidado
     return [{
-      name: 'Grupo Consolidado',
+      name: nombreRespaldoGrafica(activeBranch?.name, activeCompany?.name),
       Ingresos: Number(kpis?.income || 0),
       Egresos: Number(kpis?.expense || 0),
       Saldo: Number(kpis?.totalBalance || 0),
     }];
-  }, [activeCompany, kpis?.branchesBreakdown, kpis?.companiesBreakdown, kpis?.income, kpis?.expense, kpis?.totalBalance]);
-
-  const safePercent = (num: number, den: number) => {
-    return den > 0 ? ((num / den) * 100).toFixed(1) : '0';
-  };
+  }, [activeCompany, activeBranch, kpis?.branchesBreakdown, kpis?.companiesBreakdown, kpis?.income, kpis?.expense, kpis?.totalBalance]);
 
   // La participación solo es real en Vista Global (sin empresa ni sucursal elegida): ver dashboardLogic.participacion.
   const vistaGlobal = !activeCompany && !activeBranch;
@@ -147,9 +143,11 @@ export default function DashboardPage() {
   const panelVentas = displayTotals.income;
   const panelEgresos = displayTotals.expense;
   const panelUAI = panelVentas - panelEgresos;
-  const panelMargen = panelVentas > 0
-    ? Number(((panelUAI / panelVentas) * 100).toFixed(1))
-    : 0;
+  const panelMargen = margenSobreVentas(panelUAI, panelVentas);
+  const margenUai = margenSobreVentas(uaiDisplay, ventasDisplay);
+  const varVentas = variacionComparable(kpis?.incomeVariation, ventasDisplay, kpis?.previousIncome);
+  const varEgresos = variacionComparable(kpis?.expenseVariation, egresosDisplay, kpis?.previousExpense);
+  const sinComparar = <span title="El periodo anterior no tuvo movimientos: no hay con qué comparar." style={{ color: 'rgb(var(--text-2))', fontStyle: 'italic' }}>{SIN_COMPARAR}</span>;
 
   const sinDatosTitulo = 'El sistema aún no tiene esta cifra: solo registra ingresos y egresos, sin separar costo de gasto ni impuestos.';
   const sinDatos = (
@@ -191,7 +189,7 @@ export default function DashboardPage() {
           ventas={ventasDisplay}
           egresos={egresosDisplay}
           saldo={Number(kpis?.saldoDisponible ?? saldoDisplay)}
-          variacionVentas={typeof kpis?.incomeVariation === 'number' ? kpis.incomeVariation : null}
+          variacionVentas={variacionComparable(kpis?.incomeVariation, ventasDisplay, kpis?.previousIncome)}
           filas={companyBarChartData.map((d: { name?: string; Ingresos: number; Egresos: number }) => ({ nombre: String(d.name ?? ''), ingresos: d.Ingresos, egresos: d.Egresos }))}
           atencion={atencion}
           onIr={(ruta) => navigate(ruta)}
@@ -347,8 +345,8 @@ export default function DashboardPage() {
                     <div style={{ fontSize: '22px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
                       {formatCurrency(ventasDisplay)}
                     </div>
-                    <div style={{ fontSize: '11px', color: 'rgb(var(--ok))', letterSpacing: '0.01em' }}>
-                      {formatPercent(kpis?.incomeVariation || 0)}
+                    <div style={{ fontSize: '11px', color: varVentas === null ? 'rgb(var(--text-3))' : 'rgb(var(--ok))', letterSpacing: '0.01em' }}>
+                      {varVentas === null ? sinComparar : formatPercent(varVentas)}
                     </div>
                   </div>
 
@@ -362,8 +360,8 @@ export default function DashboardPage() {
                     <div style={{ fontSize: '22px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
                       {formatCurrency(egresosDisplay)}
                     </div>
-                    <div style={{ fontSize: '11px', color: 'rgb(var(--danger))', letterSpacing: '0.01em' }}>
-                      {formatPercent(kpis?.expenseVariation || 0)}
+                    <div style={{ fontSize: '11px', color: varEgresos === null ? 'rgb(var(--text-3))' : 'rgb(var(--danger))', letterSpacing: '0.01em' }}>
+                      {varEgresos === null ? sinComparar : formatPercent(varEgresos)}
                     </div>
                   </div>
 
@@ -397,8 +395,8 @@ export default function DashboardPage() {
                     <div style={{ fontSize: '22px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
                       {formatCurrency(uaiDisplay)}
                     </div>
-                    <div style={{ fontSize: '11px', color: uaiDisplay >= 0 ? 'rgb(var(--ok))' : 'rgb(var(--danger))', letterSpacing: '0.01em' }}>
-                      {formatPercent(Number(safePercent(uaiDisplay, ventasDisplay)))}
+                    <div style={{ fontSize: '11px', color: margenUai === null ? 'rgb(var(--text-3))' : uaiDisplay >= 0 ? 'rgb(var(--ok))' : 'rgb(var(--danger))', letterSpacing: '0.01em' }}>
+                      {margenUai === null ? SIN_DATOS : formatPercent(margenUai)}
                     </div>
                   </div>
 
@@ -499,7 +497,7 @@ export default function DashboardPage() {
                       {(kpis?.companiesBreakdown || []).map((company: any) => {
                         const compVentas = Number(company.income);
                         const compUai = compVentas - Number(company.expense);
-                        const compMargen = compVentas > 0 ? (compUai / compVentas) * 100 : 0;
+                        const compMargen = margenSobreVentas(compUai, compVentas);
                         const compPart = participacion(compVentas, kpis?.companiesBreakdown, vistaGlobal);
 
                         return (
@@ -528,7 +526,7 @@ export default function DashboardPage() {
                               {sinDatos}
                             </td>
                             <td style={{ padding: '10px 12px', textAlign: 'right', color: 'rgb(var(--text-1))', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatPercentDecimal(compMargen)}
+                              {compMargen === null ? <span style={{ color: 'rgb(var(--text-2))', fontStyle: 'italic' }}>{SIN_DATOS}</span> : formatPercentDecimal(compMargen)}
                             </td>
                             <td style={{ padding: '10px 12px', textAlign: 'right', color: 'rgb(var(--text-1))', fontSize: '12px', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {compPart === null ? <span title="La participación se calcula solo en Vista Global, con todas las empresas del grupo." style={{ color: 'rgb(var(--text-2))', fontSize: '12px', fontStyle: 'italic' }}>{SIN_DATOS}</span> : textoPorcentaje(compPart)}
@@ -589,7 +587,7 @@ export default function DashboardPage() {
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Margen (UAI / ventas)</span>
                             <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
-                              {formatPercentDecimal(panelMargen)}
+                              {panelMargen === null ? SIN_DATOS : formatPercentDecimal(panelMargen)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

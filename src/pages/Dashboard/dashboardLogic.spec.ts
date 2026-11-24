@@ -43,3 +43,33 @@ describe('textos', () => {
     expect(textoMoneda(0)).toBe('$0');
   });
 });
+
+import { variacionComparable, margenSobreVentas, nombreRespaldoGrafica, SIN_COMPARAR } from './dashboardLogic';
+describe('Dashboard: sin datos para comparar / margen / respaldo de la gráfica', () => {
+  it('textos', () => expect(SIN_COMPARAR).toBe('Sin datos para comparar'));
+  it('variación: periodo anterior en $0 → null (no «+0 %»)', () => {
+    expect(variacionComparable(0, 0, 0)).toBeNull();
+    expect(variacionComparable(0, 500, 0)).toBeNull();
+    expect(variacionComparable(0, 0)).toBeNull(); // servidor viejo: 0 con ventas en $0
+  });
+  it('variación real se conserva (incluido 0 % legítimo)', () => {
+    expect(variacionComparable(12.5, 900, 800)).toBe(12.5);
+    expect(variacionComparable(0, 800, 800)).toBe(0);
+    expect(variacionComparable(-5, 100)).toBe(-5);
+  });
+  it('variación ausente o inválida → null', () => {
+    expect(variacionComparable(undefined, 10)).toBeNull();
+    expect(variacionComparable(NaN, 10, 5)).toBeNull();
+  });
+  it('margen: sin ventas → null; con ventas se calcula (también negativo)', () => {
+    expect(margenSobreVentas(0, 0)).toBeNull();
+    expect(margenSobreVentas(-10, 0)).toBeNull();
+    expect(margenSobreVentas(50, 200)).toBe(25);
+    expect(margenSobreVentas(-50, 200)).toBe(-25);
+  });
+  it('respaldo de la gráfica usa el ámbito elegido', () => {
+    expect(nombreRespaldoGrafica('Matriz', 'RIOVA DENTAL')).toBe('Matriz');
+    expect(nombreRespaldoGrafica(null, 'RIOVA DENTAL')).toBe('RIOVA DENTAL');
+    expect(nombreRespaldoGrafica(null, null)).toBe('Grupo Consolidado');
+  });
+});
