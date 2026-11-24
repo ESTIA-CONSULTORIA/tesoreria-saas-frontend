@@ -1720,9 +1720,9 @@ export default function POSPage() {
   });
 
   return (
-    <div className="min-h-screen !bg-bg !text-content-1">
+    <div className="h-screen flex flex-col overflow-hidden !bg-bg !text-content-1">
       {/* HEADER - Tabs */}
-      <div className="h-16 border-b !border-line flex items-center px-4 !bg-nav">
+      <div className="h-16 shrink-0 border-b !border-line flex items-center px-4 !bg-nav">
         <h1 className="text-xl font-bold mr-8">POS</h1>
         <div className="flex gap-2">
           <button
@@ -1792,7 +1792,7 @@ export default function POSPage() {
 
       {/* TAB CONTENT */}
       {activeTab === "terminal" && (
-        <div className="h-[calc(100vh-64px)] flex flex-col">
+        <div className="flex-1 min-h-0 flex flex-col">
           {/* TERMINAL HEADER */}
           <header className="h-16 border-b !border-line flex items-center justify-between px-4 !bg-surface-1">
             <div className="flex items-center gap-4">
@@ -2209,7 +2209,7 @@ export default function POSPage() {
 
       {/* CONFIGURATION TABS */}
       {activeTab === "productos" && (
-        <div className="p-6">
+        <div className="p-6 flex-1 min-h-0 overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">Productos</h2>
             <div className="flex gap-2">
@@ -2320,7 +2320,7 @@ export default function POSPage() {
       )}
 
       {activeTab === "categorias" && (
-        <div className="p-6">
+        <div className="p-6 flex-1 min-h-0 overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">Categorías</h2>
             <button
@@ -2500,7 +2500,7 @@ export default function POSPage() {
       )}
 
       {activeTab === "turnos" && (
-        <div className="p-6">
+        <div className="p-6 flex-1 min-h-0 overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">Turnos</h2>
             <button
@@ -2627,7 +2627,7 @@ export default function POSPage() {
       )}
 
       {activeTab === "parametros" && (
-        <div className="p-6">
+        <div className="p-6 flex-1 min-h-0 overflow-y-auto">
           <h2 className="text-2xl font-bold mb-4">Parámetros</h2>
           <div className="max-w-2xl space-y-6">
             <div className="rounded-xl border !border-line !bg-nav p-4">
