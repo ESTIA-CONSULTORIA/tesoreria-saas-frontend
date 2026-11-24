@@ -96,7 +96,7 @@ export default function CreateRoleModal({ open, onClose, onCreated }: Props) {
             <input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Descripcion"
+              placeholder="Descripción"
               className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
             />
 

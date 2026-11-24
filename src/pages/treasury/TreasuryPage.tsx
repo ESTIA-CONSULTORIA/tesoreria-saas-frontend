@@ -5,6 +5,7 @@ import { api } from "../../core/api/api";
 import MainLayout from "../../core/layout/MainLayout";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import ExecutiveKPI from "../../components/ExecutiveKPI";
+import { pesosKpi, tendenciaMes } from "../../core/utils/dinero";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
 import { useDirectorioUsuarios } from "../../core/hooks/useDirectorioUsuarios";
 import { nombreUsuario } from "../../core/utils/nombreUsuario";
@@ -285,25 +286,24 @@ export default function TreasuryPage() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <ExecutiveKPI
                   label="Saldo Total"
-                  value={Number(executiveSummary.totalBalance || 0)}
-                  secondary={executiveSummary.comparison?.netChangePercent || 0}
+                  value={pesosKpi(executiveSummary.totalBalance)}
                   context="Liquidez total consolidada"
-                  trend={executiveSummary.comparison?.netChangePercent >= 0 ? 'up' : 'down'}
-                  trendValue={`${executiveSummary.comparison?.netChangePercent >= 0 ? '+' : ''}${Number(executiveSummary.comparison?.netChangePercent || 0).toFixed(1)}% vs mes anterior`}
+                  trend={tendenciaMes(executiveSummary.comparison?.netChangePercent).trend}
+                  trendValue={tendenciaMes(executiveSummary.comparison?.netChangePercent).texto}
                 />
                 <ExecutiveKPI
                   label="Ingresos del Período"
-                  value={Number(executiveSummary.monthlyFlow?.income || 0)}
+                  value={pesosKpi(executiveSummary.monthlyFlow?.income)}
                   context="Total ingresos del período"
                 />
                 <ExecutiveKPI
                   label="Egresos del Período"
-                  value={Number(executiveSummary.monthlyFlow?.expense || 0)}
+                  value={pesosKpi(executiveSummary.monthlyFlow?.expense)}
                   context="Total egresos del período"
                 />
                 <ExecutiveKPI
                   label="Flujo Neto"
-                  value={Number(executiveSummary.monthlyFlow?.net || 0)}
+                  value={pesosKpi(executiveSummary.monthlyFlow?.net)}
                   context="Diferencia ingresos - egresos"
                   trend={executiveSummary.monthlyFlow?.net >= 0 ? 'up' : 'down'}
                 />

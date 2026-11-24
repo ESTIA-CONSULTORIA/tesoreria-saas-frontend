@@ -72,11 +72,11 @@ export default function RolesPage() {
         onCreated={loadRoles}
       />
 
-      <div className="space-y-6">
+      <div className="space-y-6 px-6 py-4">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-bold">Roles</h2>
-            <p className="text-slate-400">Administracion de roles y permisos</p>
+            <p className="text-slate-400">Administración de roles y permisos</p>
           </div>
 
           <div className="flex gap-2">
@@ -102,7 +102,7 @@ export default function RolesPage() {
         )}
 
         {loading ? (
-          <div className="rounded-xl bg-slate-900 p-6">Cargando roles...</div>
+          <div className="rounded-xl bg-slate-900 p-6">Cargando roles…</div>
         ) : (
           <div className="space-y-4">
             {roles.length === 0 ? (
@@ -120,7 +120,7 @@ export default function RolesPage() {
                       <h3 className="text-lg font-semibold">{role.name}</h3>
 
                       <p className="text-sm text-slate-400">
-                        Codigo: {role.code}
+                        Código: {role.code}
                       </p>
 
                       <p className="text-xs text-slate-500">
