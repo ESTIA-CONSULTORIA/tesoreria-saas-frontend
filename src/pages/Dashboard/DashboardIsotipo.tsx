@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { useAlturaRestante } from "../../core/hooks/useAlturaRestante";
+import { margenSobreVentas, SIN_COMPARAR, SIN_DATOS } from "./dashboardLogic";
 
 // Dashboard de la skin ESTIA Isotipo (docs/IDENTIDAD-ISOTIPO.md): mismos datos que DashboardPage, otra composición. Sin tarjetas con radio:
 // una cifra protagonista, una cinta de datos con bisel a 30°, prismas isométricos por empresa/sucursal y una lista de atención.
@@ -92,7 +93,7 @@ function Prismas({ filas }: { filas: FilaDesglose[] }) {
 export default function DashboardIsotipo(p: Props) {
   const [refPagina, alturaPagina] = useAlturaRestante<HTMLDivElement>();
   const utilidad = p.ventas - p.egresos;
-  const margen = p.ventas > 0 ? Math.round((utilidad / p.ventas) * 100) : 0;
+  const margen = margenSobreVentas(utilidad, p.ventas);
   const variacion = p.variacionVentas;
   const totalIngresos = p.filas.reduce((s, f) => s + f.ingresos, 0);
 
@@ -107,17 +108,19 @@ export default function DashboardIsotipo(p: Props) {
         <p className="text-xs uppercase tracking-[0.18em] !text-content-3">Ventas del periodo</p>
         <div className="flex items-end gap-6">
           <p className="iso-numero iso-entrada text-[72px] font-bold leading-none !text-content-1">{pesos(p.ventas)}</p>
-          {variacion !== null && (
+          {variacion !== null ? (
             <p className={`mb-2 flex items-center gap-2 text-sm font-medium ${variacion >= 0 ? '!text-ok' : '!text-danger'}`}>
               <span aria-hidden="true" className="iso-marcador" style={{ transform: `rotate(${variacion >= 0 ? -90 : 90}deg)` }} />
               {variacion >= 0 ? '+' : ''}{variacion.toFixed(1)} % frente al periodo anterior
             </p>
+          ) : (
+            <p className="mb-2 text-sm italic !text-content-3">{SIN_COMPARAR}</p>
           )}
         </div>
         <div className="iso-bisel mt-4 flex items-stretch gap-0 !bg-surface-1 py-4">
           <Dato etiqueta="Egresos" valor={pesos(p.egresos)} />
           <SeparadorInclinado />
-          <Dato etiqueta="Utilidad antes de impuestos" valor={pesos(utilidad)} tono={utilidad >= 0 ? 'ok' : 'danger'} nota={`Margen ${margen} %`} />
+          <Dato etiqueta="Utilidad antes de impuestos" valor={pesos(utilidad)} tono={utilidad >= 0 ? 'ok' : 'danger'} nota={margen === null ? `Margen: ${SIN_DATOS}` : `Margen ${Math.round(margen)} %`} />
           <SeparadorInclinado />
           <Dato etiqueta="Saldo disponible" valor={pesos(p.saldo)} />
         </div>
