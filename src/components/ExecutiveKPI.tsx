@@ -30,7 +30,8 @@ export default function ExecutiveKPI({
   return (
     <div
       onClick={onClick}
-      className="p-5 cursor-pointer transition-colors"
+      {...(onClick ? { role: 'button', tabIndex: 0, onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } } : {})}
+      className={`p-5 transition-colors ${onClick ? 'cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--focus))]' : ''}`}
       style={{
         backgroundColor: '#161616',
         border: '1px solid #2D2D2D',

@@ -3,6 +3,7 @@ import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import CreateBankModal from "./CreateBankModal";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
+import { pesosOGuion } from "../../core/utils/dinero";
 
 interface BankAccount {
   id: string;
@@ -127,10 +128,10 @@ export default function BanksPage() {
                         {account.bank} · {account.accountNumber}
                       </p>
                       <p className="text-xs text-slate-500">
-                        Sucursal: {getBranchName(account.branchId)} · Tipo: {account.type} · Moneda: {account.currency}
+                        Sucursal: {getBranchName(account.branchId)} · Tipo: {account.type || '—'} · Moneda: {account.currency || '—'}
                       </p>
                       <p className="text-xs text-slate-400">
-                        Saldo inicial: {Number(account.initialBalance)} · Saldo actual: {Number(account.balance)}
+                        Saldo inicial: {pesosOGuion(account.initialBalance)} · Saldo actual: {pesosOGuion(account.balance)}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
