@@ -97,7 +97,7 @@ export default function CompaniesPage() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.7)', padding: '16px' }}>
           <div style={{ backgroundColor: '#161616', border: '1px solid #3D3D3D', borderRadius: '12px', padding: '24px', width: '100%', maxWidth: '400px' }}>
             <h3 style={{ fontSize: '16px', color: '#F5F5F5', marginBottom: '8px' }}>Eliminar empresa</h3>
-            <p style={{ fontSize: '13px', color: '#9A9A9A', marginBottom: '24px' }}>¿Estás seguro de eliminar esta empresa? Esta acción no se puede deshacer.</p>
+            <p style={{ fontSize: '13px', color: '#BDBDBD', marginBottom: '24px' }}>¿Estás seguro de eliminar esta empresa? Esta acción no se puede deshacer.</p>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => { setDeleteConfirmOpen(false); setDeleteConfirmId(null); }}
@@ -119,10 +119,10 @@ export default function CompaniesPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
           <div>
-            <h2 style={{ fontSize: '24px', fontWeight: 400, color: '#F5F5F5', marginBottom: '4px', letterSpacing: '0.01em' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 400, color: 'rgb(var(--text-1))', marginBottom: '4px', letterSpacing: '0.01em' }}>
               Empresas
             </h2>
-            <p style={{ fontSize: '13px', color: '#9A9A9A' }}>
+            <p style={{ fontSize: '13px', color: 'rgb(var(--text-3))' }}>
               Administración de empresas
             </p>
           </div>
@@ -153,13 +153,13 @@ export default function CompaniesPage() {
         )}
 
         {loading ? (
-          <div style={{ padding: '24px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '8px', color: '#9A9A9A' }}>
+          <div style={{ padding: '24px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '8px', color: '#BDBDBD' }}>
             Cargando empresas...
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '16px' }}>
             {companies.length === 0 ? (
-              <div style={{ padding: '24px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '8px', color: '#9A9A9A' }}>
+              <div style={{ padding: '24px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '8px', color: '#BDBDBD' }}>
                 No existen empresas registradas
               </div>
             ) : (
@@ -200,10 +200,10 @@ export default function CompaniesPage() {
                         <h3 style={{ fontSize: '15px', color: '#F5F5F5', fontWeight: 500, marginBottom: '4px' }}>
                           {company.legalName}
                         </h3>
-                        <p style={{ fontSize: '12px', color: '#9A9A9A', marginBottom: '4px' }}>
+                        <p style={{ fontSize: '12px', color: '#BDBDBD', marginBottom: '4px' }}>
                           {company.tradeName}
                         </p>
-                        <p style={{ fontSize: '11px', color: '#7E7E7E', fontFamily: 'monospace' }}>
+                        <p style={{ fontSize: '11px', color: '#BDBDBD', fontFamily: 'monospace' }}>
                           RFC: {company.taxId || 'Sin RFC'}
                         </p>
                       </div>
@@ -211,7 +211,7 @@ export default function CompaniesPage() {
 
                     <div style={{ height: '1px', backgroundColor: '#2D2D2D', margin: '12px 0' }} />
 
-                    <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', fontSize: '11px', color: '#9A9A9A' }}>
+                    <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', fontSize: '11px', color: '#BDBDBD' }}>
                       <span>Moneda: {company.baseCurrency}</span>
                     </div>
 
@@ -220,7 +220,7 @@ export default function CompaniesPage() {
                         padding: '4px 12px',
                         borderRadius: '4px',
                         fontSize: '11px',
-                        color: company.isActive ? '#3B7A57' : '#9B3A3A',
+                        color: company.isActive ? '#86D9A8' : '#FF9C98',
                         backgroundColor: company.isActive ? '#1a2e22' : '#2e1a1a',
                       }}>
                         {company.isActive ? 'Activa' : 'Inactiva'}
@@ -251,7 +251,7 @@ export default function CompaniesPage() {
                           flex: 1,
                           padding: '8px 16px',
                           fontSize: '12px',
-                          color: '#9B3A3A',
+                          color: '#FF9C98',
                           backgroundColor: 'transparent',
                           border: '1px solid #2D2D2D',
                           borderRadius: '4px',

@@ -38,6 +38,15 @@ interface Form {
   theme: string; // skin del negocio: 'estia' | 'oscuro'
 }
 
+// Color de texto legible (≥4.5:1) sobre el color de acento que eligió el negocio (blanco u oscuro según su luminosidad)
+function textoSobre(hex: string): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return '#FFFFFF';
+  const c = [0, 2, 4].map((i) => parseInt(m[1].slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)));
+  const l = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  return (1.05 / (l + 0.05)) >= ((l + 0.05) / 0.05) ? '#FFFFFF' : '#0A0A0A';
+}
+
 export default function AppearancePage() {
   const store = useBrandingStore();
   const tenantId = localStorage.getItem('tenant_id') || '';
@@ -129,12 +138,12 @@ export default function AppearancePage() {
 
   const s = {
     section: { marginBottom: 32 } as React.CSSProperties,
-    label: { fontSize: 12, color: 'rgba(255,255,255,0.4)', fontWeight: 500, marginBottom: 8, display: 'block', textTransform: 'uppercase' as const, letterSpacing: '0.05em' },
-    input: { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: '#c8cdd8', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const },
-    card: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: 20 } as React.CSSProperties,
+    label: { fontSize: 12, color: 'rgb(var(--text-3))', fontWeight: 500, marginBottom: 8, display: 'block', textTransform: 'uppercase' as const, letterSpacing: '0.05em' },
+    input: { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid rgb(var(--border-field))', background: 'rgb(var(--surface-2))', color: 'rgb(var(--text-1))', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const },
+    card: { background: 'rgb(var(--surface-1))', border: '1px solid rgb(var(--border))', borderRadius: 12, padding: 20 } as React.CSSProperties,
     swatch: (color: string, selected: boolean): React.CSSProperties => ({
       width: 28, height: 28, borderRadius: 6, background: color, cursor: 'pointer',
-      border: selected ? `2px solid #fff` : '2px solid transparent',
+      border: selected ? '2px solid rgb(var(--text-1))' : '2px solid transparent',
       boxShadow: selected ? `0 0 0 2px ${color}` : 'none',
       transition: 'all 0.15s',
       flexShrink: 0,
@@ -149,8 +158,8 @@ export default function AppearancePage() {
 
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '32px 24px' }}>
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontSize: 18, fontWeight: 600, color: '#c8cdd8', margin: 0 }}>Apariencia</h1>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: '4px 0 0' }}>Personaliza la identidad visual de tu plataforma</p>
+          <h1 style={{ fontSize: 18, fontWeight: 600, color: 'rgb(var(--text-1))', margin: 0 }}>Apariencia</h1>
+          <p style={{ fontSize: 13, color: 'rgb(var(--text-3))', margin: '4px 0 0' }}>Personaliza la identidad visual de tu plataforma</p>
         </div>
 
         {/* Logo */}
@@ -158,17 +167,17 @@ export default function AppearancePage() {
           <div style={s.card}>
             <label style={s.label}>Logo de la empresa</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{ width: 72, height: 72, borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+              <div style={{ width: 72, height: 72, borderRadius: 12, background: 'rgb(var(--surface-2))', border: '1px solid rgb(var(--border))', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                 {form.logoUrl ? (
                   <img src={form.logoUrl} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                 ) : (
-                  <span style={{ fontSize: 24, color: 'rgba(255,255,255,0.15)' }}>✦</span>
+                  <span style={{ fontSize: 24, color: 'rgb(var(--text-3))' }}>✦</span>
                 )}
               </div>
               <div style={{ flex: 1 }}>
                 <input ref={logoFileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleLogoFile} />
                 <button onClick={() => logoFileRef.current?.click()}
-                  style={{ fontSize: 12, padding: '6px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>
+                  style={{ fontSize: 12, padding: '6px 12px', borderRadius: 6, border: '1px solid rgb(var(--border-field))', background: 'transparent', color: 'rgb(var(--text-2))', cursor: 'pointer' }}>
                   Subir archivo
                 </button>
                 {form.logoUrl && (
@@ -214,7 +223,7 @@ export default function AppearancePage() {
                 <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>
               ))}
             </select>
-            <div style={{ marginTop: 10, padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: 8, fontFamily: form.fontFamily, color: '#c8cdd8', fontSize: 14 }}>
+            <div style={{ marginTop: 10, padding: '10px 14px', background: 'rgb(var(--surface-2))', borderRadius: 8, fontFamily: form.fontFamily, color: 'rgb(var(--text-1))', fontSize: 14 }}>
               Vista previa: El sistema de gestión empresarial
             </div>
           </div>
@@ -251,7 +260,7 @@ export default function AppearancePage() {
               <option value="">Igual que el negocio</option>
               {skinsOfrecidas.map(t => <option key={t} value={t}>{SKINS[t].nombre}</option>)}
             </select>
-            <div style={{ marginTop: 8, fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+            <div style={{ marginTop: 8, fontSize: 12, color: 'rgb(var(--text-3))' }}>
               El tema del negocio se guarda con «Guardar» y es el que ven todos por defecto. «Mi tema» es tu preferencia y se guarda al elegirla. La elección de este equipo se aplica al instante y solo vale aquí (útil en una caja que debe verse siempre igual); gana a las otras dos.
             </div>
           </div>
@@ -263,11 +272,11 @@ export default function AppearancePage() {
 
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={() => setPreviewSplash(true)}
-            style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'rgba(255,255,255,0.5)', fontSize: 13, cursor: 'pointer' }}>
+            style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: '1px solid rgb(var(--border-field))', background: 'transparent', color: 'rgb(var(--text-2))', fontSize: 13, cursor: 'pointer' }}>
             Vista previa del splash
           </button>
           <button onClick={save} disabled={saving}
-            style={{ flex: 2, padding: '10px 0', borderRadius: 8, border: 'none', background: form.accentColor, color: '#fff', fontSize: 13, cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 500, opacity: saving ? 0.7 : 1 }}>
+            style={{ flex: 2, padding: '10px 0', borderRadius: 8, border: 'none', background: form.accentColor, color: textoSobre(form.accentColor), fontSize: 13, cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 500, opacity: saving ? 0.7 : 1 }}>
             {saving ? 'Guardando…' : 'Guardar apariencia'}
           </button>
         </div>

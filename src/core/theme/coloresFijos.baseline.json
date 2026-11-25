@@ -102,7 +102,7 @@
   "nombrados": 0
  },
  "pages/branches/BranchesPage.tsx": {
-  "hex": 49,
+  "hex": 47,
   "rgb": 1,
   "tw": 0,
   "nombrados": 0
@@ -114,7 +114,7 @@
   "nombrados": 0
  },
  "pages/companies/CompaniesPage.tsx": {
-  "hex": 51,
+  "hex": 49,
   "rgb": 1,
   "tw": 0,
   "nombrados": 0
@@ -282,8 +282,8 @@
   "nombrados": 0
  },
  "pages/hr/HRPage.tsx": {
-  "hex": 178,
-  "rgb": 293,
+  "hex": 175,
+  "rgb": 283,
   "tw": 45,
   "nombrados": 0
  },
@@ -326,7 +326,7 @@
  "pages/membresias/MembresiasPage.tsx": {
   "hex": 0,
   "rgb": 0,
-  "tw": 122,
+  "tw": 121,
   "nombrados": 0
  },
  "pages/mobile-analytics/MobileAnalyticsApp.tsx": {
@@ -426,8 +426,8 @@
   "nombrados": 0
  },
  "pages/settings/AppearancePage.tsx": {
-  "hex": 55,
-  "rgb": 21,
+  "hex": 53,
+  "rgb": 6,
   "tw": 0,
   "nombrados": 0
  },

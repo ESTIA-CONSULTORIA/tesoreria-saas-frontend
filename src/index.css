@@ -256,7 +256,7 @@ html { height: 100%; }
 
 /* Executive view isolation — prevent global dark-theme overrides */
 #exec-root {
-  background: transparent !important;
+  /* solo el color: la imagen (degradado propio del tema del Ejecutivo, claro u oscuro) debe verse en cualquier skin */
   background-color: transparent !important;
 }
 #exec-root input,

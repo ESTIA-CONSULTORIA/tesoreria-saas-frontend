@@ -87,7 +87,7 @@ export default function BranchesPage() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.7)', padding: '16px' }}>
           <div style={{ backgroundColor: '#161616', border: '1px solid #3D3D3D', borderRadius: '12px', padding: '24px', width: '100%', maxWidth: '400px' }}>
             <h3 style={{ fontSize: '16px', color: '#F5F5F5', marginBottom: '8px' }}>Eliminar sucursal</h3>
-            <p style={{ fontSize: '13px', color: '#9A9A9A', marginBottom: '24px' }}>¿Estás seguro de eliminar esta sucursal? Esta acción no se puede deshacer.</p>
+            <p style={{ fontSize: '13px', color: '#BDBDBD', marginBottom: '24px' }}>¿Estás seguro de eliminar esta sucursal? Esta acción no se puede deshacer.</p>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => { setDeleteConfirmOpen(false); setDeleteConfirmId(null); }}
@@ -109,10 +109,10 @@ export default function BranchesPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
           <div>
-            <h2 style={{ fontSize: '24px', fontWeight: 400, color: '#F5F5F5', marginBottom: '4px', letterSpacing: '0.01em' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 400, color: 'rgb(var(--text-1))', marginBottom: '4px', letterSpacing: '0.01em' }}>
               Sucursales
             </h2>
-            <p style={{ fontSize: '13px', color: '#9A9A9A' }}>
+            <p style={{ fontSize: '13px', color: 'rgb(var(--text-3))' }}>
               Administración de sucursales
             </p>
           </div>
@@ -143,13 +143,13 @@ export default function BranchesPage() {
         )}
 
         {loading ? (
-          <div style={{ padding: '24px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '8px', color: '#9A9A9A' }}>
+          <div style={{ padding: '24px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '8px', color: '#BDBDBD' }}>
             Cargando sucursales...
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '16px' }}>
             {branches.length === 0 ? (
-              <div style={{ padding: '24px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '8px', color: '#9A9A9A' }}>
+              <div style={{ padding: '24px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '8px', color: '#BDBDBD' }}>
                 No existen sucursales registradas
               </div>
             ) : (
@@ -175,7 +175,7 @@ export default function BranchesPage() {
                       <span style={{
                         fontSize: '11px',
                         fontFamily: 'monospace',
-                        color: '#7E7E7E',
+                        color: '#BDBDBD',
                         marginBottom: '4px',
                         display: 'block',
                       }}>
@@ -184,10 +184,10 @@ export default function BranchesPage() {
                       <h3 style={{ fontSize: '15px', color: '#F5F5F5', fontWeight: 500, marginBottom: '4px' }}>
                         {branch.name}
                       </h3>
-                      <p style={{ fontSize: '12px', color: '#9A9A9A' }}>
+                      <p style={{ fontSize: '12px', color: '#BDBDBD' }}>
                         {branch.city || 'Sin ciudad'}
                       </p>
-                      <p style={{ fontSize: '11px', color: '#7E7E7E' }}>
+                      <p style={{ fontSize: '11px', color: '#BDBDBD' }}>
                         {branch.address || 'Sin dirección'}
                       </p>
                     </div>
@@ -199,7 +199,7 @@ export default function BranchesPage() {
                         padding: '4px 12px',
                         borderRadius: '4px',
                         fontSize: '11px',
-                        color: branch.isActive ? '#3B7A57' : '#9B3A3A',
+                        color: branch.isActive ? '#86D9A8' : '#FF9C98',
                         backgroundColor: branch.isActive ? '#1a2e22' : '#2e1a1a',
                       }}>
                         {branch.isActive ? 'Activa' : 'Inactiva'}
@@ -230,7 +230,7 @@ export default function BranchesPage() {
                           flex: 1,
                           padding: '8px 16px',
                           fontSize: '12px',
-                          color: '#9B3A3A',
+                          color: '#FF9C98',
                           backgroundColor: 'transparent',
                           border: '1px solid #2D2D2D',
                           borderRadius: '4px',

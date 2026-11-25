@@ -119,7 +119,7 @@ export default function MovementsPage() {
     <MainLayout>
       <CreateMovementModal open={modalOpen} onClose={() => setModalOpen(false)} onCreated={loadMovements} />
       {!activeCompany ? (
-        <div style={{ padding: '24px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '8px', color: '#8A6A3A', textAlign: 'center' }}>
+        <div style={{ padding: '24px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '8px', color: '#D9A441', textAlign: 'center' }}>
           Selecciona una empresa para ver los datos
         </div>
       ) : (
