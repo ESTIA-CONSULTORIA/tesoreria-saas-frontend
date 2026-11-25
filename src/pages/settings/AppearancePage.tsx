@@ -175,7 +175,7 @@ export default function AppearancePage() {
                 )}
               </div>
               <div style={{ flex: 1 }}>
-                <input ref={logoFileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleLogoFile} />
+                <input ref={logoFileRef} aria-label="Subir logotipo de la empresa" type="file" accept="image/*" style={{ display: 'none' }} onChange={handleLogoFile} />
                 <button onClick={() => logoFileRef.current?.click()}
                   style={{ fontSize: 12, padding: '6px 12px', borderRadius: 6, border: '1px solid rgb(var(--border-field))', background: 'transparent', color: 'rgb(var(--text-2))', cursor: 'pointer' }}>
                   Subir archivo
@@ -197,12 +197,12 @@ export default function AppearancePage() {
             <label style={s.label}>Color de acento</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
               {COLOR_PALETTE.map(c => (
-                <div key={c} style={s.swatch(c, form.accentColor === c)}
+                <button key={c} type="button" aria-label={`Color de acento ${c}`} aria-pressed={form.accentColor === c} style={{ ...s.swatch(c, form.accentColor === c), padding: 0 }}
                   onClick={() => setForm(f => ({ ...f, accentColor: c }))} />
               ))}
             </div>
             <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <input type="color" value={form.accentColor}
+              <input type="color" aria-label="Elegir color de acento" value={form.accentColor}
                 onChange={e => setForm(f => ({ ...f, accentColor: e.target.value }))}
                 style={{ width: 40, height: 36, border: 'none', borderRadius: 6, cursor: 'pointer', background: 'transparent' }} />
               <input type="text" value={form.accentColor}
