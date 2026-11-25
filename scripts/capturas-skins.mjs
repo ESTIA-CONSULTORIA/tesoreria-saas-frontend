@@ -199,6 +199,21 @@ export const ESCENAS = {
   // Pestaña Alertas de Tesorería: con los datos del caso reportado (11 alertas) y sin alertas
   'tesoreria-alertas': { ruta: '/treasury', accion: async (p) => { const b = await p.evaluateHandle(() => [...document.querySelectorAll('button')].find((x) => /^Alertas$/.test((x.textContent || '').trim()))); await b.asElement()?.click(); await ESPERA(700); }, medir: medirAlertasTesoreria },
   'tesoreria-alertas-vacio': { ruta: '/treasury', alertasVacias: true, accion: async (p) => { const b = await p.evaluateHandle(() => [...document.querySelectorAll('button')].find((x) => /^Alertas$/.test((x.textContent || '').trim()))); await b.asElement()?.click(); await ESPERA(700); }, medir: medirAlertasTesoreria },
+  // Recorrido de pantallas internas (lote visual de la noche del 24/nov): mismas escenas antes y después de cada corrección
+  usuarios: { ruta: '/users' },
+  apariencia: { ruta: '/settings/appearance' },
+  conciliacion: { ruta: '/reconciliation' },
+  ejecutivo: { ruta: '/executive' },
+  sucursales: { ruta: '/branches' },
+  empresas: { ruta: '/companies' },
+  rh: { ruta: '/hr' },
+  roles: { ruta: '/roles' },
+  tesoreria: { ruta: '/treasury' },
+  movimientos: { ruta: '/movements', usuario: { modulosActivos: [...MODULOS_ERP, 'movimientos'] } },
+  membresias: { ruta: '/membresias', usuario: { modulosActivos: [...MODULOS_ERP, 'membresias'] } },
+  logs: { ruta: '/logs', usuario: { roleCode: 'SOPORTE' } },
+  'portal-documentos': { ruta: '/employee/documents', sessionStorage: { employee_user: JSON.stringify({ id: 'e1', nombre: 'Ana Demo', name: 'Ana Demo' }) } },
+  'portal-solicitudes': { ruta: '/employee/requests', sessionStorage: { employee_user: JSON.stringify({ id: 'e1', nombre: 'Ana Demo', name: 'Ana Demo' }) } },
   'busqueda-global': { ruta: '/dashboard', accion: async (p) => { await p.keyboard.down('Control'); await p.keyboard.press('KeyK'); await p.keyboard.up('Control'); await ESPERA(300); } },
 };
 
