@@ -89,6 +89,8 @@ export function MovimientoEfectivoModal(p: {
   error?: string | null;
   /** Errores de validación por campo. */
   errores?: { monto?: string; autorizadoPor?: string; concepto?: string };
+  /** Mientras se envía: el botón queda deshabilitado (un segundo clic no manda otra operación). */
+  enviando?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
 }) {
@@ -105,7 +107,7 @@ export function MovimientoEfectivoModal(p: {
       footer={
         <ModalFooter
           secundario={<Boton variante="secundario" onClick={p.onCancel}>Cancelar</Boton>}
-          principal={<Boton onClick={p.onConfirm}>{retiro ? 'Retirar' : 'Depositar'}</Boton>}
+          principal={<Boton cargando={p.enviando} onClick={p.onConfirm}>{p.enviando ? 'Guardando…' : retiro ? 'Retirar' : 'Depositar'}</Boton>}
         />
       }
     >

@@ -1,4 +1,5 @@
 import { COLOR_CATEGORIA_POR_DEFECTO } from "./coloresDatos";
+import { claveEnUso } from "./idOperacion";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -270,6 +271,12 @@ export default function POSPage() {
   // Retiro/Depósito modals
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
   const [showDepositModal, setShowDepositModal] = useState(false);
+  // Retiros/depósitos: una clave por intento (se conserva hasta que se registra) y un candado mientras se envía, para que un doble clic o un
+  // reintento no registre dos movimientos.
+  const opRetiroRef = useRef<string | null>(null);
+  const opDepositoRef = useRef<string | null>(null);
+  const [enviandoMovimiento, setEnviandoMovimiento] = useState(false);
+  const enviandoMovimientoRef = useRef(false);
   const [withdrawalAmount, setWithdrawalAmount] = useState<string>("");
   const [withdrawalReason, setWithdrawalReason] = useState<string>("");
   const [withdrawalAuthorizedBy, setWithdrawalAuthorizedBy] = useState<string>("");
@@ -966,14 +973,20 @@ export default function POSPage() {
       setErrMovimientoCampos(faltan);
       return;
     }
+    if (enviandoMovimientoRef.current) return;
+    enviandoMovimientoRef.current = true;
+    setEnviandoMovimiento(true);
     setErrMovimientoCampos({});
+    opRetiroRef.current = claveEnUso(opRetiroRef.current);
     const body = {
       monto: Number(withdrawalAmount),
       motivo: withdrawalReason,
       autorizadoPor: withdrawalAuthorizedBy,
+      idOperacion: opRetiroRef.current,
     };
     try {
       await api.post(`/pos/shifts/${shift.id}/withdrawal`, body);
+      opRetiroRef.current = null;
       setShowWithdrawalModal(false);
       setWithdrawalAmount("");
       setWithdrawalReason("");
@@ -989,10 +1002,14 @@ export default function POSPage() {
       // (mismo criterio que stock/ventas) — no se recalcula ni se estima localmente.
       const clientTimestamp = new Date().toISOString();
       await enqueueOperation('WITHDRAWAL', { shiftId: shift.id, ...body, clientTimestamp }, clientTimestamp);
+      opRetiroRef.current = null;
       setShowWithdrawalModal(false);
       setWithdrawalAmount("");
       setWithdrawalReason("");
       setWithdrawalAuthorizedBy("");
+    } finally {
+      enviandoMovimientoRef.current = false;
+      setEnviandoMovimiento(false);
     }
   }
 
@@ -1007,14 +1024,20 @@ export default function POSPage() {
       setErrMovimientoCampos(faltan);
       return;
     }
+    if (enviandoMovimientoRef.current) return;
+    enviandoMovimientoRef.current = true;
+    setEnviandoMovimiento(true);
     setErrMovimientoCampos({});
+    opDepositoRef.current = claveEnUso(opDepositoRef.current);
     const body = {
       monto: Number(depositAmount),
       origen: depositOrigin,
       autorizadoPor: depositAuthorizedBy,
+      idOperacion: opDepositoRef.current,
     };
     try {
       await api.post(`/pos/shifts/${shift.id}/deposit`, body);
+      opDepositoRef.current = null;
       setShowDepositModal(false);
       setDepositAmount("");
       setDepositOrigin("");
@@ -1029,10 +1052,14 @@ export default function POSPage() {
       // Fase C2: mismo criterio — totales congelados hasta sincronización real.
       const clientTimestamp = new Date().toISOString();
       await enqueueOperation('DEPOSIT', { shiftId: shift.id, ...body, clientTimestamp }, clientTimestamp);
+      opDepositoRef.current = null;
       setShowDepositModal(false);
       setDepositAmount("");
       setDepositOrigin("");
       setDepositAuthorizedBy("");
+    } finally {
+      enviandoMovimientoRef.current = false;
+      setEnviandoMovimiento(false);
     }
   }
 
@@ -3531,7 +3558,8 @@ export default function POSPage() {
           setConcepto={setWithdrawalReason}
           autorizadoPor={withdrawalAuthorizedBy}
           setAutorizadoPor={setWithdrawalAuthorizedBy}
-          onCancel={() => setShowWithdrawalModal(false)}
+          enviando={enviandoMovimiento}
+          onCancel={() => { opRetiroRef.current = null; setShowWithdrawalModal(false); }}
           onConfirm={handleWithdrawal}
         />
       )}
@@ -3549,7 +3577,8 @@ export default function POSPage() {
           setConcepto={setDepositOrigin}
           autorizadoPor={depositAuthorizedBy}
           setAutorizadoPor={setDepositAuthorizedBy}
-          onCancel={() => setShowDepositModal(false)}
+          enviando={enviandoMovimiento}
+          onCancel={() => { opDepositoRef.current = null; setShowDepositModal(false); }}
           onConfirm={handleDeposit}
         />
       )}
