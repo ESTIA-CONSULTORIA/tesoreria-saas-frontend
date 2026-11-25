@@ -22,7 +22,7 @@ interface SocioFila {
 }
 
 const inp = 'w-full rounded bg-slate-800 px-3 py-2 text-white';
-const btn = 'rounded-lg px-4 py-2 text-sm font-semibold';
+const btn = 'rounded-lg px-4 py-2 text-sm font-semibold text-white';
 
 export default function MembresiasPage() {
   const user = useAuthStore((s) => s.user);
@@ -45,7 +45,7 @@ export default function MembresiasPage() {
     <div className="mx-auto max-w-6xl p-4 text-white">
       <h1 className="mb-1 text-2xl font-bold">Membresías</h1>
       {!membresiasOn && (
-        <p className="mb-3 rounded bg-amber-900/30 p-3 text-sm text-amber-200">
+        <p className="mb-3 rounded border border-warn/40 bg-warn/10 p-3 text-sm text-warn">
           El cobro de membresías desde el POS no está activo para este negocio. Un administrador debe activar la capacidad
           «membresías» (Parámetros del POS); mientras tanto puedes dar de alta socios y planes.
         </p>
