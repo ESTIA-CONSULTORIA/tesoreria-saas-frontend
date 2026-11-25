@@ -45,6 +45,7 @@ export default function EmployeeLayout({ children }: Props) {
 
       {/* Bottom Navigation */}
       <nav
+        data-portal-nav=""
         style={{
           position: "absolute",
           bottom: 0,
@@ -74,7 +75,7 @@ export default function EmployeeLayout({ children }: Props) {
                 background: "transparent",
                 border: "none",
                 cursor: "pointer",
-                color: active ? "#FFFFFF" : "#505050",
+                color: active ? "#FFFFFF" : "#9A9A9A",
                 transition: "color 0.15s",
               }}
             >

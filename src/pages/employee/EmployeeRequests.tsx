@@ -114,7 +114,7 @@ export default function EmployeeRequests() {
     return {
       display: "block",
       fontSize: "0.6rem",
-      color: "#505050",
+      color: "#9A9A9A",
       letterSpacing: "0.15em",
       textTransform: "uppercase",
       marginBottom: 6,
@@ -155,7 +155,7 @@ export default function EmployeeRequests() {
                 background: tab === t ? "#1C1C1C" : "transparent",
                 border: "none",
                 borderRadius: 9,
-                color: tab === t ? "#F5F5F5" : "#505050",
+                color: tab === t ? "#F5F5F5" : "#9A9A9A",
                 fontSize: "0.7rem",
                 fontWeight: 600,
                 letterSpacing: "0.15em",
@@ -171,7 +171,7 @@ export default function EmployeeRequests() {
 
         {/* List */}
         {loading ? (
-          <div style={{ color: "#383838", fontSize: "0.8rem", letterSpacing: "0.1em", textAlign: "center", padding: "40px 0" }}>
+          <div style={{ color: "#9A9A9A", fontSize: "0.8rem", letterSpacing: "0.1em", textAlign: "center", padding: "40px 0" }}>
             CARGANDO
           </div>
         ) : tab === "vacaciones" ? (
@@ -196,7 +196,7 @@ export default function EmployeeRequests() {
                         <div style={{ color: "#F5F5F5", fontSize: "0.9rem", fontWeight: 500 }}>
                           {fmtDate(v.startDate)} — {fmtDate(v.endDate)}
                         </div>
-                        <div style={{ color: "#505050", fontSize: "0.75rem", marginTop: 2 }}>
+                        <div style={{ color: "#9A9A9A", fontSize: "0.75rem", marginTop: 2 }}>
                           {v.daysRequested} día{v.daysRequested !== 1 ? "s" : ""}
                         </div>
                       </div>
@@ -215,9 +215,9 @@ export default function EmployeeRequests() {
                         {s.label}
                       </span>
                     </div>
-                    {v.reason && <p style={{ color: "#404040", fontSize: "0.78rem" }}>{v.reason}</p>}
+                    {v.reason && <p style={{ color: "#9A9A9A", fontSize: "0.78rem" }}>{v.reason}</p>}
                     {v.responseNote && (
-                      <p style={{ color: "#383838", fontSize: "0.72rem", marginTop: 6, borderTop: "1px solid #1A1A1A", paddingTop: 6 }}>
+                      <p style={{ color: "#9A9A9A", fontSize: "0.72rem", marginTop: 6, borderTop: "1px solid #1A1A1A", paddingTop: 6 }}>
                         {v.responseNote}
                       </p>
                     )}
@@ -264,9 +264,9 @@ export default function EmployeeRequests() {
                         {s.label}
                       </span>
                     </div>
-                    {p.reason && <p style={{ color: "#404040", fontSize: "0.78rem" }}>{p.reason}</p>}
+                    {p.reason && <p style={{ color: "#9A9A9A", fontSize: "0.78rem" }}>{p.reason}</p>}
                     {p.responseNote && (
-                      <p style={{ color: "#383838", fontSize: "0.72rem", marginTop: 6, borderTop: "1px solid #1A1A1A", paddingTop: 6 }}>
+                      <p style={{ color: "#9A9A9A", fontSize: "0.72rem", marginTop: 6, borderTop: "1px solid #1A1A1A", paddingTop: 6 }}>
                         {p.responseNote}
                       </p>
                     )}
@@ -359,7 +359,7 @@ function EmptyState({ label }: { label: string }) {
         borderRadius: 14,
         padding: "36px 20px",
         textAlign: "center",
-        color: "#303030",
+        color: "#9A9A9A",
         fontSize: "0.8rem",
         letterSpacing: "0.05em",
       }}
@@ -395,7 +395,7 @@ function Modal({ title, children, onClose }: { title: string; children: React.Re
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
           <h3 style={{ color: "#F5F5F5", fontSize: "1rem", fontWeight: 600 }}>{title}</h3>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: "#505050", fontSize: "1.2rem", cursor: "pointer", lineHeight: 1 }}>×</button>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: "#9A9A9A", fontSize: "1.2rem", cursor: "pointer", lineHeight: 1 }}>×</button>
         </div>
         {children}
       </div>
@@ -415,7 +415,7 @@ function ModalButtons({ onCancel, saving }: { onCancel: () => void; saving: bool
           background: "transparent",
           border: "1px solid #2A2A2A",
           borderRadius: 10,
-          color: "#505050",
+          color: "#9A9A9A",
           fontSize: "0.85rem",
           cursor: "pointer",
         }}
@@ -431,7 +431,7 @@ function ModalButtons({ onCancel, saving }: { onCancel: () => void; saving: bool
           background: saving ? "#1A1A1A" : "#F5F5F5",
           border: "none",
           borderRadius: 10,
-          color: saving ? "#505050" : "#0A0A0A",
+          color: saving ? "#9A9A9A" : "#0A0A0A",
           fontSize: "0.85rem",
           fontWeight: 600,
           cursor: saving ? "not-allowed" : "pointer",

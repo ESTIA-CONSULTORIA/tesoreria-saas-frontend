@@ -23,7 +23,7 @@ function Field({ label, value }: { label: string; value?: string | number | null
   if (!value) return null;
   return (
     <div style={{ padding: "14px 0", borderBottom: "1px solid #141414" }}>
-      <div style={{ color: "#383838", fontSize: "0.6rem", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 4 }}>
+      <div style={{ color: "#9A9A9A", fontSize: "0.6rem", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 4 }}>
         {label}
       </div>
       <div style={{ color: "#D0D0D0", fontSize: "0.92rem" }}>{String(value)}</div>
@@ -65,11 +65,11 @@ export default function EmployeeProfile() {
         <h1 style={{ color: "#F5F5F5", fontSize: "1.2rem", fontWeight: 600, marginBottom: 24 }}>Mi Perfil</h1>
 
         {loading ? (
-          <div style={{ color: "#383838", fontSize: "0.8rem", letterSpacing: "0.1em", textAlign: "center", padding: "40px 0" }}>
+          <div style={{ color: "#9A9A9A", fontSize: "0.8rem", letterSpacing: "0.1em", textAlign: "center", padding: "40px 0" }}>
             CARGANDO
           </div>
         ) : !employee ? (
-          <div style={{ color: "#383838", fontSize: "0.85rem", textAlign: "center", padding: "40px 0" }}>
+          <div style={{ color: "#9A9A9A", fontSize: "0.85rem", textAlign: "center", padding: "40px 0" }}>
             No se encontró perfil de empleado vinculado.
           </div>
         ) : (
@@ -86,7 +86,7 @@ export default function EmployeeProfile() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "#505050",
+                  color: "#9A9A9A",
                   fontSize: "1.4rem",
                   fontWeight: 700,
                   flexShrink: 0,
@@ -99,7 +99,7 @@ export default function EmployeeProfile() {
                   {employee.nombre} {employee.apellidos ?? ""}
                 </div>
                 {employee.puesto && (
-                  <div style={{ color: "#505050", fontSize: "0.8rem", marginTop: 2 }}>{employee.puesto}</div>
+                  <div style={{ color: "#9A9A9A", fontSize: "0.8rem", marginTop: 2 }}>{employee.puesto}</div>
                 )}
               </div>
             </div>

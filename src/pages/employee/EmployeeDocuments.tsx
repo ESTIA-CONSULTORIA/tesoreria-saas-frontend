@@ -40,7 +40,7 @@ export default function EmployeeDocuments() {
         </h1>
 
         {loading ? (
-          <div style={{ color: "#383838", fontSize: "0.8rem", letterSpacing: "0.1em", textAlign: "center", padding: "40px 0" }}>
+          <div style={{ color: "#9A9A9A", fontSize: "0.8rem", letterSpacing: "0.1em", textAlign: "center", padding: "40px 0" }}>
             CARGANDO
           </div>
         ) : documents.length === 0 ? (
@@ -51,7 +51,7 @@ export default function EmployeeDocuments() {
               borderRadius: 14,
               padding: "48px 20px",
               textAlign: "center",
-              color: "#303030",
+              color: "#9A9A9A",
               fontSize: "0.8rem",
               letterSpacing: "0.05em",
             }}
@@ -84,7 +84,7 @@ export default function EmployeeDocuments() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "#383838",
+                    color: "#9A9A9A",
                     fontSize: 18,
                     flexShrink: 0,
                   }}
@@ -106,7 +106,7 @@ export default function EmployeeDocuments() {
                   >
                     {doc.nombre}
                   </div>
-                  <div style={{ color: "#383838", fontSize: "0.7rem", marginTop: 3 }}>
+                  <div style={{ color: "#9A9A9A", fontSize: "0.7rem", marginTop: 3 }}>
                     {doc.tipo} · {new Date(doc.uploadedAt).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}
                   </div>
                 </div>
