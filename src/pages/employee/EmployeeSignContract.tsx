@@ -170,7 +170,7 @@ export default function EmployeeSignContract() {
         <h1 style={{ color: "#F5F5F5", fontSize: "1.2rem", fontWeight: 600, marginBottom: 6 }}>
           Firma electrónica
         </h1>
-        <p style={{ color: "#505050", fontSize: "0.78rem", marginBottom: 24 }}>
+        <p style={{ color: "#9A9A9A", fontSize: "0.78rem", marginBottom: 24 }}>
           Necesitamos verificar tu identidad antes de firmar — INE, una foto tuya y tu firma.
         </p>
 
@@ -196,7 +196,7 @@ export default function EmployeeSignContract() {
 
         {step === "verifying" && (
           <Card>
-            <div style={{ textAlign: "center", padding: "24px 0", color: "#383838", fontSize: "0.8rem", letterSpacing: "0.1em" }}>
+            <div style={{ textAlign: "center", padding: "24px 0", color: "#9A9A9A", fontSize: "0.8rem", letterSpacing: "0.1em" }}>
               VERIFICANDO INE...
             </div>
           </Card>
@@ -233,7 +233,7 @@ export default function EmployeeSignContract() {
             <div style={{ color: "#EF4444", fontSize: "0.85rem", fontWeight: 600, marginBottom: 8 }}>
               No pudimos confirmar tu identidad
             </div>
-            <p style={{ color: "#505050", fontSize: "0.78rem", marginBottom: 16 }}>
+            <p style={{ color: "#9A9A9A", fontSize: "0.78rem", marginBottom: 16 }}>
               Los datos de tu INE no coinciden con tu expediente. Contacta a Recursos Humanos antes de continuar — no se puede firmar con esta discrepancia.
             </p>
             {comparison.map((c) => (
@@ -266,7 +266,7 @@ export default function EmployeeSignContract() {
         {step === "signature" && (
           <Card>
             <StepLabel n={3} total={3} label="Tu firma" />
-            <p style={{ color: "#505050", fontSize: "0.78rem", marginBottom: 12 }}>
+            <p style={{ color: "#9A9A9A", fontSize: "0.78rem", marginBottom: 12 }}>
               Dibuja tu firma con el dedo dentro del recuadro.
             </p>
             <canvas
@@ -295,7 +295,7 @@ export default function EmployeeSignContract() {
 
         {step === "sending" && (
           <Card>
-            <div style={{ textAlign: "center", padding: "24px 0", color: "#383838", fontSize: "0.8rem", letterSpacing: "0.1em" }}>
+            <div style={{ textAlign: "center", padding: "24px 0", color: "#9A9A9A", fontSize: "0.8rem", letterSpacing: "0.1em" }}>
               REGISTRANDO FIRMA...
             </div>
           </Card>
@@ -306,7 +306,7 @@ export default function EmployeeSignContract() {
             <div style={{ color: "#22C55E", fontSize: "0.95rem", fontWeight: 600, marginBottom: 8 }}>
               ✓ Contrato firmado
             </div>
-            <p style={{ color: "#505050", fontSize: "0.78rem", marginBottom: 16 }}>
+            <p style={{ color: "#9A9A9A", fontSize: "0.78rem", marginBottom: 16 }}>
               Puedes ver el contrato firmado y la constancia de firma en "Mis Documentos".
             </p>
             <PrimaryButton label="Ir a Documentos" onClick={() => navigate("/employee/documents")} />
@@ -333,7 +333,7 @@ function Card({ children }: { children: React.ReactNode }) {
 
 function StepLabel({ n, total, label }: { n: number; total: number; label: string }) {
   return (
-    <div style={{ fontSize: "0.62rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "#383838", marginBottom: 10 }}>
+    <div style={{ fontSize: "0.62rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "#9A9A9A", marginBottom: 10 }}>
       Paso {n} de {total} · {label}
     </div>
   );
@@ -462,10 +462,10 @@ function LiveCameraCapture({
 
   return (
     <div>
-      <p style={{ color: "#505050", fontSize: "0.78rem", marginBottom: 12 }}>{instructions}</p>
+      <p style={{ color: "#9A9A9A", fontSize: "0.78rem", marginBottom: 12 }}>{instructions}</p>
 
       {cameraState === "requesting" && (
-        <div style={{ textAlign: "center", padding: "32px 0", color: "#383838", fontSize: "0.8rem", letterSpacing: "0.1em" }}>
+        <div style={{ textAlign: "center", padding: "32px 0", color: "#9A9A9A", fontSize: "0.8rem", letterSpacing: "0.1em" }}>
           SOLICITANDO ACCESO A LA CÁMARA...
         </div>
       )}

@@ -31,6 +31,8 @@ body, #root {
 aside, nav, [class*="sidebar"] {
   background-color: rgb(var(--nav)) !important;
 }
+/* El Portal del Empleado es oscuro fijo en todas las skins: su barra inferior no toma el color de nav de la skin */
+nav[data-portal-nav] { background-color: #080808 !important; }
 
 /* Override Tailwind bg colors */
 .bg-white { background-color: rgb(var(--surface-1)) !important; }

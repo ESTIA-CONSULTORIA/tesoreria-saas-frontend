@@ -164,7 +164,7 @@ export default function EmployeeHome() {
     return (
       <EmployeeLayout>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh" }}>
-          <div style={{ color: "#383838", fontSize: "0.8rem", letterSpacing: "0.1em" }}>CARGANDO</div>
+          <div style={{ color: "#9A9A9A", fontSize: "0.8rem", letterSpacing: "0.1em" }}>CARGANDO</div>
         </div>
       </EmployeeLayout>
     );
@@ -178,7 +178,7 @@ export default function EmployeeHome() {
     none: {
       label: "SIN REGISTRO",
       sublabel: "No has registrado entrada hoy",
-      dot: "#383838",
+      dot: "#9A9A9A",
       dotGlow: "none",
     },
     in: {
@@ -203,14 +203,14 @@ export default function EmployeeHome() {
       <div style={{ padding: "28px 20px 0" }}>
         {/* Greeting */}
         <div style={{ marginBottom: 20 }}>
-          <p style={{ color: "#383838", fontSize: "0.7rem", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 4 }}>
+          <p style={{ color: "#9A9A9A", fontSize: "0.7rem", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 4 }}>
             {formatDate()}
           </p>
           <h1 style={{ color: "#F5F5F5", fontSize: "1.35rem", fontWeight: 600, lineHeight: 1.2 }}>
             {employee ? `Hola, ${employee.nombre.split(" ")[0]}` : "Portal del Empleado"}
           </h1>
           {employee?.puesto && (
-            <p style={{ color: "#505050", fontSize: "0.8rem", marginTop: 3 }}>{employee.puesto}</p>
+            <p style={{ color: "#9A9A9A", fontSize: "0.8rem", marginTop: 3 }}>{employee.puesto}</p>
           )}
         </div>
 
@@ -220,7 +220,7 @@ export default function EmployeeHome() {
             background: "#0E0E0E", border: "1px solid #1C1C1C",
             borderRadius: 14, padding: "14px 16px", marginBottom: 12,
           }}>
-            <div style={{ fontSize: "0.62rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "#383838", marginBottom: 10 }}>
+            <div style={{ fontSize: "0.62rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "#9A9A9A", marginBottom: 10 }}>
               Información
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 16px" }}>
@@ -250,7 +250,7 @@ export default function EmployeeHome() {
               <div style={{ color: "#F5F5F5", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.12em" }}>
                 {cfg.label}
               </div>
-              <div style={{ color: "#505050", fontSize: "0.72rem", marginTop: 2 }}>{cfg.sublabel}</div>
+              <div style={{ color: "#9A9A9A", fontSize: "0.72rem", marginTop: 2 }}>{cfg.sublabel}</div>
             </div>
           </div>
 
@@ -261,7 +261,7 @@ export default function EmployeeHome() {
               background: "#0A0A0A", borderRadius: 12, padding: "14px 16px",
             }}>
               <div style={{ flex: 1 }}>
-                <div style={{ color: "#383838", fontSize: "0.6rem", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 4 }}>
+                <div style={{ color: "#9A9A9A", fontSize: "0.6rem", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 4 }}>
                   Entrada
                 </div>
                 <div style={{ color: "#22C55E", fontSize: "1.4rem", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
@@ -272,7 +272,7 @@ export default function EmployeeHome() {
                 <>
                   <div style={{ width: 1, background: "#1C1C1C", margin: "4px 0" }} />
                   <div style={{ flex: 1 }}>
-                    <div style={{ color: "#383838", fontSize: "0.6rem", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 4 }}>
+                    <div style={{ color: "#9A9A9A", fontSize: "0.6rem", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 4 }}>
                       Salida
                     </div>
                     <div style={{ color: "#3B82F6", fontSize: "1.4rem", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
@@ -293,7 +293,7 @@ export default function EmployeeHome() {
                 width: "100%", padding: "15px",
                 background: working ? "#1A1A1A" : "#22C55E15",
                 border: "1px solid #22C55E40", borderRadius: 12,
-                color: working ? "#383838" : "#22C55E",
+                color: working ? "#9A9A9A" : "#22C55E",
                 fontSize: "0.85rem", fontWeight: 600, letterSpacing: "0.08em",
                 cursor: working ? "not-allowed" : "pointer",
               }}
@@ -310,7 +310,7 @@ export default function EmployeeHome() {
                 width: "100%", padding: "15px",
                 background: working ? "#1A1A1A" : "#EF444415",
                 border: "1px solid #EF444440", borderRadius: 12,
-                color: working ? "#383838" : "#EF4444",
+                color: working ? "#9A9A9A" : "#EF4444",
                 fontSize: "0.85rem", fontWeight: 600, letterSpacing: "0.08em",
                 cursor: working ? "not-allowed" : "pointer",
               }}
@@ -343,7 +343,7 @@ export default function EmployeeHome() {
         {attendance?.method && (
           <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
             <span style={{
-              fontSize: "0.6rem", color: "#303030", letterSpacing: "0.12em",
+              fontSize: "0.6rem", color: "#9A9A9A", letterSpacing: "0.12em",
               border: "1px solid #1C1C1C", borderRadius: 6, padding: "3px 8px",
             }}>
               {attendance.method}
@@ -357,27 +357,27 @@ export default function EmployeeHome() {
             background: "#0E0E0E", border: "1px solid #1C1C1C",
             borderRadius: 14, padding: "14px 16px", marginBottom: 12,
           }}>
-            <div style={{ fontSize: "0.62rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "#383838", marginBottom: 10 }}>
+            <div style={{ fontSize: "0.62rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "#9A9A9A", marginBottom: 10 }}>
               Últimas asistencias
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {recentAttendance.map((rec) => (
                 <div key={rec.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: "0.75rem", color: "#505050" }}>
+                  <span style={{ fontSize: "0.75rem", color: "#9A9A9A" }}>
                     {formatShortDate(rec.date)}
                   </span>
                   <div style={{ display: "flex", gap: 12 }}>
-                    <span style={{ fontSize: "0.75rem", color: rec.checkIn ? "#22C55E" : "#383838", fontVariantNumeric: "tabular-nums" }}>
+                    <span style={{ fontSize: "0.75rem", color: rec.checkIn ? "#22C55E" : "#9A9A9A", fontVariantNumeric: "tabular-nums" }}>
                       {formatTime(rec.checkIn)}
                     </span>
-                    <span style={{ fontSize: "0.75rem", color: "#303030" }}>→</span>
-                    <span style={{ fontSize: "0.75rem", color: rec.checkOut ? "#3B82F6" : "#383838", fontVariantNumeric: "tabular-nums" }}>
+                    <span style={{ fontSize: "0.75rem", color: "#9A9A9A" }}>→</span>
+                    <span style={{ fontSize: "0.75rem", color: rec.checkOut ? "#3B82F6" : "#9A9A9A", fontVariantNumeric: "tabular-nums" }}>
                       {formatTime(rec.checkOut)}
                     </span>
                   </div>
                   <span style={{
                     fontSize: "0.6rem", letterSpacing: "0.08em",
-                    color: rec.status === "PRESENTE" ? "#22C55E" : rec.status === "TARDANZA" ? "#F59E0B" : "#505050",
+                    color: rec.status === "PRESENTE" ? "#22C55E" : rec.status === "TARDANZA" ? "#F59E0B" : "#9A9A9A",
                   }}>
                     {rec.status ?? ""}
                   </span>
@@ -421,7 +421,7 @@ export default function EmployeeHome() {
             background: "#0E0E0E", border: "1px solid #1C1C1C",
             borderRadius: 14, padding: "14px 16px", marginBottom: 28,
           }}>
-            <div style={{ fontSize: "0.62rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "#383838", marginBottom: 10 }}>
+            <div style={{ fontSize: "0.62rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "#9A9A9A", marginBottom: 10 }}>
               Solicitudes pendientes ({totalPending})
             </div>
             {pendingVac.map((v) => (
@@ -431,7 +431,7 @@ export default function EmployeeHome() {
               }}>
                 <div>
                   <span style={{ fontSize: "0.72rem", color: "#c8cdd8" }}>Vacaciones</span>
-                  {v.reason && <span style={{ fontSize: "0.68rem", color: "#505050", marginLeft: 6 }}>{v.reason}</span>}
+                  {v.reason && <span style={{ fontSize: "0.68rem", color: "#9A9A9A", marginLeft: 6 }}>{v.reason}</span>}
                 </div>
                 <div style={{ fontSize: "0.68rem", color: "#6b7280" }}>
                   {formatShortDate(v.startDate)} – {formatShortDate(v.endDate)}
@@ -445,7 +445,7 @@ export default function EmployeeHome() {
               }}>
                 <div>
                   <span style={{ fontSize: "0.72rem", color: "#c8cdd8" }}>Permiso</span>
-                  {p.type && <span style={{ fontSize: "0.68rem", color: "#505050", marginLeft: 6 }}>{p.type}</span>}
+                  {p.type && <span style={{ fontSize: "0.68rem", color: "#9A9A9A", marginLeft: 6 }}>{p.type}</span>}
                 </div>
                 <div style={{ fontSize: "0.68rem", color: "#6b7280" }}>
                   {formatShortDate(p.date)} · {p.hours}h
@@ -462,7 +462,7 @@ export default function EmployeeHome() {
 function InfoField({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div style={{ fontSize: "0.6rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "#383838", marginBottom: 2 }}>
+      <div style={{ fontSize: "0.6rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "#9A9A9A", marginBottom: 2 }}>
         {label}
       </div>
       <div style={{ fontSize: "0.78rem", color: "#c8cdd8" }}>{value}</div>

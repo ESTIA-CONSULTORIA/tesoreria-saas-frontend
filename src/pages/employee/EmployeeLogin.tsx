@@ -74,7 +74,7 @@ export default function EmployeeLogin() {
         </h1>
         <p
           style={{
-            color: "#505050",
+            color: "#9A9A9A",
             fontSize: "0.8rem",
             textAlign: "center",
             marginBottom: 36,
@@ -90,7 +90,7 @@ export default function EmployeeLogin() {
               style={{
                 display: "block",
                 fontSize: "0.65rem",
-                color: "#505050",
+                color: "#9A9A9A",
                 letterSpacing: "0.15em",
                 textTransform: "uppercase",
                 marginBottom: 8,
@@ -125,7 +125,7 @@ export default function EmployeeLogin() {
               style={{
                 display: "block",
                 fontSize: "0.65rem",
-                color: "#505050",
+                color: "#9A9A9A",
                 letterSpacing: "0.15em",
                 textTransform: "uppercase",
                 marginBottom: 8,
