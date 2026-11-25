@@ -48,7 +48,7 @@ export default function ExecutiveTable<T extends { id?: string }>({
         borderRadius: '6px', 
         padding: '48px', 
         textAlign: 'center',
-        color: '#7E7E7E',
+        color: '#9A9A9A',
       }}>
         {emptyMessage}
       </div>
@@ -73,7 +73,7 @@ export default function ExecutiveTable<T extends { id?: string }>({
                   textAlign: column.align || 'left',
                   fontSize: '12px',
                   fontWeight: 600,
-                  color: '#7E7E7E',
+                  color: '#9A9A9A',
                   letterSpacing: '0.05em',
                   textTransform: 'uppercase',
                   width: column.width,

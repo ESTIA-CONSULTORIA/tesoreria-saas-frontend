@@ -400,7 +400,7 @@ export default function TreasuryPage() {
                             padding: '4px 8px',
                             borderRadius: '4px',
                             backgroundColor: alert.daysUntil < 7 ? '#2D2D2D' : alert.daysUntil < 15 ? '#2D2D2D' : '#2D2D2D',
-                            color: alert.daysUntil < 7 ? '#C53030' : alert.daysUntil < 15 ? '#B7791F' : '#2F855A',
+                            color: alert.daysUntil < 7 ? '#E5736F' : alert.daysUntil < 15 ? '#D9A441' : '#4CAF7A',
                           }}>
                             {alert.daysUntil < 7 ? "CRÍTICO" : alert.daysUntil < 15 ? "ADVERTENCIA" : "PROGRAMADO"}
                           </span>
@@ -417,12 +417,12 @@ export default function TreasuryPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {alerts.lowBalanceAccounts?.length > 0 && (
                       <div style={{ padding: '16px', borderRadius: '4px', backgroundColor: '#0F0F0F', border: '1px solid #C53030' }}>
-                        <p style={{ color: '#C53030', fontWeight: 600 }}>🏦 Saldo Bajo: {alerts.lowBalanceAccounts.length}</p>
+                        <p style={{ color: '#E5736F', fontWeight: 600 }}>🏦 Saldo Bajo: {alerts.lowBalanceAccounts.length}</p>
                       </div>
                     )}
                     {alerts.overdueAlerts?.length > 0 && (
                       <div style={{ padding: '16px', borderRadius: '4px', backgroundColor: '#0F0F0F', border: '1px solid #C53030' }}>
-                        <p style={{ color: '#C53030', fontWeight: 600 }}>📄 Vencidos: {alerts.overdueAlerts.length}</p>
+                        <p style={{ color: '#E5736F', fontWeight: 600 }}>📄 Vencidos: {alerts.overdueAlerts.length}</p>
                       </div>
                     )}
                     {alerts.pendingAlerts?.length > 0 && (
@@ -444,7 +444,7 @@ export default function TreasuryPage() {
             <div className="space-y-6">
               {/* Resumen */}
               <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '24px' }}>
-                <p style={{ fontSize: '12px', color: '#7E7E7E', marginBottom: '8px', letterSpacing: '0.05em' }}>TOTAL CONSOLIDADO</p>
+                <p style={{ fontSize: '12px', color: '#9A9A9A', marginBottom: '8px', letterSpacing: '0.05em' }}>TOTAL CONSOLIDADO</p>
                 <p style={{ fontSize: '36px', fontWeight: 600, color: '#F5F5F5', fontFamily: 'monospace' }}>
                   ${Number(bankPosition.totalBalance || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
@@ -457,12 +457,12 @@ export default function TreasuryPage() {
                   <table className="w-full min-w-[700px]">
                     <thead style={{ backgroundColor: '#0F0F0F', borderBottom: '1px solid #2D2D2D' }}>
                       <tr>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Cuenta</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Banco</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Saldo</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Variación Hoy</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Status</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Acciones</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Cuenta</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Banco</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Saldo</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Variación Hoy</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Status</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -478,7 +478,7 @@ export default function TreasuryPage() {
                         >
                           <td style={{ padding: '12px 16px' }}>
                             <p style={{ fontWeight: 500, color: '#F5F5F5', fontSize: '13px' }}>{account.name}</p>
-                            <p style={{ fontSize: '12px', color: '#7E7E7E' }}>{account.accountNumber}</p>
+                            <p style={{ fontSize: '12px', color: '#9A9A9A' }}>{account.accountNumber}</p>
                           </td>
                           <td style={{ padding: '12px 16px', fontSize: '13px', color: '#A3A3A3' }}>{account.bank}</td>
                           <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: '#F5F5F5', fontSize: '13px' }}>
@@ -489,7 +489,7 @@ export default function TreasuryPage() {
                             textAlign: 'right', 
                             fontSize: '13px', 
                             fontWeight: 600,
-                            color: account.todayNet >= 0 ? '#2F855A' : '#C53030'
+                            color: account.todayNet >= 0 ? '#4CAF7A' : '#E5736F'
                           }}>
                             {account.todayNet >= 0 ? "+" : ""}${Number(account.todayNet).toFixed(2)}
                           </td>
@@ -564,7 +564,7 @@ export default function TreasuryPage() {
                         traslados internos. */}
                     {isAdminOrSoporte && (
                       <div>
-                        <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Tipo de Traslado</label>
+                        <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>Tipo de Traslado</label>
                         <select
                           value={transferForm.tipo}
                           onChange={(e) => setTransferForm({ ...transferForm, tipo: e.target.value as any })}
@@ -584,7 +584,7 @@ export default function TreasuryPage() {
                     {transferForm.tipo === "INTERCOMPAÑIA" && isAdminOrSoporte && (
                       <>
                         <div>
-                          <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Empresa Origen</label>
+                          <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>Empresa Origen</label>
                           <select
                             value={transferForm.empresaOrigenId}
                             onChange={(e) => setTransferForm({ ...transferForm, empresaOrigenId: e.target.value })}
@@ -604,7 +604,7 @@ export default function TreasuryPage() {
                           </select>
                         </div>
                         <div>
-                          <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Empresa Destino</label>
+                          <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>Empresa Destino</label>
                           <select
                             value={transferForm.empresaDestinoId}
                             onChange={(e) => setTransferForm({ ...transferForm, empresaDestinoId: e.target.value })}
@@ -626,7 +626,7 @@ export default function TreasuryPage() {
                       </>
                     )}
                     <div>
-                      <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Cuenta Origen</label>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>Cuenta Origen</label>
                       <select 
                         value={transferForm.cuentaOrigenId}
                         onChange={(e) => setTransferForm({ ...transferForm, cuentaOrigenId: e.target.value })}
@@ -647,7 +647,7 @@ export default function TreasuryPage() {
                       </select>
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Cuenta Destino</label>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>Cuenta Destino</label>
                       <select 
                         value={transferForm.cuentaDestinoId}
                         onChange={(e) => setTransferForm({ ...transferForm, cuentaDestinoId: e.target.value })}
@@ -668,7 +668,7 @@ export default function TreasuryPage() {
                       </select>
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Monto</label>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>Monto</label>
                       <input
                         type="number"
                         step="0.01"
@@ -688,7 +688,7 @@ export default function TreasuryPage() {
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Concepto</label>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>Concepto</label>
                       <input
                         type="text"
                         value={transferForm.concept}
@@ -707,7 +707,7 @@ export default function TreasuryPage() {
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Referencia (opcional)</label>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>Referencia (opcional)</label>
                       <input
                         type="text"
                         value={transferForm.referencia}
@@ -726,7 +726,7 @@ export default function TreasuryPage() {
                     </div>
                     {transferForm.tipo === "INTERCOMPAÑIA" && (
                       <div>
-                        <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Motivo del traslado (opcional)</label>
+                        <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>Motivo del traslado (opcional)</label>
                         <input
                           type="text"
                           value={transferForm.motivo}
@@ -769,7 +769,7 @@ export default function TreasuryPage() {
                   <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '16px' }}>Historial de Traslados</h3>
                   <div className="space-y-2">
                     {transferHistory.length === 0 ? (
-                      <p style={{ color: '#7E7E7E', textAlign: 'center', padding: '32px' }}>No hay traslados recientes</p>
+                      <p style={{ color: '#9A9A9A', textAlign: 'center', padding: '32px' }}>No hay traslados recientes</p>
                     ) : (
                       transferHistory.map((t: any) => (
                         <div key={t.id} style={{ padding: '12px', borderRadius: '4px', border: '1px solid #2D2D2D', backgroundColor: '#0F0F0F' }}>
@@ -789,10 +789,10 @@ export default function TreasuryPage() {
                               {t.status}
                             </span>
                           </div>
-                          <p style={{ color: '#7E7E7E', fontSize: '12px', marginTop: '4px' }}>
+                          <p style={{ color: '#9A9A9A', fontSize: '12px', marginTop: '4px' }}>
                             {getTransferAccountName(t.fromAccountId)} → {getTransferAccountName(t.toAccountId)}
                           </p>
-                          <p style={{ color: '#7E7E7E', fontSize: '12px', marginTop: '2px' }}>
+                          <p style={{ color: '#9A9A9A', fontSize: '12px', marginTop: '2px' }}>
                             {t.concept || 'Sin concepto'} · {new Date(t.createdAt).toLocaleDateString('es-MX')}
                           </p>
                         </div>
@@ -834,7 +834,7 @@ export default function TreasuryPage() {
               <div>
                 <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '16px' }}>Facturas pendientes de pago</h3>
                 {accountsPayable.length === 0 ? (
-                  <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '32px', textAlign: 'center', color: '#7E7E7E' }}>
+                  <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '32px', textAlign: 'center', color: '#9A9A9A' }}>
                     No hay facturas pendientes de pago
                   </div>
                 ) : (
@@ -843,13 +843,13 @@ export default function TreasuryPage() {
                     <table className="w-full" style={{ minWidth: '700px' }}>
                       <thead style={{ backgroundColor: '#0F0F0F', borderBottom: '1px solid #2D2D2D' }}>
                         <tr>
-                          <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Proveedor</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Factura #</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Saldo pendiente</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Vencimiento</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Días restantes</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Status</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Acciones</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Proveedor</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Factura #</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Saldo pendiente</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Vencimiento</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Días restantes</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Status</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Acciones</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -929,7 +929,7 @@ export default function TreasuryPage() {
               {showScheduledPayments && (
                 <div style={{ borderTop: '1px solid #2D2D2D', paddingTop: '24px' }}>
                   <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '16px' }}>Pagos programados</h3>
-                  <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '32px', textAlign: 'center', color: '#7E7E7E' }}>
+                  <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '32px', textAlign: 'center', color: '#9A9A9A' }}>
                     No hay pagos programados
                   </div>
                 </div>
@@ -944,7 +944,7 @@ export default function TreasuryPage() {
               <p className="text-content-2" style={{ fontSize: '12px', marginTop: 0, marginBottom: '16px' }}>Son cobros que ya entraron a tus cuentas, no saldos pendientes de clientes.</p>
 
               {accountsReceivable.length === 0 ? (
-                <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '32px', textAlign: 'center', color: '#7E7E7E' }}>
+                <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '32px', textAlign: 'center', color: '#9A9A9A' }}>
                   No hay ingresos cobrados en los últimos 90 días
                 </div>
               ) : (
@@ -953,11 +953,11 @@ export default function TreasuryPage() {
                   <table className="w-full" style={{ minWidth: '600px' }}>
                     <thead style={{ backgroundColor: '#0F0F0F', borderBottom: '1px solid #2D2D2D' }}>
                       <tr>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Concepto</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Monto</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Fecha de cobro</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Hace</th>
-                        <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Estado</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Concepto</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Monto</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Fecha de cobro</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Hace</th>
+                        <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Estado</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1012,7 +1012,7 @@ export default function TreasuryPage() {
                 <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F5F5', marginBottom: '16px' }}>Configuración de Alertas</h3>
                 <form onSubmit={handleAlertConfigSave} className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Saldo Mínimo ($)</label>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>Saldo Mínimo ($)</label>
                     <input
                       type="number"
                       value={alertForm.saldoMinimo}
@@ -1031,7 +1031,7 @@ export default function TreasuryPage() {
                     />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Días Anticipación</label>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>Días Anticipación</label>
                     <input
                       type="number"
                       value={alertForm.diasAnticipacionAlerta}
@@ -1123,7 +1123,7 @@ export default function TreasuryPage() {
           {activeTab === "antiguedad" && (
             <div className="space-y-6">
               {!agingReport ? (
-                <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '32px', textAlign: 'center', color: '#7E7E7E' }}>
+                <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '32px', textAlign: 'center', color: '#9A9A9A' }}>
                   Sin datos de antigüedad disponibles
                 </div>
               ) : (
@@ -1137,7 +1137,7 @@ export default function TreasuryPage() {
                       { label: "+90 días", key: "bucket90plus", color: "#EF4444" },
                     ].map(({ label, key, color }) => (
                       <div key={key} style={{ backgroundColor: '#161616', border: `1px solid ${color}44`, borderRadius: '6px', padding: '20px' }}>
-                        <p style={{ fontSize: '11px', color: '#7E7E7E', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
+                        <p style={{ fontSize: '11px', color: '#9A9A9A', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
                         <p style={{ fontSize: '24px', fontWeight: 700, color, fontFamily: 'monospace' }}>
                           ${Number(agingReport[key] ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                         </p>
@@ -1149,13 +1149,13 @@ export default function TreasuryPage() {
                   <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px' }}>
                     <h3 style={{ padding: '16px 24px', fontSize: '14px', fontWeight: 600, color: '#F5F5F5', borderBottom: '1px solid #2D2D2D' }}>Detalle de antigüedad</h3>
                     {(agingReport.items ?? []).length === 0 ? (
-                      <div style={{ padding: '32px', textAlign: 'center', color: '#7E7E7E' }}>Sin facturas vencidas</div>
+                      <div style={{ padding: '32px', textAlign: 'center', color: '#9A9A9A' }}>Sin facturas vencidas</div>
                     ) : (
                       <table className="w-full text-sm">
                         <thead style={{ backgroundColor: '#0F0F0F' }}>
                           <tr>
                             {["Proveedor", "Folio", "Monto", "Días vencido", "Fecha vencimiento"].map((h) => (
-                              <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: '11px', color: '#7E7E7E', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
+                              <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: '11px', color: '#9A9A9A', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
                             ))}
                           </tr>
                         </thead>
@@ -1191,7 +1191,7 @@ export default function TreasuryPage() {
               <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', overflow: 'hidden' }}>
                 <h3 style={{ padding: '16px 24px', fontSize: '14px', fontWeight: 600, color: '#F5F5F5', borderBottom: '1px solid #2D2D2D' }}>Turnos con efectivo pendiente</h3>
                 {pendingDeposits.length === 0 ? (
-                  <div style={{ padding: '32px', textAlign: 'center', color: '#7E7E7E' }}>Sin depósitos pendientes</div>
+                  <div style={{ padding: '32px', textAlign: 'center', color: '#9A9A9A' }}>Sin depósitos pendientes</div>
                 ) : (
                   <div>
                     {pendingDeposits.map((shift: any) => (
@@ -1210,11 +1210,11 @@ export default function TreasuryPage() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p style={{ fontWeight: 600, color: '#F5F5F5', fontSize: '13px' }}>{nombreUsuario(shift.cajero, directorioUsuarios, shift.cashierName ?? 'Cajero')}</p>
-                            <p style={{ fontSize: '12px', color: '#7E7E7E' }}>{shift.fecha ? new Date(shift.fecha).toLocaleDateString('es-MX') : '—'}</p>
+                            <p style={{ fontSize: '12px', color: '#9A9A9A' }}>{shift.fecha ? new Date(shift.fecha).toLocaleDateString('es-MX') : '—'}</p>
                           </div>
                           <div style={{ textAlign: 'right' }}>
                             <p style={{ fontWeight: 700, color: '#22C55E', fontFamily: 'monospace' }}>${Number(shift.totalEfectivo ?? shift.montoDepositar ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
-                            <p style={{ fontSize: '11px', color: '#7E7E7E' }}>a depositar</p>
+                            <p style={{ fontSize: '11px', color: '#9A9A9A' }}>a depositar</p>
                           </div>
                         </div>
                       </div>
@@ -1226,7 +1226,7 @@ export default function TreasuryPage() {
               {/* Panel derecho: detalle + confirmación */}
               <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '24px' }}>
                 {!selectedShift ? (
-                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7E7E7E', minHeight: '200px' }}>
+                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9A9A9A', minHeight: '200px' }}>
                     Selecciona un turno para ver el detalle
                   </div>
                 ) : (
@@ -1251,7 +1251,7 @@ export default function TreasuryPage() {
 
                     {/* Banco destino */}
                     <div>
-                      <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Cuenta bancaria destino</label>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>Cuenta bancaria destino</label>
                       <select
                         value={depositBankId}
                         onChange={(e) => setDepositBankId(e.target.value)}
@@ -1266,7 +1266,7 @@ export default function TreasuryPage() {
 
                     {/* Monto */}
                     <div>
-                      <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>Monto a depositar</label>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>Monto a depositar</label>
                       <input
                         type="number"
                         step="0.01"
@@ -1300,7 +1300,7 @@ export default function TreasuryPage() {
                         padding: '12px',
                         borderRadius: '4px',
                         backgroundColor: depositBankId && depositAmount ? '#C0C0C0' : '#2D2D2D',
-                        color: depositBankId && depositAmount ? '#0A0A0A' : '#7E7E7E',
+                        color: depositBankId && depositAmount ? '#0A0A0A' : '#9A9A9A',
                         fontWeight: 600,
                         fontSize: '14px',
                         cursor: depositBankId && depositAmount ? 'pointer' : 'not-allowed',

@@ -83,7 +83,7 @@ export default function ESTIAExecutiveAccess() {
             </p>
           </div>
 
-          <p style={{ fontSize: '14px', color: '#7E7E7E', marginBottom: '24px', textAlign: 'center', letterSpacing: '0.01em' }}>
+          <p style={{ fontSize: '14px', color: '#9A9A9A', marginBottom: '24px', textAlign: 'center', letterSpacing: '0.01em' }}>
             Selecciona una empresa
           </p>
 
@@ -130,7 +130,7 @@ export default function ESTIAExecutiveAccess() {
             <h2 style={{ fontSize: '18px', fontWeight: 400, color: '#F5F5F5', marginBottom: '8px', letterSpacing: '0.01em' }}>
               {selectedCompany.name}
             </h2>
-            <p style={{ fontSize: '12px', color: '#7E7E7E', letterSpacing: '0.01em' }}>
+            <p style={{ fontSize: '12px', color: '#9A9A9A', letterSpacing: '0.01em' }}>
               Ingresa tu PIN de acceso
             </p>
           </div>
@@ -205,7 +205,7 @@ export default function ESTIAExecutiveAccess() {
               padding: '12px',
               backgroundColor: 'transparent',
               border: 'none',
-              color: '#7E7E7E',
+              color: '#9A9A9A',
               fontSize: '12px',
               letterSpacing: '0.01em',
               cursor: 'pointer',
@@ -245,7 +245,7 @@ export default function ESTIAExecutiveAccess() {
               <h1 style={{ fontSize: '16px', fontWeight: 400, color: '#F5F5F5', marginBottom: '2px', letterSpacing: '0.01em' }}>
                 {selectedCompany?.name || 'Empresa'}
               </h1>
-              <p style={{ fontSize: '12px', color: '#7E7E7E', letterSpacing: '0.01em' }}>
+              <p style={{ fontSize: '12px', color: '#9A9A9A', letterSpacing: '0.01em' }}>
                 {user?.name || 'Usuario'}
               </p>
             </div>
@@ -257,13 +257,13 @@ export default function ESTIAExecutiveAccess() {
               backgroundColor: 'transparent',
               border: '1px solid #2D2D2D',
               borderRadius: '2px',
-              color: '#7E7E7E',
+              color: '#9A9A9A',
               fontSize: '12px',
               letterSpacing: '0.01em',
               cursor: 'pointer',
             }}
             onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.color = '#BDBDBD'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.color = '#7E7E7E'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.color = '#9A9A9A'; }}
           >
             Salir
           </button>
@@ -296,7 +296,7 @@ export default function ESTIAExecutiveAccess() {
               <h3 style={{ fontSize: '16px', fontWeight: 400, color: '#F5F5F5', marginBottom: '4px', letterSpacing: '0.01em' }}>
                 {module.label}
               </h3>
-              <p style={{ fontSize: '12px', color: '#7E7E7E', letterSpacing: '0.01em' }}>
+              <p style={{ fontSize: '12px', color: '#9A9A9A', letterSpacing: '0.01em' }}>
                 {module.description}
               </p>
             </button>
@@ -324,7 +324,7 @@ export default function ESTIAExecutiveAccess() {
               padding: '8px 12px',
               backgroundColor: 'transparent',
               border: 'none',
-              color: '#7E7E7E',
+              color: '#9A9A9A',
               fontSize: '14px',
               cursor: 'pointer',
             }}
@@ -338,37 +338,37 @@ export default function ESTIAExecutiveAccess() {
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#7E7E7E' }}>
+          <div style={{ textAlign: 'center', padding: '40px', color: '#9A9A9A' }}>
             Cargando...
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {/* KPIs */}
             <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '4px', padding: '20px' }}>
-              <p style={{ fontSize: '12px', color: '#7E7E7E', marginBottom: '16px', letterSpacing: '0.01em' }}>
+              <p style={{ fontSize: '12px', color: '#9A9A9A', marginBottom: '16px', letterSpacing: '0.01em' }}>
                 Resumen del mes
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
                 <div>
-                  <p style={{ fontSize: '11px', color: '#7E7E7E', marginBottom: '4px', letterSpacing: '0.01em' }}>Ventas</p>
+                  <p style={{ fontSize: '11px', color: '#9A9A9A', marginBottom: '4px', letterSpacing: '0.01em' }}>Ventas</p>
                   <p style={{ fontSize: '24px', color: '#F5F5F5', fontWeight: 400, letterSpacing: '0.01em' }}>
                     ${ventas.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
                   </p>
                 </div>
                 <div>
-                  <p style={{ fontSize: '11px', color: '#7E7E7E', marginBottom: '4px', letterSpacing: '0.01em' }}>UAI</p>
+                  <p style={{ fontSize: '11px', color: '#9A9A9A', marginBottom: '4px', letterSpacing: '0.01em' }}>UAI</p>
                   <p style={{ fontSize: '24px', color: uai >= 0 ? '#3B7A57' : '#9B3A3A', fontWeight: 400, letterSpacing: '0.01em' }}>
                     ${uai.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
                   </p>
                 </div>
                 <div>
-                  <p style={{ fontSize: '11px', color: '#7E7E7E', marginBottom: '4px', letterSpacing: '0.01em' }}>Costo</p>
+                  <p style={{ fontSize: '11px', color: '#9A9A9A', marginBottom: '4px', letterSpacing: '0.01em' }}>Costo</p>
                   <p style={{ fontSize: '24px', color: '#F5F5F5', fontWeight: 400, letterSpacing: '0.01em' }}>
                     ${costo.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
                   </p>
                 </div>
                 <div>
-                  <p style={{ fontSize: '11px', color: '#7E7E7E', marginBottom: '4px', letterSpacing: '0.01em' }}>UDI</p>
+                  <p style={{ fontSize: '11px', color: '#9A9A9A', marginBottom: '4px', letterSpacing: '0.01em' }}>UDI</p>
                   <p style={{ fontSize: '24px', color: udi >= 0 ? '#3B7A57' : '#9B3A3A', fontWeight: 400, letterSpacing: '0.01em' }}>
                     ${udi.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
                   </p>
@@ -378,7 +378,7 @@ export default function ESTIAExecutiveAccess() {
 
             {/* Movimientos recientes */}
             <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '4px', padding: '20px' }}>
-              <p style={{ fontSize: '12px', color: '#7E7E7E', marginBottom: '16px', letterSpacing: '0.01em' }}>
+              <p style={{ fontSize: '12px', color: '#9A9A9A', marginBottom: '16px', letterSpacing: '0.01em' }}>
                 Movimientos recientes
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -386,7 +386,7 @@ export default function ESTIAExecutiveAccess() {
                   <div key={movement.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#1B1B1B', borderRadius: '2px' }}>
                     <div>
                       <p style={{ fontSize: '13px', color: '#F5F5F5', marginBottom: '2px', letterSpacing: '0.01em' }}>{movement.concept}</p>
-                      <p style={{ fontSize: '11px', color: '#7E7E7E', letterSpacing: '0.01em' }}>{movement.category}</p>
+                      <p style={{ fontSize: '11px', color: '#9A9A9A', letterSpacing: '0.01em' }}>{movement.category}</p>
                     </div>
                     <p style={{ fontSize: '14px', color: movement.type === 'INCOME' ? '#3B7A57' : '#9B3A3A', fontWeight: 400, letterSpacing: '0.01em' }}>
                       {movement.type === 'INCOME' ? '+' : '-'}${Number(movement.amount).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -426,7 +426,7 @@ export default function ESTIAExecutiveAccess() {
               padding: '8px 12px',
               backgroundColor: 'transparent',
               border: 'none',
-              color: '#7E7E7E',
+              color: '#9A9A9A',
               fontSize: '14px',
               cursor: 'pointer',
             }}
@@ -440,7 +440,7 @@ export default function ESTIAExecutiveAccess() {
         </div>
 
         <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-          <p style={{ fontSize: '14px', color: '#7E7E7E', marginBottom: '8px', letterSpacing: '0.01em' }}>
+          <p style={{ fontSize: '14px', color: '#9A9A9A', marginBottom: '8px', letterSpacing: '0.01em' }}>
             Módulo en desarrollo
           </p>
           <p style={{ fontSize: '12px', color: '#9A9A9A', letterSpacing: '0.01em' }}>

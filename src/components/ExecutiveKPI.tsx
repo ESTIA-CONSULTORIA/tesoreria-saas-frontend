@@ -22,8 +22,8 @@ export default function ExecutiveKPI({
   onClick,
 }: ExecutiveKPIProps) {
   const getTrendColor = () => {
-    if (trend === 'up') return '#2F855A';
-    if (trend === 'down') return '#C53030';
+    if (trend === 'up') return '#4CAF7A';
+    if (trend === 'down') return '#E5736F';
     return '#A3A3A3';
   };
 
