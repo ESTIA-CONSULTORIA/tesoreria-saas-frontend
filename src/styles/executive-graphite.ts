@@ -25,14 +25,14 @@ export const executiveGraphite = {
   text: {
     primary: '#F5F5F5',    // Main text
     secondary: '#A3A3A3',  // Secondary text
-    tertiary: '#7E7E7E',   // Tertiary text
+    tertiary: '#9A9A9A',   // Tertiary text
     muted: '#5A5A5A',      // Muted text
   },
 
   // Accent colors (Silver/Platinum)
   accent: {
     silver: '#C0C0C0',     // Primary accent
-    silverDark: '#7E7E7E', // Dark silver
+    silverDark: '#9A9A9A', // Dark silver
     silverLight: '#E8E8E8', // Light silver
   },
 
@@ -103,7 +103,7 @@ export const executiveGraphite = {
     border: '#2D2D2D',
     borderFocus: '#C0C0C0',
     text: '#F5F5F5',
-    placeholder: '#7E7E7E',
+    placeholder: '#9A9A9A',
   },
 
   // Shadows (subtle, no glow)
@@ -139,9 +139,9 @@ export const executiveGraphiteVars = {
   '--border-primary': '#2D2D2D',
   '--text-primary': '#F5F5F5',
   '--text-secondary': '#A3A3A3',
-  '--text-tertiary': '#7E7E7E',
+  '--text-tertiary': '#9A9A9A',
   '--accent-silver': '#C0C0C0',
-  '--accent-silver-dark': '#7E7E7E',
+  '--accent-silver-dark': '#9A9A9A',
   '--financial-positive': '#2F855A',
   '--financial-negative': '#C53030',
   '--financial-warning': '#B7791F',

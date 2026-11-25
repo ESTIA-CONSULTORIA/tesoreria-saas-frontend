@@ -196,7 +196,7 @@ export default function LoginConfigPage() {
             <div className="space-y-4">
               {/* Imagen de Fondo */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
                   Imagen de Fondo
                 </label>
                 <input
@@ -233,7 +233,7 @@ export default function LoginConfigPage() {
 
               {/* Logo */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
                   Logo
                 </label>
                 <input
@@ -269,7 +269,7 @@ export default function LoginConfigPage() {
 
               {/* Nombre de la Empresa */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
                   Nombre de la Empresa
                 </label>
                 <input
@@ -290,7 +290,7 @@ export default function LoginConfigPage() {
 
               {/* Eslogan */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
                   Eslogan
                 </label>
                 <input
@@ -320,7 +320,7 @@ export default function LoginConfigPage() {
             <div className="space-y-4">
               {/* Color Primario */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
                   Color Primario (Botones)
                 </label>
                 <div className="flex gap-2">
@@ -355,7 +355,7 @@ export default function LoginConfigPage() {
 
               {/* Color de Texto */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
                   Color de Texto
                 </label>
                 <div className="flex gap-2">
@@ -390,7 +390,7 @@ export default function LoginConfigPage() {
 
               {/* Color de Acento */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
                   Color de Acento
                 </label>
                 <div className="flex gap-2">
@@ -425,7 +425,7 @@ export default function LoginConfigPage() {
 
               {/* Transparencia de Botones */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
                   Transparencia de Botones: {Math.round(config.buttonOpacity * 100)}%
                 </label>
                 <input
@@ -444,7 +444,7 @@ export default function LoginConfigPage() {
 
               {/* Transparencia de Tarjeta */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
                   Transparencia de Tarjeta: {Math.round(config.cardOpacity * 100)}%
                 </label>
                 <input
@@ -490,7 +490,7 @@ export default function LoginConfigPage() {
 
               {/* Mensaje de Mantenimiento */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
                   Mensaje de Mantenimiento
                 </label>
                 <textarea
@@ -512,7 +512,7 @@ export default function LoginConfigPage() {
 
               {/* Fecha de Inicio */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
                   Fecha y Hora de Inicio
                 </label>
                 <input
@@ -533,7 +533,7 @@ export default function LoginConfigPage() {
 
               {/* Fecha de Fin */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
                   Fecha y Hora de Fin
                 </label>
                 <input
@@ -561,7 +561,7 @@ export default function LoginConfigPage() {
             </h3>
             
             <div>
-              <label style={{ display: 'block', fontSize: '12px', color: '#7E7E7E', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
                 Código CSS adicional (para personalizaciones avanzadas)
               </label>
               <textarea
@@ -581,7 +581,7 @@ export default function LoginConfigPage() {
                   resize: 'vertical',
                 }}
               />
-              <p style={{ fontSize: '11px', color: '#7E7E7E', marginTop: '4px' }}>
+              <p style={{ fontSize: '11px', color: '#9A9A9A', marginTop: '4px' }}>
                 ⚠️ Usa con precaución. CSS inválido puede afectar la apariencia del login.
               </p>
             </div>

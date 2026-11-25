@@ -365,13 +365,13 @@ export default function ReconciliationPage() {
                   <table className="min-w-full text-left" style={{ fontSize: '13px' }}>
                     <thead style={{ backgroundColor: '#0F0F0F', borderBottom: '1px solid #2D2D2D' }}>
                       <tr>
-                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Factura</th>
-                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Tipo</th>
-                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Monto Factura</th>
-                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Movimiento</th>
-                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Monto Movimiento</th>
-                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Cuenta</th>
-                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Fecha</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Factura</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Tipo</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Monto Factura</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Movimiento</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Monto Movimiento</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Cuenta</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Fecha</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -408,14 +408,14 @@ export default function ReconciliationPage() {
                   <table className="min-w-full text-left" style={{ fontSize: '13px' }}>
                     <thead style={{ backgroundColor: '#0F0F0F', borderBottom: '1px solid #2D2D2D' }}>
                       <tr>
-                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Número</th>
-                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Tipo</th>
-                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Estado</th>
-                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Monto</th>
-                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Vencimiento</th>
-                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Cuenta</th>
-                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Concepto</th>
-                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Acciones</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Número</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Tipo</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Estado</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Monto</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Vencimiento</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Cuenta</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Concepto</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -470,13 +470,13 @@ export default function ReconciliationPage() {
                   <table className="min-w-full text-left" style={{ fontSize: '13px' }}>
                     <thead style={{ backgroundColor: '#0F0F0F', borderBottom: '1px solid #2D2D2D' }}>
                       <tr>
-                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>ID Movimiento</th>
-                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Tipo</th>
-                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Categoría</th>
-                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Monto</th>
-                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Cuenta</th>
-                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Concepto</th>
-                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#7E7E7E', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Fecha</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>ID Movimiento</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Tipo</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Categoría</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Monto</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Cuenta</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Concepto</th>
+                        <th style={{ padding: '12px 16px', fontSize: '12px', fontWeight: 600, color: '#9A9A9A', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Fecha</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -514,7 +514,7 @@ export default function ReconciliationPage() {
               <div className="mb-6 flex items-center justify-between">
                 <div>
                   <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#F5F5F5' }}>Nueva Factura</h3>
-                  <p style={{ fontSize: '13px', color: '#7E7E7E' }}>Registro de factura para conciliación</p>
+                  <p style={{ fontSize: '13px', color: '#9A9A9A' }}>Registro de factura para conciliación</p>
                 </div>
                 <button
                   onClick={() => {
@@ -698,7 +698,7 @@ export default function ReconciliationPage() {
 
               {modalTab === "import" && (
                 <div className="text-center py-8">
-                  <p style={{ color: '#7E7E7E', marginBottom: '16px' }}>Usa el botón "Importar Facturas" en la página principal para importar múltiples facturas</p>
+                  <p style={{ color: '#9A9A9A', marginBottom: '16px' }}>Usa el botón "Importar Facturas" en la página principal para importar múltiples facturas</p>
                   <button
                     onClick={() => {
                       setModalOpen(false);
@@ -730,7 +730,7 @@ export default function ReconciliationPage() {
               <div className="mb-6 flex items-center justify-between">
                 <div>
                   <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#F5F5F5' }}>Conciliación Manual</h3>
-                  <p style={{ fontSize: '13px', color: '#7E7E7E' }}>Factura: {selectedInvoice.invoiceNumber}</p>
+                  <p style={{ fontSize: '13px', color: '#9A9A9A' }}>Factura: {selectedInvoice.invoiceNumber}</p>
                 </div>
                 <button
                   onClick={() => setReconcileModalOpen(false)}
@@ -748,7 +748,7 @@ export default function ReconciliationPage() {
                 </button>
               </div>
               <div className="space-y-4">
-                <p style={{ fontSize: '13px', color: '#7E7E7E' }}>Seleccione un movimiento para conciliar:</p>
+                <p style={{ fontSize: '13px', color: '#9A9A9A' }}>Seleccione un movimiento para conciliar:</p>
                 <div className="max-h-64 overflow-y-auto space-y-2">
                   {availableMovements.map((movement, index) => (
                     <button
@@ -767,7 +767,7 @@ export default function ReconciliationPage() {
                         <span style={{ fontSize: '13px', color: '#F5F5F5' }}>{movement.id}</span>
                         <span style={{ fontSize: '13px', color: '#A3A3A3' }}>${Number(movement.amount).toFixed(2)}</span>
                       </div>
-                      <p style={{ fontSize: '11px', color: '#7E7E7E' }}>{movement.concept || movement.category}</p>
+                      <p style={{ fontSize: '11px', color: '#9A9A9A' }}>{movement.concept || movement.category}</p>
                     </button>
                   ))}
                 </div>

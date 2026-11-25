@@ -193,11 +193,11 @@ export default function OnboardingWizard({ onComplete }: Props) {
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 12, fontWeight: 700,
                 backgroundColor: i < step ? "#4CAF50" : i === step ? "#F5F5F5" : "#2D2D2D",
-                color: i < step ? "#fff" : i === step ? "#0A0A0A" : "#7E7E7E",
+                color: i < step ? "#fff" : i === step ? "#0A0A0A" : "#9A9A9A",
               }}>
                 {i < step ? "✓" : i + 1}
               </div>
-              <div style={{ fontSize: 10, color: i === step ? "#F5F5F5" : "#7E7E7E" }}>{s.label}</div>
+              <div style={{ fontSize: 10, color: i === step ? "#F5F5F5" : "#9A9A9A" }}>{s.label}</div>
             </div>
           ))}
         </div>

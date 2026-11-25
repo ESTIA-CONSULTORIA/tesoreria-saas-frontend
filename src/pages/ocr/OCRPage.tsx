@@ -259,7 +259,7 @@ export default function OCRPage() {
               <p style={{ color: "#F5F5F5", fontSize: 15, marginBottom: 4 }}>
                 Arrastra archivos aquí o haz clic para seleccionar
               </p>
-              <p style={{ color: "#7E7E7E", fontSize: 13 }}>JPG, PNG, WEBP, GIF, PDF — máximo 10 MB · Selección múltiple permitida</p>
+              <p style={{ color: "#9A9A9A", fontSize: 13 }}>JPG, PNG, WEBP, GIF, PDF — máximo 10 MB · Selección múltiple permitida</p>
             </>
           )}
         </div>
@@ -295,9 +295,9 @@ export default function OCRPage() {
           </div>
 
           {loading ? (
-            <div style={{ padding: 40, textAlign: "center", color: "#7E7E7E" }}>Cargando...</div>
+            <div style={{ padding: 40, textAlign: "center", color: "#9A9A9A" }}>Cargando...</div>
           ) : documents.length === 0 ? (
-            <div style={{ padding: 40, textAlign: "center", color: "#7E7E7E", fontSize: 14 }}>
+            <div style={{ padding: 40, textAlign: "center", color: "#9A9A9A", fontSize: 14 }}>
               No hay documentos aún. Sube un archivo para comenzar.
             </div>
           ) : (
@@ -311,7 +311,7 @@ export default function OCRPage() {
                         style={{
                           padding: "10px 14px",
                           textAlign: "left",
-                          color: "#7E7E7E",
+                          color: "#9A9A9A",
                           fontWeight: 600,
                           whiteSpace: "nowrap",
                         }}
@@ -353,7 +353,7 @@ export default function OCRPage() {
                           ? `$${Number(doc.extractedData.montoTotal).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`
                           : "—"}
                       </td>
-                      <td style={{ padding: "10px 14px", color: "#7E7E7E", whiteSpace: "nowrap" }}>
+                      <td style={{ padding: "10px 14px", color: "#9A9A9A", whiteSpace: "nowrap" }}>
                         {new Date(doc.uploadedAt).toLocaleDateString("es-MX")}
                       </td>
                       <td style={{ padding: "10px 14px" }}>
@@ -455,7 +455,7 @@ export default function OCRPage() {
                 <h2 style={{ fontSize: 16, fontWeight: 700, color: "#F5F5F5", margin: 0 }}>
                   Validar documento
                 </h2>
-                <p style={{ color: "#7E7E7E", fontSize: 12, marginTop: 2 }}>
+                <p style={{ color: "#9A9A9A", fontSize: 12, marginTop: 2 }}>
                   {selectedDoc.fileName} · {selectedDoc.documentType}
                 </p>
               </div>
@@ -464,7 +464,7 @@ export default function OCRPage() {
                 style={{
                   background: "transparent",
                   border: "none",
-                  color: "#7E7E7E",
+                  color: "#9A9A9A",
                   fontSize: 20,
                   cursor: "pointer",
                   lineHeight: 1,
@@ -477,7 +477,7 @@ export default function OCRPage() {
             {/* Modal body */}
             <div style={{ padding: "20px" }}>
               {modalLoading && (
-                <div style={{ fontSize: 12, color: "#7E7E7E", marginBottom: 12 }}>
+                <div style={{ fontSize: 12, color: "#9A9A9A", marginBottom: 12 }}>
                   Cargando datos extraídos...
                 </div>
               )}
@@ -526,7 +526,7 @@ export default function OCRPage() {
               {/* Texto crudo extraído — diagnóstico */}
               {selectedDoc.rawText && !selectedDoc.rawText.startsWith('[OCR') && (
                 <details style={{ marginTop: 16 }}>
-                  <summary style={{ fontSize: 11, color: "#7E7E7E", cursor: "pointer", userSelect: "none" }}>
+                  <summary style={{ fontSize: 11, color: "#9A9A9A", cursor: "pointer", userSelect: "none" }}>
                     Ver texto extraído por OCR
                   </summary>
                   <pre
