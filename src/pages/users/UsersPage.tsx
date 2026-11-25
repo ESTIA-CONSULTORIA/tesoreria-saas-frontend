@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { activarConTeclado } from '../../core/utils/accesoTeclado';
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import CreateUserModal from "./CreateUserModal";
@@ -255,6 +256,8 @@ export default function UsersPage() {
                 {roles.map(rol => (
                   <div key={rol.id}
                     onClick={() => { setSelectedRol(rol); setLocalPermissions(rol.permissions || []); setSelectedUser(null); setView('rol'); }}
+                    {...activarConTeclado(() => { setSelectedRol(rol); setLocalPermissions(rol.permissions || []); setSelectedUser(null); setView('rol'); })}
+                    aria-pressed={selectedRol?.id === rol.id}
                     style={{
                       padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)',
                       background: selectedRol?.id === rol.id ? 'rgba(123,156,204,0.1)' : 'transparent',
@@ -279,6 +282,8 @@ export default function UsersPage() {
                 {users.map(u => (
                   <div key={u.id}
                     onClick={() => { setSelectedUser(u); setSelectedRol(null); setView('user'); }}
+                    {...activarConTeclado(() => { setSelectedUser(u); setSelectedRol(null); setView('user'); })}
+                    aria-pressed={selectedUser?.id === u.id}
                     style={{
                       padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)',
                       background: selectedUser?.id === u.id ? 'rgba(123,156,204,0.1)' : 'transparent',

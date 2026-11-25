@@ -8,6 +8,7 @@ import { useCompanyStore } from "../../core/store/useCompanyStore";
 import { useDashboardFilterStore, type DashboardPeriod } from "../../core/store/useDashboardFilterStore";
 import { useSkinActiva } from "../../core/theme/useSkinActiva";
 import DashboardIsotipo from "./DashboardIsotipo";
+import { activarConTeclado } from "../../core/utils/accesoTeclado";
 import { useAlturaRestante } from "../../core/hooks/useAlturaRestante";
 import { participacion, textoPorcentaje, SIN_DATOS, SIN_COMPARAR, variacionComparable, margenSobreVentas, nombreRespaldoGrafica } from "./dashboardLogic";
 
@@ -251,7 +252,7 @@ export default function DashboardPage() {
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               {pendingShifts.length > 0 && (
                 <div
-                  onClick={() => navigate('/pos')}
+                  onClick={() => navigate('/pos')} {...activarConTeclado(() => navigate('/pos'))}
                   style={{
                     padding: '8px 14px',
                     border: '1px solid rgb(var(--warn-solid) / 0.267)',
@@ -273,7 +274,7 @@ export default function DashboardPage() {
               )}
               {(kpis.cxpVencidas && kpis.cxpVencidas > 0) && (
                 <div
-                  onClick={() => navigate('/treasury')}
+                  onClick={() => navigate('/treasury')} {...activarConTeclado(() => navigate('/treasury'))}
                   style={{
                     padding: '8px 14px',
                     border: '1px solid rgb(var(--warn-solid) / 0.267)',
@@ -295,7 +296,7 @@ export default function DashboardPage() {
               )}
               {(kpis.saldoDisponible && kpis.saldoDisponible < 10000) && (
                 <div
-                  onClick={() => navigate('/banks')}
+                  onClick={() => navigate('/banks')} {...activarConTeclado(() => navigate('/banks'))}
                   style={{
                     padding: '8px 14px',
                     border: '1px solid rgb(var(--warn-solid) / 0.267)',

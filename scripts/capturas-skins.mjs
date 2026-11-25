@@ -87,6 +87,15 @@ function responder(metodo, ruta, escena) {
   if (ruta.startsWith('/tenants/resolve')) return [200, { id: 't1', slug: 'demo', tradeName: 'Negocio Demo' }];
   if (/^\/tenants\/t1/.test(ruta)) return [200, { id: 't1', plan: escena.plan ?? 'BUSINESS', giro: escena.giro ?? 'generico', isOnboarded: true }];
   if (ruta.startsWith('/tenant-settings')) return [200, { theme: 'estia', tenantId: 't1' }];
+  if (/^[/]users/.test(ruta) && metodo === 'GET') return [200, [
+    { id: 'u1', email: 'ana@negocio-demo.mx', name: 'Ana Demo', roleCode: 'ADMIN', isActive: true },
+    { id: 'u2', email: 'luis.cajero@negocio-demo.mx', name: 'Luis Cajero', roleCode: 'CAJERO', isActive: true },
+    { id: 'u3', email: 'rosa@negocio-demo.mx', name: 'Rosa Gerente', roleCode: 'GERENTE', isActive: false },
+  ]];
+  if (/^[/]roles/.test(ruta) && metodo === 'GET') return [200, [
+    { id: 'r1', code: 'ADMIN', name: 'Administrador', permissions: [] },
+    { id: 'r2', code: 'CAJERO', name: 'Cajero', permissions: [] },
+  ]];
   if (ruta.startsWith('/companies')) return [200, empresas];
   if (ruta.startsWith('/branches')) return [200, [{ id: 'b1', name: 'Matriz', companyId: 'c1', code: 'MATRIZ' }]];
   if (ruta.startsWith('/dashboard/kpis')) return [200, escena.kpis ? { ...kpis, ...escena.kpis } : kpis];
@@ -182,10 +191,29 @@ async function medirSelectorNegocio(page) {
     };
   });
 }
+// Teclado: elementos que parecen clicables (cursor:pointer o onClick en div/span/tr…) y no se alcanzan con Tab, y campos sin nombre accesible
+async function medirTeclado(page) {
+  return page.evaluate(() => {
+    const foco = (el) => el.matches('a[href],button,input:not([type=hidden]),select,textarea,summary,[tabindex]:not([tabindex="-1"])');
+    const nombre = (el) => (el.getAttribute('aria-label') || el.getAttribute('aria-labelledby') || el.getAttribute('title') || el.labels?.length || (el.textContent || '').trim() || '');
+    const sinTeclado = [];
+    for (const el of document.querySelectorAll('body *')) {
+      if (el.closest('[aria-hidden="true"]')) continue;
+      const cs = getComputedStyle(el);
+      if (cs.cursor !== 'pointer' || cs.visibility === 'hidden' || cs.display === 'none') continue;
+      if (foco(el) || el.closest('a[href],button,label,select,[role=button],[role=tab],[role=radio]') || el.querySelector('a[href],button,input,select,textarea,[tabindex]')) continue;
+      if (el.parentElement && getComputedStyle(el.parentElement).cursor === 'pointer' && !foco(el.parentElement) && el.parentElement !== document.body) continue; // se cuenta el contenedor
+      const r = el.getBoundingClientRect(); if (!r.width || !r.height) continue;
+      sinTeclado.push(el.tagName.toLowerCase() + ':' + ((el.textContent || '').trim().slice(0, 25) || el.getAttribute('class')?.slice(0, 20) || ''));
+    }
+    const sinNombre = [...document.querySelectorAll('input:not([type=hidden]),select,textarea')].filter((el) => !nombre(el) && !el.getAttribute('placeholder')).map((el) => el.tagName.toLowerCase() + '[' + (el.type || '') + ']' + (el.id || el.name || ''));
+    return { sinTeclado, sinNombre };
+  });
+}
 export const ESCENAS = {
   login: { ruta: '/login', sinSesion: true },
   'login-negocio': { ruta: '/login?t=demo', sinSesion: true },
-  dashboard: { ruta: '/dashboard' },
+  dashboard: { ruta: '/dashboard', medir: medirTeclado },
   'dashboard-sin-pendientes': { ruta: '/dashboard', turnos: [], kpis: { cxpVencidas: 0, saldoDisponible: 50000 } },
   'dashboard-lite': { ruta: '/dashboard', usuario: { modulosActivos: ['dashboard', 'pos-sin-inventario', 'corte-caja-lite'] } },
   'centro-soluciones': { ruta: '/solutions' },
@@ -200,15 +228,15 @@ export const ESCENAS = {
   'tesoreria-alertas': { ruta: '/treasury', accion: async (p) => { const b = await p.evaluateHandle(() => [...document.querySelectorAll('button')].find((x) => /^Alertas$/.test((x.textContent || '').trim()))); await b.asElement()?.click(); await ESPERA(700); }, medir: medirAlertasTesoreria },
   'tesoreria-alertas-vacio': { ruta: '/treasury', alertasVacias: true, accion: async (p) => { const b = await p.evaluateHandle(() => [...document.querySelectorAll('button')].find((x) => /^Alertas$/.test((x.textContent || '').trim()))); await b.asElement()?.click(); await ESPERA(700); }, medir: medirAlertasTesoreria },
   // Recorrido de pantallas internas (lote visual de la noche del 24/nov): mismas escenas antes y después de cada corrección
-  usuarios: { ruta: '/users' },
-  apariencia: { ruta: '/settings/appearance' },
-  conciliacion: { ruta: '/reconciliation' },
+  usuarios: { ruta: '/users', medir: medirTeclado },
+  apariencia: { ruta: '/settings/appearance', medir: medirTeclado },
+  conciliacion: { ruta: '/reconciliation', usuario: { modulosActivos: [...MODULOS_ERP, 'conciliacion'] }, medir: medirTeclado },
   ejecutivo: { ruta: '/executive' },
   sucursales: { ruta: '/branches' },
   empresas: { ruta: '/companies' },
   rh: { ruta: '/hr' },
-  roles: { ruta: '/roles' },
-  tesoreria: { ruta: '/treasury' },
+  roles: { ruta: '/roles', medir: medirTeclado },
+  tesoreria: { ruta: '/treasury', medir: medirTeclado },
   movimientos: { ruta: '/movements', usuario: { modulosActivos: [...MODULOS_ERP, 'movimientos'] } },
   membresias: { ruta: '/membresias', usuario: { modulosActivos: [...MODULOS_ERP, 'membresias'] } },
   logs: { ruta: '/logs', usuario: { roleCode: 'SOPORTE' } },
