@@ -14,3 +14,6 @@
     .bg-tono-indigo-700, .bg-tono-amber-700, .bg-tono-yellow-700) {
   color: rgb(var(--on-solid));
 }
+
+/* El Portal del Empleado es oscuro fijo en todas las skins: su barra inferior no toma el color de nav de la skin (gana a la regla global de index.css) */
+nav[data-portal-nav] { background-color: #080808 !important; }
