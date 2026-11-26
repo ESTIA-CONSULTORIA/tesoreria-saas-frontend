@@ -3,6 +3,13 @@ import { readFileSync } from 'node:fs';
 import { decisionRuta, ESPERA_MAXIMA_RUTA_MS, mensajeRedireccion, moduloDisponible, MODULOS_VERTICALES } from './moduloDisponible';
 
 describe('moduloDisponible', () => {
+  it('planes Lite: pos_sin_inventario y corte_caja_lite equivalen al POS; Lite no abre Tesorería', () => {
+    expect(moduloDisponible('pos', { roleCode: 'CAJERO', modulosActivos: ['dashboard', 'pos_sin_inventario'] })).toBe(true);
+    expect(moduloDisponible('configuracion_pos', { roleCode: 'ADMIN', modulosActivos: ['dashboard', 'pos_sin_inventario'] })).toBe(true);
+    expect(moduloDisponible('pos', { roleCode: 'CAJERO', modulosActivos: ['dashboard', 'corte_caja_lite'] })).toBe(true);
+    expect(moduloDisponible('configuracion_pos', { roleCode: 'ADMIN', modulosActivos: ['dashboard', 'corte_caja_lite'] })).toBe(false);
+    expect(moduloDisponible('tesoreria', { roleCode: 'ADMIN', modulosActivos: ['dashboard', 'pos_sin_inventario'] })).toBe(false);
+  });
   it('con lista de módulos: solo lo que está activo', () => {
     const s = { roleCode: 'ADMIN', modulosActivos: ['dashboard', 'pacientes'] };
     expect(moduloDisponible('pacientes', s)).toBe(true);

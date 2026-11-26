@@ -4,6 +4,13 @@
  *  src/config/module-giro-requirements.config.ts). Nunca se dan por buenos «por omisión». */
 export const MODULOS_VERTICALES = ['pacientes', 'membresias'] as const;
 
+/** Planes Lite: traen otros códigos de módulo que equivalen al POS (misma tabla que el backend: plan-modulo.guard.ts).
+ *  Un negocio con el código de la derecha puede usar el módulo de la izquierda. */
+export const MODULOS_EQUIVALENTES: Record<string, string[]> = {
+  pos: ['pos_sin_inventario', 'corte_caja_lite'],
+  configuracion_pos: ['pos_sin_inventario'],
+};
+
 /** Módulos siempre visibles, sin importar el plan. */
 const BUILT_IN_MODULES = ['ocr'];
 
@@ -29,7 +36,7 @@ export function moduloDisponible(modulo: string, sesion: SesionModulos): boolean
     // pero un módulo vertical exige estar en la lista: sin ella no se ofrece Pacientes a quien no lo usa.
     return !(MODULOS_VERTICALES as readonly string[]).includes(modulo);
   }
-  return activos.includes(modulo);
+  return activos.includes(modulo) || (MODULOS_EQUIVALENTES[modulo] ?? []).some((m) => activos.includes(m));
 }
 
 /**

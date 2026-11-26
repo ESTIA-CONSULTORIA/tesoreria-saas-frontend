@@ -229,7 +229,9 @@ function App() {
 // Si es móvil y el usuario tiene rol permitido, mostrar ESTIAExecutiveAccess
   if (isMobile && user) {
     const allowedRoles = ['ADMIN', 'SOPORTE', 'GERENTE', 'SUPER_ADMIN'];
-    if (allowedRoles.includes(user.roleCode || '')) {
+    // Executive Access (pantalla móvil con PIN) está APAGADA: su PIN todavía es una simulación (acepta cualquier PIN de 4 dígitos).
+    // Para reactivarla: compilar el frontend con VITE_EXECUTIVE_ACCESS_ACTIVO=true (ver REPORTE.md: qué necesita un PIN real).
+    if (allowedRoles.includes(user.roleCode || '') && import.meta.env.VITE_EXECUTIVE_ACCESS_ACTIVO === 'true') {
       return <ESTIAExecutiveAccess />;
     }
     // Si el rol no es permitido en móvil, mostrar mensaje
