@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
+import { inicialEmpresa, nombreEmpresa } from "./nombreEmpresa";
 
 type View = 'login' | 'home' | 'dashboard' | 'tesoreria' | 'ventas' | 'gastos' | 'cxc' | 'cxp' | 'personal' | 'alertas';
 
@@ -13,6 +14,9 @@ export default function ESTIAExecutiveAccess() {
   const [kpis, setKpis] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [companies, setCompanies] = useState<any[]>([]);
+  // La lista de empresas: cargando / con error (reintentar) / vacía / lista
+  const [cargandoEmpresas, setCargandoEmpresas] = useState(true);
+  const [errorEmpresas, setErrorEmpresas] = useState(false);
   const user = useAuthStore((state) => state.user);
   const { activeCompany } = useCompanyStore();
 
@@ -21,11 +25,16 @@ export default function ESTIAExecutiveAccess() {
   }, []);
 
   async function loadCompanies() {
+    setCargandoEmpresas(true);
+    setErrorEmpresas(false);
     try {
       const response = await api.get("/companies");
-      setCompanies(response.data);
+      setCompanies(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("Error loading companies:", error);
+      setErrorEmpresas(true);
+    } finally {
+      setCargandoEmpresas(false);
     }
   }
 
@@ -44,6 +53,18 @@ export default function ESTIAExecutiveAccess() {
       setShowPinError(true);
     }
   }
+
+  // Teclado físico en la pantalla del PIN: dígitos, Retroceso y Enter
+  useEffect(() => {
+    if (!(view === 'login' && selectedCompany)) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (/^[0-9]$/.test(e.key)) setPin((p) => { if (p.length >= 4) return p; setShowPinError(false); return p + e.key; });
+      else if (e.key === 'Backspace') { setPin((p) => p.slice(0, -1)); setShowPinError(false); }
+      else if (e.key === 'Enter') handlePinSubmit();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
 
   function handlePinChange(value: string) {
     setPin(value);
@@ -87,6 +108,16 @@ export default function ESTIAExecutiveAccess() {
             Selecciona una empresa
           </p>
 
+          {cargandoEmpresas && <p role="status" style={{ textAlign: 'center', color: '#BDBDBD', fontSize: '14px' }}>Cargando empresas…</p>}
+          {!cargandoEmpresas && errorEmpresas && (
+            <div role="alert" style={{ textAlign: 'center', color: '#F5F5F5', fontSize: '14px' }}>
+              <p style={{ marginBottom: '12px' }}>No se pudieron cargar las empresas. Revisa tu conexión e inténtalo de nuevo.</p>
+              <button onClick={loadCompanies} style={{ padding: '12px 20px', backgroundColor: '#161616', border: '1px solid #6B6B6B', borderRadius: '4px', color: '#F5F5F5', fontSize: '14px', cursor: 'pointer' }}>Reintentar</button>
+            </div>
+          )}
+          {!cargandoEmpresas && !errorEmpresas && companies.length === 0 && (
+            <p role="status" style={{ textAlign: 'center', color: '#F5F5F5', fontSize: '14px' }}>Sin empresas. Pide a tu administrador que cree una en el sistema.</p>
+          )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {companies.map((company) => (
               <button
@@ -107,7 +138,7 @@ export default function ESTIAExecutiveAccess() {
                 onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.backgroundColor = '#1B1B1B'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.backgroundColor = '#161616'; }}
               >
-                {company.name}
+                {nombreEmpresa(company)}
               </button>
             ))}
           </div>
@@ -124,18 +155,18 @@ export default function ESTIAExecutiveAccess() {
           <div style={{ textAlign: 'center', marginBottom: '40px' }}>
             <div style={{ width: '80px', height: '80px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
               <span style={{ fontSize: '32px', color: '#BDBDBD' }}>
-                {selectedCompany.name.charAt(0)}
+                {inicialEmpresa(selectedCompany)}
               </span>
             </div>
             <h2 style={{ fontSize: '18px', fontWeight: 400, color: '#F5F5F5', marginBottom: '8px', letterSpacing: '0.01em' }}>
-              {selectedCompany.name}
+              {nombreEmpresa(selectedCompany)}
             </h2>
             <p style={{ fontSize: '12px', color: '#9A9A9A', letterSpacing: '0.01em' }}>
               Ingresa tu PIN de acceso
             </p>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '32px' }}>
+          <div role="group" aria-label={`PIN de 4 dígitos: ${pin.length} de 4 capturados`} style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '32px' }}>
             {[0, 1, 2, 3].map((index) => (
               <div
                 key={index}
@@ -178,6 +209,8 @@ export default function ESTIAExecutiveAccess() {
                   }
                 }}
                 disabled={num === ''}
+                aria-label={num === '⌫' ? 'Borrar último dígito' : num === '' ? undefined : `Dígito ${num}`}
+                aria-hidden={num === '' ? true : undefined}
                 style={{
                   width: '100%',
                   height: '64px',
@@ -238,12 +271,12 @@ export default function ESTIAExecutiveAccess() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ width: '48px', height: '48px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ fontSize: '20px', color: '#BDBDBD' }}>
-                {selectedCompany?.name.charAt(0) || 'E'}
+                {inicialEmpresa(selectedCompany)}
               </span>
             </div>
             <div>
               <h1 style={{ fontSize: '16px', fontWeight: 400, color: '#F5F5F5', marginBottom: '2px', letterSpacing: '0.01em' }}>
-                {selectedCompany?.name || 'Empresa'}
+                {selectedCompany ? nombreEmpresa(selectedCompany) : 'Empresa'}
               </h1>
               <p style={{ fontSize: '12px', color: '#9A9A9A', letterSpacing: '0.01em' }}>
                 {user?.name || 'Usuario'}
@@ -350,25 +383,25 @@ export default function ESTIAExecutiveAccess() {
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
                 <div>
-                  <p style={{ fontSize: '11px', color: '#9A9A9A', marginBottom: '4px', letterSpacing: '0.01em' }}>Ventas</p>
+                  <p style={{ fontSize: '12px', color: '#9A9A9A', marginBottom: '4px', letterSpacing: '0.01em' }}>Ventas</p>
                   <p style={{ fontSize: '24px', color: '#F5F5F5', fontWeight: 400, letterSpacing: '0.01em' }}>
                     ${ventas.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
                   </p>
                 </div>
                 <div>
-                  <p style={{ fontSize: '11px', color: '#9A9A9A', marginBottom: '4px', letterSpacing: '0.01em' }}>UAI</p>
+                  <p style={{ fontSize: '12px', color: '#9A9A9A', marginBottom: '4px', letterSpacing: '0.01em' }}>UAI</p>
                   <p style={{ fontSize: '24px', color: uai >= 0 ? '#3B7A57' : '#9B3A3A', fontWeight: 400, letterSpacing: '0.01em' }}>
                     ${uai.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
                   </p>
                 </div>
                 <div>
-                  <p style={{ fontSize: '11px', color: '#9A9A9A', marginBottom: '4px', letterSpacing: '0.01em' }}>Costo</p>
+                  <p style={{ fontSize: '12px', color: '#9A9A9A', marginBottom: '4px', letterSpacing: '0.01em' }}>Costo</p>
                   <p style={{ fontSize: '24px', color: '#F5F5F5', fontWeight: 400, letterSpacing: '0.01em' }}>
                     ${costo.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
                   </p>
                 </div>
                 <div>
-                  <p style={{ fontSize: '11px', color: '#9A9A9A', marginBottom: '4px', letterSpacing: '0.01em' }}>UDI</p>
+                  <p style={{ fontSize: '12px', color: '#9A9A9A', marginBottom: '4px', letterSpacing: '0.01em' }}>UDI</p>
                   <p style={{ fontSize: '24px', color: udi >= 0 ? '#3B7A57' : '#9B3A3A', fontWeight: 400, letterSpacing: '0.01em' }}>
                     ${udi.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
                   </p>
@@ -386,7 +419,7 @@ export default function ESTIAExecutiveAccess() {
                   <div key={movement.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#1B1B1B', borderRadius: '2px' }}>
                     <div>
                       <p style={{ fontSize: '13px', color: '#F5F5F5', marginBottom: '2px', letterSpacing: '0.01em' }}>{movement.concept}</p>
-                      <p style={{ fontSize: '11px', color: '#9A9A9A', letterSpacing: '0.01em' }}>{movement.category}</p>
+                      <p style={{ fontSize: '12px', color: '#9A9A9A', letterSpacing: '0.01em' }}>{movement.category}</p>
                     </div>
                     <p style={{ fontSize: '14px', color: movement.type === 'INCOME' ? '#3B7A57' : '#9B3A3A', fontWeight: 400, letterSpacing: '0.01em' }}>
                       {movement.type === 'INCOME' ? '+' : '-'}${Number(movement.amount).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

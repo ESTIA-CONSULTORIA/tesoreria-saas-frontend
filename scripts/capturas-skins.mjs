@@ -232,6 +232,11 @@ export const ESCENAS = {
   apariencia: { ruta: '/settings/appearance', medir: medirTeclado },
   conciliacion: { ruta: '/reconciliation', usuario: { modulosActivos: [...MODULOS_ERP, 'conciliacion'] }, medir: medirTeclado },
   'topbar-sin-empresas': { ruta: '/dashboard', sinEmpresas: true, accion: async (p) => { const b = await p.evaluateHandle(() => [...document.querySelectorAll('button')].find((x) => /empresa|vista|grupo|global|negocio/i.test(x.textContent || '') && x.getAttribute('aria-haspopup') === 'menu')); await b.asElement()?.click(); await ESPERA(500); } },
+  ajustes: { ruta: '/settings' },
+  'login-config': { ruta: '/settings/login-config' },
+  'corte-campos': { ruta: '/settings/corte-fields' },
+  'datos-fiscales': { ruta: '/settings/fiscal', usuario: { modulosActivos: [...MODULOS_ERP, 'sat_cfdi'] } },
+  ocr: { ruta: '/ocr' },
   ejecutivo: { ruta: '/executive' },
   sucursales: { ruta: '/branches' },
   empresas: { ruta: '/companies' },
@@ -337,6 +342,23 @@ async function capturar(browser, nombre, escena, skin) {
     const r = await window.axe.run(document, { runOnly: { type: 'rule', values: [regla] }, resultTypes: ['violations'] });
     return r.violations.flatMap((v) => v.nodes.map((n) => ({ objetivo: n.target.join(' '), enDialogo: !!n.element?.closest('[role="dialog"]'), resumen: (n.any[0]?.message ?? '').replace(/\s+/g, ' ').slice(0, 160) })));
   }, regla);
+  // nombres accesibles (campos, botones, enlaces, imágenes) y letras menores de 12 px
+  const nombres = await page.evaluate(async () => {
+    const r = await window.axe.run(document, { runOnly: { type: 'rule', values: ['label', 'select-name', 'button-name', 'aria-input-field-name', 'link-name', 'image-alt'] }, resultTypes: ['violations'] });
+    return r.violations.flatMap((v) => v.nodes.map((n) => ({ regla: v.id, objetivo: n.target.join(' ').slice(0, 120), html: (n.html || '').slice(0, 110) })));
+  });
+  const fuentes = await page.evaluate(() => {
+    const out = new Map();
+    for (const el of document.querySelectorAll('body *')) {
+      const propio = [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
+      if (!propio) continue;
+      const cs = getComputedStyle(el);
+      if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+      const px = parseFloat(cs.fontSize);
+      if (px < 12) { const k = px + 'px ' + el.tagName.toLowerCase() + '.' + String(el.className || '').toString().split(/\s+/).slice(0, 3).join('.'); out.set(k, (out.get(k) || 0) + 1); }
+    }
+    return [...out.entries()].map(([k, n]) => k + ' x' + n);
+  });
   // atajos de la escena (F2/F3/F4/F6/F8/F10, Esc…): tras cada tecla, qué hay abierto y dónde está el foco (se compara antes/después)
   const atajos = [];
   for (const k of escena.teclas ?? []) {
@@ -365,7 +387,7 @@ async function capturar(browser, nombre, escena, skin) {
   }
   const medidas = escena.medir ? await escena.medir(page) : null;
   await page.close();
-  return { axe, teclado, desborde, atajos, impresion, contrato, skinAplicada, movimiento, medidas };
+  return { axe, nombres, fuentes, teclado, desborde, atajos, impresion, contrato, skinAplicada, movimiento, medidas };
 }
 
 mkdirSync(SALIDA, { recursive: true });
@@ -375,6 +397,7 @@ const browser = await puppeteer.launch({ executablePath: CHROME, headless: true,
 const aplicadas = {}, omitidas = [], desajustes = [];
 const movTodo = {};
 const medidasTodo = {};
+const nombresTodo = {}, fuentesTodo = {};
 const axeTodo = {}, tecladoTodo = {}, desbordes = {}, atajosTodo = {}, impresionTodo = {}, contratoTodo = {};
 try {
   for (const n of nombres) for (const skin of SKINS) {
@@ -384,13 +407,16 @@ try {
     aplicadas[`${n}__${skin}`] = r.skinAplicada;
     if (r.movimiento) movTodo[`${n}__${skin}`] = r.movimiento;
     if (r.medidas) medidasTodo[`${n}__${skin}`] = r.medidas;
+    nombresTodo[`${n}__${skin}`] = r.nombres; fuentesTodo[`${n}__${skin}`] = r.fuentes;
     axeTodo[`${n}__${skin}`] = r.axe; tecladoTodo[`${n}__${skin}`] = r.teclado; desbordes[`${n}__${skin}`] = r.desborde; atajosTodo[`${n}__${skin}`] = r.atajos; contratoTodo[`${n}__${skin}`] = r.contrato; if (r.impresion) impresionTodo[`${n}__${skin}`] = r.impresion;
-    console.log(`${n.padEnd(20)} ${skin.padEnd(7)} contraste: ${String(r.axe.length).padStart(3)} fallos | foco: ${r.teclado.length} pasos | desborde: ${r.desborde ? 'SÍ' : 'no'}`);
+    console.log(`${n.padEnd(20)} ${skin.padEnd(7)} contraste: ${String(r.axe.length).padStart(3)} fallos | foco: ${r.teclado.length} pasos | desborde: ${r.desborde ? 'SÍ' : 'no'} | sin nombre: ${r.nombres.length} | letras <12px: ${r.fuentes.length}`);
   }
 } finally {
   await browser.close();
   srv.kill();
 }
+writeFileSync(join(SALIDA, 'nombres.json'), JSON.stringify(nombresTodo, null, 1));
+writeFileSync(join(SALIDA, 'fuentes.json'), JSON.stringify(fuentesTodo, null, 1));
 writeFileSync(join(SALIDA, 'axe.json'), JSON.stringify(axeTodo, null, 1));
 writeFileSync(join(SALIDA, 'teclado.json'), JSON.stringify(tecladoTodo, null, 1));
 writeFileSync(join(SALIDA, 'desborde.json'), JSON.stringify(desbordes, null, 1));
