@@ -570,7 +570,9 @@ function App() {
         path="/hr"
         element={
           <ProtectedRoute>
-            <HRPage />
+            <ModuloRoute modulo="rh">
+              <HRPage />
+            </ModuloRoute>
           </ProtectedRoute>
         }
       />

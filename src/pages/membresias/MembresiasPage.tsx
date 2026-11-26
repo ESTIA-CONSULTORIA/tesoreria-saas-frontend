@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { InputBusqueda } from '../../core/components/InputBusqueda';
 import { api } from '../../core/api/api';
 import { useAuthStore } from '../../core/store/useAuthStore';
@@ -74,6 +75,7 @@ type SetMsg = (m: { ok: boolean; texto: string } | null) => void;
 // ───────────────────────────── socios ─────────────────────────────
 function SociosTab({ cfg, gestion, setMsg, sucursalId, userId }: { cfg: IvaConfig; gestion: boolean; setMsg: SetMsg; sucursalId: string; userId: string }) {
   const [socios, setSocios] = useState<SocioFila[]>([]);
+  const [sinModulo, setSinModulo] = useState(false);
   const [planes, setPlanes] = useState<Plan[]>([]);
   const [q, setQ] = useState('');
   const [nuevo, setNuevo] = useState<Record<string, string> | null>(null);
@@ -86,6 +88,7 @@ function SociosTab({ cfg, gestion, setMsg, sucursalId, userId }: { cfg: IvaConfi
       setSocios(Array.isArray(s.data) ? s.data : []);
       setPlanes(Array.isArray(p.data) ? p.data : []);
     } catch (e) {
+      if ((e as any)?.response?.status === 403 && /módulo/i.test(String((e as any)?.response?.data?.message ?? ''))) { setSinModulo(true); return; }
       setMsg({ ok: false, texto: mensajeError(e) });
     }
   }, [setMsg]);
@@ -118,6 +121,7 @@ function SociosTab({ cfg, gestion, setMsg, sucursalId, userId }: { cfg: IvaConfi
     try { setDetalle((await api.get(`/membresias/socios/${s.id}`)).data); } catch (e) { setMsg({ ok: false, texto: mensajeError(e) }); }
   }
 
+  if (sinModulo) return <Navigate to="/dashboard" replace />;
   return (
     <div>
       <div className="mb-3 flex gap-2">

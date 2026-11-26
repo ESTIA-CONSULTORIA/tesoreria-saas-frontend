@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Navigate } from 'react-router-dom';
 import { api } from '../../core/api/api';
 import MainLayout from '../../core/layout/MainLayout';
 import { useAlturaRestante } from '../../core/hooks/useAlturaRestante';
@@ -31,6 +32,8 @@ interface Consulta {
 export default function PatientsPage() {
   const [refPagina, alturaPagina] = useAlturaRestante<HTMLDivElement>();
   const [patients, setPatients] = useState<Patient[]>([]);
+  // El servidor respondió 403 por módulo no disponible: no se muestra «0 pacientes», se sale a /dashboard
+  const [sinModulo, setSinModulo] = useState(false);
   const [selected, setSelected] = useState<Patient | null>(null);
   const [consultas, setConsultas] = useState<Consulta[]>([]);
   const [view, setView] = useState<'detail' | 'new-patient' | 'new-consulta'>('detail');
@@ -46,7 +49,7 @@ export default function PatientsPage() {
   useEffect(() => {
     api.get('/patients')
       .then(r => setPatients(Array.isArray(r.data) ? r.data : []))
-      .catch(() => {})
+      .catch((e) => { if (e?.response?.status === 403) setSinModulo(true); })
       .finally(() => setLoading(false));
   }, []);
 
@@ -105,6 +108,7 @@ export default function PatientsPage() {
     btnGreen: { padding: '10px 20px', borderRadius: 8, border: 'none', background: '#1a3a2a', color: '#4ade80', fontSize: 13, cursor: 'pointer', fontWeight: 500 },
   };
 
+  if (sinModulo) return <Navigate to="/dashboard" replace />;
   return (
     <MainLayout>
       <div ref={refPagina} style={{ display: 'flex', flexDirection: 'column', height: alturaPagina ?? 'calc(100vh - 52px)', padding: '0 0 20px', boxSizing: 'border-box' }}>
