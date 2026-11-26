@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { activarConTeclado } from '../../core/utils/accesoTeclado';
 import MainLayout from "../../core/layout/MainLayout";
+import MatrizPermisos from '../permisos/MatrizPermisos';
 import { api } from "../../core/api/api";
 import CreateUserModal from "./CreateUserModal";
 import CreateRoleModal from "../roles/CreateRoleModal";
@@ -317,62 +318,9 @@ export default function UsersPage() {
                 </div>
               )}
 
-              {/* Vista ROL — tabla de permisos */}
+              {/* Vista ROL — matriz de permisos del negocio (manda en el servidor) */}
               {view === 'rol' && selectedRol && (
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                  {/* Header */}
-                  <div style={{ padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 500, color: '#c8cdd8' }}>{selectedRol.name}</div>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)' }}>{selectedRol.description} · {selectedRol.code}</div>
-                    </div>
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                      <button onClick={() => handleSelectAll(true)}
-                        style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(74,222,128,0.3)', background: 'rgba(74,222,128,0.08)', color: '#4ade80', fontSize: 12, cursor: 'pointer' }}>
-                        ✓ Activar todo
-                      </button>
-                      <button onClick={() => handleSelectAll(false)}
-                        style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(252,165,165,0.2)', background: 'transparent', color: 'rgba(252,165,165,0.7)', fontSize: 12, cursor: 'pointer' }}>
-                        ✕ Desactivar todo
-                      </button>
-                      <button onClick={handleViewOnly}
-                        style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'rgba(255,255,255,0.62)', fontSize: 12, cursor: 'pointer' }}>
-                        Solo lectura
-                      </button>
-                      <button onClick={handleSavePermissions}
-                        style={{ padding: '4px 12px', borderRadius: 7, border: '1px solid rgba(123,156,204,0.3)', background: 'rgba(123,156,204,0.1)', color: '#8fafd4', fontSize: 12, cursor: 'pointer' }}>
-                        Guardar cambios
-                      </button>
-                    </div>
-                  </div>
-                  {/* Tabla permisos */}
-                  <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', padding: '9px 0', borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'sticky', top: 0, background: '#141820', zIndex: 1 }}>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Módulo</div>
-                      {['Ver', 'Crear', 'Editar', 'Eliminar'].map(a => (
-                        <div key={a} style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', textTransform: 'uppercase', letterSpacing: '0.06em', textAlign: 'center' }}>{a}</div>
-                      ))}
-                    </div>
-                    {MODULE_KEYS.map(key => {
-                      const perm = localPermissions.find(p => p.module === key);
-                      return (
-                        <div key={key} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', padding: '9px 0', borderBottom: '1px solid rgba(255,255,255,0.04)', alignItems: 'center' }}>
-                          <div style={{ fontSize: 12, color: '#c8cdd8' }}>{MODULE_NAMES[key]}</div>
-                          {(['canView', 'canCreate', 'canEdit', 'canDelete'] as const).map(action => (
-                            <div key={action} style={{ display: 'flex', justifyContent: 'center' }}>
-                              <input type="checkbox"
-                                checked={perm ? !!perm[action] : false}
-                                onChange={e => updatePermission(key, action, e.target.checked)}
-                                disabled={!perm}
-                                style={{ width: 15, height: 15, cursor: perm ? 'pointer' : 'not-allowed', accentColor: '#8fafd4' }}
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                <MatrizPermisos rolCode={selectedRol.code} rolNombre={selectedRol.name} descripcion={selectedRol.description} />
               )}
 
               {/* Vista USUARIO — detalle */}

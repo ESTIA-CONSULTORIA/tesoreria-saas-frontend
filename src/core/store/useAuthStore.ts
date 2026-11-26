@@ -23,6 +23,9 @@ interface AuthState {
   modulosActivos: string[];
   // SOPORTE: módulos activos del negocio elegido en la barra superior (null = sin cargar). Lo llena SelectorNegocio.
   modulosNegocioSoporte: string[] | null;
+  // Permisos efectivos del rol de la sesión por módulo (matriz del negocio); null = aún sin cargar (no se oculta nada)
+  permisos: Record<string, { ver: boolean; crear: boolean; editar: boolean; eliminar: boolean }> | null;
+  setPermisos: (p: Record<string, { ver: boolean; crear: boolean; editar: boolean; eliminar: boolean }> | null) => void;
   setModulosNegocioSoporte: (m: string[] | null) => void;
   companyId: string | null;
   branchId: string | null;
@@ -61,6 +64,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: JSON.parse(localStorage.getItem("user") || "null"),
   modulosActivos: JSON.parse(localStorage.getItem("modulos_activos") || "[]"),
   modulosNegocioSoporte: null,
+  permisos: null,
+  setPermisos: (p) => set({ permisos: p }),
   setModulosNegocioSoporte: (m) => set({ modulosNegocioSoporte: m }),
   companyId: localStorage.getItem("user_company_id"),
   branchId: localStorage.getItem("user_branch_id"),

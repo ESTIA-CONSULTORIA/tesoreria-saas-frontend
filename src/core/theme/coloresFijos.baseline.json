@@ -422,7 +422,7 @@
  "pages/roles/RolesPage.tsx": {
   "hex": 0,
   "rgb": 0,
-  "tw": 22,
+  "tw": 20,
   "nombrados": 0
  },
  "pages/settings/AppearancePage.tsx": {
@@ -516,8 +516,8 @@
   "nombrados": 0
  },
  "pages/users/UsersPage.tsx": {
-  "hex": 24,
-  "rgb": 50,
+  "hex": 18,
+  "rgb": 36,
   "tw": 0,
   "nombrados": 0
  },

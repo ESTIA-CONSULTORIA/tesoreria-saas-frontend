@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import MainLayout from "../../core/layout/MainLayout";
+import MatrizPermisos from '../permisos/MatrizPermisos';
 import { api } from "../../core/api/api";
 import CreateRoleModal from "./CreateRoleModal";
 
@@ -141,61 +142,9 @@ export default function RolesPage() {
                     </div>
                   </div>
 
-                  {expandedRole === role.id && role.permissions && (
-                    <div className="mt-4 border-t border-slate-800 pt-4">
-                      <h4 className="mb-3 text-sm font-semibold">Permisos por Módulo</h4>
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full text-left text-sm">
-                          <thead className="text-slate-400">
-                            <tr>
-                              <th className="p-2">Módulo</th>
-                              <th className="p-2">Ver</th>
-                              <th className="p-2">Crear</th>
-                              <th className="p-2">Editar</th>
-                              <th className="p-2">Eliminar</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {role.permissions.map((permission) => (
-                              <tr key={permission.id} className="border-t border-slate-800">
-                                <td className="p-2">{permission.module}</td>
-                                <td className="p-2">
-                                  <input
-                                    type="checkbox"
-                                    checked={permission.canView}
-                                    onChange={(e) => updatePermission(role.id, permission.module, "canView", e.target.checked)}
-                                    className="rounded"
-                                  />
-                                </td>
-                                <td className="p-2">
-                                  <input
-                                    type="checkbox"
-                                    checked={permission.canCreate}
-                                    onChange={(e) => updatePermission(role.id, permission.module, "canCreate", e.target.checked)}
-                                    className="rounded"
-                                  />
-                                </td>
-                                <td className="p-2">
-                                  <input
-                                    type="checkbox"
-                                    checked={permission.canEdit}
-                                    onChange={(e) => updatePermission(role.id, permission.module, "canEdit", e.target.checked)}
-                                    className="rounded"
-                                  />
-                                </td>
-                                <td className="p-2">
-                                  <input
-                                    type="checkbox"
-                                    checked={permission.canDelete}
-                                    onChange={(e) => updatePermission(role.id, permission.module, "canDelete", e.target.checked)}
-                                    className="rounded"
-                                  />
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                  {expandedRole === role.id && (
+                    <div className="mt-4 border-t border-slate-800 pt-2" style={{ height: 520 }}>
+                      <MatrizPermisos rolCode={role.code} rolNombre={role.name} descripcion={role.description} />
                     </div>
                   )}
                 </div>
