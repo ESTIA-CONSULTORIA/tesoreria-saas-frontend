@@ -442,9 +442,11 @@ function App() {
         element={
           <ProtectedRoute>
             <ModuloRoute modulo="configuracion">
-              <RoleRoute roles={['ADMIN', 'GERENTE']}>
-                <DatosFiscalesPage />
-              </RoleRoute>
+              <ModuloRoute modulo="sat_cfdi">
+                <RoleRoute roles={['ADMIN', 'GERENTE']}>
+                  <DatosFiscalesPage />
+                </RoleRoute>
+              </ModuloRoute>
             </ModuloRoute>
           </ProtectedRoute>
         }
