@@ -4,7 +4,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import { useCompanyStore } from "../store/useCompanyStore";
 import { useModulo } from "../hooks/useModulo";
 import { api } from "../api/api";
-import { itemsConfiguracion, rutaConfiguracion, SUBNAV_CONFIGURACION, veConfiguracion } from "./navConfiguracion";
+import { itemsConfiguracion, PATH_DATOS_FISCALES, rutaConfiguracion, SUBNAV_CONFIGURACION, veConfiguracion } from "./navConfiguracion";
 import { repartirNav } from "./navOverflow";
 import SelectorNegocio from "./SelectorNegocio";
 import EtiquetaCampo from "./EtiquetaCampo";
@@ -154,6 +154,7 @@ export default function TopBar() {
   const aI  = useModulo('integraciones');
   const aA  = useModulo('configuracion') && veConfiguracion(user?.roleCode);
   const aPac = useModulo('pacientes');
+  const aSat = useModulo('sat_cfdi'); // «Datos fiscales» es del addon SAT CFDI
   const aCR = useModulo('corte_retroactivo') && isAdmin;
   const aCos = useModulo('costos');
   const aMem = useModulo('membresias');
@@ -386,7 +387,7 @@ export default function TopBar() {
   const subItems = activeKey === 'dashboard' && dashboardSubItems.length > 0
     ? dashboardSubItems
     : activeKey === 'pos' ? posSubItems
-    : activeKey === 'auditoria' ? itemsConfiguracion(user?.roleCode)
+    : activeKey === 'auditoria' ? itemsConfiguracion(user?.roleCode).filter((i) => i.path !== PATH_DATOS_FISCALES || aSat)
     : activeKey ? (SUBNAV[activeKey] || []) : [];
 
   // ── Barra de módulos: lo que no cabe va al menú «Más» ──
