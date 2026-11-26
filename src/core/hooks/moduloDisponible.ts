@@ -48,3 +48,16 @@ export function decisionRuta(modulo: string, sesion: SesionModulos): 'permitir' 
   ) return 'esperar';
   return moduloDisponible(modulo, sesion) ? 'permitir' : 'redirigir';
 }
+
+/** Tiempo máximo de espera de la puerta de ruta (módulos del negocio de SOPORTE) antes de sacar al usuario con un aviso. */
+export const ESPERA_MAXIMA_RUTA_MS = 8000;
+
+const NOMBRE_MODULO: Record<string, string> = { pacientes: 'Pacientes', membresias: 'Membresías', rh: 'Recursos humanos', sat_cfdi: 'Datos fiscales' };
+
+/** Aviso en español cuando una ruta saca al usuario al Dashboard. */
+export function mensajeRedireccion(modulo: string, motivo: 'no-disponible' | 'tiempo-agotado'): string {
+  const nombre = NOMBRE_MODULO[modulo] ?? modulo;
+  return motivo === 'tiempo-agotado'
+    ? `No se pudo comprobar si el negocio tiene el módulo ${nombre}. Inténtalo de nuevo en unos segundos.`
+    : `El módulo ${nombre} no está disponible en este negocio.`;
+}
