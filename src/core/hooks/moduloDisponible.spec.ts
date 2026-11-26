@@ -11,8 +11,21 @@ describe('moduloDisponible', () => {
   it('un negocio sin Pacientes en su lista no lo ve', () => {
     expect(moduloDisponible('pacientes', { roleCode: 'ADMIN', modulosActivos: ['dashboard', 'pos', 'tesoreria'] })).toBe(false);
   });
-  it('SOPORTE ve todo', () => {
+  it('SOPORTE sin negocio elegido ve todo', () => {
     expect(moduloDisponible('pacientes', { roleCode: 'SOPORTE', modulosActivos: [] })).toBe(true);
+  });
+  it('SOPORTE con negocio elegido: Pacientes y Membresías solo si ese negocio los tiene activos; lo demás siempre', () => {
+    const sin = { roleCode: 'SOPORTE', negocioSoporteId: 'n1', modulosNegocioSoporte: ['dashboard', 'pos'] };
+    expect(moduloDisponible('pacientes', sin)).toBe(false);
+    expect(moduloDisponible('membresias', sin)).toBe(false);
+    expect(moduloDisponible('tesoreria', sin)).toBe(true);
+    expect(moduloDisponible('pacientes', { ...sin, modulosNegocioSoporte: ['pacientes'] })).toBe(true);
+    // lista aún sin cargar: no se ofrece un vertical que quizá no corresponde
+    expect(moduloDisponible('pacientes', { ...sin, modulosNegocioSoporte: null })).toBe(false);
+    expect(moduloDisponible('costos', { ...sin, modulosNegocioSoporte: null })).toBe(true);
+  });
+  it('ADMIN de un negocio con el módulo no cambia', () => {
+    expect(moduloDisponible('pacientes', { roleCode: 'ADMIN', modulosActivos: ['pacientes'], negocioSoporteId: 'x', modulosNegocioSoporte: [] })).toBe(true);
   });
   it('lista vacía o ausente: los módulos genéricos se conservan (sesiones antiguas) pero los verticales NO', () => {
     for (const lista of [[], null, undefined]) {
