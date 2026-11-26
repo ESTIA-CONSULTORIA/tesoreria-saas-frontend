@@ -4,6 +4,7 @@ import TopBar from "./TopBar";
 import { useBrandingStore } from "../store/useBrandingStore";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import GlobalSearchModal from "../components/GlobalSearchModal";
+import AvisoRuta from "./AvisoRuta";
 
 interface Props {
   children: React.ReactNode;
@@ -48,6 +49,7 @@ export default function MainLayout({ children }: Props) {
 
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
         <TopBar />
+        <AvisoRuta />
         <main style={{
           flex: 1,
           overflowY: 'auto',

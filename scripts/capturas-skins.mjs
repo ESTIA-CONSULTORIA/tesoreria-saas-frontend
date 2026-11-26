@@ -104,6 +104,8 @@ function responder(metodo, ruta, escena) {
     mods.forEach(([c], i) => { celdas.ADMIN[c] = celda(i, false); celdas.CAJERO[c] = celda(i + 1, i === 12); });
     return [200, { modulos: mods.map(([codigo, nombre]) => ({ codigo, nombre, descripcion: nombre })), roles: [{ code: 'ADMIN', name: 'Administrador' }, { code: 'CAJERO', name: 'Cajero' }], celdas, protegidos: { rol: 'ADMIN', modulos: ['permisos', 'configuracion'] } }];
   }
+  if (/^[/]modules[/]tenant[/]/.test(ruta)) return [200, escena.modulosNegocio ?? ['dashboard', 'pos', 'tesoreria']];
+  if (ruta.startsWith('/patients')) return [200, []];
   if (ruta.startsWith('/companies') && escena.empresasMultiNegocio) return [200, [
     { id: 'c1', tradeName: 'BOCATTA', legalName: 'BOCATTA', tenantId: 't3' },
     { id: 'c2', tradeName: 'Gimnasio Demo', legalName: 'Gimnasio Demo', tenantId: 't1' },
@@ -249,6 +251,8 @@ export const ESCENAS = {
   apariencia: { ruta: '/settings/appearance', medir: medirTeclado },
   conciliacion: { ruta: '/reconciliation', usuario: { modulosActivos: [...MODULOS_ERP, 'conciliacion'] }, medir: medirTeclado },
   'topbar-empresas-soporte': { ruta: '/dashboard', usuario: { roleCode: 'SOPORTE' }, empresasMultiNegocio: true, accion: async (p) => { const b = await p.evaluateHandle(() => [...document.querySelectorAll('button')].find((x) => x.getAttribute('aria-haspopup') === 'menu' && /vista|global|empresa/i.test(x.getAttribute('aria-label') || x.textContent || ''))); await b.asElement()?.click(); await ESPERA(700); } },
+  'patients-url-sin-modulo': { ruta: '/patients', usuario: { roleCode: 'SOPORTE' }, localStorage: { soporte_tenant_id: 't2', soporte_tenant_name: 'Empresa Demo' }, modulosNegocio: ['dashboard', 'pos'] },
+  'patients-url-con-modulo': { ruta: '/patients', usuario: { roleCode: 'SOPORTE' }, localStorage: { soporte_tenant_id: 't1', soporte_tenant_name: 'RIOVA DENTAL' }, modulosNegocio: ['dashboard', 'pacientes'] },
   'topbar-sin-empresas': { ruta: '/dashboard', sinEmpresas: true, accion: async (p) => { const b = await p.evaluateHandle(() => [...document.querySelectorAll('button')].find((x) => /empresa|vista|grupo|global|negocio/i.test(x.textContent || '') && x.getAttribute('aria-haspopup') === 'menu')); await b.asElement()?.click(); await ESPERA(500); } },
   ajustes: { ruta: '/settings' },
   'login-config': { ruta: '/settings/login-config' },
