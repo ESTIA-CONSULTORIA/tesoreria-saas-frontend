@@ -172,6 +172,9 @@ export default function TopBar() {
   const [ctxOpen, setCtxOpen]               = useState(false);
   const [ctxPhase, setCtxPhase]             = useState<'company' | 'branch'>('company');
   const [companies, setCompanies]           = useState<Company[]>([]);
+  // La lista de empresas ya se pidió (y respondió): distingue «Cargando…» de «el negocio no tiene empresas»
+  const [companiesListas, setCompaniesListas] = useState(false);
+  const [companiesError, setCompaniesError]   = useState(false);
   const [branches, setBranches]             = useState<Branch[]>([]);
   const [pendingCo, setPendingCo]           = useState<{ id: string; name: string } | null>(null);
   // Cubre clearCtx (Vista Global) y pickBranch (elegir sucursal) — feedback visual
@@ -230,7 +233,9 @@ export default function TopBar() {
       try {
         const r = await api.get('/companies');
         setCompanies(Array.isArray(r.data) ? r.data : []);
-      } catch {}
+        setCompaniesError(false);
+      } catch { setCompaniesError(true); }
+      setCompaniesListas(true);
     }
     // Start at branch phase if company already selected
     if (activeCompany) {
@@ -630,7 +635,15 @@ export default function TopBar() {
                         onClick={clearCtx}
                       />
                     )}
-                    {companies.length === 0 && <div style={{ padding: '8px 12px', fontSize: 12, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))' }}>Cargando...</div>}
+                    {companies.length === 0 && !companiesListas && <div style={{ padding: '8px 12px', fontSize: 12, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))' }}>Cargando...</div>}
+                    {companies.length === 0 && companiesListas && companiesError && <div role="status" style={{ padding: '8px 12px', fontSize: 12, lineHeight: 1.4, color: 'rgb(var(--text-1))' }}>No se pudo cargar la lista de empresas. Cierra el menú e inténtalo de nuevo.</div>}
+                    {companies.length === 0 && companiesListas && !companiesError && (
+                      <div role="status" style={{ padding: '8px 12px 10px', fontSize: 12, lineHeight: 1.4, color: 'rgb(var(--text-1))' }}>
+                        <strong style={{ display: 'block', marginBottom: 2 }}>Sin empresas</strong>
+                        Este negocio aún no tiene empresas. Crea la primera en{' '}
+                        <Link to="/companies" onClick={() => setCtxOpen(false)} style={{ color: 'rgb(var(--text-1))', textDecoration: 'underline', fontWeight: 600 }}>Empresas</Link>.
+                      </div>
+                    )}
                     {companies.map(co => (
                       <CtxItem key={co.id} label={co.tradeName || co.legalName} active={activeCompany?.id === co.id}
                         disabled={ctxSwitching}
