@@ -1,7 +1,8 @@
 import { createPortal } from "react-dom";
 import { usePilaEscape } from "../../core/components/usePilaEscape";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { api } from "../../core/api/api";
+import { claveEnUso } from "../pos/idOperacion";
 
 interface Props {
   open: boolean;
@@ -14,9 +15,12 @@ export default function ReceiveOrderModal({ open, onClose, onReceived, order }: 
   const [receivedItems, setReceivedItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // Una clave por intento: un doble clic o un reintento no mete la mercancía al inventario dos veces
+  const claveRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (open && order) {
+      claveRef.current = null;
       setReceivedItems(
         order.items.map((item: any) => ({
           ...item,
@@ -34,11 +38,14 @@ export default function ReceiveOrderModal({ open, onClose, onReceived, order }: 
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return;
     try {
       setLoading(true);
       setError("");
 
+      claveRef.current = claveEnUso(claveRef.current);
       await api.put(`/purchases/orders/${order.id}/receive`, {
+        idOperacion: claveRef.current,
         receivedItems: receivedItems.map((item) => ({
           descripcion: item.descripcion,
           cantidadRecibida: item.cantidadRecibida,
