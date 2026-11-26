@@ -10,10 +10,18 @@ const BUILT_IN_MODULES = ['ocr'];
 export interface SesionModulos {
   roleCode?: string | null;
   modulosActivos?: string[] | null;
+  /** SOPORTE: id del negocio elegido en la barra superior (null/ausente = ninguno) y sus módulos activos (null = aún sin cargar). */
+  negocioSoporteId?: string | null;
+  modulosNegocioSoporte?: string[] | null;
 }
 
 export function moduloDisponible(modulo: string, sesion: SesionModulos): boolean {
-  if (sesion.roleCode === 'SOPORTE') return true; // SOPORTE administra todos los negocios
+  if (sesion.roleCode === 'SOPORTE') {
+    // SOPORTE administra todos los negocios y ve todos los módulos, salvo los VERTICALES (Pacientes, Membresías): con un negocio
+    // elegido solo se ofrecen si ese negocio los tiene activos (el backend también lo exige). Sin negocio elegido se ve todo.
+    if (!(MODULOS_VERTICALES as readonly string[]).includes(modulo) || !sesion.negocioSoporteId) return true;
+    return (sesion.modulosNegocioSoporte ?? []).includes(modulo);
+  }
   if (BUILT_IN_MODULES.includes(modulo)) return true;
   const activos = sesion.modulosActivos;
   if (!activos || activos.length === 0) {

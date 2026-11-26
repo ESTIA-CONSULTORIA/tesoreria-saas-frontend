@@ -23,6 +23,7 @@ const etiqueta = (n: Negocio) => n.tradeName || n.legalName || n.id;
 // punto de color (no depende solo del color del borde).
 export default function SelectorNegocio() {
   const esSoporte = useAuthStore((s) => s.user?.roleCode) === 'SOPORTE';
+  const setModulosNegocioSoporte = useAuthStore((s) => s.setModulosNegocioSoporte);
   const { setActiveCompany, setActiveBranch } = useCompanyStore();
   const [negocios, setNegocios] = useState<Negocio[]>([]);
   const [error, setError] = useState(false);
@@ -34,6 +35,15 @@ export default function SelectorNegocio() {
       .then((r) => { setNegocios(Array.isArray(r.data) ? r.data : []); setError(false); })
       .catch(() => { setNegocios([]); setError(true); });
   }, [esSoporte]);
+
+  // Módulos activos del negocio elegido: el menú oculta Pacientes/Membresías para SOPORTE si ese negocio no los tiene
+  useEffect(() => {
+    if (!esSoporte) return;
+    if (!actual) { setModulosNegocioSoporte(null); return; }
+    api.get(`/modules/tenant/${actual}`)
+      .then((r) => setModulosNegocioSoporte(Array.isArray(r.data) ? r.data : []))
+      .catch(() => setModulosNegocioSoporte([]));
+  }, [esSoporte, actual, setModulosNegocioSoporte]);
 
   if (!esSoporte) return null;
 
