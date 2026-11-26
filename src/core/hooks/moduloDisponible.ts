@@ -31,3 +31,20 @@ export function moduloDisponible(modulo: string, sesion: SesionModulos): boolean
   }
   return activos.includes(modulo);
 }
+
+/**
+ * Qué hace una RUTA protegida por módulo (la misma regla que el menú: moduloDisponible, para TODOS los roles, SOPORTE incluido):
+ *  - 'permitir': el módulo está disponible para la sesión / el negocio activo;
+ *  - 'redirigir': no lo está → se saca al usuario a /dashboard (antes SOPORTE entraba por URL a /patients de un negocio sin el módulo y veía «0 pacientes»);
+ *  - 'esperar': SOPORTE con negocio elegido y sus módulos aún sin cargar (no se decide todavía; evita sacar a quien sí lo tiene).
+ * Se vuelve a evaluar cada vez que cambia la sesión o el negocio activo, así que cambiar de negocio con la pantalla abierta también saca.
+ */
+export function decisionRuta(modulo: string, sesion: SesionModulos): 'permitir' | 'redirigir' | 'esperar' {
+  if (
+    sesion.roleCode === 'SOPORTE' &&
+    (MODULOS_VERTICALES as readonly string[]).includes(modulo) &&
+    sesion.negocioSoporteId &&
+    sesion.modulosNegocioSoporte === null
+  ) return 'esperar';
+  return moduloDisponible(modulo, sesion) ? 'permitir' : 'redirigir';
+}
