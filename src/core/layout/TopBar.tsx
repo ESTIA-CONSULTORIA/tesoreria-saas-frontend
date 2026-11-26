@@ -626,7 +626,7 @@ export default function TopBar() {
               }}>
                 {ctxPhase === 'company' ? (
                   <>
-                    <div style={{ padding: '8px 12px 4px', fontSize: 9.5, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Empresa</div>
+                    <div style={{ padding: '8px 12px 4px', fontSize: 12, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Empresa</div>
                     {isAdmin && (
                       <CtxItem
                         label={ctxSwitching ? 'Cambiando…' : 'Vista Global'}
@@ -663,13 +663,13 @@ export default function TopBar() {
                         disabled={ctxSwitching}
                         style={{
                           display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none',
-                          color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', cursor: ctxSwitching ? 'default' : 'pointer', fontSize: 11, padding: 0,
+                          color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', cursor: ctxSwitching ? 'default' : 'pointer', fontSize: 12, padding: 0,
                           opacity: ctxSwitching ? 0.5 : 1,
                         }}>
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
                         Volver
                       </button>
-                      <span style={{ fontSize: 11.5, color: 'rgb(var(--veil) / max(0.6, var(--alfa-texto-min)))', fontWeight: 500 }}>{pendingCo?.name}</span>
+                      <span style={{ fontSize: 12, color: 'rgb(var(--veil) / max(0.6, var(--alfa-texto-min)))', fontWeight: 500 }}>{pendingCo?.name}</span>
                     </div>
                     <CtxItem
                       label={ctxSwitching ? 'Cambiando…' : 'Ver toda la empresa'}
@@ -678,7 +678,7 @@ export default function TopBar() {
                       disabled={ctxSwitching}
                       onClick={viewFullCompany}
                     />
-                    <div style={{ padding: '6px 12px 4px', fontSize: 9.5, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Sucursal</div>
+                    <div style={{ padding: '6px 12px 4px', fontSize: 12, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Sucursal</div>
                     {branches.length === 0 && <div style={{ padding: '8px 12px', fontSize: 12, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))' }}>Cargando...</div>}
                     {branches.map(br => (
                       <CtxItem
@@ -704,16 +704,16 @@ export default function TopBar() {
               width: 28, height: 28, borderRadius: '50%',
               background: 'rgb(var(--chip))', border: '1px solid rgb(var(--accent-alt) / 0.25)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 10.5, fontWeight: 600, color: 'rgb(var(--accent))', flexShrink: 0,
+              fontSize: 12, fontWeight: 600, color: 'rgb(var(--accent))', flexShrink: 0,
             }}>
               {userInitials}
             </div>
             <div style={{ lineHeight: 1.2 }}>
-              <div style={{ fontSize: 11.5, color: 'rgb(var(--text-soft))', fontWeight: 500 }}>{user?.name?.split(' ')[0] || user?.email?.split('@')[0]}</div>
-              <div style={{ fontSize: 10, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))' }}>{user?.roleCode}</div>
+              <div style={{ fontSize: 12, color: 'rgb(var(--text-soft))', fontWeight: 500 }}>{user?.name?.split(' ')[0] || user?.email?.split('@')[0]}</div>
+              <div style={{ fontSize: 12, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))' }}>{user?.roleCode}</div>
             </div>
             <button onClick={triggerLogout} style={{
-              fontSize: 11, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', background: 'transparent',
+              fontSize: 12, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', background: 'transparent',
               border: 'none', cursor: 'pointer', padding: '4px 6px', borderRadius: 4,
             }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgb(var(--text-soft))'; }}

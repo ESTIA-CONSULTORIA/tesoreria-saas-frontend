@@ -4,6 +4,19 @@ import { useAuthStore } from "../../core/store/useAuthStore";
 import { useCompanyStore } from "../../core/store/useCompanyStore";
 import { inicialEmpresa, nombreEmpresa } from "./nombreEmpresa";
 
+// Paleta propia de esta pantalla (siempre oscura, independiente de la skin)
+const C_0A0A0A = '#0A0A0A';
+const C_F5F5F5 = '#F5F5F5';
+const C_9A9A9A = '#9A9A9A';
+const C_BDBDBD = '#BDBDBD';
+const C_161616 = '#161616';
+const C_3D3D3D = '#3D3D3D';
+const C_1B1B1B = '#1B1B1B';
+const C_2D2D2D = '#2D2D2D';
+const C_9B3A3A = '#9B3A3A';
+const C_3B7A57 = '#3B7A57';
+const C_6B6B6B = '#6B6B6B';
+
 type View = 'login' | 'home' | 'dashboard' | 'tesoreria' | 'ventas' | 'gastos' | 'cxc' | 'cxp' | 'personal' | 'alertas';
 
 export default function ESTIAExecutiveAccess() {
@@ -93,30 +106,30 @@ export default function ESTIAExecutiveAccess() {
   // Vista: Selección de Empresa
   if (view === 'login' && !selectedCompany) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: C_0A0A0A, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
         <div style={{ maxWidth: '400px', width: '100%' }}>
           <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-            <h1 style={{ fontSize: '24px', fontWeight: 400, color: '#F5F5F5', marginBottom: '8px', letterSpacing: '0.02em' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 400, color: C_F5F5F5, marginBottom: '8px', letterSpacing: '0.02em' }}>
               ESTIA
             </h1>
-            <p style={{ fontSize: '14px', color: '#9A9A9A', letterSpacing: '0.01em' }}>
+            <p style={{ fontSize: '14px', color: C_9A9A9A, letterSpacing: '0.01em' }}>
               Executive Access
             </p>
           </div>
 
-          <p style={{ fontSize: '14px', color: '#9A9A9A', marginBottom: '24px', textAlign: 'center', letterSpacing: '0.01em' }}>
+          <p style={{ fontSize: '14px', color: C_9A9A9A, marginBottom: '24px', textAlign: 'center', letterSpacing: '0.01em' }}>
             Selecciona una empresa
           </p>
 
-          {cargandoEmpresas && <p role="status" style={{ textAlign: 'center', color: '#BDBDBD', fontSize: '14px' }}>Cargando empresas…</p>}
+          {cargandoEmpresas && <p role="status" style={{ textAlign: 'center', color: C_BDBDBD, fontSize: '14px' }}>Cargando empresas…</p>}
           {!cargandoEmpresas && errorEmpresas && (
-            <div role="alert" style={{ textAlign: 'center', color: '#F5F5F5', fontSize: '14px' }}>
+            <div role="alert" style={{ textAlign: 'center', color: C_F5F5F5, fontSize: '14px' }}>
               <p style={{ marginBottom: '12px' }}>No se pudieron cargar las empresas. Revisa tu conexión e inténtalo de nuevo.</p>
-              <button onClick={loadCompanies} style={{ padding: '12px 20px', backgroundColor: '#161616', border: '1px solid #6B6B6B', borderRadius: '4px', color: '#F5F5F5', fontSize: '14px', cursor: 'pointer' }}>Reintentar</button>
+              <button onClick={loadCompanies} style={{ padding: '12px 20px', backgroundColor: C_161616, border: `1px solid ${C_6B6B6B}`, borderRadius: '4px', color: C_F5F5F5, fontSize: '14px', cursor: 'pointer' }}>Reintentar</button>
             </div>
           )}
           {!cargandoEmpresas && !errorEmpresas && companies.length === 0 && (
-            <p role="status" style={{ textAlign: 'center', color: '#F5F5F5', fontSize: '14px' }}>Sin empresas. Pide a tu administrador que cree una en el sistema.</p>
+            <p role="status" style={{ textAlign: 'center', color: C_F5F5F5, fontSize: '14px' }}>Sin empresas. Pide a tu administrador que cree una en el sistema.</p>
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {companies.map((company) => (
@@ -126,17 +139,17 @@ export default function ESTIAExecutiveAccess() {
                 style={{
                   width: '100%',
                   padding: '20px',
-                  backgroundColor: '#161616',
-                  border: '1px solid #2D2D2D',
+                  backgroundColor: C_161616,
+                  border: `1px solid ${C_2D2D2D}`,
                   borderRadius: '4px',
-                  color: '#F5F5F5',
+                  color: C_F5F5F5,
                   fontSize: '14px',
                   letterSpacing: '0.01em',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.backgroundColor = '#1B1B1B'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.backgroundColor = '#161616'; }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = C_3D3D3D; e.currentTarget.style.backgroundColor = C_1B1B1B; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = C_2D2D2D; e.currentTarget.style.backgroundColor = C_161616; }}
               >
                 {nombreEmpresa(company)}
               </button>
@@ -150,18 +163,18 @@ export default function ESTIAExecutiveAccess() {
   // Vista: PIN
   if (view === 'login' && selectedCompany) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: C_0A0A0A, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
         <div style={{ maxWidth: '400px', width: '100%' }}>
           <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-            <div style={{ width: '80px', height: '80px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-              <span style={{ fontSize: '32px', color: '#BDBDBD' }}>
+            <div style={{ width: '80px', height: '80px', backgroundColor: C_161616, border: `1px solid ${C_2D2D2D}`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+              <span style={{ fontSize: '32px', color: C_BDBDBD }}>
                 {inicialEmpresa(selectedCompany)}
               </span>
             </div>
-            <h2 style={{ fontSize: '18px', fontWeight: 400, color: '#F5F5F5', marginBottom: '8px', letterSpacing: '0.01em' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 400, color: C_F5F5F5, marginBottom: '8px', letterSpacing: '0.01em' }}>
               {nombreEmpresa(selectedCompany)}
             </h2>
-            <p style={{ fontSize: '12px', color: '#9A9A9A', letterSpacing: '0.01em' }}>
+            <p style={{ fontSize: '12px', color: C_9A9A9A, letterSpacing: '0.01em' }}>
               Ingresa tu PIN de acceso
             </p>
           </div>
@@ -173,14 +186,14 @@ export default function ESTIAExecutiveAccess() {
                 style={{
                   width: '48px',
                   height: '56px',
-                  backgroundColor: '#161616',
-                  border: showPinError ? '1px solid #9B3A3A' : '1px solid #2D2D2D',
+                  backgroundColor: C_161616,
+                  border: showPinError ? `1px solid ${C_9B3A3A}` : `1px solid ${C_2D2D2D}`,
                   borderRadius: '4px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '24px',
-                  color: '#F5F5F5',
+                  color: C_F5F5F5,
                   letterSpacing: '0.02em',
                 }}
               >
@@ -190,7 +203,7 @@ export default function ESTIAExecutiveAccess() {
           </div>
 
           {showPinError && (
-            <p style={{ textAlign: 'center', color: '#9B3A3A', fontSize: '12px', marginBottom: '24px', letterSpacing: '0.01em' }}>
+            <p style={{ textAlign: 'center', color: C_9B3A3A, fontSize: '12px', marginBottom: '24px', letterSpacing: '0.01em' }}>
               PIN incorrecto
             </p>
           )}
@@ -214,16 +227,16 @@ export default function ESTIAExecutiveAccess() {
                 style={{
                   width: '100%',
                   height: '64px',
-                  backgroundColor: '#161616',
-                  border: '1px solid #2D2D2D',
+                  backgroundColor: C_161616,
+                  border: `1px solid ${C_2D2D2D}`,
                   borderRadius: '4px',
-                  color: '#F5F5F5',
+                  color: C_F5F5F5,
                   fontSize: '24px',
                   cursor: num === '' ? 'default' : 'pointer',
                   transition: 'all 0.2s',
                 }}
-                onMouseEnter={(e) => { if (num !== '') e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.backgroundColor = '#1B1B1B'; }}
-                onMouseLeave={(e) => { if (num !== '') e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.backgroundColor = '#161616'; }}
+                onMouseEnter={(e) => { if (num !== '') e.currentTarget.style.borderColor = C_3D3D3D; e.currentTarget.style.backgroundColor = C_1B1B1B; }}
+                onMouseLeave={(e) => { if (num !== '') e.currentTarget.style.borderColor = C_2D2D2D; e.currentTarget.style.backgroundColor = C_161616; }}
               >
                 {num}
               </button>
@@ -238,7 +251,7 @@ export default function ESTIAExecutiveAccess() {
               padding: '12px',
               backgroundColor: 'transparent',
               border: 'none',
-              color: '#9A9A9A',
+              color: C_9A9A9A,
               fontSize: '12px',
               letterSpacing: '0.01em',
               cursor: 'pointer',
@@ -265,20 +278,20 @@ export default function ESTIAExecutiveAccess() {
     ];
 
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', padding: '20px' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: C_0A0A0A, padding: '20px' }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '48px', height: '48px', backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: '20px', color: '#BDBDBD' }}>
+            <div style={{ width: '48px', height: '48px', backgroundColor: C_161616, border: `1px solid ${C_2D2D2D}`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: '20px', color: C_BDBDBD }}>
                 {inicialEmpresa(selectedCompany)}
               </span>
             </div>
             <div>
-              <h1 style={{ fontSize: '16px', fontWeight: 400, color: '#F5F5F5', marginBottom: '2px', letterSpacing: '0.01em' }}>
+              <h1 style={{ fontSize: '16px', fontWeight: 400, color: C_F5F5F5, marginBottom: '2px', letterSpacing: '0.01em' }}>
                 {selectedCompany ? nombreEmpresa(selectedCompany) : 'Empresa'}
               </h1>
-              <p style={{ fontSize: '12px', color: '#9A9A9A', letterSpacing: '0.01em' }}>
+              <p style={{ fontSize: '12px', color: C_9A9A9A, letterSpacing: '0.01em' }}>
                 {user?.name || 'Usuario'}
               </p>
             </div>
@@ -288,21 +301,21 @@ export default function ESTIAExecutiveAccess() {
             style={{
               padding: '8px 16px',
               backgroundColor: 'transparent',
-              border: '1px solid #2D2D2D',
+              border: `1px solid ${C_2D2D2D}`,
               borderRadius: '2px',
-              color: '#9A9A9A',
+              color: C_9A9A9A,
               fontSize: '12px',
               letterSpacing: '0.01em',
               cursor: 'pointer',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.color = '#BDBDBD'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.color = '#9A9A9A'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = C_3D3D3D; e.currentTarget.style.color = C_BDBDBD; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = C_2D2D2D; e.currentTarget.style.color = C_9A9A9A; }}
           >
             Salir
           </button>
         </div>
 
-        <h2 style={{ fontSize: '20px', fontWeight: 400, color: '#F5F5F5', marginBottom: '24px', letterSpacing: '0.01em' }}>
+        <h2 style={{ fontSize: '20px', fontWeight: 400, color: C_F5F5F5, marginBottom: '24px', letterSpacing: '0.01em' }}>
           Consulta Ejecutiva
         </h2>
 
@@ -313,23 +326,23 @@ export default function ESTIAExecutiveAccess() {
               onClick={() => setView(module.id as View)}
               style={{
                 padding: '24px',
-                backgroundColor: '#161616',
-                border: '1px solid #2D2D2D',
+                backgroundColor: C_161616,
+                border: `1px solid ${C_2D2D2D}`,
                 borderRadius: '4px',
                 textAlign: 'left',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#3D3D3D'; e.currentTarget.style.backgroundColor = '#1B1B1B'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2D2D2D'; e.currentTarget.style.backgroundColor = '#161616'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = C_3D3D3D; e.currentTarget.style.backgroundColor = C_1B1B1B; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = C_2D2D2D; e.currentTarget.style.backgroundColor = C_161616; }}
             >
               <span style={{ fontSize: '32px', display: 'block', marginBottom: '12px' }}>
                 {module.icon}
               </span>
-              <h3 style={{ fontSize: '16px', fontWeight: 400, color: '#F5F5F5', marginBottom: '4px', letterSpacing: '0.01em' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 400, color: C_F5F5F5, marginBottom: '4px', letterSpacing: '0.01em' }}>
                 {module.label}
               </h3>
-              <p style={{ fontSize: '12px', color: '#9A9A9A', letterSpacing: '0.01em' }}>
+              <p style={{ fontSize: '12px', color: C_9A9A9A, letterSpacing: '0.01em' }}>
                 {module.description}
               </p>
             </button>
@@ -348,7 +361,7 @@ export default function ESTIAExecutiveAccess() {
     const udi = uai * 0.75;
 
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', padding: '20px' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: C_0A0A0A, padding: '20px' }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
           <button
@@ -357,52 +370,52 @@ export default function ESTIAExecutiveAccess() {
               padding: '8px 12px',
               backgroundColor: 'transparent',
               border: 'none',
-              color: '#9A9A9A',
+              color: C_9A9A9A,
               fontSize: '14px',
               cursor: 'pointer',
             }}
           >
             ← Volver
           </button>
-          <h1 style={{ fontSize: '16px', fontWeight: 400, color: '#F5F5F5', letterSpacing: '0.01em' }}>
+          <h1 style={{ fontSize: '16px', fontWeight: 400, color: C_F5F5F5, letterSpacing: '0.01em' }}>
             Dashboard
           </h1>
           <div style={{ width: '60px' }} />
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#9A9A9A' }}>
+          <div style={{ textAlign: 'center', padding: '40px', color: C_9A9A9A }}>
             Cargando...
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {/* KPIs */}
-            <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '4px', padding: '20px' }}>
-              <p style={{ fontSize: '12px', color: '#9A9A9A', marginBottom: '16px', letterSpacing: '0.01em' }}>
+            <div style={{ backgroundColor: C_161616, border: `1px solid ${C_2D2D2D}`, borderRadius: '4px', padding: '20px' }}>
+              <p style={{ fontSize: '12px', color: C_9A9A9A, marginBottom: '16px', letterSpacing: '0.01em' }}>
                 Resumen del mes
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
                 <div>
-                  <p style={{ fontSize: '12px', color: '#9A9A9A', marginBottom: '4px', letterSpacing: '0.01em' }}>Ventas</p>
-                  <p style={{ fontSize: '24px', color: '#F5F5F5', fontWeight: 400, letterSpacing: '0.01em' }}>
+                  <p style={{ fontSize: '12px', color: C_9A9A9A, marginBottom: '4px', letterSpacing: '0.01em' }}>Ventas</p>
+                  <p style={{ fontSize: '24px', color: C_F5F5F5, fontWeight: 400, letterSpacing: '0.01em' }}>
                     ${ventas.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
                   </p>
                 </div>
                 <div>
-                  <p style={{ fontSize: '12px', color: '#9A9A9A', marginBottom: '4px', letterSpacing: '0.01em' }}>UAI</p>
-                  <p style={{ fontSize: '24px', color: uai >= 0 ? '#3B7A57' : '#9B3A3A', fontWeight: 400, letterSpacing: '0.01em' }}>
+                  <p style={{ fontSize: '12px', color: C_9A9A9A, marginBottom: '4px', letterSpacing: '0.01em' }}>UAI</p>
+                  <p style={{ fontSize: '24px', color: uai >= 0 ? C_3B7A57 : C_9B3A3A, fontWeight: 400, letterSpacing: '0.01em' }}>
                     ${uai.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
                   </p>
                 </div>
                 <div>
-                  <p style={{ fontSize: '12px', color: '#9A9A9A', marginBottom: '4px', letterSpacing: '0.01em' }}>Costo</p>
-                  <p style={{ fontSize: '24px', color: '#F5F5F5', fontWeight: 400, letterSpacing: '0.01em' }}>
+                  <p style={{ fontSize: '12px', color: C_9A9A9A, marginBottom: '4px', letterSpacing: '0.01em' }}>Costo</p>
+                  <p style={{ fontSize: '24px', color: C_F5F5F5, fontWeight: 400, letterSpacing: '0.01em' }}>
                     ${costo.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
                   </p>
                 </div>
                 <div>
-                  <p style={{ fontSize: '12px', color: '#9A9A9A', marginBottom: '4px', letterSpacing: '0.01em' }}>UDI</p>
-                  <p style={{ fontSize: '24px', color: udi >= 0 ? '#3B7A57' : '#9B3A3A', fontWeight: 400, letterSpacing: '0.01em' }}>
+                  <p style={{ fontSize: '12px', color: C_9A9A9A, marginBottom: '4px', letterSpacing: '0.01em' }}>UDI</p>
+                  <p style={{ fontSize: '24px', color: udi >= 0 ? C_3B7A57 : C_9B3A3A, fontWeight: 400, letterSpacing: '0.01em' }}>
                     ${udi.toLocaleString('es-MX', { maximumFractionDigits: 0 })}
                   </p>
                 </div>
@@ -410,18 +423,18 @@ export default function ESTIAExecutiveAccess() {
             </div>
 
             {/* Movimientos recientes */}
-            <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '4px', padding: '20px' }}>
-              <p style={{ fontSize: '12px', color: '#9A9A9A', marginBottom: '16px', letterSpacing: '0.01em' }}>
+            <div style={{ backgroundColor: C_161616, border: `1px solid ${C_2D2D2D}`, borderRadius: '4px', padding: '20px' }}>
+              <p style={{ fontSize: '12px', color: C_9A9A9A, marginBottom: '16px', letterSpacing: '0.01em' }}>
                 Movimientos recientes
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {(kpis?.latestMovements || []).slice(0, 5).map((movement: any) => (
-                  <div key={movement.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#1B1B1B', borderRadius: '2px' }}>
+                  <div key={movement.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: C_1B1B1B, borderRadius: '2px' }}>
                     <div>
-                      <p style={{ fontSize: '13px', color: '#F5F5F5', marginBottom: '2px', letterSpacing: '0.01em' }}>{movement.concept}</p>
-                      <p style={{ fontSize: '12px', color: '#9A9A9A', letterSpacing: '0.01em' }}>{movement.category}</p>
+                      <p style={{ fontSize: '13px', color: C_F5F5F5, marginBottom: '2px', letterSpacing: '0.01em' }}>{movement.concept}</p>
+                      <p style={{ fontSize: '12px', color: C_9A9A9A, letterSpacing: '0.01em' }}>{movement.category}</p>
                     </div>
-                    <p style={{ fontSize: '14px', color: movement.type === 'INCOME' ? '#3B7A57' : '#9B3A3A', fontWeight: 400, letterSpacing: '0.01em' }}>
+                    <p style={{ fontSize: '14px', color: movement.type === 'INCOME' ? C_3B7A57 : C_9B3A3A, fontWeight: 400, letterSpacing: '0.01em' }}>
                       {movement.type === 'INCOME' ? '+' : '-'}${Number(movement.amount).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
@@ -451,7 +464,7 @@ export default function ESTIAExecutiveAccess() {
     };
 
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', padding: '20px' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: C_0A0A0A, padding: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
           <button
             onClick={() => setView('home')}
@@ -459,24 +472,24 @@ export default function ESTIAExecutiveAccess() {
               padding: '8px 12px',
               backgroundColor: 'transparent',
               border: 'none',
-              color: '#9A9A9A',
+              color: C_9A9A9A,
               fontSize: '14px',
               cursor: 'pointer',
             }}
           >
             ← Volver
           </button>
-          <h1 style={{ fontSize: '16px', fontWeight: 400, color: '#F5F5F5', letterSpacing: '0.01em' }}>
+          <h1 style={{ fontSize: '16px', fontWeight: 400, color: C_F5F5F5, letterSpacing: '0.01em' }}>
             {viewNames[view]}
           </h1>
           <div style={{ width: '60px' }} />
         </div>
 
         <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-          <p style={{ fontSize: '14px', color: '#9A9A9A', marginBottom: '8px', letterSpacing: '0.01em' }}>
+          <p style={{ fontSize: '14px', color: C_9A9A9A, marginBottom: '8px', letterSpacing: '0.01em' }}>
             Módulo en desarrollo
           </p>
-          <p style={{ fontSize: '12px', color: '#9A9A9A', letterSpacing: '0.01em' }}>
+          <p style={{ fontSize: '12px', color: C_9A9A9A, letterSpacing: '0.01em' }}>
             Esta sección estará disponible próximamente
           </p>
         </div>

@@ -135,18 +135,18 @@ export default function MovementsPage() {
         </div>
 
         <div className="grid gap-3 rounded-xl border border-slate-800 bg-slate-900 p-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
-          <select value={accountId} onChange={(e) => { setPage(1); setAccountId(e.target.value); }} className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-white">
+          <select aria-label="Cuenta" value={accountId} onChange={(e) => { setPage(1); setAccountId(e.target.value); }} className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-white">
             <option value="">Todas las cuentas</option>
             {accounts.map((acc) => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
           </select>
-          <select value={type} onChange={(e) => { setPage(1); setType(e.target.value); }} className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-white">
+          <select aria-label="Tipo de movimiento" value={type} onChange={(e) => { setPage(1); setType(e.target.value); }} className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-white">
             <option value="">Todos los tipos</option>
             <option value="INGRESO">INGRESO</option>
             <option value="EGRESO">EGRESO</option>
           </select>
           <input value={category} onChange={(e) => { setPage(1); setCategory(e.target.value); }} placeholder="Categoria" className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-white" />
-          <input type="date" value={startDate} onChange={(e) => { setPage(1); setStartDate(e.target.value); }} className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-white" />
-          <input type="date" value={endDate} onChange={(e) => { setPage(1); setEndDate(e.target.value); }} className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-white" />
+          <input aria-label="Fecha inicial" type="date" value={startDate} onChange={(e) => { setPage(1); setStartDate(e.target.value); }} className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-white" />
+          <input aria-label="Fecha final" type="date" value={endDate} onChange={(e) => { setPage(1); setEndDate(e.target.value); }} className="rounded-lg border border-slate-700 bg-slate-800 p-2 text-white" />
         </div>
 
         {error && <div className="rounded-xl border border-red-700 bg-red-900/30 p-4 text-red-300">{error}</div>}
@@ -185,7 +185,7 @@ export default function MovementsPage() {
                       <td className="p-2">{item.concept}</td>
                       <td className="p-2">{Number(item.amount).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</td>
                       <td className="p-2">
-                        <span style={{ background: badge.color + "22", color: badge.color, border: `1px solid ${badge.color}44`, borderRadius: 4, padding: "2px 7px", fontSize: 11, whiteSpace: "nowrap" }}>
+                        <span style={{ background: badge.color + "22", color: badge.color, border: `1px solid ${badge.color}44`, borderRadius: 4, padding: "2px 7px", fontSize: 12, whiteSpace: "nowrap" }}>
                           {badge.label}
                         </span>
                       </td>

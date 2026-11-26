@@ -197,7 +197,7 @@ export default function OnboardingWizard({ onComplete }: Props) {
               }}>
                 {i < step ? "✓" : i + 1}
               </div>
-              <div style={{ fontSize: 10, color: i === step ? "#F5F5F5" : "#9A9A9A" }}>{s.label}</div>
+              <div style={{ fontSize: 12, color: i === step ? "#F5F5F5" : "#9A9A9A" }}>{s.label}</div>
             </div>
           ))}
         </div>

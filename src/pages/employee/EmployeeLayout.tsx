@@ -82,7 +82,7 @@ export default function EmployeeLayout({ children }: Props) {
               <span style={{ fontSize: 18, lineHeight: 1 }}>{tab.icon}</span>
               <span
                 style={{
-                  fontSize: "0.55rem",
+                  fontSize: "0.75rem",
                   letterSpacing: "0.2em",
                   fontWeight: 600,
                   textTransform: "uppercase",

@@ -139,7 +139,7 @@ export function Modal({ title, subtitle, size = 'md', footer, onClose, atajos = 
         <div className={CLASES_MODAL.body}>{children}</div>
         {footer ? <div data-pos-footer className={papel ? CLASES_MODAL_PAPEL.footer : CLASES_MODAL.footer}>{footer}</div> : null}
         {leyenda.length > 0 ? (
-          <div className={papel ? CLASES_MODAL_PAPEL.leyenda : 'shrink-0 border-t !border-line px-5 py-1.5 text-[11px] !text-content-3'} aria-label="Atajos de teclado">
+          <div className={papel ? CLASES_MODAL_PAPEL.leyenda : 'shrink-0 border-t !border-line px-5 py-1.5 text-[12px] !text-content-3'} aria-label="Atajos de teclado">
             {leyenda.map((t, i) => (
               <span key={t}>
                 {i > 0 ? <span className="mx-2 text-content-3">·</span> : null}

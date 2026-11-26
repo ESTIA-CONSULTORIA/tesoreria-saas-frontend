@@ -118,7 +118,7 @@ export default function PosChatPanel({ turnoId, onClose, onApproved, onRejected 
         <div style={{ padding: "14px 18px", borderBottom: "1px solid rgb(var(--border))", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <div style={{ fontWeight: 700, color: "rgb(var(--text-1))", fontSize: 14 }}>Chat de Turno</div>
-            <div style={{ fontSize: 11, color: "rgb(var(--text-3))" }}>Turno #{turnoId.slice(0, 8)}</div>
+            <div style={{ fontSize: 12, color: "rgb(var(--text-3))" }}>Turno #{turnoId.slice(0, 8)}</div>
           </div>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "rgb(var(--text-3))", fontSize: 20, cursor: "pointer" }}>×</button>
         </div>
@@ -141,12 +141,12 @@ export default function PosChatPanel({ turnoId, onClose, onApproved, onRejected 
                 border: `1px solid ${style.border !== "transparent" ? style.border : (isMe ? "rgb(var(--chat-mine-line))" : "rgb(var(--border))")}`,
                 borderRadius: 8, padding: "8px 12px",
               }}>
-                <div style={{ fontSize: 10, color: "rgb(var(--text-3))", marginBottom: 2 }}>
+                <div style={{ fontSize: 12, color: "rgb(var(--text-3))", marginBottom: 2 }}>
                   {msg.userName} · {msg.role}
                   {style.label && <span style={{ marginLeft: 6, fontWeight: 600, color: style.border !== "transparent" ? style.border.replace("44", "") : "rgb(var(--text-3))" }}>{style.label}</span>}
                 </div>
                 <div style={{ fontSize: 13, color: "rgb(var(--text-1))" }}>{msg.message}</div>
-                <div style={{ fontSize: 10, color: "rgb(var(--viz-6))", marginTop: 2, textAlign: "right" }}>
+                <div style={{ fontSize: 12, color: "rgb(var(--viz-6))", marginTop: 2, textAlign: "right" }}>
                   {new Date(msg.createdAt).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
                 </div>
               </div>
@@ -158,7 +158,7 @@ export default function PosChatPanel({ turnoId, onClose, onApproved, onRejected 
         {/* Admin approval panel */}
         {isAdmin && !resolved && (
           <div style={{ padding: "10px 16px", borderTop: "1px solid rgb(var(--border))", background: "rgb(var(--nav-alt))" }}>
-            <div style={{ fontSize: 11, color: "rgb(var(--text-3))", marginBottom: 6 }}>Acciones de supervisor</div>
+            <div style={{ fontSize: 12, color: "rgb(var(--text-3))", marginBottom: 6 }}>Acciones de supervisor</div>
             {showRejectInput ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <input

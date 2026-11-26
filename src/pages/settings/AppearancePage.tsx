@@ -216,7 +216,7 @@ export default function AppearancePage() {
         <div style={s.section}>
           <div style={s.card}>
             <label style={s.label}>Tipografía</label>
-            <select value={form.fontFamily}
+            <select aria-label="Tipografía" value={form.fontFamily}
               onChange={e => setForm(f => ({ ...f, fontFamily: e.target.value }))}
               style={{ ...s.input, fontFamily: form.fontFamily }}>
               {GOOGLE_FONTS.map(f => (

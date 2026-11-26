@@ -16,10 +16,10 @@ interface Respuesta {
 const VACIA: Respuesta = { vacaciones: [], permisos: [], totalVacaciones: 0, totalPermisos: 0, total: 0 };
 
 const card: React.CSSProperties = { padding: 14, borderRadius: 10, background: '#141820', border: '1px solid rgba(255,255,255,0.07)' };
-const tenue: React.CSSProperties = { fontSize: 11.5, color: 'rgba(255,255,255,0.35)', margin: 0 };
+const tenue: React.CSSProperties = { fontSize: 12, color: 'rgba(255,255,255,0.35)', margin: 0 };
 const campo: React.CSSProperties = { padding: '5px 8px', fontSize: 12, borderRadius: 6, background: '#0f131a', border: '1px solid rgba(255,255,255,0.12)', color: '#c8cdd8' };
 const btn = (verde: boolean): React.CSSProperties => ({
-  padding: '4px 12px', fontSize: 11.5, borderRadius: 5, cursor: 'pointer',
+  padding: '4px 12px', fontSize: 12, borderRadius: 5, cursor: 'pointer',
   background: verde ? 'rgba(74,222,128,0.08)' : 'rgba(239,68,68,0.08)',
   border: `1px solid ${verde ? 'rgba(74,222,128,0.2)' : 'rgba(239,68,68,0.2)'}`,
   color: verde ? '#4ade80' : 'rgba(252,165,165,0.8)',

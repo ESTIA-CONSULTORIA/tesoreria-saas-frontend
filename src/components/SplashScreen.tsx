@@ -135,7 +135,7 @@ export function SplashScreen({ onDone }: Props) {
         {/* Tipografía destacada */}
         <div style={{
           marginTop: 18,
-          fontSize: 11,
+          fontSize: 12,
           letterSpacing: '0.5em',
           color: 'rgba(180,210,235,0.55)',
           textTransform: 'uppercase',

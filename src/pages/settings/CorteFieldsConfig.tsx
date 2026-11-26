@@ -47,10 +47,10 @@ export default function CorteFieldsConfig() {
                 <div>
                   <div style={{ fontSize: 14, color: 'rgb(var(--text-soft))' }}>{f.label}</div>
                   {f.isRequired && (
-                    <div style={{ fontSize: 11, color: 'rgb(var(--veil) / 0.25)', marginTop: 2 }}>Obligatorio</div>
+                    <div style={{ fontSize: 12, color: 'rgb(var(--veil) / 0.25)', marginTop: 2 }}>Obligatorio</div>
                   )}
                   {f.resta && (
-                    <div style={{ fontSize: 11, color: 'rgb(var(--tono-danger-300) / 0.5)', marginTop: 2 }}>Resta del total</div>
+                    <div style={{ fontSize: 12, color: 'rgb(var(--tono-danger-300) / 0.5)', marginTop: 2 }}>Resta del total</div>
                   )}
                 </div>
                 <button

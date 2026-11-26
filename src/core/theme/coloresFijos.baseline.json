@@ -92,7 +92,7 @@
  "pages/banks/BanksPage.tsx": {
   "hex": 3,
   "rgb": 0,
-  "tw": 24,
+  "tw": 20,
   "nombrados": 0
  },
  "pages/banks/CreateBankModal.tsx": {
@@ -330,7 +330,7 @@
   "nombrados": 0
  },
  "pages/mobile-analytics/MobileAnalyticsApp.tsx": {
-  "hex": 81,
+  "hex": 11,
   "rgb": 0,
   "tw": 0,
   "nombrados": 0
@@ -348,7 +348,7 @@
   "nombrados": 0
  },
  "pages/ocr/OCRPage.tsx": {
-  "hex": 66,
+  "hex": 64,
   "rgb": 1,
   "tw": 0,
   "nombrados": 0
@@ -396,7 +396,7 @@
   "nombrados": 0
  },
  "pages/reconciliation/ReconciliationPage.tsx": {
-  "hex": 205,
+  "hex": 197,
   "rgb": 2,
   "tw": 2,
   "nombrados": 0
@@ -422,7 +422,7 @@
  "pages/roles/RolesPage.tsx": {
   "hex": 0,
   "rgb": 0,
-  "tw": 24,
+  "tw": 22,
   "nombrados": 0
  },
  "pages/settings/AppearancePage.tsx": {
@@ -432,7 +432,7 @@
   "nombrados": 0
  },
  "pages/settings/LoginConfigPage.tsx": {
-  "hex": 101,
+  "hex": 99,
   "rgb": 1,
   "tw": 0,
   "nombrados": 0

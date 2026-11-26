@@ -197,7 +197,7 @@ export default function ExecutiveDashboard({
         <p
           style={{
             color: t.secondary,
-            fontSize: "0.6rem",
+            fontSize: "0.75rem",
             fontWeight: 400,
             letterSpacing: "0.2em",
             textTransform: "uppercase",
@@ -219,7 +219,7 @@ export default function ExecutiveDashboard({
             {userName}
           </p>
         )}
-        <p style={{ color: t.secondary, fontSize: "0.65rem", letterSpacing: "0.06em" }}>
+        <p style={{ color: t.secondary, fontSize: "0.75rem", letterSpacing: "0.06em" }}>
           {clockLabel}
         </p>
       </div>
@@ -260,7 +260,7 @@ export default function ExecutiveDashboard({
             <span
               style={{
                 color: t.secondary,
-                fontSize: "0.6rem",
+                fontSize: "0.75rem",
                 fontWeight: 400,
                 letterSpacing: "0.2em",
                 textTransform: "uppercase",
@@ -284,7 +284,7 @@ export default function ExecutiveDashboard({
               const up = pct?.startsWith("▲");
               return (
                 <span style={{
-                  fontSize: "0.6rem",
+                  fontSize: "0.75rem",
                   letterSpacing: "0.04em",
                   color: pct ? (up ? "#4ade80" : "#f87171") : t.secondary,
                 }}>
@@ -299,7 +299,7 @@ export default function ExecutiveDashboard({
       {/* Avisos de insumos */}
       {insumoAlerts.length > 0 && (
         <div style={{ padding: '0 20px', marginTop: 16, flexShrink: 0 }}>
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 10 }}>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 10 }}>
             Avisos de insumos
           </div>
           {insumoAlerts.map(ins => (
@@ -311,10 +311,10 @@ export default function ExecutiveDashboard({
             }}>
               <div>
                 <div style={{ fontSize: 13, color: '#c8cdd8' }}>{ins.nombre}</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>{ins.tipo}</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>{ins.tipo}</div>
               </div>
               <span style={{
-                fontSize: 10, padding: '3px 8px', borderRadius: 99,
+                fontSize: 12, padding: '3px 8px', borderRadius: 99,
                 background: ins.estado === 'agotado' ? 'rgba(252,165,165,0.12)' : 'rgba(251,191,36,0.12)',
                 color: ins.estado === 'agotado' ? 'rgba(252,165,165,0.8)' : 'rgba(251,191,36,0.8)',
                 letterSpacing: '0.08em',
@@ -331,7 +331,7 @@ export default function ExecutiveDashboard({
         <p
           style={{
             color: t.secondary,
-            fontSize: "0.55rem",
+            fontSize: "0.75rem",
             fontWeight: 400,
             letterSpacing: "0.2em",
             textTransform: "uppercase",
@@ -367,7 +367,7 @@ export default function ExecutiveDashboard({
                   borderRadius: 6,
                   padding: "10px 20px",
                   color: t.text,
-                  fontSize: "0.7rem",
+                  fontSize: "0.75rem",
                   fontWeight: 300,
                   letterSpacing: "0.05em",
                   textAlign: "center",
@@ -402,7 +402,7 @@ export default function ExecutiveDashboard({
             background: "none",
             border: "none",
             color: t.secondary,
-            fontSize: "0.6rem",
+            fontSize: "0.75rem",
             letterSpacing: "0.15em",
             textTransform: "uppercase",
             cursor: "pointer",

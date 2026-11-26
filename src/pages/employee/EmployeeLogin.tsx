@@ -89,7 +89,7 @@ export default function EmployeeLogin() {
             <label
               style={{
                 display: "block",
-                fontSize: "0.65rem",
+                fontSize: "0.75rem",
                 color: "#9A9A9A",
                 letterSpacing: "0.15em",
                 textTransform: "uppercase",
@@ -124,7 +124,7 @@ export default function EmployeeLogin() {
             <label
               style={{
                 display: "block",
-                fontSize: "0.65rem",
+                fontSize: "0.75rem",
                 color: "#9A9A9A",
                 letterSpacing: "0.15em",
                 textTransform: "uppercase",

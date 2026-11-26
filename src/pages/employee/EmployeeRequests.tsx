@@ -113,7 +113,7 @@ export default function EmployeeRequests() {
   function labelStyle(): React.CSSProperties {
     return {
       display: "block",
-      fontSize: "0.6rem",
+      fontSize: "0.75rem",
       color: "#9A9A9A",
       letterSpacing: "0.15em",
       textTransform: "uppercase",
@@ -156,7 +156,7 @@ export default function EmployeeRequests() {
                 border: "none",
                 borderRadius: 9,
                 color: tab === t ? "#F5F5F5" : "#9A9A9A",
-                fontSize: "0.7rem",
+                fontSize: "0.75rem",
                 fontWeight: 600,
                 letterSpacing: "0.15em",
                 textTransform: "uppercase",
@@ -204,7 +204,7 @@ export default function EmployeeRequests() {
                         style={{
                           background: s.bg,
                           color: s.color,
-                          fontSize: "0.65rem",
+                          fontSize: "0.75rem",
                           fontWeight: 600,
                           letterSpacing: "0.1em",
                           padding: "4px 10px",
@@ -217,7 +217,7 @@ export default function EmployeeRequests() {
                     </div>
                     {v.reason && <p style={{ color: "#9A9A9A", fontSize: "0.78rem" }}>{v.reason}</p>}
                     {v.responseNote && (
-                      <p style={{ color: "#9A9A9A", fontSize: "0.72rem", marginTop: 6, borderTop: "1px solid #1A1A1A", paddingTop: 6 }}>
+                      <p style={{ color: "#9A9A9A", fontSize: "0.75rem", marginTop: 6, borderTop: "1px solid #1A1A1A", paddingTop: 6 }}>
                         {v.responseNote}
                       </p>
                     )}
@@ -253,7 +253,7 @@ export default function EmployeeRequests() {
                         style={{
                           background: s.bg,
                           color: s.color,
-                          fontSize: "0.65rem",
+                          fontSize: "0.75rem",
                           fontWeight: 600,
                           letterSpacing: "0.1em",
                           padding: "4px 10px",
@@ -266,7 +266,7 @@ export default function EmployeeRequests() {
                     </div>
                     {p.reason && <p style={{ color: "#9A9A9A", fontSize: "0.78rem" }}>{p.reason}</p>}
                     {p.responseNote && (
-                      <p style={{ color: "#9A9A9A", fontSize: "0.72rem", marginTop: 6, borderTop: "1px solid #1A1A1A", paddingTop: 6 }}>
+                      <p style={{ color: "#9A9A9A", fontSize: "0.75rem", marginTop: 6, borderTop: "1px solid #1A1A1A", paddingTop: 6 }}>
                         {p.responseNote}
                       </p>
                     )}

@@ -133,7 +133,7 @@
 }
 [data-skin="isotipo"][data-pos-hex="1"] .iso-hex > *:not(.iso-stock) { position: relative; z-index: 1; }
 [data-skin="isotipo"][data-pos-hex="1"] .iso-hex .iso-hex-img { display: none; }
-[data-skin="isotipo"][data-pos-hex="1"] .iso-hex .iso-hex-nombre { height: auto; max-width: 84px; font-size: 11px; line-height: 1.2; }
+[data-skin="isotipo"][data-pos-hex="1"] .iso-hex .iso-hex-nombre { height: auto; max-width: 84px; font-size: 12px; line-height: 1.2; }
 [data-skin="isotipo"][data-pos-hex="1"] .iso-hex .iso-stock {
   position: relative !important;
   z-index: 1;

@@ -82,7 +82,7 @@ export function ConceptsEditor({ entry, catalog, onSave, onClose }: Props) {
       </div>
       <input type="number" value={c.amount} onChange={e => updateConcept(realIdx, 'amount', parseFloat(e.target.value) || 0)}
         style={{ ...inputStyle, flex: 1 }} />
-      <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap', paddingTop: 6 }}>
+      <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap', paddingTop: 6 }}>
         <input type="checkbox" checked={!!c.saved} onChange={e => updateConcept(realIdx, 'saved', e.target.checked)} />
         guardar
       </label>

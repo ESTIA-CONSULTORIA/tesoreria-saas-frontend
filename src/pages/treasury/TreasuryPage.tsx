@@ -228,6 +228,7 @@ export default function TreasuryPage() {
             <p className="text-content-2" style={{ fontSize: '14px' }}>Gestión financiera integral</p>
           </div>
           <select
+            aria-label="Periodo"
             value={period}
             onChange={(e) => setPeriod(e.target.value as PeriodType)}
             className="px-4 py-2 text-sm font-medium"
@@ -395,7 +396,7 @@ export default function TreasuryPage() {
                             </div>
                           </div>
                           <span style={{
-                            fontSize: '11px',
+                            fontSize: '12px',
                             fontWeight: 600,
                             padding: '4px 8px',
                             borderRadius: '4px',
@@ -497,7 +498,7 @@ export default function TreasuryPage() {
                             <span style={{
                               padding: '4px 8px',
                               borderRadius: '4px',
-                              fontSize: '11px',
+                              fontSize: '12px',
                               fontWeight: 600,
                               backgroundColor: account.balance >= 0 ? '#0F0F0F' : '#0F0F0F',
                               color: account.balance >= 0 ? '#2F855A' : '#C53030',
@@ -512,7 +513,7 @@ export default function TreasuryPage() {
                               style={{
                                 padding: '6px 12px',
                                 borderRadius: '4px',
-                                fontSize: '11px',
+                                fontSize: '12px',
                                 fontWeight: 600,
                                 backgroundColor: '#C0C0C0',
                                 color: '#0A0A0A',
@@ -778,11 +779,11 @@ export default function TreasuryPage() {
                               <span style={{ color: '#F5F5F5', fontSize: '14px', fontWeight: 500 }}>
                                 ${Number(t.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                               </span>
-                              <span style={{ marginLeft: '8px', fontSize: '11px', padding: '2px 6px', borderRadius: '4px', backgroundColor: t.tipo === 'INTERNA' ? '#1e3a5f' : '#3b1f5e', color: t.tipo === 'INTERNA' ? '#60a5fa' : '#c084fc' }}>
+                              <span style={{ marginLeft: '8px', fontSize: '12px', padding: '2px 6px', borderRadius: '4px', backgroundColor: t.tipo === 'INTERNA' ? '#1e3a5f' : '#3b1f5e', color: t.tipo === 'INTERNA' ? '#60a5fa' : '#c084fc' }}>
                                 {t.tipo === 'INTERNA' ? 'Interno' : 'Intercompañía'}
                               </span>
                             </div>
-                            <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px',
+                            <span style={{ fontSize: '12px', padding: '2px 8px', borderRadius: '4px',
                               backgroundColor: t.status === 'AUTORIZADA' ? '#14532d' : t.status === 'RECHAZADA' ? '#450a0a' : '#422006',
                               color: t.status === 'AUTORIZADA' ? '#4ade80' : t.status === 'RECHAZADA' ? '#f87171' : '#fb923c'
                             }}>
@@ -876,7 +877,7 @@ export default function TreasuryPage() {
                                 <span style={{
                                   padding: '4px 8px',
                                   borderRadius: '4px',
-                                  fontSize: '11px',
+                                  fontSize: '12px',
                                   fontWeight: 600,
                                   backgroundColor: '#0F0F0F',
                                   color: urgencyColor,
@@ -889,7 +890,7 @@ export default function TreasuryPage() {
                                 <span style={{
                                   padding: '4px 8px',
                                   borderRadius: '4px',
-                                  fontSize: '11px',
+                                  fontSize: '12px',
                                   fontWeight: 600,
                                   backgroundColor: '#0F0F0F',
                                   color: '#A3A3A3',
@@ -902,7 +903,7 @@ export default function TreasuryPage() {
                                   style={{
                                     padding: '4px 8px',
                                     borderRadius: '4px',
-                                    fontSize: '11px',
+                                    fontSize: '12px',
                                     fontWeight: 600,
                                     backgroundColor: '#C0C0C0',
                                     color: '#0A0A0A',
@@ -985,7 +986,7 @@ export default function TreasuryPage() {
                             <span style={{
                               padding: '4px 8px',
                               borderRadius: '4px',
-                              fontSize: '11px',
+                              fontSize: '12px',
                               fontWeight: 600,
                               backgroundColor: '#0F0F0F',
                               color: '#A3A3A3',
@@ -1137,7 +1138,7 @@ export default function TreasuryPage() {
                       { label: "+90 días", key: "bucket90plus", color: "#EF4444" },
                     ].map(({ label, key, color }) => (
                       <div key={key} style={{ backgroundColor: '#161616', border: `1px solid ${color}44`, borderRadius: '6px', padding: '20px' }}>
-                        <p style={{ fontSize: '11px', color: '#9A9A9A', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
+                        <p style={{ fontSize: '12px', color: '#9A9A9A', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
                         <p style={{ fontSize: '24px', fontWeight: 700, color, fontFamily: 'monospace' }}>
                           ${Number(agingReport[key] ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                         </p>
@@ -1155,7 +1156,7 @@ export default function TreasuryPage() {
                         <thead style={{ backgroundColor: '#0F0F0F' }}>
                           <tr>
                             {["Proveedor", "Folio", "Monto", "Días vencido", "Fecha vencimiento"].map((h) => (
-                              <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: '11px', color: '#9A9A9A', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
+                              <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: '12px', color: '#9A9A9A', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
                             ))}
                           </tr>
                         </thead>
@@ -1169,7 +1170,7 @@ export default function TreasuryPage() {
                                 <td style={{ padding: '10px 16px', color: '#A3A3A3' }}>{item.folio ?? item.numero ?? '—'}</td>
                                 <td style={{ padding: '10px 16px', color: '#F5F5F5', fontWeight: 600 }}>${Number(item.monto ?? item.saldoPendiente ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
                                 <td style={{ padding: '10px 16px' }}>
-                                  <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 600, backgroundColor: color + '22', color }}>{days} días</span>
+                                  <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, backgroundColor: color + '22', color }}>{days} días</span>
                                 </td>
                                 <td style={{ padding: '10px 16px', color: '#A3A3A3' }}>{item.fechaVencimiento ? new Date(item.fechaVencimiento).toLocaleDateString('es-MX') : '—'}</td>
                               </tr>
@@ -1214,7 +1215,7 @@ export default function TreasuryPage() {
                           </div>
                           <div style={{ textAlign: 'right' }}>
                             <p style={{ fontWeight: 700, color: '#22C55E', fontFamily: 'monospace' }}>${Number(shift.totalEfectivo ?? shift.montoDepositar ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
-                            <p style={{ fontSize: '11px', color: '#9A9A9A' }}>a depositar</p>
+                            <p style={{ fontSize: '12px', color: '#9A9A9A' }}>a depositar</p>
                           </div>
                         </div>
                       </div>

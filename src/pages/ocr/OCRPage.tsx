@@ -191,10 +191,10 @@ export default function OCRPage() {
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
         {/* Header */}
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#F5F5F5", marginBottom: 4 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: "rgb(var(--text-1))", marginBottom: 4 }}>
             OCR de Documentos
           </h1>
-          <p style={{ color: "#9A9A9A", fontSize: 14 }}>
+          <p style={{ color: "rgb(var(--text-2))", fontSize: 14 }}>
             Sube facturas, recibos o contratos. El sistema extrae los datos automáticamente para validación.
           </p>
         </div>
@@ -235,6 +235,7 @@ export default function OCRPage() {
           <input
             ref={fileInputRef}
             type="file"
+            aria-label="Subir documentos para reconocimiento de texto"
             accept=".jpg,.jpeg,.png,.webp,.gif,.pdf"
             multiple
             style={{ display: "none" }}
@@ -259,7 +260,7 @@ export default function OCRPage() {
               <p style={{ color: "#F5F5F5", fontSize: 15, marginBottom: 4 }}>
                 Arrastra archivos aquí o haz clic para seleccionar
               </p>
-              <p style={{ color: "#9A9A9A", fontSize: 13 }}>JPG, PNG, WEBP, GIF, PDF — máximo 10 MB · Selección múltiple permitida</p>
+              <p style={{ color: "#B0B0B0", fontSize: 13 }}>JPG, PNG, WEBP, GIF, PDF — máximo 10 MB · Selección múltiple permitida</p>
             </>
           )}
         </div>
@@ -284,7 +285,7 @@ export default function OCRPage() {
                 background: "transparent",
                 border: "1px solid #3D3D3D",
                 borderRadius: 6,
-                color: "#9A9A9A",
+                color: "#B0B0B0",
                 fontSize: 12,
                 padding: "4px 12px",
                 cursor: "pointer",
@@ -295,9 +296,9 @@ export default function OCRPage() {
           </div>
 
           {loading ? (
-            <div style={{ padding: 40, textAlign: "center", color: "#9A9A9A" }}>Cargando...</div>
+            <div style={{ padding: 40, textAlign: "center", color: "#B0B0B0" }}>Cargando...</div>
           ) : documents.length === 0 ? (
-            <div style={{ padding: 40, textAlign: "center", color: "#9A9A9A", fontSize: 14 }}>
+            <div style={{ padding: 40, textAlign: "center", color: "#B0B0B0", fontSize: 14 }}>
               No hay documentos aún. Sube un archivo para comenzar.
             </div>
           ) : (
@@ -311,7 +312,7 @@ export default function OCRPage() {
                         style={{
                           padding: "10px 14px",
                           textAlign: "left",
-                          color: "#9A9A9A",
+                          color: "#B0B0B0",
                           fontWeight: 600,
                           whiteSpace: "nowrap",
                         }}
@@ -341,7 +342,7 @@ export default function OCRPage() {
                             border: `1px solid ${STATUS_COLOR[doc.status]}44`,
                             borderRadius: 4,
                             padding: "2px 8px",
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: 600,
                           }}
                         >
@@ -353,7 +354,7 @@ export default function OCRPage() {
                           ? `$${Number(doc.extractedData.montoTotal).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`
                           : "—"}
                       </td>
-                      <td style={{ padding: "10px 14px", color: "#9A9A9A", whiteSpace: "nowrap" }}>
+                      <td style={{ padding: "10px 14px", color: "#B0B0B0", whiteSpace: "nowrap" }}>
                         {new Date(doc.uploadedAt).toLocaleDateString("es-MX")}
                       </td>
                       <td style={{ padding: "10px 14px" }}>
@@ -381,7 +382,7 @@ export default function OCRPage() {
                                 background: "transparent",
                                 border: "1px solid #3D3D3D",
                                 borderRadius: 5,
-                                color: "#9A9A9A",
+                                color: "#B0B0B0",
                                 fontSize: 12,
                                 padding: "4px 10px",
                                 cursor: "pointer",
@@ -455,7 +456,7 @@ export default function OCRPage() {
                 <h2 style={{ fontSize: 16, fontWeight: 700, color: "#F5F5F5", margin: 0 }}>
                   Validar documento
                 </h2>
-                <p style={{ color: "#9A9A9A", fontSize: 12, marginTop: 2 }}>
+                <p style={{ color: "#B0B0B0", fontSize: 12, marginTop: 2 }}>
                   {selectedDoc.fileName} · {selectedDoc.documentType}
                 </p>
               </div>
@@ -464,7 +465,7 @@ export default function OCRPage() {
                 style={{
                   background: "transparent",
                   border: "none",
-                  color: "#9A9A9A",
+                  color: "#B0B0B0",
                   fontSize: 20,
                   cursor: "pointer",
                   lineHeight: 1,
@@ -477,7 +478,7 @@ export default function OCRPage() {
             {/* Modal body */}
             <div style={{ padding: "20px" }}>
               {modalLoading && (
-                <div style={{ fontSize: 12, color: "#9A9A9A", marginBottom: 12 }}>
+                <div style={{ fontSize: 12, color: "#B0B0B0", marginBottom: 12 }}>
                   Cargando datos extraídos...
                 </div>
               )}
@@ -500,10 +501,11 @@ export default function OCRPage() {
 
               {Object.entries(FIELD_LABELS).map(([key, label]) => (
                 <div key={key} style={{ marginBottom: 14 }}>
-                  <label style={{ display: "block", fontSize: 12, color: "#9A9A9A", marginBottom: 4 }}>
+                  <label style={{ display: "block", fontSize: 12, color: "#B0B0B0", marginBottom: 4 }}>
                     {label}
                   </label>
                   <input
+                    aria-label={label}
                     value={formData[key] ?? ""}
                     onChange={(e) => setFormData((prev) => ({ ...prev, [key]: e.target.value }))}
                     disabled={selectedDoc.status !== "PENDING"}
@@ -526,7 +528,7 @@ export default function OCRPage() {
               {/* Texto crudo extraído — diagnóstico */}
               {selectedDoc.rawText && !selectedDoc.rawText.startsWith('[OCR') && (
                 <details style={{ marginTop: 16 }}>
-                  <summary style={{ fontSize: 11, color: "#9A9A9A", cursor: "pointer", userSelect: "none" }}>
+                  <summary style={{ fontSize: 12, color: "#B0B0B0", cursor: "pointer", userSelect: "none" }}>
                     Ver texto extraído por OCR
                   </summary>
                   <pre
@@ -536,7 +538,7 @@ export default function OCRPage() {
                       background: "#111",
                       border: "1px solid #2D2D2D",
                       borderRadius: 6,
-                      fontSize: 11,
+                      fontSize: 12,
                       color: "#BDBDBD",
                       whiteSpace: "pre-wrap",
                       wordBreak: "break-word",
@@ -549,7 +551,7 @@ export default function OCRPage() {
                 </details>
               )}
               {selectedDoc.rawText?.startsWith('[OCR') && (
-                <div style={{ marginTop: 12, padding: "8px 12px", background: "#1A1010", border: "1px solid #EF444433", borderRadius: 6, fontSize: 11, color: "#EF4444" }}>
+                <div style={{ marginTop: 12, padding: "8px 12px", background: "#1A1010", border: "1px solid #EF444433", borderRadius: 6, fontSize: 12, color: "#EF4444" }}>
                   {selectedDoc.rawText}
                 </div>
               )}

@@ -41,7 +41,7 @@ function SeparadorInclinado() {
 function Dato({ etiqueta, valor, tono, nota }: { etiqueta: string; valor: string; tono?: 'ok' | 'danger'; nota?: string }) {
   return (
     <div className="min-w-0 flex-1 px-5">
-      <p className="text-[11px] uppercase tracking-[0.14em] !text-content-3">{etiqueta}</p>
+      <p className="text-[12px] uppercase tracking-[0.14em] !text-content-3">{etiqueta}</p>
       <p className={`iso-numero text-2xl font-semibold ${tono === 'ok' ? '!text-ok' : tono === 'danger' ? '!text-danger' : '!text-content-1'}`}>{valor}</p>
       {nota ? <p className="text-xs !text-content-3">{nota}</p> : null}
     </div>
@@ -172,7 +172,7 @@ export default function DashboardIsotipo(p: Props) {
           <table className="w-full text-sm">
             <caption className="sr-only">Desglose de ingresos y egresos</caption>
             <thead>
-              <tr className="text-left text-[11px] uppercase tracking-[0.14em] !text-content-3">
+              <tr className="text-left text-[12px] uppercase tracking-[0.14em] !text-content-3">
                 <th scope="col" className="py-1 font-medium">Empresa o sucursal</th>
                 <th scope="col" className="py-1 text-right font-medium">Ingresos</th>
                 <th scope="col" className="py-1 text-right font-medium">Egresos</th>

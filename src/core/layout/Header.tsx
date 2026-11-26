@@ -71,7 +71,7 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             {user?.name || user?.email}
           </div>
           <div style={{ 
-            fontSize: '11px', 
+            fontSize: '12px', 
             color: 'rgb(var(--text-3))',
           }}>
             {user?.roleCode}

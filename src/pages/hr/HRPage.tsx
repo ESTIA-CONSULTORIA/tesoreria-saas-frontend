@@ -98,7 +98,7 @@ function EmpAvatar({ emp, photos }: { emp: Employee; photos: Record<string, stri
     return <img src={photo} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }} alt={initials} />;
   }
   return (
-    <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#1c2030', color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11.5, fontWeight: 600, flexShrink: 0, border: '1px solid rgba(255,255,255,0.06)' }}>
+    <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#1c2030', color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, flexShrink: 0, border: '1px solid rgba(255,255,255,0.06)' }}>
       {initials}
     </div>
   );
@@ -756,9 +756,9 @@ export default function HRPage() {
                   display: 'flex', alignItems: 'center', gap: 5,
                   padding: '5px 10px', borderRadius: 6,
                   background: 'rgb(var(--surface-2))', border: '1px solid rgb(var(--border))',
-                  fontSize: 11.5,
+                  fontSize: 12,
                 }}>
-                  <span style={{ color: 'rgb(var(--text-3))', fontSize: 11 }}>{m.icon}</span>
+                  <span style={{ color: 'rgb(var(--text-3))', fontSize: 12 }}>{m.icon}</span>
                   <span style={{ color: 'rgb(var(--text-1))', fontWeight: 600 }}>{m.val}</span>
                   <span style={{ color: 'rgb(var(--text-3))' }}>{m.label}</span>
                 </div>
@@ -802,7 +802,7 @@ export default function HRPage() {
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                     {["Empleado", "Área", "Puesto", "Turno", "Estado", ""].map((h) => (
-                      <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11.5, fontWeight: 500, color: 'rgba(255,255,255,0.62)', letterSpacing: '0.04em' }}>{h}</th>
+                      <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.62)', letterSpacing: '0.04em' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -822,7 +822,7 @@ export default function HRPage() {
                             <EmpAvatar emp={emp} photos={employeePhotos} />
                             <div>
                               <div style={{ fontWeight: 500, color: '#c8cdd8' }}>{emp.nombre} {emp.apellidos}</div>
-                              {emp.fechaIngreso && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.62)', marginTop: 1 }}>{new Date(emp.fechaIngreso).toLocaleDateString('es-MX')}</div>}
+                              {emp.fechaIngreso && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', marginTop: 1 }}>{new Date(emp.fechaIngreso).toLocaleDateString('es-MX')}</div>}
                             </div>
                           </div>
                         </td>
@@ -836,15 +836,15 @@ export default function HRPage() {
                         </td>
                         {/* Estado */}
                         <td style={{ padding: '10px 14px' }}>
-                          <span style={{ background: badge.bg, color: badge.color, border: `1px solid ${badge.border}`, borderRadius: 4, padding: '2px 8px', fontSize: 11 }}>
+                          <span style={{ background: badge.bg, color: badge.color, border: `1px solid ${badge.border}`, borderRadius: 4, padding: '2px 8px', fontSize: 12 }}>
                             {emp.status}
                           </span>
                         </td>
                         {/* Acciones */}
                         <td style={{ padding: '10px 14px' }}>
                           <div style={{ display: 'flex', gap: 6 }}>
-                            <button onClick={() => openEdit(emp)} style={{ padding: '3px 10px', fontSize: 11.5, borderRadius: 4, background: '#1e2d45', border: '1px solid rgba(123,156,204,0.25)', color: '#8fafd4', cursor: 'pointer' }}>Editar</button>
-                            <button onClick={() => deleteEmployee(emp.id)} style={{ padding: '3px 10px', fontSize: 11.5, borderRadius: 4, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: 'rgba(252,165,165,0.8)', cursor: 'pointer' }}>Eliminar</button>
+                            <button onClick={() => openEdit(emp)} style={{ padding: '3px 10px', fontSize: 12, borderRadius: 4, background: '#1e2d45', border: '1px solid rgba(123,156,204,0.25)', color: '#8fafd4', cursor: 'pointer' }}>Editar</button>
+                            <button onClick={() => deleteEmployee(emp.id)} style={{ padding: '3px 10px', fontSize: 12, borderRadius: 4, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: 'rgba(252,165,165,0.8)', cursor: 'pointer' }}>Eliminar</button>
                           </div>
                         </td>
                       </tr>
@@ -877,7 +877,7 @@ export default function HRPage() {
                 <div style={{ borderRadius: 10, border: '1px solid rgba(255,255,255,0.07)', background: '#141820', overflow: 'hidden' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                     <thead><tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                      {["Empleado", "Puesto"].map(h => <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11.5, fontWeight: 500, color: 'rgba(255,255,255,0.62)' }}>{h}</th>)}
+                      {["Empleado", "Puesto"].map(h => <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.62)' }}>{h}</th>)}
                     </tr></thead>
                     <tbody>
                       {employees.map(emp => (
@@ -949,10 +949,10 @@ export default function HRPage() {
                         {bulkFiles.map((bf, i) => (
                           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 6, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                             <span style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.6)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{bf.file.name}</span>
-                            <select value={bf.tipo} disabled={bulkRunning} onChange={(e) => setBulkFiles((prev) => prev.map((x, idx) => idx === i ? { ...x, tipo: e.target.value } : x))} style={{ background: '#1e2433', border: '1px solid rgba(255,255,255,0.1)', color: '#c8cdd8', borderRadius: 4, padding: '2px 6px', fontSize: 11 }}>
+                            <select value={bf.tipo} disabled={bulkRunning} onChange={(e) => setBulkFiles((prev) => prev.map((x, idx) => idx === i ? { ...x, tipo: e.target.value } : x))} style={{ background: '#1e2433', border: '1px solid rgba(255,255,255,0.1)', color: '#c8cdd8', borderRadius: 4, padding: '2px 6px', fontSize: 12 }}>
                               {TIPOS_DOC.map((t) => <option key={t} value={t}>{t}</option>)}
                             </select>
-                            <span style={{ fontSize: 11, color: bf.status === "done" ? "#4ade80" : bf.status === "error" ? "#f87171" : bf.status === "uploading" ? "#7b9ccc" : "rgba(255,255,255,0.3)" }}>
+                            <span style={{ fontSize: 12, color: bf.status === "done" ? "#4ade80" : bf.status === "error" ? "#f87171" : bf.status === "uploading" ? "#7b9ccc" : "rgba(255,255,255,0.3)" }}>
                               {bf.status === "done" ? "✓" : bf.status === "error" ? "✗" : bf.status === "uploading" ? "..." : "—"}
                             </span>
                           </div>
@@ -971,13 +971,13 @@ export default function HRPage() {
                 <div style={{ borderRadius: 10, border: '1px solid rgba(255,255,255,0.07)', background: '#141820', overflow: 'hidden' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                     <thead><tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                      {["Tipo", "Nombre", "Documento", "Notas", "Fecha", ""].map((h) => <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11.5, fontWeight: 500, color: 'rgba(255,255,255,0.62)' }}>{h}</th>)}
+                      {["Tipo", "Nombre", "Documento", "Notas", "Fecha", ""].map((h) => <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.62)' }}>{h}</th>)}
                     </tr></thead>
                     <tbody>
                       {docs.length === 0 && <tr><td colSpan={6} style={{ padding: 24, textAlign: 'center', color: 'rgba(255,255,255,0.62)' }}>Sin documentos</td></tr>}
                       {docs.map((d) => (
                         <tr key={d.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                          <td style={{ padding: '10px 14px', fontWeight: 500, color: '#7b9ccc', fontSize: 11.5 }}>{d.tipo}</td>
+                          <td style={{ padding: '10px 14px', fontWeight: 500, color: '#7b9ccc', fontSize: 12 }}>{d.tipo}</td>
                           <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.5)' }}>{d.nombre || "—"}</td>
                           <td style={{ padding: '10px 14px' }}>
                             {d.fileData ? (
@@ -994,7 +994,7 @@ export default function HRPage() {
                           </td>
                           <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.62)', fontSize: 12 }}>{d.notas || "—"}</td>
                           <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.62)', fontSize: 12 }}>{new Date(d.uploadedAt).toLocaleDateString("es-MX")}</td>
-                          <td style={{ padding: '10px 14px' }}><button onClick={() => removeDoc(d.id)} style={{ padding: '3px 10px', fontSize: 11, borderRadius: 4, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: 'rgba(252,165,165,0.8)', cursor: 'pointer' }}>Eliminar</button></td>
+                          <td style={{ padding: '10px 14px' }}><button onClick={() => removeDoc(d.id)} style={{ padding: '3px 10px', fontSize: 12, borderRadius: 4, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: 'rgba(252,165,165,0.8)', cursor: 'pointer' }}>Eliminar</button></td>
                         </tr>
                       ))}
                     </tbody>
@@ -1055,7 +1055,7 @@ export default function HRPage() {
                       <thead>
                         <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                           {['Período', 'Tipo', 'Total', 'Estado', 'Acciones'].map(h => (
-                            <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 11.5 }}>{h}</th>
+                            <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 12 }}>{h}</th>
                           ))}
                         </tr>
                       </thead>
@@ -1067,7 +1067,7 @@ export default function HRPage() {
                             <td style={{ padding: '10px 12px', color: '#4ade80' }}>${Number(run.totalAmount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
                             <td style={{ padding: '10px 12px' }}>
                               <span style={{
-                                padding: '2px 10px', borderRadius: 99, fontSize: 11,
+                                padding: '2px 10px', borderRadius: 99, fontSize: 12,
                                 background: run.status === 'PAGADA' ? 'rgba(74,222,128,0.15)' : run.status === 'APROBADA' ? 'rgba(123,156,204,0.15)' : 'rgba(255,255,255,0.07)',
                                 color: run.status === 'PAGADA' ? '#4ade80' : run.status === 'APROBADA' ? '#8fafd4' : 'rgba(255,255,255,0.5)',
                               }}>{run.status}</span>
@@ -1109,7 +1109,7 @@ export default function HRPage() {
                     <thead>
                       <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                         {['Empleado', 'Días', 'Percepciones', 'Deducciones', 'Neto', 'Acciones'].map(h => (
-                          <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 11.5 }}>{h}</th>
+                          <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 12 }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -1173,7 +1173,7 @@ export default function HRPage() {
                       }}
                     >{selectedRun.status === 'PAGADA' ? '✓ Nómina pagada' : 'Confirmar pago en efectivo'}</button>
                   </div>
-                  <div style={{ marginTop: 8, fontSize: 11, color: 'rgba(255,255,255,0.62)' }}>
+                  <div style={{ marginTop: 8, fontSize: 12, color: 'rgba(255,255,255,0.62)' }}>
                     Al confirmar se registra un egreso interno "NOMINA" en la caja seleccionada.
                   </div>
 
@@ -1223,7 +1223,7 @@ export default function HRPage() {
                     <thead>
                       <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                         {['Empleado', 'Neto a pagar'].map(h => (
-                          <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 11.5 }}>{h}</th>
+                          <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 12 }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -1271,16 +1271,16 @@ export default function HRPage() {
                         <div style={{ flex: 1, color: '#c8cdd8', fontSize: 13 }}>{c.name}</div>
                         <div style={{ color: 'rgba(255,255,255,0.62)', fontSize: 12, marginRight: 16 }}>{c.category}</div>
                         {c.isGlobal ? (
-                          <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: 'rgba(123,156,204,0.1)', color: '#8fafd4' }}>ESTIA</span>
+                          <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 99, background: 'rgba(123,156,204,0.1)', color: '#8fafd4' }}>ESTIA</span>
                         ) : (
                           <div style={{ display: 'flex', gap: 6 }}>
                             <button
                               onClick={() => { setEditingCatalogId(c.id); setCatalogForm({ name: c.name, type: c.type, defaultAmount: c.defaultAmount, category: c.category || 'OTRO' }); setShowCatalogModal(true); }}
-                              style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', fontSize: 11, cursor: 'pointer' }}
+                              style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', fontSize: 12, cursor: 'pointer' }}
                             >Editar</button>
                             <button
                               onClick={async () => { await api.delete(`/payroll/catalog/${c.id}`); await loadCatalog(); }}
-                              style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid rgba(252,165,165,0.2)', background: 'transparent', color: 'rgba(252,165,165,0.7)', fontSize: 11, cursor: 'pointer' }}
+                              style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid rgba(252,165,165,0.2)', background: 'transparent', color: 'rgba(252,165,165,0.7)', fontSize: 12, cursor: 'pointer' }}
                             >Eliminar</button>
                           </div>
                         )}
@@ -1301,16 +1301,16 @@ export default function HRPage() {
                         <div style={{ flex: 1, color: '#c8cdd8', fontSize: 13 }}>{c.name}</div>
                         <div style={{ color: 'rgba(255,255,255,0.62)', fontSize: 12, marginRight: 16 }}>{c.category}</div>
                         {c.isGlobal ? (
-                          <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: 'rgba(123,156,204,0.1)', color: '#8fafd4' }}>ESTIA</span>
+                          <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 99, background: 'rgba(123,156,204,0.1)', color: '#8fafd4' }}>ESTIA</span>
                         ) : (
                           <div style={{ display: 'flex', gap: 6 }}>
                             <button
                               onClick={() => { setEditingCatalogId(c.id); setCatalogForm({ name: c.name, type: c.type, defaultAmount: c.defaultAmount, category: c.category || 'OTRO' }); setShowCatalogModal(true); }}
-                              style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', fontSize: 11, cursor: 'pointer' }}
+                              style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', fontSize: 12, cursor: 'pointer' }}
                             >Editar</button>
                             <button
                               onClick={async () => { await api.delete(`/payroll/catalog/${c.id}`); await loadCatalog(); }}
-                              style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid rgba(252,165,165,0.2)', background: 'transparent', color: 'rgba(252,165,165,0.7)', fontSize: 11, cursor: 'pointer' }}
+                              style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid rgba(252,165,165,0.2)', background: 'transparent', color: 'rgba(252,165,165,0.7)', fontSize: 12, cursor: 'pointer' }}
                             >Eliminar</button>
                           </div>
                         )}
@@ -1499,7 +1499,7 @@ export default function HRPage() {
                               fontWeight: 500,
                             }}>
                               <div>{dow}</div>
-                              <div style={{ fontSize: 10 }}>{d.getDate()}</div>
+                              <div style={{ fontSize: 12 }}>{d.getDate()}</div>
                             </th>
                           );
                         });
@@ -1525,7 +1525,7 @@ export default function HRPage() {
                               <span style={{ color: '#c8cdd8', fontWeight: 500 }}>{emp.nombre}</span>
                               <button
                                 onClick={() => loadAudit(emp)}
-                                style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'rgba(255,255,255,0.62)', cursor: 'pointer' }}
+                                style={{ fontSize: 12, padding: '2px 6px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'rgba(255,255,255,0.62)', cursor: 'pointer' }}
                               >historial</button>
                             </div>
                           </td>
@@ -1616,7 +1616,7 @@ export default function HRPage() {
                       <thead>
                         <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                           {['Fecha', 'Día', 'Anterior', 'Nuevo', 'Motivo', 'Por', 'Autorizado', 'Acciones'].map(h => (
-                            <th key={h} style={{ padding: '8px 6px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 11 }}>{h}</th>
+                            <th key={h} style={{ padding: '8px 6px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 12 }}>{h}</th>
                           ))}
                         </tr>
                       </thead>
@@ -1628,8 +1628,8 @@ export default function HRPage() {
                             <td style={{ padding: '8px 6px', color: 'rgba(252,165,165,0.8)' }}>{log.previousIncidenceType || log.previousStatus || '—'}</td>
                             <td style={{ padding: '8px 6px', color: '#4ade80' }}>{log.newIncidenceType || log.newStatus || '—'}</td>
                             <td style={{ padding: '8px 6px', color: 'rgba(255,255,255,0.5)' }}>{log.changeReason || '—'}</td>
-                            <td style={{ padding: '8px 6px', color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>{log.changedBy}</td>
-                            <td style={{ padding: '8px 6px', color: log.approvedBy ? '#4ade80' : 'rgba(255,255,255,0.2)', fontSize: 11 }}>{log.approvedBy || 'Pendiente'}</td>
+                            <td style={{ padding: '8px 6px', color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>{log.changedBy}</td>
+                            <td style={{ padding: '8px 6px', color: log.approvedBy ? '#4ade80' : 'rgba(255,255,255,0.2)', fontSize: 12 }}>{log.approvedBy || 'Pendiente'}</td>
                             <td style={{ padding: '8px 6px' }}>
                               {!log.reverted && (
                                 <button
@@ -1639,10 +1639,10 @@ export default function HRPage() {
                                     await loadAudit(auditEmployee);
                                     await loadPeriodAttendance();
                                   }}
-                                  style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, border: '1px solid rgba(252,165,165,0.3)', background: 'transparent', color: 'rgba(252,165,165,0.7)', cursor: 'pointer' }}
+                                  style={{ fontSize: 12, padding: '2px 8px', borderRadius: 4, border: '1px solid rgba(252,165,165,0.3)', background: 'transparent', color: 'rgba(252,165,165,0.7)', cursor: 'pointer' }}
                                 >Revertir</button>
                               )}
-                              {log.reverted && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>Revertido</span>}
+                              {log.reverted && <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>Revertido</span>}
                             </td>
                           </tr>
                         ))}
@@ -1676,10 +1676,10 @@ export default function HRPage() {
                   <div key={s.id} style={{ borderRadius: 10, padding: 16, background: '#141820', border: '1px solid rgba(255,255,255,0.07)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                       <span style={{ fontWeight: 500, fontSize: 13, color: '#c8cdd8' }}>{s.name}</span>
-                      <button onClick={() => deleteShift(s.id)} style={{ fontSize: 11, color: 'rgba(252,165,165,0.6)', background: 'none', border: 'none', cursor: 'pointer' }}>Eliminar</button>
+                      <button onClick={() => deleteShift(s.id)} style={{ fontSize: 12, color: 'rgba(252,165,165,0.6)', background: 'none', border: 'none', cursor: 'pointer' }}>Eliminar</button>
                     </div>
                     <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: 0 }}>{s.startTime} — {s.endTime}</p>
-                    <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.62)', margin: '4px 0 0' }}>Tolerancia: {s.toleranceMinutes} min</p>
+                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', margin: '4px 0 0' }}>Tolerancia: {s.toleranceMinutes} min</p>
                   </div>
                 ))}
               </div>
@@ -1689,16 +1689,16 @@ export default function HRPage() {
                 <div style={{ background: "#141820", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 12, padding: 24, width: "100%", maxWidth: 360 }}>
                   <h3 style={{ fontSize: 15, fontWeight: 600, margin: '0 0 16px', color: '#c8cdd8' }}>Nuevo Turno</h3>
                   <div style={{ marginBottom: 12 }}>
-                    <label style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.62)', display: 'block', marginBottom: 4 }}>Nombre</label>
+                    <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', display: 'block', marginBottom: 4 }}>Nombre</label>
                     <input value={shiftForm.name} onChange={(e) => setShiftForm((p) => ({ ...p, name: e.target.value }))} className={inp} />
                   </div>
                   <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
                     <div style={{ flex: 1 }}>
-                      <label style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.62)', display: 'block', marginBottom: 4 }}>Entrada</label>
+                      <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', display: 'block', marginBottom: 4 }}>Entrada</label>
                       <input type="time" value={shiftForm.startTime} onChange={(e) => setShiftForm((p) => ({ ...p, startTime: e.target.value }))} className={inp} />
                     </div>
                     <div style={{ flex: 1 }}>
-                      <label style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.62)', display: 'block', marginBottom: 4 }}>Salida</label>
+                      <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', display: 'block', marginBottom: 4 }}>Salida</label>
                       <input type="time" value={shiftForm.endTime} onChange={(e) => setShiftForm((p) => ({ ...p, endTime: e.target.value }))} className={inp} />
                     </div>
                   </div>
@@ -1754,7 +1754,7 @@ export default function HRPage() {
                         {emp
                           ? <EmpAvatar emp={emp} photos={employeePhotos} />
                           : (
-                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#1c2030', color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11.5, fontWeight: 600, flexShrink: 0, border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#1c2030', color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, flexShrink: 0, border: '1px solid rgba(255,255,255,0.06)' }}>
                               {((b.nombre?.[0] || '') + (b.apellidos?.[0] || '')).toUpperCase() || '?'}
                             </div>
                           )
@@ -1763,7 +1763,7 @@ export default function HRPage() {
                           <div style={{ fontWeight: 500, color: '#c8cdd8', fontSize: 13 }}>
                             {b.nombre} {b.apellidos}
                           </div>
-                          <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.62)', marginTop: 2 }}>
+                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', marginTop: 2 }}>
                             {b.puesto}{b.departamento ? ` · ${b.departamento}` : ''}
                           </div>
                         </div>
@@ -1771,7 +1771,7 @@ export default function HRPage() {
                           <div style={{ fontSize: 12.5, color: isToday ? '#7b9ccc' : 'rgba(255,255,255,0.55)', fontWeight: isToday ? 600 : 400 }}>
                             {String(bDay).padStart(2, '0')}/{String(bMonth).padStart(2, '0')}
                           </div>
-                          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.62)', marginTop: 2 }}>
+                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', marginTop: 2 }}>
                             {age} años
                           </div>
                         </div>
@@ -1800,7 +1800,7 @@ export default function HRPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
-                <label style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.62)', display: 'block', marginBottom: 4 }}>Empleado</label>
+                <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', display: 'block', marginBottom: 4 }}>Empleado</label>
                 <select value={attendanceForm.employeeId} onChange={(e) => setAttendanceForm(p => ({ ...p, employeeId: e.target.value }))} className={inp}>
                   <option value="">Seleccionar empleado...</option>
                   {employees.filter(e => e.status === 'ACTIVO').map(emp => (
@@ -1809,16 +1809,16 @@ export default function HRPage() {
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.62)', display: 'block', marginBottom: 4 }}>Fecha</label>
+                <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', display: 'block', marginBottom: 4 }}>Fecha</label>
                 <input type="date" value={attendanceForm.date} onChange={(e) => setAttendanceForm(p => ({ ...p, date: e.target.value }))} className={inp} />
               </div>
               <div style={{ display: 'flex', gap: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.62)', display: 'block', marginBottom: 4 }}>Hora entrada</label>
+                  <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', display: 'block', marginBottom: 4 }}>Hora entrada</label>
                   <input type="time" value={attendanceForm.checkIn} onChange={(e) => setAttendanceForm(p => ({ ...p, checkIn: e.target.value }))} className={inp} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.62)', display: 'block', marginBottom: 4 }}>Hora salida <span style={{ opacity: 0.5, fontSize: 10 }}>(opcional)</span></label>
+                  <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', display: 'block', marginBottom: 4 }}>Hora salida <span style={{ opacity: 0.5, fontSize: 12 }}>(opcional)</span></label>
                   <input type="time" value={attendanceForm.checkOut} onChange={(e) => setAttendanceForm(p => ({ ...p, checkOut: e.target.value }))} className={inp} />
                 </div>
               </div>
@@ -1960,7 +1960,7 @@ export default function HRPage() {
                     <label className="block text-xs text-slate-400 mb-1">Salario estimado por período</label>
                     <div style={{ padding: '8px 12px', borderRadius: 6, background: 'rgba(123,156,204,0.06)', border: '1px solid rgba(123,156,204,0.15)', fontSize: 14, fontWeight: 600, color: '#7b9ccc' }}>
                       ${salarioEstimado.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                      <span style={{ fontSize: 11, fontWeight: 400, color: 'rgba(255,255,255,0.62)', marginLeft: 8 }}>
+                      <span style={{ fontSize: 12, fontWeight: 400, color: 'rgba(255,255,255,0.62)', marginLeft: 8 }}>
                         {sdModal} × {periodoModal === 'SEMANAL' ? 7 : periodoModal === 'CATORCENAL' ? 14 : 15} días
                       </span>
                     </div>
@@ -1994,7 +1994,7 @@ export default function HRPage() {
               {modalTab === 'expediente' && isEdit && (
                 <div className="space-y-4">
                   <div style={{ borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)', padding: 16 }}>
-                    <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.62)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>Subir documento con análisis OCR</p>
+                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>Subir documento con análisis OCR</p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <select value={ocrTipo} onChange={(e) => setOcrTipo(e.target.value)} style={{ background: '#1a1f2e', border: '1px solid rgba(255,255,255,0.1)', color: '#c8cdd8', borderRadius: 6, padding: '7px 10px', fontSize: 12 }}>
                         {TIPOS_DOC.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -2007,7 +2007,7 @@ export default function HRPage() {
                       </label>
                     </div>
                     {(ocrTipo === 'INE' || ocrTipo === 'CURP') && (
-                      <p style={{ margin: '10px 0 0', fontSize: 11.5, color: 'rgba(180,150,80,0.9)', display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                      <p style={{ margin: '10px 0 0', fontSize: 12, color: 'rgba(180,150,80,0.9)', display: 'flex', alignItems: 'flex-start', gap: 6 }}>
                         <span style={{ flexShrink: 0 }}>⚠</span>
                         Para mejores resultados con el OCR, sube el INE como imagen JPG o PNG. Los PDF escaneados no contienen texto y el análisis puede fallar.
                       </p>
@@ -2020,13 +2020,13 @@ export default function HRPage() {
                       {docs.map((doc) => (
                         <div key={doc.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', background: '#141820', padding: '10px 14px' }}>
                           <div style={{ overflow: 'hidden' }}>
-                            <span style={{ fontSize: 11.5, fontWeight: 600, color: '#7b9ccc', marginRight: 8 }}>{doc.tipo}</span>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: '#7b9ccc', marginRight: 8 }}>{doc.tipo}</span>
                             <span style={{ fontSize: 13, color: '#c8cdd8' }}>{doc.nombre || doc.tipo}</span>
-                            {doc.ocrConfirmed && <span style={{ marginLeft: 8, fontSize: 11, color: '#4ade80' }}>✓ OCR confirmado</span>}
+                            {doc.ocrConfirmed && <span style={{ marginLeft: 8, fontSize: 12, color: '#4ade80' }}>✓ OCR confirmado</span>}
                           </div>
                           <div style={{ display: 'flex', gap: 8, flexShrink: 0, marginLeft: 12 }}>
-                            {(doc.fileData || doc.url) && <button onClick={() => openDoc(doc)} style={{ fontSize: 11.5, color: '#7b9ccc', background: 'none', border: 'none', cursor: 'pointer' }}>Ver</button>}
-                            <button onClick={() => removeDoc(doc.id)} style={{ fontSize: 11.5, color: 'rgba(252,165,165,0.7)', background: 'none', border: 'none', cursor: 'pointer' }}>Eliminar</button>
+                            {(doc.fileData || doc.url) && <button onClick={() => openDoc(doc)} style={{ fontSize: 12, color: '#7b9ccc', background: 'none', border: 'none', cursor: 'pointer' }}>Ver</button>}
+                            <button onClick={() => removeDoc(doc.id)} style={{ fontSize: 12, color: 'rgba(252,165,165,0.7)', background: 'none', border: 'none', cursor: 'pointer' }}>Eliminar</button>
                           </div>
                         </div>
                       ))}
@@ -2061,7 +2061,7 @@ export default function HRPage() {
               ) : (
                 Object.entries(ocrFields).map(([key, val]) => (
                   <div key={key}>
-                    <label style={{ display: 'block', fontSize: 11.5, color: 'rgba(255,255,255,0.62)', textTransform: 'capitalize', marginBottom: 4 }}>{key}</label>
+                    <label style={{ display: 'block', fontSize: 12, color: 'rgba(255,255,255,0.62)', textTransform: 'capitalize', marginBottom: 4 }}>{key}</label>
                     <input value={val} onChange={(e) => setOcrFields((p) => ({ ...p, [key]: e.target.value }))} className={inp} placeholder="No detectado" />
                   </div>
                 ))
