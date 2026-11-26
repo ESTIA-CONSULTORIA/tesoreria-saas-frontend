@@ -96,7 +96,7 @@ function responder(metodo, ruta, escena) {
     { id: 'r1', code: 'ADMIN', name: 'Administrador', permissions: [] },
     { id: 'r2', code: 'CAJERO', name: 'Cajero', permissions: [] },
   ]];
-  if (ruta.startsWith('/companies')) return [200, empresas];
+  if (ruta.startsWith('/companies')) return [200, escena.sinEmpresas ? [] : empresas];
   if (ruta.startsWith('/branches')) return [200, [{ id: 'b1', name: 'Matriz', companyId: 'c1', code: 'MATRIZ' }]];
   if (ruta.startsWith('/dashboard/kpis')) return [200, escena.kpis ? { ...kpis, ...escena.kpis } : kpis];
   if (ruta.startsWith('/pos/shifts')) return [200, escena.turnos ?? turnoPendiente];
@@ -231,6 +231,7 @@ export const ESCENAS = {
   usuarios: { ruta: '/users', medir: medirTeclado },
   apariencia: { ruta: '/settings/appearance', medir: medirTeclado },
   conciliacion: { ruta: '/reconciliation', usuario: { modulosActivos: [...MODULOS_ERP, 'conciliacion'] }, medir: medirTeclado },
+  'topbar-sin-empresas': { ruta: '/dashboard', sinEmpresas: true, accion: async (p) => { const b = await p.evaluateHandle(() => [...document.querySelectorAll('button')].find((x) => /empresa|vista|grupo|global|negocio/i.test(x.textContent || '') && x.getAttribute('aria-haspopup') === 'menu')); await b.asElement()?.click(); await ESPERA(500); } },
   ejecutivo: { ruta: '/executive' },
   sucursales: { ruta: '/branches' },
   empresas: { ruta: '/companies' },
