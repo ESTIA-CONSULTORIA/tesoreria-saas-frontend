@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import { useCompanyStore } from "../store/useCompanyStore";
 import { useModulo } from "../hooks/useModulo";
+import { useModuloVisible } from "../hooks/usePuede";
 import { api } from "../api/api";
 import { itemsConfiguracion, PATH_DATOS_FISCALES, rutaConfiguracion, SUBNAV_CONFIGURACION, veConfiguracion } from "./navConfiguracion";
 import { repartirNav } from "./navOverflow";
@@ -145,19 +146,27 @@ export default function TopBar() {
 
   // Module access — hooks always in same order
   const modulosActivos = useAuthStore((state) => state.modulosActivos);
-  const aD  = useModulo('dashboard');
-  const aR  = useModulo('rh');
-  const aT  = useModulo('tesoreria');
-  const aP  = useModulo('pos');
-  const aC  = useModulo('compras');
-  const aRe = useModulo('reportes');
-  const aI  = useModulo('integraciones');
+  const aD  = useModuloVisible('dashboard');
+  const aR  = useModuloVisible('rh');
+  const aT  = useModuloVisible('tesoreria');
+  const aP  = useModuloVisible('pos');
+  const aC  = useModuloVisible('compras');
+  const aRe = useModuloVisible('reportes');
+  const aI  = useModuloVisible('integraciones');
   const aA  = useModulo('configuracion') && veConfiguracion(user?.roleCode);
   const aPac = useModulo('pacientes');
   const aSat = useModulo('sat_cfdi'); // «Datos fiscales» es del addon SAT CFDI
+  const setPermisos = useAuthStore((st) => st.setPermisos);
+  const negocioPermisos = user?.roleCode === 'SOPORTE' ? leerNegocioActivo(localStorage)?.id : user?.tenantId;
+  useEffect(() => {
+    if (!user?.id) { setPermisos(null); return; }
+    let vivo = true;
+    api.get('/permisos/mis-permisos').then((r) => { if (vivo) setPermisos(r.data && typeof r.data === 'object' ? r.data : null); }).catch(() => { if (vivo) setPermisos(null); });
+    return () => { vivo = false; };
+  }, [user?.id, user?.roleCode, negocioPermisos, setPermisos]);
   const aCR = useModulo('corte_retroactivo') && isAdmin;
-  const aCos = useModulo('costos');
-  const aMem = useModulo('membresias');
+  const aCos = useModuloVisible('costos');
+  const aMem = useModuloVisible('membresias');
   const modAccess: Record<ModKey, boolean> = {
     dashboard: aD, rh: aR, tesoreria: aT, pos: aP,
     compras: aC, reportes: aRe, integraciones: aI, auditoria: aA,

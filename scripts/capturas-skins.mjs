@@ -96,6 +96,14 @@ function responder(metodo, ruta, escena) {
     { id: 'r1', code: 'ADMIN', name: 'Administrador', permissions: [] },
     { id: 'r2', code: 'CAJERO', name: 'Cajero', permissions: [] },
   ]];
+  if (ruta.startsWith('/permisos/mis-permisos')) return [200, {}];
+  if (/^[/]permisos([/?]|$)/.test(ruta) && metodo === 'GET') {
+    const mods = [['dashboard','Dashboard'],['empresas','Empresas'],['sucursales','Sucursales'],['usuarios','Usuarios'],['permisos','Permisos'],['bancos','Bancos y cuentas'],['movimientos','Movimientos'],['transferencias','Transferencias'],['tesoreria','Tesorería'],['conciliacion','Conciliación'],['compras','Compras y proveedores'],['costos','Costos e inventario'],['pos','Punto de venta'],['rh','Recursos humanos'],['reportes','Reportes'],['ocr','OCR de documentos'],['integraciones','Integraciones'],['membresias','Membresías'],['facturacion','Datos fiscales y facturación'],['configuracion','Configuración del negocio'],['administracion','Administración']];
+    const celda = (c, cambia) => { const d = { ver: true, crear: c % 3 !== 0, editar: c % 2 === 0, eliminar: c % 4 === 0 }; return { defecto: d, efectivo: cambia ? { ...d, crear: false } : d, modificado: !!cambia }; };
+    const celdas = { ADMIN: {}, CAJERO: {} };
+    mods.forEach(([c], i) => { celdas.ADMIN[c] = celda(i, false); celdas.CAJERO[c] = celda(i + 1, i === 12); });
+    return [200, { modulos: mods.map(([codigo, nombre]) => ({ codigo, nombre, descripcion: nombre })), roles: [{ code: 'ADMIN', name: 'Administrador' }, { code: 'CAJERO', name: 'Cajero' }], celdas, protegidos: { rol: 'ADMIN', modulos: ['permisos', 'configuracion'] } }];
+  }
   if (ruta.startsWith('/companies')) return [200, escena.sinEmpresas ? [] : empresas];
   if (ruta.startsWith('/branches')) return [200, [{ id: 'b1', name: 'Matriz', companyId: 'c1', code: 'MATRIZ' }]];
   if (ruta.startsWith('/dashboard/kpis')) return [200, escena.kpis ? { ...kpis, ...escena.kpis } : kpis];
@@ -229,6 +237,7 @@ export const ESCENAS = {
   'tesoreria-alertas-vacio': { ruta: '/treasury', alertasVacias: true, accion: async (p) => { const b = await p.evaluateHandle(() => [...document.querySelectorAll('button')].find((x) => /^Alertas$/.test((x.textContent || '').trim()))); await b.asElement()?.click(); await ESPERA(700); }, medir: medirAlertasTesoreria },
   // Recorrido de pantallas internas (lote visual de la noche del 24/nov): mismas escenas antes y después de cada corrección
   usuarios: { ruta: '/users', medir: medirTeclado },
+  'permisos-matriz': { ruta: '/users', medir: medirTeclado, accion: async (p) => { const b = await p.evaluateHandle(() => [...document.querySelectorAll('[aria-pressed]')].find((x) => /CAJERO/.test(x.textContent || ''))); await b.asElement()?.click(); await ESPERA(900); const c = await p.evaluateHandle(() => document.querySelector('input[aria-label="Punto de venta: Crear"]')); await c.asElement()?.click(); await ESPERA(300); } },
   apariencia: { ruta: '/settings/appearance', medir: medirTeclado },
   conciliacion: { ruta: '/reconciliation', usuario: { modulosActivos: [...MODULOS_ERP, 'conciliacion'] }, medir: medirTeclado },
   'topbar-sin-empresas': { ruta: '/dashboard', sinEmpresas: true, accion: async (p) => { const b = await p.evaluateHandle(() => [...document.querySelectorAll('button')].find((x) => /empresa|vista|grupo|global|negocio/i.test(x.textContent || '') && x.getAttribute('aria-haspopup') === 'menu')); await b.asElement()?.click(); await ESPERA(500); } },
