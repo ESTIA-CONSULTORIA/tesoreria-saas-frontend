@@ -9,13 +9,14 @@ import { itemsConfiguracion, PATH_DATOS_FISCALES, rutaConfiguracion, SUBNAV_CONF
 import { repartirNav } from "./navOverflow";
 import SelectorNegocio from "./SelectorNegocio";
 import EtiquetaCampo from "./EtiquetaCampo";
+import { agruparEmpresas, type NegocioLista } from "./empresasPorNegocio";
 import { etiquetaContexto } from "./etiquetaContexto";
 import { leerNegocioActivo } from "../api/negocioActivo";
 
 // Espacio entre módulos de la barra principal (compacto, para que quepan más a 1366 px).
 const SEPARACION_NAV = 4;
 
-interface Company { id: string; legalName: string; tradeName: string; }
+interface Company { id: string; legalName: string; tradeName: string; tenantId?: string | null; }
 interface Branch  { id: string; name: string; }
 
 const IC: Record<string, React.ReactNode> = {
@@ -185,6 +186,8 @@ export default function TopBar() {
   // La lista de empresas ya se pidió (y respondió): distingue «Cargando…» de «el negocio no tiene empresas»
   const [companiesListas, setCompaniesListas] = useState(false);
   const [companiesError, setCompaniesError]   = useState(false);
+  // SOPORTE sin negocio elegido ve las empresas de todos los negocios: se necesitan los nombres de los negocios para agruparlas
+  const [negociosLista, setNegociosLista]     = useState<NegocioLista[]>([]);
   const [branches, setBranches]             = useState<Branch[]>([]);
   const [pendingCo, setPendingCo]           = useState<{ id: string; name: string } | null>(null);
   // Cubre clearCtx (Vista Global) y pickBranch (elegir sucursal) — feedback visual
@@ -246,6 +249,9 @@ export default function TopBar() {
         setCompaniesError(false);
       } catch { setCompaniesError(true); }
       setCompaniesListas(true);
+    }
+    if (user?.roleCode === 'SOPORTE' && !leerNegocioActivo(localStorage)?.id && negociosLista.length === 0) {
+      try { const n = await api.get('/tenants'); setNegociosLista(Array.isArray(n.data) ? n.data : []); } catch {}
     }
     // Start at branch phase if company already selected
     if (activeCompany) {
@@ -654,12 +660,19 @@ export default function TopBar() {
                         <Link to="/companies" onClick={() => setCtxOpen(false)} style={{ color: 'rgb(var(--text-1))', textDecoration: 'underline', fontWeight: 600 }}>Empresas</Link>.
                       </div>
                     )}
-                    {companies.map(co => (
-                      <CtxItem key={co.id} label={co.tradeName || co.legalName} active={activeCompany?.id === co.id}
-                        disabled={ctxSwitching}
-                        onClick={() => pickCompany(co)}
-                        after={<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>}
-                      />
+                    {agruparEmpresas(companies, negociosLista, user?.roleCode === 'SOPORTE' && !negocioNombre).map((g) => (
+                      <div key={g.clave} role="group" aria-label={g.encabezado ?? 'Empresas'}>
+                        {g.encabezado && (
+                          <div style={{ padding: '6px 12px 2px', fontSize: 12, fontWeight: 600, color: 'rgb(var(--text-1))', borderTop: '1px solid rgb(var(--veil) / 0.08)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={`Negocio: ${g.encabezado}`}>{g.encabezado}</div>
+                        )}
+                        {g.filas.map((f) => (
+                          <CtxItem key={f.empresa.id} label={f.etiqueta} title={f.tooltip} active={activeCompany?.id === f.empresa.id}
+                            disabled={ctxSwitching}
+                            onClick={() => pickCompany(f.empresa as Company)}
+                            after={<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>}
+                          />
+                        ))}
+                      </div>
                     ))}
                   </>
                 ) : (
@@ -769,9 +782,9 @@ export default function TopBar() {
 
 // Helper item component for dropdown
 function CtxItem({
-  label, icon, after, active, disabled, onClick,
+  label, title, icon, after, active, disabled, onClick,
 }: {
-  label: string; icon?: React.ReactNode; after?: React.ReactNode;
+  label: string; title?: string; icon?: React.ReactNode; after?: React.ReactNode;
   active?: boolean; disabled?: boolean; onClick: () => void;
 }) {
   return (
@@ -780,6 +793,7 @@ function CtxItem({
       tabIndex={disabled ? undefined : -1}
       aria-disabled={disabled || undefined}
       aria-current={active ? 'true' : undefined}
+      title={title ?? label}
       onClick={disabled ? undefined : onClick}
       onKeyDown={(e) => { if (!disabled && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onClick(); } }}
       onFocus={(e) => { e.currentTarget.style.background = 'rgb(var(--veil) / 0.1)'; e.currentTarget.style.outline = '2px solid rgb(var(--accent-alt))'; e.currentTarget.style.outlineOffset = '-2px'; }}
@@ -797,7 +811,7 @@ function CtxItem({
     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = active ? 'rgb(var(--veil) / 0.04)' : 'transparent'; }}
     >
       {icon && <span style={{ opacity: 0.6, display: 'flex' }}>{icon}</span>}
-      <span style={{ flex: 1 }}>{label}</span>
+      <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
       {after && <span style={{ opacity: 0.35, display: 'flex' }}>{after}</span>}
     </div>
   );

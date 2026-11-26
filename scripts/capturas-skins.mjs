@@ -104,6 +104,14 @@ function responder(metodo, ruta, escena) {
     mods.forEach(([c], i) => { celdas.ADMIN[c] = celda(i, false); celdas.CAJERO[c] = celda(i + 1, i === 12); });
     return [200, { modulos: mods.map(([codigo, nombre]) => ({ codigo, nombre, descripcion: nombre })), roles: [{ code: 'ADMIN', name: 'Administrador' }, { code: 'CAJERO', name: 'Cajero' }], celdas, protegidos: { rol: 'ADMIN', modulos: ['permisos', 'configuracion'] } }];
   }
+  if (ruta.startsWith('/companies') && escena.empresasMultiNegocio) return [200, [
+    { id: 'c1', tradeName: 'BOCATTA', legalName: 'BOCATTA', tenantId: 't3' },
+    { id: 'c2', tradeName: 'Gimnasio Demo', legalName: 'Gimnasio Demo', tenantId: 't1' },
+    { id: 'c3', tradeName: 'Gimnasio Demo', legalName: 'Gimnasio Demo', tenantId: 't1' },
+    { id: 'c4', tradeName: 'El Sazón', legalName: 'El Sazón SA de CV', tenantId: 't2' },
+    { id: 'c5', tradeName: 'Comercializadora Demo', legalName: 'Comercializadora Demo S.A. de C.V.', tenantId: 't2' },
+    { id: 'c6', tradeName: 'Servicios Profesionales Demo de Occidente', legalName: 'Servicios Profesionales Demo S. de R.L.', tenantId: 't2' },
+  ]];
   if (ruta.startsWith('/companies')) return [200, escena.sinEmpresas ? [] : empresas];
   if (ruta.startsWith('/branches')) return [200, [{ id: 'b1', name: 'Matriz', companyId: 'c1', code: 'MATRIZ' }]];
   if (ruta.startsWith('/dashboard/kpis')) return [200, escena.kpis ? { ...kpis, ...escena.kpis } : kpis];
@@ -240,6 +248,7 @@ export const ESCENAS = {
   'permisos-matriz': { ruta: '/users', medir: medirTeclado, accion: async (p) => { const b = await p.evaluateHandle(() => [...document.querySelectorAll('[aria-pressed]')].find((x) => /CAJERO/.test(x.textContent || ''))); await b.asElement()?.click(); await ESPERA(900); const c = await p.evaluateHandle(() => document.querySelector('input[aria-label="Punto de venta: Crear"]')); await c.asElement()?.click(); await ESPERA(300); } },
   apariencia: { ruta: '/settings/appearance', medir: medirTeclado },
   conciliacion: { ruta: '/reconciliation', usuario: { modulosActivos: [...MODULOS_ERP, 'conciliacion'] }, medir: medirTeclado },
+  'topbar-empresas-soporte': { ruta: '/dashboard', usuario: { roleCode: 'SOPORTE' }, empresasMultiNegocio: true, accion: async (p) => { const b = await p.evaluateHandle(() => [...document.querySelectorAll('button')].find((x) => x.getAttribute('aria-haspopup') === 'menu' && /vista|global|empresa/i.test(x.getAttribute('aria-label') || x.textContent || ''))); await b.asElement()?.click(); await ESPERA(700); } },
   'topbar-sin-empresas': { ruta: '/dashboard', sinEmpresas: true, accion: async (p) => { const b = await p.evaluateHandle(() => [...document.querySelectorAll('button')].find((x) => /empresa|vista|grupo|global|negocio/i.test(x.textContent || '') && x.getAttribute('aria-haspopup') === 'menu')); await b.asElement()?.click(); await ESPERA(500); } },
   ajustes: { ruta: '/settings' },
   'login-config': { ruta: '/settings/login-config' },
