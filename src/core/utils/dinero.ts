@@ -20,6 +20,8 @@ export function pesosKpi(v: unknown): string {
 /** Tendencia contra el mes anterior: si el servidor no manda el porcentaje (o no hay con qué comparar), no se inventa un 0 %. */
 export function tendenciaMes(porcentaje: unknown): { trend: 'up' | 'down' | 'neutral'; texto: string } {
   const n = num(porcentaje);
-  if (n === null) return { trend: 'neutral', texto: 'Sin datos para comparar' };
+  // El servidor manda 0 cuando el mes anterior vale $0 (no se puede dividir entre cero): eso no es «0.0 %», es «sin datos para comparar»
+  // (igual que el Dashboard). Un cambio exactamente 0 contra una base distinta de cero es prácticamente imposible.
+  if (n === null || n === 0) return { trend: 'neutral', texto: 'Sin datos para comparar' };
   return { trend: n > 0 ? 'up' : n < 0 ? 'down' : 'neutral', texto: `${n > 0 ? '+' : ''}${n.toFixed(1)} % frente al mes anterior` };
 }

@@ -17,6 +17,7 @@ describe('dinero', () => {
     expect(tendenciaMes(null).texto).toBe('Sin datos para comparar');
     expect(tendenciaMes(12.34)).toEqual({ trend: 'up', texto: '+12.3 % frente al mes anterior' });
     expect(tendenciaMes(-3)).toEqual({ trend: 'down', texto: '-3.0 % frente al mes anterior' });
-    expect(tendenciaMes(0)).toEqual({ trend: 'neutral', texto: '0.0 % frente al mes anterior' });
+    // 0 = el servidor no pudo comparar (mes anterior en $0): se dice igual que el Dashboard
+    expect(tendenciaMes(0)).toEqual({ trend: 'neutral', texto: 'Sin datos para comparar' });
   });
 });
