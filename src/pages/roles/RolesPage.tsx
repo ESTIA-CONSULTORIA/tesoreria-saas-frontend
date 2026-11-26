@@ -129,7 +129,7 @@ export default function RolesPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-green-900/40 px-3 py-1 text-sm text-green-300">
+                      <span className="rounded-full bg-surface-2 px-3 py-1 text-sm !text-content-1">
                         {role.isActive ? "Activo" : "Inactivo"}
                       </span>
                       <button

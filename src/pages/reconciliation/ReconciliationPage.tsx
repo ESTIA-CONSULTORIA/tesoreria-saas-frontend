@@ -178,8 +178,8 @@ export default function ReconciliationPage() {
         <div className="space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-bold" style={{ color: '#F5F5F5' }}>Conciliación Bancaria</h2>
-            <p style={{ color: '#A3A3A3', fontSize: '14px' }}>Cruce de movimientos bancarios con facturas</p>
+            <h2 className="text-3xl font-bold" style={{ color: 'rgb(var(--text-1))' }}>Conciliación Bancaria</h2>
+            <p style={{ color: 'rgb(var(--text-2))', fontSize: '14px' }}>Cruce de movimientos bancarios con facturas</p>
           </div>
           <div className="flex gap-2">
             <button
@@ -222,7 +222,7 @@ export default function ReconciliationPage() {
         {/* Filtros */}
         <div style={{ backgroundColor: '#161616', border: '1px solid #2D2D2D', borderRadius: '6px', padding: '16px' }}>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <input
+            <input aria-label="Fecha inicial"
               type="date"
               value={filters.startDate}
               onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
@@ -235,7 +235,7 @@ export default function ReconciliationPage() {
                 fontSize: '13px',
               }}
             />
-            <input
+            <input aria-label="Fecha final"
               type="date"
               value={filters.endDate}
               onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
@@ -248,7 +248,7 @@ export default function ReconciliationPage() {
                 fontSize: '13px',
               }}
             />
-            <select
+            <select aria-label="Tipo de movimiento"
               value={filters.type}
               onChange={(e) => setFilters({ ...filters, type: e.target.value as any })}
               style={{
@@ -320,7 +320,7 @@ export default function ReconciliationPage() {
                 onClick={() => setActiveTab("reconciled")}
                 className="px-4 py-2 text-sm font-medium"
                 style={{
-                  color: activeTab === "reconciled" ? '#2F855A' : '#A3A3A3',
+                  color: activeTab === "reconciled" ? 'rgb(var(--text-1))' : 'rgb(var(--text-2))',
                   borderBottom: activeTab === "reconciled" ? '2px solid #2F855A' : '2px solid transparent',
                   backgroundColor: 'transparent',
                 }}
@@ -333,7 +333,7 @@ export default function ReconciliationPage() {
                 onClick={() => setActiveTab("pending")}
                 className="px-4 py-2 text-sm font-medium"
                 style={{
-                  color: activeTab === "pending" ? '#B7791F' : '#A3A3A3',
+                  color: activeTab === "pending" ? 'rgb(var(--text-1))' : 'rgb(var(--text-2))',
                   borderBottom: activeTab === "pending" ? '2px solid #B7791F' : '2px solid transparent',
                   backgroundColor: 'transparent',
                 }}
@@ -346,7 +346,7 @@ export default function ReconciliationPage() {
                 onClick={() => setActiveTab("notReconciled")}
                 className="px-4 py-2 text-sm font-medium"
                 style={{
-                  color: activeTab === "notReconciled" ? '#C53030' : '#A3A3A3',
+                  color: activeTab === "notReconciled" ? 'rgb(var(--text-1))' : 'rgb(var(--text-2))',
                   borderBottom: activeTab === "notReconciled" ? '2px solid #C53030' : '2px solid transparent',
                   backgroundColor: 'transparent',
                 }}
@@ -442,7 +442,7 @@ export default function ReconciliationPage() {
                               style={{
                                 padding: '4px 8px',
                                 borderRadius: '4px',
-                                fontSize: '11px',
+                                fontSize: '12px',
                                 fontWeight: 600,
                                 backgroundColor: '#C0C0C0',
                                 color: '#0A0A0A',
@@ -582,7 +582,7 @@ export default function ReconciliationPage() {
                       fontSize: '13px',
                     }}
                   />
-                  <select
+                  <select aria-label="Tipo de factura"
                     value={formData.type}
                     onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
                     style={{
@@ -598,7 +598,7 @@ export default function ReconciliationPage() {
                     <option value="EMITIDA">Emitida</option>
                     <option value="RECIBIDA">Recibida</option>
                   </select>
-                  <select
+                  <select aria-label="Estado de la factura"
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
                     style={{
@@ -632,7 +632,7 @@ export default function ReconciliationPage() {
                       fontSize: '13px',
                     }}
                   />
-                  <input
+                  <input aria-label="Fecha de vencimiento"
                     type="date"
                     value={formData.dueDate}
                     onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
@@ -767,7 +767,7 @@ export default function ReconciliationPage() {
                         <span style={{ fontSize: '13px', color: '#F5F5F5' }}>{movement.id}</span>
                         <span style={{ fontSize: '13px', color: '#A3A3A3' }}>${Number(movement.amount).toFixed(2)}</span>
                       </div>
-                      <p style={{ fontSize: '11px', color: '#9A9A9A' }}>{movement.concept || movement.category}</p>
+                      <p style={{ fontSize: '12px', color: '#9A9A9A' }}>{movement.concept || movement.category}</p>
                     </button>
                   ))}
                 </div>

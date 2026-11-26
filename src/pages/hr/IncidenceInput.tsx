@@ -70,7 +70,7 @@ export function IncidenceInput({ value, locked, isWeekend, onChange }: Props) {
     return (
       <div style={{
         width: 44, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 11, fontWeight: 600, color: value ? color : 'rgba(255,255,255,0.1)',
+        fontSize: 12, fontWeight: 600, color: value ? color : 'rgba(255,255,255,0.1)',
         background: value ? `${color}22` : 'transparent',
         borderRadius: 6, border: '1px solid rgba(255,255,255,0.05)',
       }}>
@@ -93,7 +93,7 @@ export function IncidenceInput({ value, locked, isWeekend, onChange }: Props) {
         maxLength={3}
         placeholder="—"
         style={{
-          width: '100%', padding: '3px 4px', borderRadius: 6, fontSize: 11,
+          width: '100%', padding: '3px 4px', borderRadius: 6, fontSize: 12,
           textAlign: 'center', fontWeight: 600, textTransform: 'uppercase',
           border: `1px solid ${value ? `${color}44` : 'rgba(255,255,255,0.08)'}`,
           background: value ? `${color}18` : (isWeekend ? 'rgba(255,255,255,0.02)' : '#141820'),
@@ -122,7 +122,7 @@ export function IncidenceInput({ value, locked, isWeekend, onChange }: Props) {
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             >
               <span style={{ fontWeight: 700, color: KEY_COLORS[k.key], minWidth: 28 }}>{k.key}</span>
-              <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>{k.label}</span>
+              <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>{k.label}</span>
             </div>
           ))}
         </div>

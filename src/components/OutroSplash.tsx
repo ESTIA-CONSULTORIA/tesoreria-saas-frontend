@@ -51,7 +51,7 @@ export function OutroSplash({ onDone }: Props) {
       </div>
       <div style={{
         position: 'absolute', bottom: 20, right: 24,
-        fontSize: 10, color: 'rgba(255,255,255,0.15)',
+        fontSize: 12, color: 'rgba(255,255,255,0.15)',
         letterSpacing: '0.1em',
       }}>
         ESTIA ERP

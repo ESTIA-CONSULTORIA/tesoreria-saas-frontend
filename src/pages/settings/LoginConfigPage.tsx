@@ -77,6 +77,7 @@ export default function LoginConfigPage() {
           </p>
           <input
             type="email"
+            aria-label="Correo electrónico (vista previa)"
             placeholder="Correo electrónico"
             disabled
             className="mb-4 w-full p-3 rounded text-sm"
@@ -89,6 +90,7 @@ export default function LoginConfigPage() {
           />
           <input
             type="password"
+            aria-label="Contraseña (vista previa)"
             placeholder="Contraseña"
             disabled
             className="mb-6 w-full p-3 rounded text-sm"
@@ -132,10 +134,10 @@ export default function LoginConfigPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold" style={{ color: '#F5F5F5' }}>
+            <h2 className="text-3xl font-bold" style={{ color: 'rgb(var(--text-1))' }}>
               Configuración de Login
             </h2>
-            <p style={{ color: '#A3A3A3', fontSize: '14px' }}>
+            <p style={{ color: 'rgb(var(--text-2))', fontSize: '14px' }}>
               Personaliza la página de inicio de sesión
             </p>
           </div>
@@ -173,13 +175,13 @@ export default function LoginConfigPage() {
               onClick={handleReset}
               className="px-4 py-2 font-medium text-sm"
               style={{
-                backgroundColor: '#C53030',
+                backgroundColor: '#9B2C2C',
                 color: '#F5F5F5',
                 borderRadius: '4px',
-                border: '1px solid #C53030',
+                border: '1px solid #9B2C2C',
               }}
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E53E3E'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#C53030'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#9B2C2C'}
             >
               🔄 Restablecer
             </button>
@@ -196,10 +198,10 @@ export default function LoginConfigPage() {
             <div className="space-y-4">
               {/* Imagen de Fondo */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#B0B0B0', marginBottom: '6px' }}>
                   Imagen de Fondo
                 </label>
-                <input
+                <input aria-label="Imagen de Fondo"
                   type="file"
                   accept="image/*"
                   onChange={(e) => handleImageUpload(e, 'backgroundImage')}
@@ -223,7 +225,7 @@ export default function LoginConfigPage() {
                     <button
                       onClick={() => setConfig({ backgroundImage: '' })}
                       className="mt-2 text-xs"
-                      style={{ color: '#C53030' }}
+                      style={{ color: '#9B2C2C' }}
                     >
                       Eliminar imagen
                     </button>
@@ -233,10 +235,10 @@ export default function LoginConfigPage() {
 
               {/* Logo */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#B0B0B0', marginBottom: '6px' }}>
                   Logo
                 </label>
-                <input
+                <input aria-label="Logo"
                   type="file"
                   accept="image/*"
                   onChange={(e) => handleImageUpload(e, 'logoUrl')}
@@ -259,7 +261,7 @@ export default function LoginConfigPage() {
                     <button
                       onClick={() => setConfig({ logoUrl: '' })}
                       className="mt-2 text-xs"
-                      style={{ color: '#C53030' }}
+                      style={{ color: '#9B2C2C' }}
                     >
                       Eliminar logo
                     </button>
@@ -269,10 +271,10 @@ export default function LoginConfigPage() {
 
               {/* Nombre de la Empresa */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#B0B0B0', marginBottom: '6px' }}>
                   Nombre de la Empresa
                 </label>
-                <input
+                <input aria-label="Nombre de la Empresa"
                   type="text"
                   value={config.companyName}
                   onChange={(e) => setConfig({ companyName: e.target.value })}
@@ -290,10 +292,10 @@ export default function LoginConfigPage() {
 
               {/* Eslogan */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#B0B0B0', marginBottom: '6px' }}>
                   Eslogan
                 </label>
-                <input
+                <input aria-label="Eslogan"
                   type="text"
                   value={config.tagline}
                   onChange={(e) => setConfig({ tagline: e.target.value })}
@@ -320,11 +322,11 @@ export default function LoginConfigPage() {
             <div className="space-y-4">
               {/* Color Primario */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#B0B0B0', marginBottom: '6px' }}>
                   Color Primario (Botones)
                 </label>
                 <div className="flex gap-2">
-                  <input
+                  <input aria-label="Color Primario (Botones)"
                     type="color"
                     value={config.primaryColor}
                     onChange={(e) => setConfig({ primaryColor: e.target.value })}
@@ -336,7 +338,7 @@ export default function LoginConfigPage() {
                       cursor: 'pointer',
                     }}
                   />
-                  <input
+                  <input aria-label="Color Primario (Botones) (código)"
                     type="text"
                     value={config.primaryColor}
                     onChange={(e) => setConfig({ primaryColor: e.target.value })}
@@ -355,11 +357,11 @@ export default function LoginConfigPage() {
 
               {/* Color de Texto */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#B0B0B0', marginBottom: '6px' }}>
                   Color de Texto
                 </label>
                 <div className="flex gap-2">
-                  <input
+                  <input aria-label="Color de Texto"
                     type="color"
                     value={config.textColor}
                     onChange={(e) => setConfig({ textColor: e.target.value })}
@@ -371,7 +373,7 @@ export default function LoginConfigPage() {
                       cursor: 'pointer',
                     }}
                   />
-                  <input
+                  <input aria-label="Color de Texto (código)"
                     type="text"
                     value={config.textColor}
                     onChange={(e) => setConfig({ textColor: e.target.value })}
@@ -390,11 +392,11 @@ export default function LoginConfigPage() {
 
               {/* Color de Acento */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#B0B0B0', marginBottom: '6px' }}>
                   Color de Acento
                 </label>
                 <div className="flex gap-2">
-                  <input
+                  <input aria-label="Color de Acento"
                     type="color"
                     value={config.accentColor}
                     onChange={(e) => setConfig({ accentColor: e.target.value })}
@@ -406,7 +408,7 @@ export default function LoginConfigPage() {
                       cursor: 'pointer',
                     }}
                   />
-                  <input
+                  <input aria-label="Color de Acento (código)"
                     type="text"
                     value={config.accentColor}
                     onChange={(e) => setConfig({ accentColor: e.target.value })}
@@ -425,10 +427,10 @@ export default function LoginConfigPage() {
 
               {/* Transparencia de Botones */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#B0B0B0', marginBottom: '6px' }}>
                   Transparencia de Botones: {Math.round(config.buttonOpacity * 100)}%
                 </label>
-                <input
+                <input aria-label="Transparencia de Botones: %"
                   type="range"
                   min="0"
                   max="1"
@@ -444,10 +446,10 @@ export default function LoginConfigPage() {
 
               {/* Transparencia de Tarjeta */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#B0B0B0', marginBottom: '6px' }}>
                   Transparencia de Tarjeta: {Math.round(config.cardOpacity * 100)}%
                 </label>
-                <input
+                <input aria-label="Transparencia de Tarjeta: %"
                   type="range"
                   min="0"
                   max="1"
@@ -479,9 +481,9 @@ export default function LoginConfigPage() {
                   onClick={() => setConfig({ maintenanceMode: !config.maintenanceMode })}
                   className="px-4 py-2 rounded text-sm font-medium"
                   style={{
-                    backgroundColor: config.maintenanceMode ? '#C53030' : '#2F855A',
+                    backgroundColor: config.maintenanceMode ? '#9B2C2C' : '#276749',
                     color: '#F5F5F5',
-                    border: `1px solid ${config.maintenanceMode ? '#C53030' : '#2F855A'}`,
+                    border: `1px solid ${config.maintenanceMode ? '#9B2C2C' : '#276749'}`,
                   }}
                 >
                   {config.maintenanceMode ? 'ACTIVADO' : 'DESACTIVADO'}
@@ -490,10 +492,10 @@ export default function LoginConfigPage() {
 
               {/* Mensaje de Mantenimiento */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#B0B0B0', marginBottom: '6px' }}>
                   Mensaje de Mantenimiento
                 </label>
-                <textarea
+                <textarea aria-label="Mensaje de Mantenimiento"
                   value={config.maintenanceMessage || ''}
                   onChange={(e) => setConfig({ maintenanceMessage: e.target.value })}
                   rows={3}
@@ -512,10 +514,10 @@ export default function LoginConfigPage() {
 
               {/* Fecha de Inicio */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#B0B0B0', marginBottom: '6px' }}>
                   Fecha y Hora de Inicio
                 </label>
-                <input
+                <input aria-label="Fecha y Hora de Inicio"
                   type="datetime-local"
                   value={config.maintenanceStartTime || ''}
                   onChange={(e) => setConfig({ maintenanceStartTime: e.target.value })}
@@ -533,10 +535,10 @@ export default function LoginConfigPage() {
 
               {/* Fecha de Fin */}
               <div>
-                <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#B0B0B0', marginBottom: '6px' }}>
                   Fecha y Hora de Fin
                 </label>
-                <input
+                <input aria-label="Fecha y Hora de Fin"
                   type="datetime-local"
                   value={config.maintenanceEndTime || ''}
                   onChange={(e) => setConfig({ maintenanceEndTime: e.target.value })}
@@ -561,10 +563,10 @@ export default function LoginConfigPage() {
             </h3>
             
             <div>
-              <label style={{ display: 'block', fontSize: '12px', color: '#9A9A9A', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '12px', color: '#B0B0B0', marginBottom: '6px' }}>
                 Código CSS adicional (para personalizaciones avanzadas)
               </label>
-              <textarea
+              <textarea aria-label="Código CSS adicional (para personalizaciones avanzadas)"
                 value={config.customCSS || ''}
                 onChange={(e) => setConfig({ customCSS: e.target.value })}
                 rows={8}
@@ -581,7 +583,7 @@ export default function LoginConfigPage() {
                   resize: 'vertical',
                 }}
               />
-              <p style={{ fontSize: '11px', color: '#9A9A9A', marginTop: '4px' }}>
+              <p style={{ fontSize: '12px', color: '#B0B0B0', marginTop: '4px' }}>
                 ⚠️ Usa con precaución. CSS inválido puede afectar la apariencia del login.
               </p>
             </div>

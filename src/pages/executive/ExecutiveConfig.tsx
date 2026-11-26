@@ -86,7 +86,7 @@ export default function ExecutiveConfig({ config, onSave, onBack, onLogout, onTh
         <p
           style={{
             color: t.secondary,
-            fontSize: 10,
+            fontSize: 12,
             letterSpacing: "0.1em",
             marginBottom: 8,
           }}
@@ -122,7 +122,7 @@ export default function ExecutiveConfig({ config, onSave, onBack, onLogout, onTh
 
       {/* Module label */}
       <div style={{ flexShrink: 0, padding: "4px 24px 6px" }}>
-        <p style={{ color: t.secondary, fontSize: 10, letterSpacing: "0.1em" }}>
+        <p style={{ color: t.secondary, fontSize: 12, letterSpacing: "0.1em" }}>
           MÓDULOS VISIBLES
         </p>
       </div>

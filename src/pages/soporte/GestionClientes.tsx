@@ -445,7 +445,7 @@ export default function GestionClientes() {
                             padding: '3px 8px', borderRadius: 6,
                             border: '1px solid rgba(74,222,128,0.2)',
                             background: 'transparent', color: 'rgba(74,222,128,0.7)',
-                            fontSize: 11, cursor: 'pointer',
+                            fontSize: 12, cursor: 'pointer',
                           }}
                         >
                           Renovar
@@ -557,7 +557,7 @@ export default function GestionClientes() {
 
                 {/* Sección módulos */}
                 <div style={{ marginTop: 20 }}>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>
                     Módulos activos
                   </div>
                   {loadingModules ? (
@@ -570,7 +570,7 @@ export default function GestionClientes() {
                           <button key={m.code}
                             onClick={() => editTenant && toggleModule(editTenant.id, m.code, isActive)}
                             style={{
-                              padding: '5px 12px', borderRadius: 99, fontSize: 11, cursor: 'pointer',
+                              padding: '5px 12px', borderRadius: 99, fontSize: 12, cursor: 'pointer',
                               border: `1px solid ${isActive ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.08)'}`,
                               background: isActive ? 'rgba(74,222,128,0.08)' : 'rgba(255,255,255,0.02)',
                               color: isActive ? '#4ade80' : 'rgba(255,255,255,0.3)',
@@ -633,7 +633,7 @@ export default function GestionClientes() {
                         transition: 'all 0.2s',
                       }}>{s.num}</div>
                       <div style={{
-                        fontSize: 10, letterSpacing: '0.06em',
+                        fontSize: 12, letterSpacing: '0.06em',
                         color: wizardStep >= s.num ? '#8fafd4' : 'rgba(255,255,255,0.2)',
                         transition: 'all 0.2s',
                       }}>
@@ -773,7 +773,7 @@ export default function GestionClientes() {
                     </select>
 
                     <div style={{ marginBottom: 12 }}>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Ciclo de facturación</div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Ciclo de facturación</div>
                       <div style={{ display: 'flex', gap: 8 }}>
                         {[
                           { value: 'monthly', label: 'Mensual', desc: 'Precio normal' },
@@ -790,7 +790,7 @@ export default function GestionClientes() {
                             }}
                           >
                             <div style={{ fontSize: 13, color: '#c8cdd8', fontWeight: 500 }}>{opt.label}</div>
-                            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{opt.desc}</div>
+                            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>{opt.desc}</div>
                           </button>
                         ))}
                       </div>
@@ -802,7 +802,7 @@ export default function GestionClientes() {
                       onChange={e => setWizardData(p => ({ ...p, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') }))}
                       style={{ width: '100%', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', padding: '10px 12px', color: '#e8edf5', fontSize: 13, marginBottom: 4, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace' }}
                     />
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', marginBottom: 12 }}>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', marginBottom: 12 }}>
                       Ej: /corte?tenant={wizardData.slug || 'nombre'}
                     </div>
 
@@ -977,7 +977,7 @@ export default function GestionClientes() {
                           <button key={m.code}
                             onClick={() => toggleModule(selectedTenant.id, m.code, isActive)}
                             style={{
-                              padding: '5px 12px', borderRadius: 99, fontSize: 11, cursor: 'pointer',
+                              padding: '5px 12px', borderRadius: 99, fontSize: 12, cursor: 'pointer',
                               border: `1px solid ${isActive ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.08)'}`,
                               background: isActive ? 'rgba(74,222,128,0.08)' : 'rgba(255,255,255,0.02)',
                               color: isActive ? '#4ade80' : 'rgba(255,255,255,0.3)',

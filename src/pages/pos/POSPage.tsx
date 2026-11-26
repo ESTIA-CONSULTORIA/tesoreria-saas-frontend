@@ -2012,7 +2012,7 @@ export default function POSPage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full px-4 py-2 rounded-lg border !border-line !bg-surface-1 !text-content-1"
                 />
-                <p className="text-[11px] !text-content-3" aria-label="Atajos de teclado">
+                <p className="text-[12px] !text-content-3" aria-label="Atajos de teclado">
                   <kbd className="font-sans">F2</kbd> Buscar producto · <kbd className="font-sans">F4</kbd> Cobrar · <kbd className="font-sans">Esc</kbd> Limpiar búsqueda
                 </p>
                 <div className="flex gap-2 overflow-x-auto pb-1">
@@ -2080,7 +2080,7 @@ export default function POSPage() {
                       <p className="iso-hex-nombre font-medium text-xs line-clamp-2 h-8 overflow-hidden">{product.name}</p>
                       <p className="iso-numero !text-ok font-bold text-sm">${product.price.toFixed(2)}</p>
                       {product.stock !== null && product.stock !== undefined && (
-                        <div className={`iso-stock absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                        <div className={`iso-stock absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[12px] font-bold ${
                           product.stock <= 0
                             ? '!bg-danger-solid !text-on-solid'
                             : product.stock <= (product.stockMinimo || 0)
@@ -2780,7 +2780,7 @@ export default function POSPage() {
               <h3 className="text-lg font-semibold mb-3">Impuestos</h3>
               <div>
                 <label className="block text-sm !text-content-3 mb-1">IVA por defecto del negocio</label>
-                <select
+                <select aria-label="IVA por defecto del negocio"
                   value={ivaTasaDefault}
                   onChange={(e) => esTasaIva(e.target.value) && guardarIva({ ivaTasaDefault: e.target.value })}
                   disabled={user?.roleCode !== "ADMIN" || guardandoIva}
@@ -3046,7 +3046,7 @@ export default function POSPage() {
               {/* Sección 3: Selección de productos */}
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <input
+                  <input aria-label="Seleccionar todos los productos"
                     type="checkbox"
                     checked={selectAllProducts}
                     onChange={(e) => {
@@ -3065,7 +3065,7 @@ export default function POSPage() {
                   <div className="max-h-32 overflow-y-auto space-y-1">
                     {ticket.map((item) => (
                       <div key={item.productoId} className="flex items-center gap-2">
-                        <input
+                        <input aria-label="Incluir este producto"
                           type="checkbox"
                           checked={selectedProductIds.has(item.productoId)}
                           onChange={(e) => {
@@ -3089,7 +3089,7 @@ export default function POSPage() {
               {/* Sección 4: Motivo */}
               <div>
                 <label className="block text-sm !text-content-3 mb-1">Motivo *</label>
-                <select
+                <select aria-label="Motivo del descuento"
                   value={discountReason}
                   onChange={(e) => setDiscountReason(e.target.value)}
                   className="w-full px-4 py-2 rounded-lg border !border-line !bg-nav !text-content-1"
@@ -3137,7 +3137,7 @@ export default function POSPage() {
               {/* Sección 1: Selección de productos */}
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <input
+                  <input aria-label="Seleccionar todos los productos"
                     type="checkbox"
                     checked={selectAllCourtesy}
                     onChange={(e) => {
@@ -3156,7 +3156,7 @@ export default function POSPage() {
                   <div className="max-h-32 overflow-y-auto space-y-1">
                     {ticket.map((item) => (
                       <div key={item.productoId} className="flex items-center gap-2">
-                        <input
+                        <input aria-label="Incluir este producto"
                           type="checkbox"
                           checked={courtesyProductIds.has(item.productoId)}
                           onChange={(e) => {
@@ -3180,7 +3180,7 @@ export default function POSPage() {
               {/* Sección 2: Motivo */}
               <div>
                 <label className="block text-sm !text-content-3 mb-1">Motivo *</label>
-                <select
+                <select aria-label="Motivo de la cortesía"
                   value={courtesyReason}
                   onChange={(e) => setCourtesyReason(e.target.value)}
                   className="w-full px-4 py-2 rounded-lg border !border-line !bg-nav !text-content-1"
@@ -3464,7 +3464,7 @@ export default function POSPage() {
               </div>
               <div>
                 <label className="block text-sm !text-content-3 mb-1">Tipo</label>
-                <select
+                <select aria-label="Tipo de producto"
                   value={productForm.tipo}
                   onChange={(e) => setProductForm({ ...productForm, tipo: e.target.value, recipeId: "", insumoId: "" })}
                   className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
@@ -3476,7 +3476,7 @@ export default function POSPage() {
               {productForm.tipo === "PREPARADO" && (
                 <div>
                   <label className="block text-sm !text-content-3 mb-1">Receta</label>
-                  <select
+                  <select aria-label="Receta"
                     value={productForm.recipeId}
                     onChange={(e) => setProductForm({ ...productForm, recipeId: e.target.value })}
                     className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
@@ -3491,7 +3491,7 @@ export default function POSPage() {
               {productForm.tipo === "SIMPLE" && (
                 <div>
                   <label className="block text-sm !text-content-3 mb-1">Insumo</label>
-                  <select
+                  <select aria-label="Insumo"
                     value={productForm.insumoId}
                     onChange={(e) => setProductForm({ ...productForm, insumoId: e.target.value })}
                     className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
@@ -3505,7 +3505,7 @@ export default function POSPage() {
               )}
               <div>
                 <label className="block text-sm !text-content-3 mb-1">IVA de este producto</label>
-                <select
+                <select aria-label="IVA de este producto"
                   value={productForm.tasaIva}
                   onChange={(e) => setProductForm({ ...productForm, tasaIva: e.target.value })}
                   className="w-full px-3 py-2 rounded !bg-nav !text-content-1"
@@ -3518,7 +3518,7 @@ export default function POSPage() {
                 <p className="text-xs !text-content-3 mt-1">Reemplaza la tasa del negocio solo para este producto.</p>
               </div>
               <div className="flex items-center gap-2">
-                <input
+                <input aria-label="Producto activo"
                   type="checkbox"
                   checked={productForm.activo}
                   onChange={(e) => setProductForm({ ...productForm, activo: e.target.checked })}

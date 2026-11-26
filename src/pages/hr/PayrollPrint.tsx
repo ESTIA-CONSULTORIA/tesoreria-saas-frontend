@@ -22,7 +22,7 @@ export function PayrollPrint({ run, employees, company, branch }: Props) {
   <title>Lista de Raya — ${run.periodStart} al ${run.periodEnd}</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, sans-serif; font-size: 11px; color: #000; padding: 20px; }
+    body { font-family: Arial, sans-serif; font-size: 12px; color: #000; padding: 20px; }
     .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
     .company-name { font-size: 16px; font-weight: bold; }
     .periodo { font-size: 12px; margin-top: 4px; }
@@ -30,14 +30,14 @@ export function PayrollPrint({ run, employees, company, branch }: Props) {
     .recibo-header { background: #f0f0f0; padding: 8px 12px; display: flex; justify-content: space-between; }
     .recibo-body { padding: 8px 12px; }
     table { width: 100%; border-collapse: collapse; margin-top: 6px; }
-    th { background: #f0f0f0; padding: 4px 8px; text-align: left; font-size: 10px; border: 1px solid #ccc; }
-    td { padding: 4px 8px; border: 1px solid #ccc; font-size: 11px; }
+    th { background: #f0f0f0; padding: 4px 8px; text-align: left; font-size: 12px; border: 1px solid #ccc; }
+    td { padding: 4px 8px; border: 1px solid #ccc; font-size: 12px; }
     .amount { text-align: right; }
     .neto { font-weight: bold; font-size: 13px; }
     .firma { margin-top: 12px; display: flex; justify-content: flex-end; }
     .firma-line { text-align: center; }
     .firma-linea { border-bottom: 1px solid #000; width: 160px; margin-bottom: 4px; height: 24px; }
-    .firma-label { font-size: 10px; }
+    .firma-label { font-size: 12px; }
     .resumen { margin-top: 20px; border-top: 2px solid #000; padding-top: 12px; }
     .resumen table { width: 50%; margin-left: auto; }
     @media print { body { padding: 10px; } }

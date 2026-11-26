@@ -106,7 +106,7 @@ export default function EmployeeDocuments() {
                   >
                     {doc.nombre}
                   </div>
-                  <div style={{ color: "#9A9A9A", fontSize: "0.7rem", marginTop: 3 }}>
+                  <div style={{ color: "#9A9A9A", fontSize: "0.75rem", marginTop: 3 }}>
                     {doc.tipo} · {new Date(doc.uploadedAt).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}
                   </div>
                 </div>
@@ -124,7 +124,7 @@ export default function EmployeeDocuments() {
                       border: "1px solid #2A2A2A",
                       borderRadius: 8,
                       color: "#A0A0A0",
-                      fontSize: "0.72rem",
+                      fontSize: "0.75rem",
                       fontWeight: 600,
                       letterSpacing: "0.08em",
                       padding: "7px 14px",

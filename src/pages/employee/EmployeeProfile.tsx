@@ -23,7 +23,7 @@ function Field({ label, value }: { label: string; value?: string | number | null
   if (!value) return null;
   return (
     <div style={{ padding: "14px 0", borderBottom: "1px solid #141414" }}>
-      <div style={{ color: "#9A9A9A", fontSize: "0.6rem", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 4 }}>
+      <div style={{ color: "#9A9A9A", fontSize: "0.75rem", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 4 }}>
         {label}
       </div>
       <div style={{ color: "#D0D0D0", fontSize: "0.92rem" }}>{String(value)}</div>

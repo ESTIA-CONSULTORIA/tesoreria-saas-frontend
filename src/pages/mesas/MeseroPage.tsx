@@ -83,7 +83,7 @@ export default function MeseroPage() {
       <div className="grid grid-cols-3 gap-3">
         {['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'del'].map((k) =>
           k === '' ? <span key="e" /> : (
-            <button key={k} disabled={!tenantId || cargando} className="h-20 w-20 rounded-2xl !bg-surface-1 text-2xl font-semibold active:bg-tono-slate-700 disabled:opacity-40" onClick={() => digitar(k)}>
+            <button key={k} aria-label={k === 'del' ? 'Borrar último dígito' : `Dígito ${k}`} disabled={!tenantId || cargando} className="h-20 w-20 rounded-2xl !bg-surface-1 text-2xl font-semibold active:bg-tono-slate-700 disabled:opacity-40" onClick={() => digitar(k)}>
               {k === 'del' ? '⌫' : k}
             </button>
           ),

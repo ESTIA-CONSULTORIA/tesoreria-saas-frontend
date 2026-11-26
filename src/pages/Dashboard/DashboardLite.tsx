@@ -189,7 +189,7 @@ export default function DashboardLite() {
             {/* KPI + canales */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16, marginBottom: 20 }}>
               <div style={{ borderRadius: 12, border: '1px solid rgb(var(--veil) / 0.07)', background: 'rgb(var(--panel))', padding: '20px 24px' }}>
-                <div style={{ fontSize: 11, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Venta total del período</div>
+                <div style={{ fontSize: 12, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Venta total del período</div>
                 <div style={{ fontSize: 36, fontWeight: 300, color: 'rgb(var(--viz-1))', letterSpacing: '-0.02em' }}>{fmt(totalVenta)}</div>
                 <div style={{ fontSize: 12, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', marginTop: 6 }}>
                   {filtered.length} corte{filtered.length !== 1 ? 's' : ''} registrado{filtered.length !== 1 ? 's' : ''}
@@ -197,7 +197,7 @@ export default function DashboardLite() {
               </div>
 
               <div style={{ borderRadius: 12, border: '1px solid rgb(var(--veil) / 0.07)', background: 'rgb(var(--panel))', padding: '20px 24px' }}>
-                <div style={{ fontSize: 11, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>Desglose por canal</div>
+                <div style={{ fontSize: 12, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>Desglose por canal</div>
                 {canalTotals.length === 0 ? (
                   <div style={{ color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', fontSize: 13 }}>Sin datos</div>
                 ) : (
@@ -222,16 +222,16 @@ export default function DashboardLite() {
             {/* Gráfica */}
             {chartData.length > 0 && (
               <div style={{ borderRadius: 12, border: '1px solid rgb(var(--veil) / 0.07)', background: 'rgb(var(--panel))', padding: '20px 24px', marginBottom: 20 }}>
-                <div style={{ fontSize: 11, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>Comportamiento por canal</div>
+                <div style={{ fontSize: 12, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>Comportamiento por canal</div>
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={chartData} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                    <XAxis dataKey="day" tick={{ fontSize: 11, fill: 'rgb(var(--veil) / max(0.3, var(--alfa-texto-min)))' }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11, fill: 'rgb(var(--veil) / max(0.3, var(--alfa-texto-min)))' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
+                    <XAxis dataKey="day" tick={{ fontSize: 12, fill: 'rgb(var(--veil) / max(0.3, var(--alfa-texto-min)))' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 12, fill: 'rgb(var(--veil) / max(0.3, var(--alfa-texto-min)))' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
                     <Tooltip
                       contentStyle={{ background: 'rgb(var(--canvas))', border: '1px solid rgb(var(--veil) / 0.1)', borderRadius: 8, fontSize: 12 }}
                       formatter={(value: any, name: string) => [fmt(Number(value)), name]}
                     />
-                    <Legend wrapperStyle={{ fontSize: 11, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))' }} />
+                    <Legend wrapperStyle={{ fontSize: 12, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))' }} />
                     {CANALES.map(c => (
                       <Bar key={c.key} dataKey={c.key} name={c.label} fill={c.color} radius={[4, 4, 0, 0]} stackId="a" />
                     ))}
@@ -243,7 +243,7 @@ export default function DashboardLite() {
             {/* Lista de cortes + detalle */}
             <div style={{ display: 'grid', gridTemplateColumns: selectedShift ? '1fr 1fr' : '1fr', gap: 16 }}>
               <div style={{ borderRadius: 12, border: '1px solid rgb(var(--veil) / 0.07)', background: 'rgb(var(--panel))', overflow: 'hidden' }}>
-                <div style={{ padding: '14px 20px', borderBottom: '1px solid rgb(var(--veil) / 0.06)', fontSize: 11, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                <div style={{ padding: '14px 20px', borderBottom: '1px solid rgb(var(--veil) / 0.06)', fontSize: 12, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                   Cortes del período
                 </div>
                 {filtered.length === 0 ? (
@@ -266,7 +266,7 @@ export default function DashboardLite() {
                           <div style={{ fontSize: 13, color: 'rgb(var(--text-soft))' }}>
                             {fecha.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
                           </div>
-                          <div style={{ fontSize: 11, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', marginTop: 2 }}>
+                          <div style={{ fontSize: 12, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', marginTop: 2 }}>
                             {fecha.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
                           </div>
                         </div>
@@ -283,7 +283,7 @@ export default function DashboardLite() {
               {selectedShift && shiftDetalle && (
                 <div style={{ borderRadius: 12, border: '1px solid rgb(var(--accent) / 0.15)', background: 'rgb(var(--panel))', overflow: 'hidden' }}>
                   <div style={{ padding: '14px 20px', borderBottom: '1px solid rgb(var(--veil) / 0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontSize: 11, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Detalle del corte</div>
+                    <div style={{ fontSize: 12, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Detalle del corte</div>
                     <button onClick={() => setSelectedShift(null)} style={{ background: 'none', border: 'none', color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', cursor: 'pointer', fontSize: 16 }}>✕</button>
                   </div>
                   <div style={{ padding: '16px 20px' }}>
@@ -294,7 +294,7 @@ export default function DashboardLite() {
                           <div style={{ fontSize: 15, fontWeight: 400, color: c.resta ? 'rgb(var(--danger))' : 'rgb(var(--text-soft))' }}>
                             {c.resta ? '-' : ''}{fmt(c.valor)}
                           </div>
-                          <div style={{ fontSize: 11, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))' }}>
+                          <div style={{ fontSize: 12, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))' }}>
                             {shiftDetalle.ingresos > 0 ? (c.valor / shiftDetalle.ingresos * 100).toFixed(1) : '0.0'}%
                           </div>
                         </div>

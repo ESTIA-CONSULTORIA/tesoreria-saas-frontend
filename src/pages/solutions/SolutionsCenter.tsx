@@ -55,7 +55,7 @@ export default function SolutionsCenter() {
       <div style={{ padding: '20px 0', maxWidth: 1100 }}>
         {/* Header */}
         <div style={{ marginBottom: 32 }}>
-          <div style={{ fontSize: 10, letterSpacing: '0.2em', color: 'rgb(var(--accent))', textTransform: 'uppercase', marginBottom: 8 }}>
+          <div style={{ fontSize: 12, letterSpacing: '0.2em', color: 'rgb(var(--accent))', textTransform: 'uppercase', marginBottom: 8 }}>
             ESTIA ERP
           </div>
           <h1 style={{ fontSize: 28, fontWeight: 200, color: 'rgb(var(--text-bright))', marginBottom: 8, letterSpacing: '-0.01em' }}>
@@ -97,20 +97,20 @@ export default function SolutionsCenter() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 500, color: 'rgb(var(--text-soft))', marginBottom: 4 }}>{m.name}</div>
-                      <div style={{ fontSize: 10, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                      <div style={{ fontSize: 12, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                         {CATEGORY_LABELS[m.category] || m.category}
                       </div>
                     </div>
                     {isActive ? (
-                      <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 99, background: 'rgb(var(--viz-1) / 0.12)', color: 'rgb(var(--viz-1))', letterSpacing: '0.08em' }}>
+                      <span style={{ fontSize: 12, padding: '3px 8px', borderRadius: 99, background: 'rgb(var(--viz-1) / 0.12)', color: 'rgb(var(--viz-1))', letterSpacing: '0.08em' }}>
                         ACTIVO
                       </span>
                     ) : m.isAddon ? (
-                      <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 99, background: 'rgb(var(--accent) / 0.08)', color: 'rgb(var(--accent))', letterSpacing: '0.08em' }}>
+                      <span style={{ fontSize: 12, padding: '3px 8px', borderRadius: 99, background: 'rgb(var(--accent) / 0.08)', color: 'rgb(var(--accent))', letterSpacing: '0.08em' }}>
                         ADD-ON
                       </span>
                     ) : (
-                      <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 99, background: 'rgb(var(--veil) / 0.05)', color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', letterSpacing: '0.08em' }}>
+                      <span style={{ fontSize: 12, padding: '3px 8px', borderRadius: 99, background: 'rgb(var(--veil) / 0.05)', color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', letterSpacing: '0.08em' }}>
                         INCLUIDO
                       </span>
                     )}
@@ -124,7 +124,7 @@ export default function SolutionsCenter() {
                     {m.isAddon && m.defaultPrice > 0 && !isActive && (
                       <div style={{ fontSize: 13, color: 'rgb(var(--text-soft))' }}>
                         <span style={{ fontSize: 18, fontWeight: 300 }}>${m.defaultPrice}</span>
-                        <span style={{ fontSize: 11, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))' }}>/mes</span>
+                        <span style={{ fontSize: 12, color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))' }}>/mes</span>
                       </div>
                     )}
                     {isActive ? (

@@ -258,7 +258,7 @@ export default function DashboardPage() {
                     border: '1px solid rgb(var(--warn-solid) / 0.267)',
                     background: 'rgb(var(--warn-solid) / 0.067)',
                     borderRadius: '8px',
-                    fontSize: '11px',
+                    fontSize: '12px',
                     color: 'rgb(var(--warn))',
                     cursor: 'pointer',
                     display: 'flex',
@@ -280,7 +280,7 @@ export default function DashboardPage() {
                     border: '1px solid rgb(var(--warn-solid) / 0.267)',
                     background: 'rgb(var(--warn-solid) / 0.067)',
                     borderRadius: '8px',
-                    fontSize: '11px',
+                    fontSize: '12px',
                     color: 'rgb(var(--warn))',
                     cursor: 'pointer',
                     display: 'flex',
@@ -302,7 +302,7 @@ export default function DashboardPage() {
                     border: '1px solid rgb(var(--warn-solid) / 0.267)',
                     background: 'rgb(var(--warn-solid) / 0.067)',
                     borderRadius: '8px',
-                    fontSize: '11px',
+                    fontSize: '12px',
                     color: 'rgb(var(--warn))',
                     cursor: 'pointer',
                     display: 'flex',
@@ -340,13 +340,13 @@ export default function DashboardPage() {
                 <div style={{ padding: '10px 24px', borderBottom: '1px solid rgb(var(--border))', display: 'flex', alignItems: 'center', backgroundColor: 'rgb(var(--bg))', overflowX: 'auto', minWidth: 0 }}>
                   {/* Ventas */}
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
+                    <div style={{ fontSize: '12px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
                       Ventas
                     </div>
                     <div style={{ fontSize: '22px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
                       {formatCurrency(ventasDisplay)}
                     </div>
-                    <div style={{ fontSize: '11px', color: varVentas === null ? 'rgb(var(--text-3))' : 'rgb(var(--ok))', letterSpacing: '0.01em' }}>
+                    <div style={{ fontSize: '12px', color: varVentas === null ? 'rgb(var(--text-3))' : 'rgb(var(--ok))', letterSpacing: '0.01em' }}>
                       {varVentas === null ? sinComparar : formatPercent(varVentas)}
                     </div>
                   </div>
@@ -355,13 +355,13 @@ export default function DashboardPage() {
 
                   {/* Egresos (total real de movimientos EXPENSE) */}
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
+                    <div style={{ fontSize: '12px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
                       Egresos
                     </div>
                     <div style={{ fontSize: '22px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
                       {formatCurrency(egresosDisplay)}
                     </div>
-                    <div style={{ fontSize: '11px', color: varEgresos === null ? 'rgb(var(--text-3))' : 'rgb(var(--danger))', letterSpacing: '0.01em' }}>
+                    <div style={{ fontSize: '12px', color: varEgresos === null ? 'rgb(var(--text-3))' : 'rgb(var(--danger))', letterSpacing: '0.01em' }}>
                       {varEgresos === null ? sinComparar : formatPercent(varEgresos)}
                     </div>
                   </div>
@@ -370,7 +370,7 @@ export default function DashboardPage() {
 
                   {/* Costo: sin fuente real */}
                   <div style={{ flex: 1 }} data-testid="kpi-costo">
-                    <div style={{ fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
+                    <div style={{ fontSize: '12px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
                       Costo
                     </div>
                     <div style={{ minHeight: '26px', display: 'flex', alignItems: 'center', marginBottom: '2px' }}>{sinDatos}</div>
@@ -380,7 +380,7 @@ export default function DashboardPage() {
 
                   {/* Gasto: sin fuente real */}
                   <div style={{ flex: 1 }} data-testid="kpi-gasto">
-                    <div style={{ fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
+                    <div style={{ fontSize: '12px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
                       Gasto
                     </div>
                     <div style={{ minHeight: '26px', display: 'flex', alignItems: 'center', marginBottom: '2px' }}>{sinDatos}</div>
@@ -390,13 +390,13 @@ export default function DashboardPage() {
 
                   {/* UAI */}
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
+                    <div style={{ fontSize: '12px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
                       UAI
                     </div>
                     <div style={{ fontSize: '22px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', marginBottom: '2px', letterSpacing: '-0.01em' }}>
                       {formatCurrency(uaiDisplay)}
                     </div>
-                    <div style={{ fontSize: '11px', color: margenUai === null ? 'rgb(var(--text-3))' : uaiDisplay >= 0 ? 'rgb(var(--ok))' : 'rgb(var(--danger))', letterSpacing: '0.01em' }}>
+                    <div style={{ fontSize: '12px', color: margenUai === null ? 'rgb(var(--text-3))' : uaiDisplay >= 0 ? 'rgb(var(--ok))' : 'rgb(var(--danger))', letterSpacing: '0.01em' }}>
                       {margenUai === null ? SIN_DATOS : formatPercent(margenUai)}
                     </div>
                   </div>
@@ -405,7 +405,7 @@ export default function DashboardPage() {
 
                   {/* UDI */}
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
+                    <div style={{ fontSize: '12px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '3px' }}>
                       UDI
                     </div>
                     <div style={{ minHeight: '26px', display: 'flex', alignItems: 'center', marginBottom: '2px' }} data-testid="kpi-udi">{sinDatos}</div>
@@ -434,17 +434,17 @@ export default function DashboardPage() {
                       <ResponsiveContainer width="100%" height={170}>
                         <BarChart data={companyBarChartData}>
                         <CartesianGrid strokeDasharray="4 4" stroke="rgb(var(--border))" vertical={false} />
-                        <XAxis dataKey="name" stroke="rgb(var(--text-3))" fontSize="11" tick={{ fill: 'rgb(var(--text-3))' }} />
-                        <YAxis stroke="rgb(var(--text-3))" fontSize="11" tick={{ fill: 'rgb(var(--text-3))' }} />
+                        <XAxis dataKey="name" stroke="rgb(var(--text-3))" fontSize="12" tick={{ fill: 'rgb(var(--text-3))' }} />
+                        <YAxis stroke="rgb(var(--text-3))" fontSize="12" tick={{ fill: 'rgb(var(--text-3))' }} />
                         <Tooltip
                           contentStyle={{ backgroundColor: 'rgb(var(--field))', border: '1px solid rgb(var(--border))', borderRadius: '2px', color: 'rgb(var(--text-1))', fontSize: '12px', padding: '8px 12px' }}
-                          itemStyle={{ color: 'rgb(var(--text-1))', fontSize: '11px' }}
+                          itemStyle={{ color: 'rgb(var(--text-1))', fontSize: '12px' }}
                           formatter={(value: number) => formatCurrency(value)}
                         />
                         <Legend 
-                          wrapperStyle={{ paddingTop: '12px', fontSize: '11px' }}
+                          wrapperStyle={{ paddingTop: '12px', fontSize: '12px' }}
                           iconType="rect"
-                          formatter={(value: string) => <span style={{ color: 'rgb(var(--text-2))', fontSize: '11px' }}>{value}</span>}
+                          formatter={(value: string) => <span style={{ color: 'rgb(var(--text-2))', fontSize: '12px' }}>{value}</span>}
                         />
                         <Bar dataKey="Ingresos" fill="rgb(var(--text-2))" name="Ingresos" radius={[0, 0, 0, 0]} />
                         <Bar dataKey="Egresos" fill="rgb(var(--viz-5))" name="Egresos" radius={[0, 0, 0, 0]} />
@@ -465,31 +465,31 @@ export default function DashboardPage() {
                   <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse' }}>
                     <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                       <tr style={{ backgroundColor: 'rgb(var(--field))' }}>
-                        <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
+                        <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '12px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
                           Empresa
                         </th>
-                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
+                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '12px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
                           Ventas
                         </th>
-                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
+                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '12px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
                           Costo
                         </th>
-                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
+                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '12px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
                           Gasto
                         </th>
-                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
+                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '12px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
                           UAI
                         </th>
-                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
+                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '12px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
                           UDI
                         </th>
-                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
+                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '12px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
                           Margen
                         </th>
-                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
+                        <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '12px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
                           Part.%
                         </th>
-                        <th style={{ padding: '10px 12px', textAlign: 'center', fontSize: '10px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
+                        <th style={{ padding: '10px 12px', textAlign: 'center', fontSize: '12px', color: 'rgb(var(--text-3))', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 400 }}>
                           Acciones
                         </th>
                       </tr>
@@ -548,7 +548,7 @@ export default function DashboardPage() {
                         <h2 style={{ fontSize: '16px', fontWeight: 400, color: 'rgb(var(--text-1))', marginBottom: '2px', letterSpacing: '0.01em' }}>
                           {activeCompany.name}
                         </h2>
-                        <p style={{ fontSize: '11px', color: 'rgb(var(--text-3))', marginBottom: '8px', letterSpacing: '0.01em' }}>
+                        <p style={{ fontSize: '12px', color: 'rgb(var(--text-3))', marginBottom: '8px', letterSpacing: '0.01em' }}>
                           Detalle de la empresa
                         </p>
 
@@ -556,43 +556,43 @@ export default function DashboardPage() {
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Ventas</span>
+                            <span style={{ fontSize: '12px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Ventas</span>
                             <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatCurrency(panelVentas)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Egresos</span>
+                            <span style={{ fontSize: '12px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Egresos</span>
                             <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatCurrency(panelEgresos)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Costo</span>
+                            <span style={{ fontSize: '12px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Costo</span>
                             {sinDatos}
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Gasto</span>
+                            <span style={{ fontSize: '12px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Gasto</span>
                             {sinDatos}
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>UAI</span>
+                            <span style={{ fontSize: '12px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>UAI</span>
                             <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatCurrency(panelUAI)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>UDI</span>
+                            <span style={{ fontSize: '12px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>UDI</span>
                             {sinDatos}
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Margen (UAI / ventas)</span>
+                            <span style={{ fontSize: '12px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Margen (UAI / ventas)</span>
                             <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {panelMargen === null ? SIN_DATOS : formatPercentDecimal(panelMargen)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Participación %</span>
+                            <span style={{ fontSize: '12px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Participación %</span>
                             <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {textoPorcentaje(participacion(panelVentas, kpis?.companiesBreakdown, vistaGlobal))}
                             </span>
@@ -627,7 +627,7 @@ export default function DashboardPage() {
                         <h2 style={{ fontSize: '16px', fontWeight: 400, color: 'rgb(var(--text-1))', marginBottom: '2px', letterSpacing: '0.01em' }}>
                           Resumen del Grupo
                         </h2>
-                        <p style={{ fontSize: '11px', color: 'rgb(var(--text-3))', marginBottom: '8px', letterSpacing: '0.01em' }}>
+                        <p style={{ fontSize: '12px', color: 'rgb(var(--text-3))', marginBottom: '8px', letterSpacing: '0.01em' }}>
                           Vista consolidada de todas las empresas
                         </p>
 
@@ -635,33 +635,33 @@ export default function DashboardPage() {
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Ventas Totales</span>
+                            <span style={{ fontSize: '12px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Ventas Totales</span>
                             <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatCurrency(ventasDisplay)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Egresos Totales</span>
+                            <span style={{ fontSize: '12px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Egresos Totales</span>
                             <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatCurrency(egresosDisplay)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Costo Total</span>
+                            <span style={{ fontSize: '12px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Costo Total</span>
                             {sinDatos}
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Gasto Total</span>
+                            <span style={{ fontSize: '12px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>Gasto Total</span>
                             {sinDatos}
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>UAI Consolidada</span>
+                            <span style={{ fontSize: '12px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>UAI Consolidada</span>
                             <span style={{ fontSize: '13px', color: 'rgb(var(--text-1))', fontWeight: 400, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.01em' }}>
                               {formatCurrency(uaiDisplay)}
                             </span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>UDI Consolidada</span>
+                            <span style={{ fontSize: '12px', color: 'rgb(var(--text-3))', letterSpacing: '0.01em' }}>UDI Consolidada</span>
                             {sinDatos}
                           </div>
                         </div>

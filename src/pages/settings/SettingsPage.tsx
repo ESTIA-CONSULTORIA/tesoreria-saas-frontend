@@ -227,7 +227,7 @@ export default function SettingsPage() {
             <div className="space-y-6">
               <div>
                 <label className="block text-sm text-slate-400 mb-2">Nombre del sistema</label>
-                <input
+                <input aria-label="Nombre del sistema"
                   value={settings.systemName}
                   onChange={(e) => setSettings({ ...settings, systemName: e.target.value })}
                   className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
@@ -237,7 +237,7 @@ export default function SettingsPage() {
 
               <div>
                 <label className="block text-sm text-slate-400 mb-2">Logo del sistema</label>
-                <input
+                <input aria-label="Logo del sistema"
                   type="file"
                   accept="image/*"
                   onChange={handleLogoFile}
@@ -252,7 +252,7 @@ export default function SettingsPage() {
 
               <div>
                 <label className="block text-sm text-slate-400 mb-2">URL del Favicon</label>
-                <input
+                <input aria-label="URL del Favicon"
                   value={settings.faviconUrl}
                   onChange={(e) => setSettings({ ...settings, faviconUrl: e.target.value })}
                   className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
@@ -262,7 +262,7 @@ export default function SettingsPage() {
 
               <div>
                 <label className="block text-sm text-slate-400 mb-2">Imagen de fondo del sistema</label>
-                <input
+                <input aria-label="Imagen de fondo del sistema"
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   onChange={handleBackgroundFile}
@@ -291,13 +291,13 @@ export default function SettingsPage() {
                 <div>
                   <label className="block text-sm text-slate-400 mb-2">Color Primario</label>
                   <div className="flex gap-2">
-                    <input
+                    <input aria-label="Color Primario"
                       type="color"
                       value={settings.primaryColor}
                       onChange={(e) => setSettings({ ...settings, primaryColor: e.target.value })}
                       className="h-10 w-12 rounded border border-slate-700 bg-slate-800 p-1"
                     />
-                    <input
+                    <input aria-label="Color Primario (código)"
                       type="text"
                       value={settings.primaryColor}
                       onChange={(e) => setSettings({ ...settings, primaryColor: e.target.value })}
@@ -308,13 +308,13 @@ export default function SettingsPage() {
                 <div>
                   <label className="block text-sm text-slate-400 mb-2">Color Secundario</label>
                   <div className="flex gap-2">
-                    <input
+                    <input aria-label="Color Secundario"
                       type="color"
                       value={settings.secondaryColor}
                       onChange={(e) => setSettings({ ...settings, secondaryColor: e.target.value })}
                       className="h-10 w-12 rounded border border-slate-700 bg-slate-800 p-1"
                     />
-                    <input
+                    <input aria-label="Color Secundario (código)"
                       type="text"
                       value={settings.secondaryColor}
                       onChange={(e) => setSettings({ ...settings, secondaryColor: e.target.value })}
@@ -325,13 +325,13 @@ export default function SettingsPage() {
                 <div>
                   <label className="block text-sm text-slate-400 mb-2">Color de Acento</label>
                   <div className="flex gap-2">
-                    <input
+                    <input aria-label="Color de Acento"
                       type="color"
                       value={settings.accentColor}
                       onChange={(e) => setSettings({ ...settings, accentColor: e.target.value })}
                       className="h-10 w-12 rounded border border-slate-700 bg-slate-800 p-1"
                     />
-                    <input
+                    <input aria-label="Color de Acento (código)"
                       type="text"
                       value={settings.accentColor}
                       onChange={(e) => setSettings({ ...settings, accentColor: e.target.value })}
@@ -347,7 +347,7 @@ export default function SettingsPage() {
             <div className="space-y-6">
               <div>
                 <label className="block text-sm text-slate-400 mb-2">Fuente Principal</label>
-                <select
+                <select aria-label="Fuente Principal"
                   value={settings.fontFamily}
                   onChange={(e) => setSettings({ ...settings, fontFamily: e.target.value as any })}
                   className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
@@ -364,7 +364,7 @@ export default function SettingsPage() {
 
               <div>
                 <label className="block text-sm text-slate-400 mb-2">Tamaño Base (px)</label>
-                <input
+                <input aria-label="Tamaño Base (px)"
                   type="number"
                   min="12"
                   max="24"
@@ -385,13 +385,13 @@ export default function SettingsPage() {
                 <div>
                   <label className="block text-sm text-slate-400 mb-2">Color de Fondo</label>
                   <div className="flex gap-2">
-                    <input
+                    <input aria-label="Color de Fondo"
                       type="color"
                       value={settings.sidebarBgColor}
                       onChange={(e) => setSettings({ ...settings, sidebarBgColor: e.target.value })}
                       className="h-10 w-12 rounded border border-slate-700 bg-slate-800 p-1"
                     />
-                    <input
+                    <input aria-label="Color de Fondo (código)"
                       type="text"
                       value={settings.sidebarBgColor}
                       onChange={(e) => setSettings({ ...settings, sidebarBgColor: e.target.value })}
@@ -402,13 +402,13 @@ export default function SettingsPage() {
                 <div>
                   <label className="block text-sm text-slate-400 mb-2">Color de Texto</label>
                   <div className="flex gap-2">
-                    <input
+                    <input aria-label="Color de Texto"
                       type="color"
                       value={settings.sidebarTextColor}
                       onChange={(e) => setSettings({ ...settings, sidebarTextColor: e.target.value })}
                       className="h-10 w-12 rounded border border-slate-700 bg-slate-800 p-1"
                     />
-                    <input
+                    <input aria-label="Color de Texto (código)"
                       type="text"
                       value={settings.sidebarTextColor}
                       onChange={(e) => setSettings({ ...settings, sidebarTextColor: e.target.value })}
@@ -419,13 +419,13 @@ export default function SettingsPage() {
                 <div>
                   <label className="block text-sm text-slate-400 mb-2">Color Activo</label>
                   <div className="flex gap-2">
-                    <input
+                    <input aria-label="Color Activo"
                       type="color"
                       value={settings.sidebarActiveColor}
                       onChange={(e) => setSettings({ ...settings, sidebarActiveColor: e.target.value })}
                       className="h-10 w-12 rounded border border-slate-700 bg-slate-800 p-1"
                     />
-                    <input
+                    <input aria-label="Color Activo (código)"
                       type="text"
                       value={settings.sidebarActiveColor}
                       onChange={(e) => setSettings({ ...settings, sidebarActiveColor: e.target.value })}
@@ -466,13 +466,13 @@ export default function SettingsPage() {
                 <div>
                   <label className="block text-sm text-slate-400 mb-2">Color Botón Primario</label>
                   <div className="flex gap-2">
-                    <input
+                    <input aria-label="Color Botón Primario"
                       type="color"
                       value={settings.primaryButtonColor}
                       onChange={(e) => setSettings({ ...settings, primaryButtonColor: e.target.value })}
                       className="h-10 w-12 rounded border border-slate-700 bg-slate-800 p-1"
                     />
-                    <input
+                    <input aria-label="Color Botón Primario (código)"
                       type="text"
                       value={settings.primaryButtonColor}
                       onChange={(e) => setSettings({ ...settings, primaryButtonColor: e.target.value })}
@@ -483,13 +483,13 @@ export default function SettingsPage() {
                 <div>
                   <label className="block text-sm text-slate-400 mb-2">Color Botón Secundario</label>
                   <div className="flex gap-2">
-                    <input
+                    <input aria-label="Color Botón Secundario"
                       type="color"
                       value={settings.secondaryButtonColor}
                       onChange={(e) => setSettings({ ...settings, secondaryButtonColor: e.target.value })}
                       className="h-10 w-12 rounded border border-slate-700 bg-slate-800 p-1"
                     />
-                    <input
+                    <input aria-label="Color Botón Secundario (código)"
                       type="text"
                       value={settings.secondaryButtonColor}
                       onChange={(e) => setSettings({ ...settings, secondaryButtonColor: e.target.value })}

@@ -215,7 +215,7 @@ export default function UsersPage() {
           <p className="text-content-2" style={{ fontSize: 12 }}>Administración de usuarios y roles</p>
           {esSoporte && (
             <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <label htmlFor="usuarios-negocio" className="text-content-3" style={{ fontSize: 11 }}>Negocio</label>
+              <label htmlFor="usuarios-negocio" className="text-content-3" style={{ fontSize: 12 }}>Negocio</label>
               <select id="usuarios-negocio" value={negocioSel}
                 onChange={(ev) => { setNegocioSel(ev.target.value); setSelectedUser(null); setView(null); }}
                 className="bg-surface-1 text-content-1 border border-line"
@@ -245,9 +245,9 @@ export default function UsersPage() {
 
               {/* Header Roles */}
               <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 10, fontWeight: 500, color: 'rgba(255,255,255,0.62)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Roles</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.62)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Roles</span>
                 <button onClick={() => setRoleModalOpen(true)}
-                  style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', cursor: 'pointer' }}>
+                  style={{ fontSize: 12, padding: '3px 8px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', cursor: 'pointer' }}>
                   + Nuevo
                 </button>
               </div>
@@ -264,16 +264,16 @@ export default function UsersPage() {
                       borderLeft: selectedRol?.id === rol.id ? '3px solid #8fafd4' : '3px solid transparent',
                     }}>
                     <div style={{ fontSize: 12, color: '#c8cdd8' }}>{rol.name}</div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.62)' }}>{rol.code}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)' }}>{rol.code}</div>
                   </div>
                 ))}
               </div>
 
               {/* Header Usuarios */}
               <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.07)', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 10, fontWeight: 500, color: 'rgba(255,255,255,0.62)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Usuarios</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.62)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Usuarios</span>
                 <button onClick={() => { setEditingUser(null); setModalOpen(true); }}
-                  style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, border: '1px solid rgba(123,156,204,0.3)', background: 'rgba(123,156,204,0.08)', color: '#8fafd4', cursor: 'pointer' }}>
+                  style={{ fontSize: 12, padding: '3px 8px', borderRadius: 6, border: '1px solid rgba(123,156,204,0.3)', background: 'rgba(123,156,204,0.08)', color: '#8fafd4', cursor: 'pointer' }}>
                   + Nuevo
                 </button>
               </div>
@@ -291,16 +291,16 @@ export default function UsersPage() {
                     }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
                       <div style={{ fontSize: 12, color: '#c8cdd8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name || u.email}</div>
-                      <span style={{ fontSize: 10, padding: '1px 5px', borderRadius: 99, flexShrink: 0,
+                      <span style={{ fontSize: 12, padding: '1px 5px', borderRadius: 99, flexShrink: 0,
                         background: u.isActive ? 'rgba(74,222,128,0.12)' : 'rgba(255,255,255,0.06)',
                         color: u.isActive ? '#4ade80' : 'rgba(255,255,255,0.62)' }}>
                         {u.isActive ? 'Activo' : 'Inactivo'}
                       </span>
                     </div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.62)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</div>
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.62)' }}>{u.roleCode}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)' }}>{u.roleCode}</div>
                     {esSoporte && (
-                      <div className="text-content-3" style={{ fontSize: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{etiquetaNegocio(u.tenantNombre, u.tenantId)}</div>
+                      <div className="text-content-3" style={{ fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{etiquetaNegocio(u.tenantNombre, u.tenantId)}</div>
                     )}
                   </div>
                 ))}
@@ -324,23 +324,23 @@ export default function UsersPage() {
                   <div style={{ padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 500, color: '#c8cdd8' }}>{selectedRol.name}</div>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.62)' }}>{selectedRol.description} · {selectedRol.code}</div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)' }}>{selectedRol.description} · {selectedRol.code}</div>
                     </div>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                       <button onClick={() => handleSelectAll(true)}
-                        style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(74,222,128,0.3)', background: 'rgba(74,222,128,0.08)', color: '#4ade80', fontSize: 11, cursor: 'pointer' }}>
+                        style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(74,222,128,0.3)', background: 'rgba(74,222,128,0.08)', color: '#4ade80', fontSize: 12, cursor: 'pointer' }}>
                         ✓ Activar todo
                       </button>
                       <button onClick={() => handleSelectAll(false)}
-                        style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(252,165,165,0.2)', background: 'transparent', color: 'rgba(252,165,165,0.7)', fontSize: 11, cursor: 'pointer' }}>
+                        style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(252,165,165,0.2)', background: 'transparent', color: 'rgba(252,165,165,0.7)', fontSize: 12, cursor: 'pointer' }}>
                         ✕ Desactivar todo
                       </button>
                       <button onClick={handleViewOnly}
-                        style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'rgba(255,255,255,0.62)', fontSize: 11, cursor: 'pointer' }}>
+                        style={{ padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'rgba(255,255,255,0.62)', fontSize: 12, cursor: 'pointer' }}>
                         Solo lectura
                       </button>
                       <button onClick={handleSavePermissions}
-                        style={{ padding: '4px 12px', borderRadius: 7, border: '1px solid rgba(123,156,204,0.3)', background: 'rgba(123,156,204,0.1)', color: '#8fafd4', fontSize: 11, cursor: 'pointer' }}>
+                        style={{ padding: '4px 12px', borderRadius: 7, border: '1px solid rgba(123,156,204,0.3)', background: 'rgba(123,156,204,0.1)', color: '#8fafd4', fontSize: 12, cursor: 'pointer' }}>
                         Guardar cambios
                       </button>
                     </div>
@@ -348,9 +348,9 @@ export default function UsersPage() {
                   {/* Tabla permisos */}
                   <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', padding: '9px 0', borderBottom: '1px solid rgba(255,255,255,0.07)', position: 'sticky', top: 0, background: '#141820', zIndex: 1 }}>
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.62)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Módulo</div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Módulo</div>
                       {['Ver', 'Crear', 'Editar', 'Eliminar'].map(a => (
-                        <div key={a} style={{ fontSize: 10, color: 'rgba(255,255,255,0.62)', textTransform: 'uppercase', letterSpacing: '0.06em', textAlign: 'center' }}>{a}</div>
+                        <div key={a} style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', textTransform: 'uppercase', letterSpacing: '0.06em', textAlign: 'center' }}>{a}</div>
                       ))}
                     </div>
                     {MODULE_KEYS.map(key => {
@@ -404,7 +404,7 @@ export default function UsersPage() {
                       { label: 'Sucursal', value: etiquetaAmbito(selectedUser.sucursalNombre, selectedUser.branchId) },
                     ].map(item => (
                       <div key={item.label} style={{ padding: '12px 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', background: '#0f1117' }}>
-                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.62)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.label}</div>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.label}</div>
                         <div style={{ fontSize: 13, color: '#c8cdd8' }}>{item.value}</div>
                       </div>
                     ))}

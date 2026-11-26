@@ -135,7 +135,7 @@ export default function BanksPage() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`rounded-full px-3 py-1 text-sm ${account.isActive ? 'bg-green-900/40 text-green-300' : 'bg-red-900/40 text-red-300'}`}>
+                      <span className={`rounded-full px-3 py-1 text-sm ${account.isActive ? 'bg-surface-2 !text-content-1' : 'bg-surface-2 !text-content-2'}`}>
                         {account.isActive ? "Activa" : "Inactiva"}
                       </span>
                       <button 

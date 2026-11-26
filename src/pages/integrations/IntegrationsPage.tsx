@@ -114,7 +114,7 @@ export default function IntegrationsPage() {
           categories.map((cat) => (
             <div key={cat} style={{ marginBottom: 28 }}>
               <div style={{
-                fontSize: 10, fontWeight: 600, letterSpacing: "0.1em",
+                fontSize: 12, fontWeight: 600, letterSpacing: "0.1em",
                 textTransform: "uppercase", color: "#4b5563", marginBottom: 10,
               }}>
                 {CATEGORY_LABELS[cat] ?? cat}
@@ -155,7 +155,7 @@ export default function IntegrationsPage() {
                               }} />
                             </div>
                             <p style={{
-                              fontSize: 11, color: "#6b7280", margin: 0,
+                              fontSize: 12, color: "#6b7280", margin: 0,
                               whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                               maxWidth: "100%",
                             }}>
@@ -167,7 +167,7 @@ export default function IntegrationsPage() {
                         {/* Test result */}
                         {testR && (
                           <div style={{
-                            fontSize: 11, padding: "4px 8px", borderRadius: 4, marginBottom: 6,
+                            fontSize: 12, padding: "4px 8px", borderRadius: 4, marginBottom: 6,
                             background: testR.success ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)",
                             color: testR.success ? "#22C55E" : "#ef4444",
                             border: `1px solid ${testR.success ? "rgba(34,197,94,0.2)" : "rgba(239,68,68,0.2)"}`,
@@ -183,7 +183,7 @@ export default function IntegrationsPage() {
                               <button
                                 onClick={() => handleTest(entry.slug)}
                                 style={{
-                                  flex: 1, fontSize: 11, padding: "4px 0",
+                                  flex: 1, fontSize: 12, padding: "4px 0",
                                   background: "transparent",
                                   border: "1px solid rgba(255,255,255,0.1)",
                                   borderRadius: 5, color: "#9ca3af", cursor: "pointer",
@@ -194,7 +194,7 @@ export default function IntegrationsPage() {
                               <button
                                 onClick={() => openModal(entry)}
                                 style={{
-                                  flex: 1, fontSize: 11, padding: "4px 0",
+                                  flex: 1, fontSize: 12, padding: "4px 0",
                                   background: "transparent",
                                   border: "1px solid rgba(255,255,255,0.1)",
                                   borderRadius: 5, color: "#9ca3af", cursor: "pointer",
@@ -205,7 +205,7 @@ export default function IntegrationsPage() {
                               <button
                                 onClick={() => handleDeactivate(entry.slug)}
                                 style={{
-                                  fontSize: 11, padding: "4px 10px",
+                                  fontSize: 12, padding: "4px 10px",
                                   background: "rgba(239,68,68,0.08)",
                                   border: "1px solid rgba(239,68,68,0.2)",
                                   borderRadius: 5, color: "#ef4444", cursor: "pointer",
@@ -218,7 +218,7 @@ export default function IntegrationsPage() {
                             <button
                               onClick={() => openModal(entry)}
                               style={{
-                                flex: 1, fontSize: 11, padding: "5px 0",
+                                flex: 1, fontSize: 12, padding: "5px 0",
                                 background: "rgba(123,156,204,0.08)",
                                 border: "1px solid rgba(123,156,204,0.2)",
                                 borderRadius: 5, color: "#7b9ccc", cursor: "pointer",
@@ -252,14 +252,14 @@ export default function IntegrationsPage() {
               <span style={{ fontSize: 24 }}>{modal.icon}</span>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: "#c8cdd8" }}>{modal.name}</div>
-                <div style={{ fontSize: 11, color: "#6b7280" }}>{modal.description}</div>
+                <div style={{ fontSize: 12, color: "#6b7280" }}>{modal.description}</div>
               </div>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
               {modal.fields.map((field) => (
                 <div key={field}>
-                  <label style={{ fontSize: 11, color: "#9ca3af", display: "block", marginBottom: 4, textTransform: "capitalize" }}>
+                  <label style={{ fontSize: 12, color: "#9ca3af", display: "block", marginBottom: 4, textTransform: "capitalize" }}>
                     {field.replace(/_/g, " ")}
                   </label>
                   <input

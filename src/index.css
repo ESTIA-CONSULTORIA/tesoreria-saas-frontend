@@ -195,7 +195,7 @@ input::placeholder, textarea::placeholder {
 th {
   background-color: rgb(var(--field)) !important;
   color: rgb(var(--text-3)) !important;
-  font-size: 11px !important;
+  font-size: 12px !important;
   text-transform: uppercase !important;
   letter-spacing: 0.08em !important;
 }

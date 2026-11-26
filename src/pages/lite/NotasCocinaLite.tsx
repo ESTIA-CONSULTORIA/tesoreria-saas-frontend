@@ -171,10 +171,10 @@ export default function NotasCocinaLite() {
       .bold { font-weight: 700; }
       .sep { border: none; border-top: 1px dashed ${IMPRESION.linea}; margin: 10px 0; }
       .item { padding: 6px 0; display: flex; justify-content: space-between; }
-      .footer { font-size: 10px; color: ${IMPRESION.tintaTenue}; margin-top: 14px; text-align: center; }
+      .footer { font-size: 12px; color: ${IMPRESION.tintaTenue}; margin-top: 14px; text-align: center; }
     </style></head><body>
     <div class="center bold" style="font-size:16px;">${estacion}</div>
-    <div class="center" style="font-size:11px; color:${IMPRESION.tintaSuave};">Venta ${saleId.slice(0, 8)} · ${hora}</div>
+    <div class="center" style="font-size: 12px; color:${IMPRESION.tintaSuave};">Venta ${saleId.slice(0, 8)} · ${hora}</div>
     <hr class="sep">
     ${items.map(i => `<div class="item"><span>${i.nombre}</span><span class="bold">x${i.cantidad}</span></div>`).join('')}
     <hr class="sep">
@@ -197,7 +197,7 @@ export default function NotasCocinaLite() {
   if (screen === 'pin') return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgb(var(--papel-navy))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ width: '100%', maxWidth: 420, background: 'rgb(var(--papel))', borderRadius: 20, padding: '32px 32px 40px', boxShadow: '0 4px 40px rgb(var(--scrim) / 0.2)' }}>
-        <div style={{ fontSize: 9, letterSpacing: '0.35em', color: 'rgb(var(--tinta-3))', textTransform: 'uppercase', marginBottom: 8 }}>ESTIA ERP · {estacion}</div>
+        <div style={{ fontSize: 12, letterSpacing: '0.35em', color: 'rgb(var(--tinta-3))', textTransform: 'uppercase', marginBottom: 8 }}>ESTIA ERP · {estacion}</div>
         <div style={{ fontSize: 22, fontWeight: 600, color: 'rgb(var(--tinta-1))', marginBottom: 32 }}>Ingresa tu NIP</div>
         <div style={{ display: 'flex', gap: 20, marginBottom: 36, justifyContent: 'center' }}>
           {[0,1,2,3].map(i => (
@@ -208,6 +208,8 @@ export default function NotasCocinaLite() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
           {PIN_KEYS.map((k, i) => (
             <button key={i}
+              aria-label={k === 'del' ? 'Borrar último dígito' : k === '' ? undefined : `Dígito ${k}`}
+              aria-hidden={k === '' ? true : undefined}
               onClick={() => k !== '' && !loading && handlePin(k)}
               style={{ padding: '22px 8px', borderRadius: 14, border: '1px solid rgb(var(--papel-linea))', background: 'rgb(var(--papel-soft))', color: 'rgb(var(--tinta-1))', fontSize: 28, cursor: 'pointer', opacity: k === '' ? 0 : 1, pointerEvents: k === '' ? 'none' : 'auto' }}>
               {k === 'del' ? '←' : k}
@@ -224,10 +226,10 @@ export default function NotasCocinaLite() {
     <div style={{ position: 'fixed', inset: 0, background: 'rgb(var(--papel-navy))', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '20px 28px', borderBottom: '1px solid rgb(var(--veil) / 0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
         <div>
-          <div style={{ fontSize: 10, letterSpacing: '0.2em', color: 'rgb(var(--tinta-navy-tx))', textTransform: 'uppercase' }}>ESTIA ERP</div>
+          <div style={{ fontSize: 12, letterSpacing: '0.2em', color: 'rgb(var(--tinta-navy-tx))', textTransform: 'uppercase' }}>ESTIA ERP</div>
           <div style={{ fontSize: 24, fontWeight: 700, color: 'rgb(var(--papel))' }}>{estacion}</div>
         </div>
-        <button onClick={handleBloquear} style={{ background: 'none', border: '1px solid rgb(var(--veil) / 0.2)', color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', fontSize: 11, padding: '6px 14px', borderRadius: 8, cursor: 'pointer', letterSpacing: '0.08em' }}>
+        <button onClick={handleBloquear} style={{ background: 'none', border: '1px solid rgb(var(--veil) / 0.2)', color: 'rgb(var(--veil) / max(0.5, var(--alfa-texto-min)))', fontSize: 12, padding: '6px 14px', borderRadius: 8, cursor: 'pointer', letterSpacing: '0.08em' }}>
           BLOQUEAR
         </button>
       </div>
@@ -245,7 +247,7 @@ export default function NotasCocinaLite() {
                   <div style={{ color: 'rgb(var(--tinta-4))', fontSize: 12, letterSpacing: '0.05em' }}>
                     Venta {saleId.slice(0, 8)} · {new Date(items[0].createdAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
                   </div>
-                  <button onClick={() => imprimirComanda(saleId, items)} style={{ background: 'rgb(var(--veil) / 0.08)', border: 'none', color: 'rgb(var(--papel-linea-3))', fontSize: 11, padding: '5px 10px', borderRadius: 6, cursor: 'pointer' }}>
+                  <button onClick={() => imprimirComanda(saleId, items)} style={{ background: 'rgb(var(--veil) / 0.08)', border: 'none', color: 'rgb(var(--papel-linea-3))', fontSize: 12, padding: '5px 10px', borderRadius: 6, cursor: 'pointer' }}>
                     🖨 Imprimir
                   </button>
                 </div>

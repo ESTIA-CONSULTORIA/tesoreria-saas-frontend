@@ -173,7 +173,7 @@ export default function BranchesPage() {
                   >
                     <div style={{ marginBottom: '12px' }}>
                       <span style={{
-                        fontSize: '11px',
+                        fontSize: '12px',
                         fontFamily: 'monospace',
                         color: '#BDBDBD',
                         marginBottom: '4px',
@@ -187,7 +187,7 @@ export default function BranchesPage() {
                       <p style={{ fontSize: '12px', color: '#BDBDBD' }}>
                         {branch.city || 'Sin ciudad'}
                       </p>
-                      <p style={{ fontSize: '11px', color: '#BDBDBD' }}>
+                      <p style={{ fontSize: '12px', color: '#BDBDBD' }}>
                         {branch.address || 'Sin dirección'}
                       </p>
                     </div>
@@ -198,7 +198,7 @@ export default function BranchesPage() {
                       <span style={{
                         padding: '4px 12px',
                         borderRadius: '4px',
-                        fontSize: '11px',
+                        fontSize: '12px',
                         color: branch.isActive ? '#86D9A8' : '#FF9C98',
                         backgroundColor: branch.isActive ? '#1a2e22' : '#2e1a1a',
                       }}>

@@ -209,7 +209,7 @@ export default function EmployeeSignContract() {
             {comparison.length > 0 && (
               <div style={{ marginBottom: 12 }}>
                 {comparison.map((c) => (
-                  <div key={c.field} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", padding: "4px 0", color: c.match ? "#22C55E" : "#EF4444" }}>
+                  <div key={c.field} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", padding: "4px 0", color: c.match ? "#22C55E" : "#EF4444" }}>
                     <span>{FIELD_LABELS[c.field] || c.field}</span>
                     <span>{c.match ? "✓ Coincide" : "✗ No coincide"}</span>
                   </div>
@@ -237,7 +237,7 @@ export default function EmployeeSignContract() {
               Los datos de tu INE no coinciden con tu expediente. Contacta a Recursos Humanos antes de continuar — no se puede firmar con esta discrepancia.
             </p>
             {comparison.map((c) => (
-              <div key={c.field} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", padding: "4px 0", color: c.match ? "#22C55E" : "#EF4444" }}>
+              <div key={c.field} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", padding: "4px 0", color: c.match ? "#22C55E" : "#EF4444" }}>
                 <span>{FIELD_LABELS[c.field] || c.field}</span>
                 <span>{c.match ? "✓ Coincide" : "✗ No coincide"}</span>
               </div>
@@ -333,7 +333,7 @@ function Card({ children }: { children: React.ReactNode }) {
 
 function StepLabel({ n, total, label }: { n: number; total: number; label: string }) {
   return (
-    <div style={{ fontSize: "0.62rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "#9A9A9A", marginBottom: 10 }}>
+    <div style={{ fontSize: "0.75rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "#9A9A9A", marginBottom: 10 }}>
       Paso {n} de {total} · {label}
     </div>
   );

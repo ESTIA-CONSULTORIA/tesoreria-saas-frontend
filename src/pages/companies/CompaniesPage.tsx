@@ -203,7 +203,7 @@ export default function CompaniesPage() {
                         <p style={{ fontSize: '12px', color: '#BDBDBD', marginBottom: '4px' }}>
                           {company.tradeName}
                         </p>
-                        <p style={{ fontSize: '11px', color: '#BDBDBD', fontFamily: 'monospace' }}>
+                        <p style={{ fontSize: '12px', color: '#BDBDBD', fontFamily: 'monospace' }}>
                           RFC: {company.taxId || 'Sin RFC'}
                         </p>
                       </div>
@@ -211,7 +211,7 @@ export default function CompaniesPage() {
 
                     <div style={{ height: '1px', backgroundColor: '#2D2D2D', margin: '12px 0' }} />
 
-                    <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', fontSize: '11px', color: '#BDBDBD' }}>
+                    <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', fontSize: '12px', color: '#BDBDBD' }}>
                       <span>Moneda: {company.baseCurrency}</span>
                     </div>
 
@@ -219,7 +219,7 @@ export default function CompaniesPage() {
                       <span style={{
                         padding: '4px 12px',
                         borderRadius: '4px',
-                        fontSize: '11px',
+                        fontSize: '12px',
                         color: company.isActive ? '#86D9A8' : '#FF9C98',
                         backgroundColor: company.isActive ? '#1a2e22' : '#2e1a1a',
                       }}>

@@ -169,7 +169,7 @@ export default function BackfillCortePage() {
           <div style={{ borderRadius: 10, border: '1px solid rgb(var(--veil) / 0.07)', background: 'rgb(var(--panel))', padding: 20 }}>
             <div style={{ marginBottom: 16 }}>
               <label style={labelStyle}>Fecha del corte</label>
-              <input
+              <input aria-label="Fecha del corte"
                 type="date"
                 value={fecha}
                 max={todayStr()}
@@ -181,7 +181,7 @@ export default function BackfillCortePage() {
             {fields.map(f => (
               <div key={f.key} style={{ marginBottom: 16 }}>
                 <label style={labelStyle}>{f.label}{f.resta ? ' (resta del total)' : ''}</label>
-                <input
+                <input aria-label={f.label}
                   type="number"
                   inputMode="decimal"
                   placeholder="0.00"
@@ -213,7 +213,7 @@ export default function BackfillCortePage() {
             {aplicoFondoInicial && (
               <div style={{ marginBottom: 16 }}>
                 <label style={labelStyle}>Fondo inicial de caja</label>
-                <input
+                <input aria-label="Fondo inicial de caja"
                   type="number"
                   inputMode="decimal"
                   placeholder="0.00"
@@ -226,7 +226,7 @@ export default function BackfillCortePage() {
 
             <div style={{ marginBottom: 20 }}>
               <label style={labelStyle}>Notas</label>
-              <textarea
+              <textarea aria-label="Notas"
                 value={notas}
                 onChange={e => setNotas(e.target.value)}
                 rows={3}

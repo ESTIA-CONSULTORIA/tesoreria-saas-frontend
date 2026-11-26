@@ -145,7 +145,7 @@ export default function CreateBankModal({ open, onClose, onCreated, bankAccount 
         <div className="flex-1 overflow-y-auto p-6">
           {error && <div className="mb-4 rounded-lg border border-red-700 bg-red-900/30 p-3 text-sm text-red-300">{error}</div>}
           <form onSubmit={handleSubmit} className="space-y-4">
-            <select
+            <select aria-label="Sucursal"
               value={branchId}
               onChange={(e) => setBranchId(e.target.value)}
               required
@@ -164,11 +164,11 @@ export default function CreateBankModal({ open, onClose, onCreated, bankAccount 
             {!bankAccount && (
               <input type="number" step="0.01" value={initialBalance} onChange={(e) => setInitialBalance(e.target.value)} placeholder="Saldo inicial" required className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500" />
             )}
-            <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500">
+            <select aria-label="Moneda" value={currency} onChange={(e) => setCurrency(e.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500">
               <option value="MXN">MXN</option>
               <option value="USD">USD</option>
             </select>
-            <select value={type} onChange={(e) => setType(e.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500">
+            <select aria-label="Tipo de cuenta" value={type} onChange={(e) => setType(e.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500">
               <option value="EFECTIVO">EFECTIVO</option>
               <option value="BANCO">BANCO</option>
               <option value="CAJA">CAJA</option>

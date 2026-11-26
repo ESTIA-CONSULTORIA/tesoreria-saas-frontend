@@ -184,7 +184,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
         <p
           style={{
             color: t.secondary,
-            fontSize: "0.6rem",
+            fontSize: "0.75rem",
             letterSpacing: "0.28em",
             textTransform: "uppercase",
           }}
@@ -299,7 +299,7 @@ export default function ExecutiveLogin({ onLogin, config }: Props) {
 
         {!tenantId && (
           <div style={{ flexShrink: 0, textAlign: "center", paddingBottom: 14, paddingTop: 4 }}>
-            <p style={{ color: "#EF4444", fontSize: "0.7rem", letterSpacing: "0.05em" }}>
+            <p style={{ color: "#EF4444", fontSize: "0.75rem", letterSpacing: "0.05em" }}>
               No hay empresa configurada
             </p>
           </div>

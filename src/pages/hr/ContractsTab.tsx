@@ -270,7 +270,7 @@ export function ContractsTab({ employees, tenantId, companyId }: Props) {
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                     {['Fecha', 'Nivel', 'Estado', 'Acciones'].map(h => (
-                      <th key={h} style={{ padding: '8px 10px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 11 }}>{h}</th>
+                      <th key={h} style={{ padding: '8px 10px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 12 }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -281,7 +281,7 @@ export function ContractsTab({ employees, tenantId, companyId }: Props) {
                       <td style={{ padding: '8px 10px', color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>{c.signatureLevel}</td>
                       <td style={{ padding: '8px 10px' }}>
                         <span style={{
-                          fontSize: 11, padding: '2px 8px', borderRadius: 99,
+                          fontSize: 12, padding: '2px 8px', borderRadius: 99,
                           background: c.status === 'FIRMADO' ? 'rgba(74,222,128,0.15)' : 'rgba(255,255,255,0.07)',
                           color: c.status === 'FIRMADO' ? '#4ade80' : 'rgba(255,255,255,0.5)',
                         }}>{c.status}</span>
@@ -302,7 +302,7 @@ export function ContractsTab({ employees, tenantId, companyId }: Props) {
                             link.href = `data:${mimeType};base64,${pdf}`;
                             link.download = buildFileName(c, emp, tmpl, ext);
                             link.click();
-                          }} style={{ ...s.btn, fontSize: 11 }}>Descargar</button>
+                          }} style={{ ...s.btn, fontSize: 12 }}>Descargar</button>
                           {c.status === 'PENDIENTE' && (
                             <button onClick={async () => {
                               const res = await api.get(`/contracts/${c.id}/pdf`);
@@ -311,7 +311,7 @@ export function ContractsTab({ employees, tenantId, companyId }: Props) {
                               setHasSignature(false);
                               setSignData({});
                               setShowSignModal(true);
-                            }} style={{ ...s.btnPrimary, fontSize: 11 }}>Firmar</button>
+                            }} style={{ ...s.btnPrimary, fontSize: 12 }}>Firmar</button>
                           )}
                         </div>
                       </td>
@@ -329,14 +329,14 @@ export function ContractsTab({ employees, tenantId, companyId }: Props) {
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
-              Usa marcadores <code style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 6px', borderRadius: 4, fontSize: 11 }}>{`{campo}`}</code> en tu Word o PDF
+              Usa marcadores <code style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 6px', borderRadius: 4, fontSize: 12 }}>{`{campo}`}</code> en tu Word o PDF
             </div>
             <button onClick={() => setShowUploadModal(true)} style={s.btnPrimary}>+ Subir plantilla</button>
           </div>
 
-          <div style={{ marginBottom: 8, fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
+          <div style={{ marginBottom: 8, fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
             Campos disponibles: {FIELD_CATALOG.map(f => (
-              <code key={f} style={{ background: 'rgba(255,255,255,0.06)', padding: '1px 5px', borderRadius: 3, margin: '0 2px', fontSize: 10 }}>{`{${f}}`}</code>
+              <code key={f} style={{ background: 'rgba(255,255,255,0.06)', padding: '1px 5px', borderRadius: 3, margin: '0 2px', fontSize: 12 }}>{`{${f}}`}</code>
             ))}
           </div>
 
@@ -348,13 +348,13 @@ export function ContractsTab({ employees, tenantId, companyId }: Props) {
                 <div key={t.id} style={{ display: 'flex', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, color: '#c8cdd8' }}>{t.name}</div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
                       {t.fileType} · {t.detectedFields?.length || 0} campos · {t.isGlobal ? 'ESTIA' : 'Empresa'}
                     </div>
                   </div>
                   {!t.isGlobal && (
                     <button onClick={async () => { await api.delete(`/contracts/templates/${t.id}`); await loadTemplates(); }}
-                      style={{ ...s.btn, fontSize: 11, color: 'rgba(252,165,165,0.7)', borderColor: 'rgba(252,165,165,0.2)' }}>
+                      style={{ ...s.btn, fontSize: 12, color: 'rgba(252,165,165,0.7)', borderColor: 'rgba(252,165,165,0.2)' }}>
                       Eliminar
                     </button>
                   )}
@@ -391,7 +391,7 @@ export function ContractsTab({ employees, tenantId, companyId }: Props) {
                       background: signLevel === l.value ? '#8fafd4' : 'transparent' }} />
                     <div>
                       <div style={{ fontSize: 12, color: '#c8cdd8' }}>{l.label}</div>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{l.desc}</div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{l.desc}</div>
                     </div>
                   </div>
                 ))}
@@ -472,8 +472,8 @@ export function ContractsTab({ employees, tenantId, companyId }: Props) {
                   onMouseDown={startDraw} onMouseMove={draw} onMouseUp={stopDraw} onMouseLeave={stopDraw}
                   onTouchStart={startDraw} onTouchMove={draw} onTouchEnd={stopDraw} />
                 <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                  <button onClick={clearCanvas} style={{ ...s.btn, fontSize: 11 }}>Limpiar</button>
-                  {signData.lat && <span style={{ fontSize: 11, color: '#4ade80', padding: '6px 0' }}>✓ GPS capturado</span>}
+                  <button onClick={clearCanvas} style={{ ...s.btn, fontSize: 12 }}>Limpiar</button>
+                  {signData.lat && <span style={{ fontSize: 12, color: '#4ade80', padding: '6px 0' }}>✓ GPS capturado</span>}
                 </div>
               </div>
             )}
@@ -527,7 +527,7 @@ export function ContractsTab({ employees, tenantId, companyId }: Props) {
               <div>
                 <label style={s.label}>Archivo (.docx o .pdf)</label>
                 <input type="file" accept=".docx,.pdf" onChange={handleFileUpload} style={s.input} />
-                {uploadForm.fileBase64 && <div style={{ fontSize: 11, color: '#4ade80', marginTop: 4 }}>✓ Archivo cargado ({uploadForm.fileType})</div>}
+                {uploadForm.fileBase64 && <div style={{ fontSize: 12, color: '#4ade80', marginTop: 4 }}>✓ Archivo cargado ({uploadForm.fileType})</div>}
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>

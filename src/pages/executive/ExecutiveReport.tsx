@@ -546,7 +546,7 @@ export default function ExecutiveReport({
         <span
           style={{
             color: t.secondary,
-            fontSize: "0.65rem",
+            fontSize: "0.75rem",
             fontWeight: 400,
             letterSpacing: "0.2em",
             textTransform: "uppercase",
@@ -560,7 +560,7 @@ export default function ExecutiveReport({
             color: t.secondary,
             background: "none",
             border: "none",
-            fontSize: "0.65rem",
+            fontSize: "0.75rem",
             letterSpacing: "0.2em",
             textTransform: "uppercase",
             cursor: "pointer",
@@ -626,7 +626,7 @@ export default function ExecutiveReport({
             <p
               style={{
                 color: t.secondary,
-                fontSize: "0.65rem",
+                fontSize: "0.75rem",
                 marginTop: 6,
                 letterSpacing: "0.06em",
               }}
@@ -656,7 +656,7 @@ export default function ExecutiveReport({
                     border: `1px solid ${period === p ? t.accent : t.border}`,
                     borderRadius: 20,
                     padding: "6px 14px",
-                    fontSize: "0.65rem",
+                    fontSize: "0.75rem",
                     letterSpacing: "0.1em",
                     textTransform: "uppercase",
                     cursor: "pointer",
@@ -674,7 +674,7 @@ export default function ExecutiveReport({
                   border: `1px solid ${period === "Personalizado" ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.1)'}`,
                   background: period === "Personalizado" ? 'rgba(255,255,255,0.1)' : 'transparent',
                   color: period === "Personalizado" ? '#e8ecf0' : 'rgba(255,255,255,0.35)',
-                  fontSize: 11, letterSpacing: '0.1em', cursor: 'pointer',
+                  fontSize: 12, letterSpacing: '0.1em', cursor: 'pointer',
                   fontFamily: "'Inter', sans-serif",
                   WebkitTapHighlightColor: 'transparent',
                 }}
@@ -773,7 +773,7 @@ export default function ExecutiveReport({
                     <span
                       style={{
                         color: t.secondary,
-                        fontSize: "0.6rem",
+                        fontSize: "0.75rem",
                         fontWeight: 400,
                         letterSpacing: "0.15em",
                         textTransform: "uppercase",
@@ -799,7 +799,7 @@ export default function ExecutiveReport({
                   >
                     <XAxis
                       dataKey="day"
-                      tick={{ fill: t.secondary, fontSize: 11 }}
+                      tick={{ fill: t.secondary, fontSize: 12 }}
                       axisLine={false}
                       tickLine={false}
                     />
@@ -811,7 +811,7 @@ export default function ExecutiveReport({
                         border: t.cardBorder,
                         borderRadius: 6,
                         color: t.text,
-                        fontSize: 11,
+                        fontSize: 12,
                       }}
                       cursor={{ fill: `${t.bgColor}40` }}
                     />
