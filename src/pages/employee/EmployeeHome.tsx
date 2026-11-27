@@ -128,13 +128,13 @@ export default function EmployeeHome() {
         method: "WEB_GPS",
       });
       setAttendance(res.data);
-      setMessage({ text: "Entrada registrada correctamente", ok: true });
+      setMessage({ text: res.data?.fueraDeZona ? "Entrada registrada. Quedó marcada «fuera de zona» (más de 10 m de la sucursal): RH la verá." : "Entrada registrada correctamente", ok: true });
     } catch (err: any) {
       if (err.code === 1) {
         try {
           const res = await employeeApi.post("/hr/portal/check-in", { method: "WEB_NO_GPS" });
           setAttendance(res.data);
-          setMessage({ text: "Entrada registrada sin GPS", ok: true });
+          setMessage({ text: "Entrada registrada sin ubicación: quedó marcada «fuera de zona» y RH la verá.", ok: true });
         } catch (e2: any) {
           setMessage({ text: e2?.response?.data?.message || "Error al registrar entrada", ok: false });
         }

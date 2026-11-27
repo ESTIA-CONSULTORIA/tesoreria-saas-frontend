@@ -24,7 +24,9 @@ import HRPage from "./pages/hr/HRPage";
 import IntegrationsPage from "./pages/integrations/IntegrationsPage";
 import EmployeeLogin from "./pages/employee/EmployeeLogin";
 import EmployeeHome from "./pages/employee/EmployeeHome";
-import EmployeeRequests from "./pages/employee/EmployeeRequests";
+import EmployeeSolicitudes from "./pages/employee/EmployeeSolicitudes";
+import EmployeeAttendance from "./pages/employee/EmployeeAttendance";
+import EmployeeReceipts from "./pages/employee/EmployeeReceipts";
 import EmployeeDocuments from "./pages/employee/EmployeeDocuments";
 import EmployeeProfile from "./pages/employee/EmployeeProfile";
 import EmployeeSignContract from "./pages/employee/EmployeeSignContract";
@@ -593,7 +595,9 @@ function App() {
       {/* Portal del Empleado — rutas sin ProtectedRoute */}
       <Route path="/employee" element={<EmployeeLogin />} />
       <Route path="/employee/home" element={<EmployeeHome />} />
-      <Route path="/employee/requests" element={<EmployeeRequests />} />
+      <Route path="/employee/requests" element={<EmployeeSolicitudes />} />
+      <Route path="/employee/attendance" element={<EmployeeAttendance />} />
+      <Route path="/employee/receipts" element={<EmployeeReceipts />} />
       <Route path="/employee/documents" element={<EmployeeDocuments />} />
       <Route path="/employee/profile" element={<EmployeeProfile />} />
       <Route path="/employee/sign/:contractId" element={<EmployeeSignContract />} />

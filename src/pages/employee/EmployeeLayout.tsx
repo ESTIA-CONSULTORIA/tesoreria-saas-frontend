@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
+import { PORTAL_CSS } from "./portalPaleta";
 import { employeeApi } from "../../core/api/employeeApi";
 
 interface Props {
@@ -6,94 +7,47 @@ interface Props {
 }
 
 const TABS = [
-  { label: "INICIO", to: "/employee/home", icon: "⌂" },
-  { label: "SOLICITUDES", to: "/employee/requests", icon: "◈" },
-  { label: "DOCUMENTOS", to: "/employee/documents", icon: "◻" },
-  { label: "PERFIL", to: "/employee/profile", icon: "◯" },
+  { label: "Inicio", to: "/employee/home", icon: "⌂" },
+  { label: "Asistencia", to: "/employee/attendance", icon: "◷" },
+  { label: "Recibos", to: "/employee/receipts", icon: "▤" },
+  { label: "Solicitudes", to: "/employee/requests", icon: "◈" },
+  { label: "Documentos", to: "/employee/documents", icon: "◻" },
+  { label: "Perfil", to: "/employee/profile", icon: "◯" },
 ];
+
+// Portal del empleado: barra superior con el logo ESTIA y, en pantallas anchas (laptop 1366x768), la navegación en la misma barra;
+// en móvil la navegación pasa abajo. El contenido es lo único que se desplaza.
 
 export default function EmployeeLayout({ children }: Props) {
   const location = useLocation();
   const navigate = useNavigate();
 
   async function logout() {
-    // Auditoría de seguridad (GoodsHabits, cookies httpOnly, Pendiente 3): ver el mismo
-    // comentario en EmployeeProfile.tsx::logout() — el Portal comparte cookie con el ERP
-    // normal, solo el servidor puede invalidarla. await obligatorio antes de navegar.
+    // La sesión vive en una cookie httpOnly: solo el servidor puede invalidarla, por eso el await va antes de navegar.
     await employeeApi.post("/auth/logout").catch(() => {});
     sessionStorage.removeItem("employee_user");
     navigate("/employee");
   }
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        maxWidth: 430,
-        margin: "0 auto",
-        background: "linear-gradient(160deg, #0A0A0A 0%, #111111 50%, #0D0D0D 100%)",
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-      }}
-    >
-      {/* Scrollable content area */}
-      <div style={{ flex: 1, overflowY: "auto", paddingBottom: 76 }}>
-        {children}
-      </div>
-
-      {/* Bottom Navigation */}
-      <nav
-        data-portal-nav=""
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: 72,
-          background: "#080808",
-          borderTop: "1px solid #1C1C1C",
-          display: "flex",
-          alignItems: "center",
-        }}
-      >
-        {TABS.map((tab) => {
-          const active = location.pathname === tab.to;
-          return (
-            <button
-              key={tab.to}
-              onClick={() => navigate(tab.to)}
-              style={{
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 4,
-                height: "100%",
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-                color: active ? "#FFFFFF" : "#9A9A9A",
-                transition: "color 0.15s",
-              }}
-            >
-              <span style={{ fontSize: 18, lineHeight: 1 }}>{tab.icon}</span>
-              <span
-                style={{
-                  fontSize: "0.75rem",
-                  letterSpacing: "0.2em",
-                  fontWeight: 600,
-                  textTransform: "uppercase",
-                }}
-              >
-                {tab.label}
-              </span>
+    <div className="pe-root">
+      <style>{PORTAL_CSS}</style>
+      <header className="pe-top">
+        <img src="/logo-estia-erp.png" alt="ESTIA" />
+        <span className="pe-title">Portal del empleado</span>
+        <nav className="pe-nav" aria-label="Secciones del portal" data-portal-nav="">
+          {TABS.map((t) => (
+            <button key={t.to} className="pe-tab" aria-current={location.pathname === t.to ? "page" : undefined} onClick={() => navigate(t.to)}>
+              <span aria-hidden="true">{t.icon}</span>
+              <span>{t.label}</span>
             </button>
-          );
-        })}
-      </nav>
+          ))}
+        </nav>
+        <button className="pe-out" onClick={logout}>Salir</button>
+      </header>
+      <main className="pe-main">
+        <div className="pe-wrap">{children}</div>
+      </main>
     </div>
   );
 }

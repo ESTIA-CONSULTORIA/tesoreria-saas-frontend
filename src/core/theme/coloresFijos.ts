@@ -20,6 +20,7 @@ export const DEFINEN_COLORES: readonly string[] = [
   'pages/pos/coloresDatos.ts',
   'pages/lite/impresionClara.ts',
   'core/theme/coloresFijos.ts',
+  'pages/employee/portalPaleta.ts',
   'pages/Login/loginPaleta.ts',
 ];
 

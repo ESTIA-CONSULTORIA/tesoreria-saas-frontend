@@ -161,12 +161,6 @@
   "tw": 0,
   "nombrados": 0
  },
- "pages/employee/EmployeeLayout.tsx": {
-  "hex": 7,
-  "rgb": 0,
-  "tw": 0,
-  "nombrados": 0
- },
  "pages/employee/EmployeeLogin.tsx": {
   "hex": 26,
   "rgb": 0,
@@ -176,12 +170,6 @@
  "pages/employee/EmployeeProfile.tsx": {
   "hex": 15,
   "rgb": 0,
-  "tw": 0,
-  "nombrados": 0
- },
- "pages/employee/EmployeeRequests.tsx": {
-  "hex": 47,
-  "rgb": 1,
   "tw": 0,
   "nombrados": 0
  },

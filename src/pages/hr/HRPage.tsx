@@ -1,3 +1,5 @@
+import BandejaPortal from "./BandejaPortal";
+import PortalAccesoPanel from "./PortalAccesoPanel";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import MainLayout from "../../core/layout/MainLayout";
@@ -907,6 +909,8 @@ export default function HRPage() {
                   </div>
                 </div>
 
+                <PortalAccesoPanel employeeId={selectedEmp.id} headers={headers} />
+
                 {showDocForm && (
                   <div style={{ borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: '#141820', padding: 20 }}>
                     <h4 style={{ fontSize: 13, fontWeight: 500, margin: '0 0 14px', color: '#c8cdd8' }}>Nuevo Documento</h4>
@@ -1714,7 +1718,10 @@ export default function HRPage() {
 
         {/* ── TAB: Solicitudes ── */}
         {tab === "solicitudes" && (
-          <SolicitudesTab headers={headers} employees={employees} onTotalPendientes={setVacacionesCount} />
+          <>
+            <SolicitudesTab headers={headers} employees={employees} onTotalPendientes={setVacacionesCount} />
+            <BandejaPortal headers={headers} />
+          </>
         )}
 
         {/* ── TAB: Cumpleaños ── */}
