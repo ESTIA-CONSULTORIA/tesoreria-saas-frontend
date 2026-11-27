@@ -24,6 +24,8 @@ export default function ESTIAExecutiveAccess() {
   const [selectedCompany, setSelectedCompany] = useState<any>(null);
   const [pin, setPin] = useState('');
   const [showPinError, setShowPinError] = useState(false);
+  const [pinMsg, setPinMsg] = useState('PIN incorrecto');
+  const [verificando, setVerificando] = useState(false);
   const [kpis, setKpis] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [companies, setCompanies] = useState<any[]>([]);
@@ -56,14 +58,27 @@ export default function ESTIAExecutiveAccess() {
     setView('login');
   }
 
-  function handlePinSubmit() {
-    // Simulación de validación PIN - en producción validar contra backend
-    if (pin.length === 4) {
+  // El PIN ejecutivo (6 a 12 dígitos) se valida en el SERVIDOR contra el PIN de este mismo usuario: con límite de intentos y bloqueo temporal.
+  async function handlePinSubmit() {
+    if (verificando) return;
+    if (pin.length < 6) {
+      setPinMsg('El PIN ejecutivo tiene entre 6 y 12 dígitos.');
+      setShowPinError(true);
+      return;
+    }
+    setVerificando(true);
+    try {
+      await api.post('/auth/executive-verify', { pin });
       setShowPinError(false);
+      setPin('');
       setView('home');
       loadKpis();
-    } else {
+    } catch (e: any) {
+      setPinMsg(e?.response?.data?.message || 'No se pudo validar el PIN. Intenta de nuevo.');
       setShowPinError(true);
+      setPin('');
+    } finally {
+      setVerificando(false);
     }
   }
 
@@ -71,7 +86,7 @@ export default function ESTIAExecutiveAccess() {
   useEffect(() => {
     if (!(view === 'login' && selectedCompany)) return;
     const onKey = (e: KeyboardEvent) => {
-      if (/^[0-9]$/.test(e.key)) setPin((p) => { if (p.length >= 4) return p; setShowPinError(false); return p + e.key; });
+      if (/^[0-9]$/.test(e.key)) setPin((p) => { if (p.length >= 12) return p; setShowPinError(false); return p + e.key; });
       else if (e.key === 'Backspace') { setPin((p) => p.slice(0, -1)); setShowPinError(false); }
       else if (e.key === 'Enter') handlePinSubmit();
     };
@@ -179,13 +194,13 @@ export default function ESTIAExecutiveAccess() {
             </p>
           </div>
 
-          <div role="group" aria-label={`PIN de 4 dígitos: ${pin.length} de 4 capturados`} style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '32px' }}>
-            {[0, 1, 2, 3].map((index) => (
+          <div role="group" aria-label={`PIN ejecutivo: ${pin.length} dígitos capturados`} style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '32px' }}>
+            {Array.from({ length: Math.max(6, pin.length) }, (_, index) => index).map((index) => (
               <div
                 key={index}
                 style={{
-                  width: '48px',
-                  height: '56px',
+                  width: '36px',
+                  height: '48px',
                   backgroundColor: C_161616,
                   border: showPinError ? `1px solid ${C_9B3A3A}` : `1px solid ${C_2D2D2D}`,
                   borderRadius: '4px',
@@ -204,7 +219,7 @@ export default function ESTIAExecutiveAccess() {
 
           {showPinError && (
             <p style={{ textAlign: 'center', color: C_9B3A3A, fontSize: '12px', marginBottom: '24px', letterSpacing: '0.01em' }}>
-              PIN incorrecto
+              {pinMsg}
             </p>
           )}
 
@@ -217,7 +232,7 @@ export default function ESTIAExecutiveAccess() {
                     handlePinChange(pin.slice(0, -1));
                   } else if (num === '') {
                     // Espacio vacío
-                  } else if (pin.length < 4) {
+                  } else if (pin.length < 12) {
                     handlePinChange(pin + num);
                   }
                 }}
@@ -242,6 +257,14 @@ export default function ESTIAExecutiveAccess() {
               </button>
             ))}
           </div>
+
+          <button
+            onClick={handlePinSubmit}
+            disabled={verificando || pin.length < 6}
+            style={{ marginTop: '16px', width: '100%', padding: '14px', backgroundColor: C_F5F5F5, border: 'none', borderRadius: '4px', color: C_0A0A0A, fontSize: '14px', fontWeight: 600, cursor: 'pointer', opacity: verificando || pin.length < 6 ? 0.5 : 1 }}
+          >
+            {verificando ? 'Validando…' : 'Entrar'}
+          </button>
 
           <button
             onClick={() => setSelectedCompany(null)}
