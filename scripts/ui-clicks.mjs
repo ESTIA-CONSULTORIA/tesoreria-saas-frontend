@@ -113,6 +113,10 @@ async function main() {
       await page.getByText(/Portal del empleado: recibos, cartas y correcciones/).waitFor({ timeout: 10000 });
     });
     await abrir('/users', /Usuarios/i, 'Usuarios');
+    await abrir('/settings/fiscal', /Datos fiscales/i, 'Datos fiscales y facturas (aviso sin validez fiscal)', async () => {
+      await page.getByRole('tab', { name: /Facturas/ }).click();
+      await page.getByText(/no tienen validez fiscal/i).first().waitFor({ timeout: 10000 });
+    });
     await abrir('/settings/login-config', /Login|Acceso|Configuración/i, 'Configuración de login');
     await abrir('/settings/appearance', /Apariencia|Tema|Skin/i, 'Apariencia');
     await page.context().close();

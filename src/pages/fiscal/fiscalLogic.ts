@@ -90,19 +90,19 @@ export function opcionesRegimen(catalogo: Record<string, string>, tipo?: TipoRfc
 }
 
 // ── pestañas y atajos ──
-export const PESTANAS = ['emisor', 'sucursales', 'productos', 'receptores'] as const;
+export const PESTANAS = ['emisor', 'sucursales', 'productos', 'receptores', 'facturas'] as const;
 export type Pestana = (typeof PESTANAS)[number];
-export const ETIQUETA_PESTANA: Record<Pestana, string> = { emisor: 'Emisor', sucursales: 'Sucursales', productos: 'Productos', receptores: 'Receptores' };
+export const ETIQUETA_PESTANA: Record<Pestana, string> = { emisor: 'Emisor', sucursales: 'Sucursales', productos: 'Productos', receptores: 'Receptores', facturas: 'Facturas' };
 
 export function pestanaRelativa(actual: Pestana, delta: 1 | -1): Pestana {
   const i = PESTANAS.indexOf(actual);
   return PESTANAS[(i + delta + PESTANAS.length) % PESTANAS.length];
 }
 
-/** Alt+Shift+1…4. Se usa `code` (no `key`) para no depender de la distribución del teclado, y NO se pisa Alt+1…4 del ERP. */
+/** Alt+Shift+1…5. Se usa `code` (no `key`) para no depender de la distribución del teclado, y NO se pisa Alt+1…4 del ERP. */
 export function pestanaDeAtajo(e: { altKey: boolean; shiftKey: boolean; ctrlKey: boolean; metaKey?: boolean; code: string }): Pestana | null {
   if (!e.altKey || !e.shiftKey || e.ctrlKey || e.metaKey) return null;
-  const m = /^Digit([1-4])$/.exec(e.code);
+  const m = /^Digit([1-5])$/.exec(e.code);
   return m ? PESTANAS[Number(m[1]) - 1] : null;
 }
 

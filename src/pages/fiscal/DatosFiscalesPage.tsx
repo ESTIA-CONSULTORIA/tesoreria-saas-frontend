@@ -8,6 +8,7 @@ import EmisorTab from './EmisorTab';
 import SucursalesTab from './SucursalesTab';
 import ProductosTab from './ProductosTab';
 import ReceptoresTab from './ReceptoresTab';
+import FacturasTab from './FacturasTab';
 
 interface Catalogos {
   regimenesFiscales: Record<string, string>;
@@ -133,6 +134,8 @@ export default function DatosFiscalesPage() {
             <SucursalesTab alGuardar={cargarResumen} />
           ) : tab === 'productos' ? (
             <ProductosTab objetos={catalogos.objetosImpuesto} alGuardar={cargarResumen} />
+          ) : tab === 'facturas' ? (
+            <FacturasTab usos={catalogos.usosCfdi} />
           ) : (
             <ReceptoresTab regimenes={catalogos.regimenesFiscales} usos={catalogos.usosCfdi} alGuardar={cargarResumen} />
           )}

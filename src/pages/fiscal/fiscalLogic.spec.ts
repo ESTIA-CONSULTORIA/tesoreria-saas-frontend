@@ -63,16 +63,17 @@ describe('pestañas y atajos (sin chocar con Alt+1…4 del ERP)', () => {
   it('Alt+Shift+1…4 elige la pestaña', () => {
     expect(pestanaDeAtajo(t('Digit1'))).toBe('emisor');
     expect(pestanaDeAtajo(t('Digit4'))).toBe('receptores');
+    expect(pestanaDeAtajo(t('Digit5'))).toBe('facturas');
   });
   it('Alt+1…4 solo (navegación global del ERP) y otras teclas NO se toman', () => {
     expect(pestanaDeAtajo(t('Digit1', { shiftKey: false }))).toBeNull();
-    expect(pestanaDeAtajo(t('Digit5'))).toBeNull();
+    expect(pestanaDeAtajo(t('Digit6'))).toBeNull();
     expect(pestanaDeAtajo(t('Digit2', { ctrlKey: true }))).toBeNull();
     expect(pestanaDeAtajo(t('Digit2', { altKey: false }))).toBeNull();
   });
   it('← → recorre en círculo', () => {
-    expect(pestanaRelativa('receptores', 1)).toBe('emisor');
-    expect(pestanaRelativa('emisor', -1)).toBe('receptores');
+    expect(pestanaRelativa('facturas', 1)).toBe('emisor');
+    expect(pestanaRelativa('emisor', -1)).toBe('facturas');
     expect(pestanaRelativa('sucursales', 1)).toBe('productos');
   });
 });
