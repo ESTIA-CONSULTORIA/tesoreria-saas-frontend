@@ -71,7 +71,7 @@ const TIPOS_DOC = ["INE", "CURP", "NSS", "CONTRATO", "COMPROBANTE_DOMICILIO", "A
 
 // Badge palette (Parte 1 — nueva paleta)
 const STATUS_BADGE: Record<string, { bg: string; color: string; border: string }> = {
-  ACTIVO:     { bg: 'rgba(255,255,255,0.04)',  color: 'rgba(255,255,255,0.55)', border: 'rgba(255,255,255,0.08)' },
+  ACTIVO:     { bg: 'rgba(255,255,255,0.04)',  color: 'rgba(255,255,255,0.62)', border: 'rgba(255,255,255,0.08)' },
   VACACIONES: { bg: 'rgba(180,150,80,0.08)',   color: '#b09a5a',                border: 'rgba(180,150,80,0.15)' },
   BAJA:       { bg: 'rgba(255,255,255,0.03)',  color: 'rgba(255,255,255,0.62)', border: 'rgba(255,255,255,0.06)' },
 };
@@ -101,7 +101,7 @@ function EmpAvatar({ emp, photos }: { emp: Employee; photos: Record<string, stri
     return <img src={photo} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }} alt={initials} />;
   }
   return (
-    <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#1c2030', color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, flexShrink: 0, border: '1px solid rgba(255,255,255,0.06)' }}>
+    <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#1c2030', color: 'rgba(255,255,255,0.62)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, flexShrink: 0, border: '1px solid rgba(255,255,255,0.06)' }}>
       {initials}
     </div>
   );
@@ -832,9 +832,9 @@ export default function HRPage() {
                           </div>
                         </td>
                         {/* Área */}
-                        <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.5)' }}>{emp.departamento || '—'}</td>
+                        <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.62)' }}>{emp.departamento || '—'}</td>
                         {/* Puesto */}
-                        <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.5)' }}>{emp.puesto || '—'}</td>
+                        <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.62)' }}>{emp.puesto || '—'}</td>
                         {/* Turno */}
                         <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.62)', fontSize: 12 }}>
                           {emp.shiftId ? (shiftsMap[emp.shiftId] || emp.shiftId.slice(0, 8) + '…') : '—'}
@@ -891,7 +891,7 @@ export default function HRPage() {
                           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)'; }}
                           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
                           <td style={{ padding: '10px 14px' }}><div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><EmpAvatar emp={emp} photos={employeePhotos} /><span style={{ fontWeight: 500, color: '#c8cdd8' }}>{emp.nombre} {emp.apellidos}</span></div></td>
-                          <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.45)' }}>{emp.puesto || '—'}</td>
+                          <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.62)' }}>{emp.puesto || '—'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -906,7 +906,7 @@ export default function HRPage() {
                     <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', margin: '3px 0 0' }}>{selectedEmp.puesto} · {selectedEmp.departamento}</p>
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={() => setSelectedEmp(null)} style={{ padding: '6px 12px', fontSize: 12, borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>← Volver</button>
+                    <button onClick={() => setSelectedEmp(null)} style={{ padding: '6px 12px', fontSize: 12, borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.62)', cursor: 'pointer' }}>← Volver</button>
                     <button onClick={() => { setShowBulkPanel(false); setShowDocForm(true); }} style={{ padding: '6px 14px', fontSize: 12, borderRadius: 6, background: '#1e2d45', border: '1px solid rgba(123,156,204,0.3)', color: '#8fafd4', cursor: 'pointer' }}>+ Agregar Documento</button>
                     <button onClick={() => { setShowDocForm(false); setBulkFiles([]); setBulkProgress(0); setShowBulkPanel(true); }} style={{ padding: '6px 14px', fontSize: 12, borderRadius: 6, background: 'transparent', border: '1px solid rgba(123,156,204,0.2)', color: 'rgba(139,175,212,0.7)', cursor: 'pointer' }}>Carga masiva</button>
                   </div>
@@ -938,7 +938,7 @@ export default function HRPage() {
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 14 }}>
-                      <button onClick={() => setShowDocForm(false)} style={{ padding: '6px 14px', fontSize: 12, borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>Cancelar</button>
+                      <button onClick={() => setShowDocForm(false)} style={{ padding: '6px 14px', fontSize: 12, borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.62)', cursor: 'pointer' }}>Cancelar</button>
                       <button onClick={addDocument} style={{ padding: '6px 16px', fontSize: 12, borderRadius: 6, background: '#1e2d45', border: '1px solid rgba(123,156,204,0.3)', color: '#8fafd4', cursor: 'pointer' }}>Guardar</button>
                     </div>
                   </div>
@@ -967,7 +967,7 @@ export default function HRPage() {
                       </div>
                     )}
                     <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 14 }}>
-                      <button onClick={() => setShowBulkPanel(false)} style={{ padding: '6px 14px', fontSize: 12, borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>Cerrar</button>
+                      <button onClick={() => setShowBulkPanel(false)} style={{ padding: '6px 14px', fontSize: 12, borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.62)', cursor: 'pointer' }}>Cerrar</button>
                       <button onClick={runBulkUpload} disabled={bulkRunning || bulkFiles.length === 0} style={{ padding: '6px 16px', fontSize: 12, borderRadius: 6, background: '#1e2d45', border: '1px solid rgba(123,156,204,0.3)', color: '#8fafd4', cursor: 'pointer', opacity: bulkRunning || bulkFiles.length === 0 ? 0.5 : 1 }}>
                         {bulkRunning ? `Subiendo ${bulkProgress}/${bulkFiles.length}...` : `Subir todos (${bulkFiles.length})`}
                       </button>
@@ -985,7 +985,7 @@ export default function HRPage() {
                       {docs.map((d) => (
                         <tr key={d.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                           <td style={{ padding: '10px 14px', fontWeight: 500, color: '#7b9ccc', fontSize: 12 }}>{d.tipo}</td>
-                          <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.5)' }}>{d.nombre || "—"}</td>
+                          <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.62)' }}>{d.nombre || "—"}</td>
                           <td style={{ padding: '10px 14px' }}>
                             {d.fileData ? (
                               d.fileData.startsWith("data:image") ? (
@@ -1062,7 +1062,7 @@ export default function HRPage() {
                       <thead>
                         <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                           {['Período', 'Tipo', 'Total', 'Estado', 'Acciones'].map(h => (
-                            <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 12 }}>{h}</th>
+                            <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: 'rgba(255,255,255,0.62)', fontWeight: 500, fontSize: 12 }}>{h}</th>
                           ))}
                         </tr>
                       </thead>
@@ -1070,7 +1070,7 @@ export default function HRPage() {
                         {payrollRuns.map((run: any) => (
                           <tr key={run.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                             <td style={{ padding: '10px 12px', color: '#c8cdd8' }}>{run.periodStart} — {run.periodEnd}</td>
-                            <td style={{ padding: '10px 12px', color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>{run.periodType}</td>
+                            <td style={{ padding: '10px 12px', color: 'rgba(255,255,255,0.62)', fontSize: 12 }}>{run.periodType}</td>
                             <td style={{ padding: '10px 12px', color: '#4ade80' }}>${Number(run.totalAmount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
                             <td style={{ padding: '10px 12px' }}>
                               <span style={{
@@ -1098,7 +1098,7 @@ export default function HRPage() {
             {payrollTab === 'prenomina' && selectedRun && (
               <div>
                 <div style={{ marginBottom: 16, padding: '12px 16px', background: '#141820', borderRadius: 10, border: '1px solid rgba(255,255,255,0.07)' }}>
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.62)', marginBottom: 4 }}>
                     Período: {selectedRun.periodStart} al {selectedRun.periodEnd}
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1116,7 +1116,7 @@ export default function HRPage() {
                     <thead>
                       <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                         {['Empleado', 'Días', 'Percepciones', 'Deducciones', 'Neto', 'Acciones'].map(h => (
-                          <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 12 }}>{h}</th>
+                          <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: 'rgba(255,255,255,0.62)', fontWeight: 500, fontSize: 12 }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -1132,7 +1132,7 @@ export default function HRPage() {
                                 {empName}
                               </div>
                             </td>
-                            <td style={{ padding: '10px 12px', color: 'rgba(255,255,255,0.5)' }}>{entry.workedDays}</td>
+                            <td style={{ padding: '10px 12px', color: 'rgba(255,255,255,0.62)' }}>{entry.workedDays}</td>
                             <td style={{ padding: '10px 12px', color: '#4ade80' }}>${Number(entry.totalPerceptions).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
                             <td style={{ padding: '10px 12px', color: 'rgba(252,165,165,0.8)' }}>-${Number(entry.totalDeductions).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
                             <td style={{ padding: '10px 12px', fontWeight: 500, color: '#c8cdd8' }}>${Number(entry.netAmount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
@@ -1157,7 +1157,7 @@ export default function HRPage() {
             {payrollTab === 'nomina' && selectedRun && (
               <div>
                 <div style={{ marginBottom: 16, padding: '12px 16px', background: '#141820', borderRadius: 10, border: '1px solid rgba(255,255,255,0.07)' }}>
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Selecciona la caja desde donde sale el efectivo</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.62)', marginBottom: 8 }}>Selecciona la caja desde donde sale el efectivo</div>
                   <select value={selectedCajaId} onChange={e => setSelectedCajaId(e.target.value)}
                     style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13, marginBottom: 12 }}>
                     <option value="">— Seleccionar caja —</option>
@@ -1230,7 +1230,7 @@ export default function HRPage() {
                     <thead>
                       <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                         {['Empleado', 'Neto a pagar'].map(h => (
-                          <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 12 }}>{h}</th>
+                          <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: 'rgba(255,255,255,0.62)', fontWeight: 500, fontSize: 12 }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -1260,7 +1260,7 @@ export default function HRPage() {
             {payrollTab === 'catalogo' && (
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.62)' }}>
                     Los conceptos globales (ESTIA) no se pueden modificar. Agrega los propios de tu empresa.
                   </div>
                   <button
@@ -1338,12 +1338,12 @@ export default function HRPage() {
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                         <div>
-                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Nombre</div>
+                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', marginBottom: 4 }}>Nombre</div>
                           <input value={catalogForm.name} onChange={e => setCatalogForm(p => ({ ...p, name: e.target.value }))}
                             style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13 }} />
                         </div>
                         <div>
-                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Tipo</div>
+                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', marginBottom: 4 }}>Tipo</div>
                           <select value={catalogForm.type} onChange={e => setCatalogForm(p => ({ ...p, type: e.target.value }))}
                             style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13 }}>
                             <option value="P">Percepción</option>
@@ -1351,7 +1351,7 @@ export default function HRPage() {
                           </select>
                         </div>
                         <div>
-                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Categoría</div>
+                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', marginBottom: 4 }}>Categoría</div>
                           <select value={catalogForm.category} onChange={e => setCatalogForm(p => ({ ...p, category: e.target.value }))}
                             style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13 }}>
                             <option value="SALARIO">Salario</option>
@@ -1364,7 +1364,7 @@ export default function HRPage() {
                           </select>
                         </div>
                         <div>
-                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Monto default (0 = se captura al momento)</div>
+                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', marginBottom: 4 }}>Monto default (0 = se captura al momento)</div>
                           <input type="number" value={catalogForm.defaultAmount}
                             onChange={e => setCatalogForm(p => ({ ...p, defaultAmount: parseFloat(e.target.value) || 0 }))}
                             style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13 }} />
@@ -1397,19 +1397,19 @@ export default function HRPage() {
                   <div style={{ fontSize: 16, fontWeight: 500, color: '#c8cdd8', marginBottom: 20 }}>Nueva corrida de nómina</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     <div>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Fecha inicio</div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', marginBottom: 4 }}>Fecha inicio</div>
                       <input type="date" value={newRunForm.periodStart}
                         onChange={e => setNewRunForm(p => ({ ...p, periodStart: e.target.value }))}
                         style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13 }} />
                     </div>
                     <div>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Fecha fin</div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', marginBottom: 4 }}>Fecha fin</div>
                       <input type="date" value={newRunForm.periodEnd}
                         onChange={e => setNewRunForm(p => ({ ...p, periodEnd: e.target.value }))}
                         style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13 }} />
                     </div>
                     <div>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Tipo de período</div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', marginBottom: 4 }}>Tipo de período</div>
                       <select value={newRunForm.periodType}
                         onChange={e => setNewRunForm(p => ({ ...p, periodType: e.target.value }))}
                         style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13 }}>
@@ -1419,7 +1419,7 @@ export default function HRPage() {
                       </select>
                     </div>
                     <div>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Notas (opcional)</div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', marginBottom: 4 }}>Notas (opcional)</div>
                       <input value={newRunForm.notes}
                         onChange={e => setNewRunForm(p => ({ ...p, notes: e.target.value }))}
                         placeholder="Ej: Quincena junio primera parte"
@@ -1468,11 +1468,11 @@ export default function HRPage() {
             {/* Selector de período */}
             <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>Del</span>
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)' }}>Del</span>
                 <input type="date" value={attendancePeriod.start}
                   onChange={e => setAttendancePeriod(p => ({ ...p, start: e.target.value }))}
                   style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13 }} />
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>al</span>
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)' }}>al</span>
                 <input type="date" value={attendancePeriod.end}
                   onChange={e => setAttendancePeriod(p => ({ ...p, end: e.target.value }))}
                   style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13 }} />
@@ -1490,7 +1490,7 @@ export default function HRPage() {
                 <table style={{ borderCollapse: 'collapse', fontSize: 12, minWidth: '100%' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                      <th style={{ padding: '8px 12px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontWeight: 500, minWidth: 160, position: 'sticky', left: 0, background: '#0f1117' }}>Empleado</th>
+                      <th style={{ padding: '8px 12px', textAlign: 'left', color: 'rgba(255,255,255,0.62)', fontWeight: 500, minWidth: 160, position: 'sticky', left: 0, background: '#0f1117' }}>Empleado</th>
                       {(() => {
                         const days: Date[] = [];
                         const start = new Date(attendancePeriod.start + 'T12:00:00');
@@ -1511,7 +1511,7 @@ export default function HRPage() {
                           );
                         });
                       })()}
-                      <th style={{ padding: '8px 12px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>Días</th>
+                      <th style={{ padding: '8px 12px', textAlign: 'center', color: 'rgba(255,255,255,0.62)', fontWeight: 500 }}>Días</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1576,14 +1576,14 @@ export default function HRPage() {
                 <div style={{ background: '#141820', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', padding: 24, width: 340 }}>
                   <div style={{ fontSize: 15, fontWeight: 500, color: '#c8cdd8', marginBottom: 16 }}>Tiempo extra — {overtimeTarget.date}</div>
                   <div style={{ marginBottom: 12 }}>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Horas extra</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', marginBottom: 4 }}>Horas extra</div>
                     <input type="number" min={0.5} max={12} step={0.5}
                       value={overtimeTarget.hours}
                       onChange={e => setOvertimeTarget(p => p ? ({ ...p, hours: parseFloat(e.target.value) || 0 }) : p)}
                       style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: '#0f1117', color: '#c8cdd8', fontSize: 13 }} />
                   </div>
                   <div style={{ marginBottom: 16 }}>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Nota (opcional)</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', marginBottom: 4 }}>Nota (opcional)</div>
                     <input value={overtimeTarget.note}
                       onChange={e => setOvertimeTarget(p => p ? ({ ...p, note: e.target.value }) : p)}
                       placeholder="Ej: Cierre de mes"
@@ -1623,19 +1623,19 @@ export default function HRPage() {
                       <thead>
                         <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                           {['Fecha', 'Día', 'Anterior', 'Nuevo', 'Motivo', 'Por', 'Autorizado', 'Acciones'].map(h => (
-                            <th key={h} style={{ padding: '8px 6px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 12 }}>{h}</th>
+                            <th key={h} style={{ padding: '8px 6px', textAlign: 'left', color: 'rgba(255,255,255,0.62)', fontWeight: 500, fontSize: 12 }}>{h}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
                         {auditLogs.map((log: any) => (
                           <tr key={log.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', opacity: log.reverted ? 0.4 : 1 }}>
-                            <td style={{ padding: '8px 6px', color: 'rgba(255,255,255,0.5)' }}>{new Date(log.createdAt).toLocaleDateString('es-MX')}</td>
+                            <td style={{ padding: '8px 6px', color: 'rgba(255,255,255,0.62)' }}>{new Date(log.createdAt).toLocaleDateString('es-MX')}</td>
                             <td style={{ padding: '8px 6px', color: '#c8cdd8' }}>{log.date}</td>
                             <td style={{ padding: '8px 6px', color: 'rgba(252,165,165,0.8)' }}>{log.previousIncidenceType || log.previousStatus || '—'}</td>
                             <td style={{ padding: '8px 6px', color: '#4ade80' }}>{log.newIncidenceType || log.newStatus || '—'}</td>
-                            <td style={{ padding: '8px 6px', color: 'rgba(255,255,255,0.5)' }}>{log.changeReason || '—'}</td>
-                            <td style={{ padding: '8px 6px', color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>{log.changedBy}</td>
+                            <td style={{ padding: '8px 6px', color: 'rgba(255,255,255,0.62)' }}>{log.changeReason || '—'}</td>
+                            <td style={{ padding: '8px 6px', color: 'rgba(255,255,255,0.62)', fontSize: 12 }}>{log.changedBy}</td>
                             <td style={{ padding: '8px 6px', color: log.approvedBy ? '#4ade80' : 'rgba(255,255,255,0.2)', fontSize: 12 }}>{log.approvedBy || 'Pendiente'}</td>
                             <td style={{ padding: '8px 6px' }}>
                               {!log.reverted && (
@@ -1649,7 +1649,7 @@ export default function HRPage() {
                                   style={{ fontSize: 12, padding: '2px 8px', borderRadius: 4, border: '1px solid rgba(252,165,165,0.3)', background: 'transparent', color: 'rgba(252,165,165,0.7)', cursor: 'pointer' }}
                                 >Revertir</button>
                               )}
-                              {log.reverted && <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>Revertido</span>}
+                              {log.reverted && <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)' }}>Revertido</span>}
                             </td>
                           </tr>
                         ))}
@@ -1685,7 +1685,7 @@ export default function HRPage() {
                       <span style={{ fontWeight: 500, fontSize: 13, color: '#c8cdd8' }}>{s.name}</span>
                       {puedeEliminarRh && <button onClick={() => deleteShift(s.id)} style={{ fontSize: 12, color: 'rgba(252,165,165,0.6)', background: 'none', border: 'none', cursor: 'pointer' }}>Eliminar</button>}
                     </div>
-                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: 0 }}>{s.startTime} — {s.endTime}</p>
+                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', margin: 0 }}>{s.startTime} — {s.endTime}</p>
                     <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', margin: '4px 0 0' }}>Tolerancia: {s.toleranceMinutes} min</p>
                   </div>
                 ))}
@@ -1710,7 +1710,7 @@ export default function HRPage() {
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={() => setShowShiftForm(false)} style={{ flex: 1, padding: '8px', fontSize: 12, borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.45)', cursor: 'pointer' }}>Cancelar</button>
+                    <button onClick={() => setShowShiftForm(false)} style={{ flex: 1, padding: '8px', fontSize: 12, borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.62)', cursor: 'pointer' }}>Cancelar</button>
                     <button onClick={saveShift} style={{ flex: 1, padding: '8px', fontSize: 12, borderRadius: 6, background: '#1e2d45', border: '1px solid rgba(123,156,204,0.3)', color: '#8fafd4', fontWeight: 500, cursor: 'pointer' }}>Guardar</button>
                   </div>
                 </div>
@@ -1764,7 +1764,7 @@ export default function HRPage() {
                         {emp
                           ? <EmpAvatar emp={emp} photos={employeePhotos} />
                           : (
-                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#1c2030', color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, flexShrink: 0, border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#1c2030', color: 'rgba(255,255,255,0.62)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, flexShrink: 0, border: '1px solid rgba(255,255,255,0.06)' }}>
                               {((b.nombre?.[0] || '') + (b.apellidos?.[0] || '')).toUpperCase() || '?'}
                             </div>
                           )
@@ -1834,7 +1834,7 @@ export default function HRPage() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 20 }}>
-              <button onClick={() => setShowAttendanceModal(false)} style={{ padding: '7px 14px', fontSize: 12, borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={() => setShowAttendanceModal(false)} style={{ padding: '7px 14px', fontSize: 12, borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.62)', cursor: 'pointer' }}>Cancelar</button>
               <button onClick={createManualAttendance} disabled={attendanceSaving} style={{ padding: '7px 18px', fontSize: 12, borderRadius: 6, background: '#1e2d45', border: '1px solid rgba(123,156,204,0.3)', color: '#8fafd4', fontWeight: 500, cursor: 'pointer', opacity: attendanceSaving ? 0.6 : 1 }}>
                 {attendanceSaving ? 'Guardando...' : 'Guardar'}
               </button>
@@ -2048,7 +2048,7 @@ export default function HRPage() {
 
             {/* Footer */}
             <div style={{ padding: "14px 24px", borderTop: "1px solid rgba(255,255,255,0.08)", display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-              <button onClick={() => setShowEmpModal(false)} style={{ padding: '7px 16px', fontSize: 12.5, borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.45)', cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={() => setShowEmpModal(false)} style={{ padding: '7px 16px', fontSize: 12.5, borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.62)', cursor: 'pointer' }}>Cancelar</button>
               {modalTab !== 'expediente' && (
                 <button onClick={saveEmployee} style={{ padding: '7px 20px', fontSize: 12.5, fontWeight: 500, borderRadius: 6, background: '#1e2d45', border: '1px solid rgba(123,156,204,0.3)', color: '#8fafd4', cursor: 'pointer' }}>Guardar</button>
               )}
@@ -2078,7 +2078,7 @@ export default function HRPage() {
               )}
             </div>
             <div style={{ padding: "14px 24px", borderTop: "1px solid rgba(255,255,255,0.08)", display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-              <button onClick={() => { setOcrPanel(false); setOcrDocumentId(''); setOcrFields({}); }} style={{ padding: '7px 16px', fontSize: 12.5, borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.45)', cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={() => { setOcrPanel(false); setOcrDocumentId(''); setOcrFields({}); }} style={{ padding: '7px 16px', fontSize: 12.5, borderRadius: 6, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.62)', cursor: 'pointer' }}>Cancelar</button>
               <button onClick={confirmOcr} style={{ padding: '7px 20px', fontSize: 12.5, fontWeight: 500, borderRadius: 6, background: '#1e2d45', border: '1px solid rgba(123,156,204,0.3)', color: '#8fafd4', cursor: 'pointer' }}>Confirmar y aplicar</button>
             </div>
           </div>

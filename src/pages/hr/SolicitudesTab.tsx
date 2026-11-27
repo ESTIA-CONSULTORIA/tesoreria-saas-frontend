@@ -16,7 +16,7 @@ interface Respuesta {
 const VACIA: Respuesta = { vacaciones: [], permisos: [], totalVacaciones: 0, totalPermisos: 0, total: 0 };
 
 const card: React.CSSProperties = { padding: 14, borderRadius: 10, background: '#141820', border: '1px solid rgba(255,255,255,0.07)' };
-const tenue: React.CSSProperties = { fontSize: 12, color: 'rgba(255,255,255,0.35)', margin: 0 };
+const tenue: React.CSSProperties = { fontSize: 12, color: 'rgba(255,255,255,0.62)', margin: 0 };
 const campo: React.CSSProperties = { padding: '5px 8px', fontSize: 12, borderRadius: 6, background: '#0f131a', border: '1px solid rgba(255,255,255,0.12)', color: '#c8cdd8' };
 const btn = (verde: boolean): React.CSSProperties => ({
   padding: '4px 12px', fontSize: 12, borderRadius: 5, cursor: 'pointer',
@@ -120,9 +120,9 @@ export function SolicitudesTab({ headers, employees, onTotalPendientes }: {
       {error && <div style={{ ...card, color: 'rgba(252,165,165,0.9)', fontSize: 13, marginBottom: 12 }}>{error}</div>}
 
       {cargando ? (
-        <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13 }}>Cargando...</div>
+        <div style={{ color: 'rgba(255,255,255,0.62)', fontSize: 13 }}>Cargando...</div>
       ) : grupos.length === 0 && !error ? (
-        <div style={{ ...card, padding: 24, color: 'rgba(255,255,255,0.25)', fontSize: 13 }}>
+        <div style={{ ...card, padding: 24, color: 'rgba(255,255,255,0.62)', fontSize: 13 }}>
           {filtros.estado === 'PENDIENTE' ? 'Sin solicitudes pendientes' : 'Sin solicitudes con estos filtros'}
         </div>
       ) : (
