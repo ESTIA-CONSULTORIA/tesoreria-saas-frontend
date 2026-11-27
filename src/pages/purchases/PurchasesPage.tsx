@@ -423,10 +423,10 @@ export default function PurchasesPage() {
                               <button className="rounded bg-slate-700 px-2 py-1 text-xs text-white hover:bg-slate-600" onClick={() => handleViewOrder(order)}>
                                 Ver
                               </button>
-                              {order.status === "BORRADOR" && (
-                                {puedeEditarCompras && <button className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700" onClick={() => handleViewOrder(order)}>
+                              {order.status === "BORRADOR" && puedeEditarCompras && (
+                                <button className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700" onClick={() => handleViewOrder(order)}>
                                   Editar
-                                </button>}
+                                </button>
                               )}
                               {order.status === "BORRADOR" && (
                                 <button className="rounded bg-green-600 px-2 py-1 text-xs text-white hover:bg-green-700" onClick={() => markOrderAsSent(order.id)}>

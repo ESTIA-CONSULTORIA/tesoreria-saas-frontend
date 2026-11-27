@@ -27,7 +27,6 @@ const inp = 'w-full rounded bg-slate-800 px-3 py-2 text-white';
 const btn = 'rounded-lg px-4 py-2 text-sm font-semibold text-white';
 
 export default function MembresiasPage() {
-  const puedeEditarMembresias = usePuede('membresias', 'editar');
   const user = useAuthStore((s) => s.user);
   const branchId = useAuthStore((s) => s.branchId);
   const ivaTasaDefault = useBrandingStore((s) => s.ivaTasaDefault);
@@ -439,6 +438,7 @@ function AlertasTab({ gestion, setMsg }: { gestion: boolean; setMsg: SetMsg }) {
 
 // ───────────────────────────── planes ─────────────────────────────
 function PlanesTab({ cfg, setMsg }: { cfg: IvaConfig; setMsg: SetMsg }) {
+  const puedeEditarMembresias = usePuede('membresias', 'editar');
   const [planes, setPlanes] = useState<Plan[]>([]);
   const [form, setForm] = useState<PlanForm | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
