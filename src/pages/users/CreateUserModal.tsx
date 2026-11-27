@@ -3,6 +3,8 @@ import { usePilaEscape } from "../../core/components/usePilaEscape";
 import { useEffect, useState } from "react";
 import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
+import { leerNegocioActivo } from "../../core/api/negocioActivo";
+import { negocioParaAlta, errorNegocioFaltante, etiquetaSucursal, etiquetaNegocioOpcion, type NegocioOpcion } from "./altaUsuario";
 
 interface User {
   id: string;
@@ -21,6 +23,8 @@ interface Props {
   onClose: () => void;
   onCreated: () => void;
   user?: User | null;
+  /** Negocio que la pantalla Usuarios tiene filtrado (SOPORTE). */
+  negocioFiltro?: string;
 }
 
 interface Role {
@@ -32,6 +36,7 @@ interface Role {
 interface Branch {
   id: string;
   name: string;
+  companyId?: string;
 }
 
 interface Company {
@@ -40,7 +45,7 @@ interface Company {
   legalName: string;
 }
 
-export default function CreateUserModal({ open, onClose, onCreated, user }: Props) {
+export default function CreateUserModal({ open, onClose, onCreated, user, negocioFiltro = "" }: Props) {
   const currentUser = useAuthStore((s) => s.user);
   // Selector de empresa: solo SOPORTE lo ve y lo puede editar — casos de corrección de
   // datos, no un campo normal de alta/edición. El backend refuerza lo mismo del lado
@@ -60,17 +65,31 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
   const [roles, setRoles] = useState<Role[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [negocios, setNegocios] = useState<NegocioOpcion[]>([]);
+  const [negocioId, setNegocioId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (open) {
       loadRoles();
-      loadBranches();
-      if (isSoporte) loadCompanies();
+      if (isSoporte) {
+        api.get("/tenants").then((r) => setNegocios(Array.isArray(r.data) ? r.data : [])).catch(() => setNegocios([]));
+        // Negocio de partida: el filtro de la pantalla y, si no hay, el del encabezado
+        setNegocioId(negocioParaAlta(true, "", negocioFiltro, leerNegocioActivo(localStorage)?.id ?? null));
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  // Sucursales y empresas del negocio elegido (para SOPORTE se piden con ese negocio explícito; para los demás, el servidor usa su sesión)
+  useEffect(() => {
+    if (!open) return;
+    if (isSoporte && !negocioId) { setBranches([]); setCompanies([]); return; }
+    loadBranches();
+    loadCompanies();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, negocioId]);
 
   useEffect(() => {
     if (user) {
@@ -111,7 +130,7 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
 
   async function loadBranches() {
     try {
-      const response = await api.get("/branches");
+      const response = await api.get("/branches", isSoporte ? { params: { tenantId: negocioId } } : undefined);
       const branchList = Array.isArray(response.data) ? response.data : [];
       setBranches(branchList);
     } catch {
@@ -121,7 +140,7 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
 
   async function loadCompanies() {
     try {
-      const response = await api.get("/companies");
+      const response = await api.get("/companies", isSoporte ? { params: { tenantId: negocioId } } : undefined);
       const companyList = Array.isArray(response.data) ? response.data : [];
       setCompanies(companyList);
     } catch {
@@ -141,6 +160,13 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
       setError("");
 
       const fullName = `${firstName} ${lastName}`.trim();
+
+      const faltaNegocio = !user ? errorNegocioFaltante(isSoporte, negocioId) : null;
+      if (faltaNegocio) {
+        setError(faltaNegocio);
+        setLoading(false);
+        return;
+      }
 
       const isExecRole = roleCode === "ADMIN" || roleCode === "GERENTE";
       const isCajero = roleCode === "CAJERO";
@@ -193,6 +219,8 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
           roleId: roleId || undefined,
           roleCode,
           branchId: branchId || undefined,
+          // SOPORTE no pertenece a ningún negocio: el servidor toma el negocio del cuerpo. Los demás roles no lo mandan (manda su sesión).
+          ...(isSoporte ? { tenantId: negocioId } : {}),
           // Un ADMIN/GERENTE normal nunca manda esto — el backend ya asigna su propio
           // companyId al usuario nuevo. Solo SOPORTE (sin companyId propio) lo elige
           // explícito acá, para tenants/empresas específicas.
@@ -258,6 +286,24 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {isSoporte && !user && (
+              <div>
+                <label htmlFor="alta-negocio" className="block text-xs text-content-3 mb-1">Negocio</label>
+                <select
+                  id="alta-negocio"
+                  value={negocioId}
+                  onChange={(e) => { setNegocioId(e.target.value); setBranchId(""); setCompanyId(""); }}
+                  required
+                  className="w-full rounded-lg border border-line bg-surface-1 p-3 text-content-1 outline-none focus:border-accent"
+                >
+                  <option value="">Elegir negocio…</option>
+                  {negocios.map((n) => (
+                    <option key={n.id} value={n.id}>{etiquetaNegocioOpcion(n)}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <input
                 value={firstName}
@@ -366,7 +412,7 @@ export default function CreateUserModal({ open, onClose, onCreated, user }: Prop
               <option value="">Seleccionar sucursal (opcional)</option>
               {branches.map((branch) => (
                 <option key={branch.id} value={branch.id}>
-                  {branch.name}
+                  {etiquetaSucursal(branch, companies)}
                 </option>
               ))}
             </select>

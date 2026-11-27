@@ -188,7 +188,7 @@ export default function UsersPage() {
 
   return (
     <MainLayout>
-      <CreateUserModal open={modalOpen} onClose={handleCloseUserModal} onCreated={loadData} user={editingUser} />
+      <CreateUserModal open={modalOpen} onClose={handleCloseUserModal} onCreated={loadData} user={editingUser} negocioFiltro={negocioSel} />
       <CreateRoleModal open={roleModalOpen} onClose={() => setRoleModalOpen(false)} onCreated={loadData} />
 
       {deleteConfirmOpen && (
