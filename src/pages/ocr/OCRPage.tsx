@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import { usePuede } from "../../core/hooks/usePuede";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
@@ -38,6 +39,7 @@ const FIELD_LABELS: Record<string, string> = {
 };
 
 export default function OCRPage() {
+  const puedeEditarOcr = usePuede('ocr', 'editar');
   const tenantId = useAuthStore((s) => s.tenantId);
   // Auditoría de producto (GoodsHabits, Hallazgo 4): antes leía companyId de useAuthStore,
   // que ahora es SOLO la empresa fija del perfil del usuario, no la que está activa en la
@@ -575,7 +577,7 @@ export default function OCRPage() {
                   >
                     {modalLoading ? "Guardando..." : "Validar"}
                   </button>
-                  <button
+                  {puedeEditarOcr && <button
                     onClick={handleReject}
                     disabled={modalLoading}
                     style={{
@@ -591,7 +593,7 @@ export default function OCRPage() {
                     }}
                   >
                     Rechazar
-                  </button>
+                  </button>}
                 </div>
               )}
             </div>

@@ -75,6 +75,7 @@ type SetMsg = (m: { ok: boolean; texto: string } | null) => void;
 
 // ───────────────────────────── socios ─────────────────────────────
 function SociosTab({ cfg, gestion, setMsg, sucursalId, userId }: { cfg: IvaConfig; gestion: boolean; setMsg: SetMsg; sucursalId: string; userId: string }) {
+  const puedeCrearMembresias = usePuede('membresias', 'crear');
   const [socios, setSocios] = useState<SocioFila[]>([]);
   const [sinModulo, setSinModulo] = useState(false);
   const [planes, setPlanes] = useState<Plan[]>([]);
@@ -180,7 +181,7 @@ function SociosTab({ cfg, gestion, setMsg, sucursalId, userId }: { cfg: IvaConfi
               <input className={`${inp} mt-1`} value={nuevo[k] ?? ''} onChange={(e) => setNuevo({ ...nuevo, [k]: e.target.value })} />
             </label>
           ))}
-          <button className={`${btn} w-full bg-blue-600`} onClick={guardarNuevo}>Guardar socio</button>
+          {puedeCrearMembresias && <button className={`${btn} w-full bg-blue-600`} onClick={guardarNuevo}>Guardar socio</button>}
         </Modal>
       )}
 
@@ -525,7 +526,7 @@ function PlanesTab({ cfg, setMsg }: { cfg: IvaConfig; setMsg: SetMsg }) {
           <label className="mb-3 flex items-center gap-2 text-sm text-slate-300">
             <input type="checkbox" checked={form.activo} onChange={(e) => setForm({ ...form, activo: e.target.checked })} /> Plan activo (se puede cobrar)
           </label>
-          <button className={`${btn} w-full bg-blue-600`} onClick={guardar}>Guardar plan</button>
+          {puedeEditarMembresias && <button className={`${btn} w-full bg-blue-600`} onClick={guardar}>Guardar plan</button>}
         </Modal>
       )}
     </div>

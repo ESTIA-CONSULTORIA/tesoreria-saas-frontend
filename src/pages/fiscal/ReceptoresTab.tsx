@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { usePuede } from "../../core/hooks/usePuede";
 import { api } from '../../core/api/api';
 import { InputBusqueda } from '../../core/components/InputBusqueda';
 import type { Atajo } from '../../core/components/reglasTeclado';
@@ -22,6 +23,7 @@ const deReceptor = (r: Receptor): FormReceptor => ({
 });
 
 export default function ReceptoresTab({ regimenes, usos, alGuardar }: { regimenes: Record<string, string>; usos: Record<string, string>; alGuardar: () => void }) {
+  const puedeEliminarFacturacion = usePuede('facturacion', 'eliminar');
   const [lista, setLista] = useState<Receptor[]>([]);
   const [cargando, setCargando] = useState(true);
   const [q, setQ] = useState('');
@@ -222,7 +224,7 @@ export default function ReceptoresTab({ regimenes, usos, alGuardar }: { regimene
           </div>
           <div className="mt-auto flex items-center gap-2 pt-1">
             <button type="submit" className={`${btn} bg-blue-600 hover:bg-blue-500 disabled:opacity-40`} disabled={sinCambios}>Guardar</button>
-            {editandoId && !confirmarBorrar ? <button type="button" className={`${btn} bg-slate-700 hover:bg-red-700`} onClick={() => setConfirmarBorrar(true)}>Eliminar</button> : null}
+            {editandoId && !confirmarBorrar && puedeEliminarFacturacion ? <button type="button" className={`${btn} bg-slate-700 hover:bg-red-700`} onClick={() => setConfirmarBorrar(true)}>Eliminar</button> : null}
             {confirmarBorrar ? (
               <button type="button" data-autofocus className={`${btn} bg-red-700 hover:bg-red-600`} onClick={() => void eliminar()}>
                 Confirmar: eliminar a «{form.nombreFiscal}»
