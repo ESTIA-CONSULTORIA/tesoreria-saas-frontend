@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { usePuede } from "../../core/hooks/usePuede";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import CreateBankModal from "./CreateBankModal";
@@ -24,6 +25,7 @@ interface Branch {
 }
 
 export default function BanksPage() {
+  const puedeCrearBancos = usePuede('bancos', 'crear');
   const { activeBranch, activeCompany } = useCompanyStore();
   const [banks, setBanks] = useState<BankAccount[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -107,9 +109,9 @@ export default function BanksPage() {
             <h2 className="text-3xl font-bold">Bancos</h2>
             <p className="text-slate-400">Cuentas bancarias por sucursal</p>
           </div>
-          <button onClick={handleCreateBankAccount} className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700">
+          {puedeCrearBancos && <button onClick={handleCreateBankAccount} className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700">
             + Nueva Cuenta
-          </button>
+          </button>}
         </div>
         {error && <div className="rounded-xl border border-red-700 bg-red-900/30 p-4 text-red-300">{error}</div>}
         {loading ? (

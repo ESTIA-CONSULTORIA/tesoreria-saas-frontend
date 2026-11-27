@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { usePuede } from "../../core/hooks/usePuede";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import useDebounce from "../../core/hooks/useDebounce";
@@ -31,6 +32,7 @@ const STATUS_BADGE: Record<string, { label: string; color: string }> = {
 };
 
 export default function MovementsPage() {
+  const puedeCrearMovimientos = usePuede('movimientos', 'crear');
   const { activeBranch, activeCompany } = useCompanyStore();
   const user = useAuthStore((s) => s.user);
   const canApprove = user?.roleCode === "ADMIN" || user?.roleCode === "GERENTE";
@@ -129,9 +131,9 @@ export default function MovementsPage() {
             <h2 className="text-3xl font-bold">Movimientos</h2>
             <p className="text-slate-400">Filtros y paginacion por cuenta, tipo, fecha y categoria</p>
           </div>
-          <button onClick={() => setModalOpen(true)} className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700">
+          {puedeCrearMovimientos && <button onClick={() => setModalOpen(true)} className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700">
             + Nuevo Movimiento
-          </button>
+          </button>}
         </div>
 
         <div className="grid gap-3 rounded-xl border border-slate-800 bg-slate-900 p-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">

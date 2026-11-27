@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { usePuede } from "../../core/hooks/usePuede";
 import { Navigate } from 'react-router-dom';
 import { InputBusqueda } from '../../core/components/InputBusqueda';
 import { api } from '../../core/api/api';
@@ -26,6 +27,7 @@ const inp = 'w-full rounded bg-slate-800 px-3 py-2 text-white';
 const btn = 'rounded-lg px-4 py-2 text-sm font-semibold text-white';
 
 export default function MembresiasPage() {
+  const puedeEditarMembresias = usePuede('membresias', 'editar');
   const user = useAuthStore((s) => s.user);
   const branchId = useAuthStore((s) => s.branchId);
   const ivaTasaDefault = useBrandingStore((s) => s.ivaTasaDefault);
@@ -486,7 +488,7 @@ function PlanesTab({ cfg, setMsg }: { cfg: IvaConfig; setMsg: SetMsg }) {
               {p.beneficios?.descuentoPct ? <div className="mt-1 text-sm text-green-300">Beneficio: {p.beneficios.descuentoPct}% en compras del POS</div> : null}
               {(p.beneficios?.notas ?? []).map((n) => <div key={n} className="text-xs text-slate-400">• {n}</div>)}
               <div className="mt-3 flex items-center gap-2">
-                <button className={`${btn} bg-slate-700 py-1`} onClick={() => { setEditId(p.id); setForm(planAForm(p)); }}>Editar</button>
+                {puedeEditarMembresias && <button className={`${btn} bg-slate-700 py-1`} onClick={() => { setEditId(p.id); setForm(planAForm(p)); }}>Editar</button>}
                 {!p.activo && <span className="text-xs text-slate-400">Desactivado</span>}
               </div>
             </div>

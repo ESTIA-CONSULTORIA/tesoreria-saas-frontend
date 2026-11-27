@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { usePuede } from "../../core/hooks/usePuede";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import CreateBranchModal from "./CreateBranchModal";
@@ -14,6 +15,7 @@ interface Branch {
 }
 
 export default function BranchesPage() {
+  const puedeEliminarSucursales = usePuede('sucursales', 'eliminar');
   const { activeCompany } = useCompanyStore();
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,12 +97,12 @@ export default function BranchesPage() {
               >
                 Cancelar
               </button>
-              <button
+              {puedeEliminarSucursales && <button
                 onClick={handleDeleteConfirm}
                 style={{ padding: '8px 16px', fontSize: '13px', color: '#fff', backgroundColor: '#9B3A3A', border: '1px solid #9B3A3A', borderRadius: '6px', cursor: 'pointer' }}
               >
                 Eliminar
-              </button>
+              </button>}
             </div>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { usePuede } from "../../core/hooks/usePuede";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import { useAuthStore } from "../../core/store/useAuthStore";
@@ -25,6 +26,7 @@ interface BankAccount {
 }
 
 export default function TransfersPage() {
+  const puedeCrearTransferencias = usePuede('transferencias', 'crear');
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -118,9 +120,9 @@ export default function TransfersPage() {
             <h2 className="text-3xl font-bold">Traslado de Fondos</h2>
             <p className="text-slate-400">Traspasos entre cuentas</p>
           </div>
-          <button onClick={() => setModalOpen(true)} className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700">
+          {puedeCrearTransferencias && <button onClick={() => setModalOpen(true)} className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700">
             + Nuevo Traslado
-          </button>
+          </button>}
         </div>
         {error && <div className="rounded-xl border border-red-700 bg-red-900/30 p-4 text-red-300">{error}</div>}
         {loading ? (

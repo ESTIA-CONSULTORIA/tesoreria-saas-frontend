@@ -1,4 +1,5 @@
 import BandejaPortal from "./BandejaPortal";
+import { usePuede } from "../../core/hooks/usePuede";
 import PortalAccesoPanel from "./PortalAccesoPanel";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -122,6 +123,8 @@ const INCIDENCE_KEYS = [
 ];
 
 export default function HRPage() {
+  const puedeEliminarRh = usePuede('rh', 'eliminar');
+  const puedeCrearRh = usePuede('rh', 'crear');
   const [searchParams] = useSearchParams();
 
   // Auditoría de producto (GoodsHabits, Fase 3 — Nómina): addons independientes, no
@@ -766,12 +769,12 @@ export default function HRPage() {
                 </div>
               ))}
               <div style={{ width: 1, height: 24, background: 'rgb(var(--border))', margin: '0 4px' }} />
-              <button onClick={openNew} style={{
+              {puedeCrearRh && <button onClick={openNew} style={{
                 padding: '6px 16px', borderRadius: 6, fontSize: 12.5, fontWeight: 500, cursor: 'pointer',
                 background: '#1e2d45', border: '1px solid rgba(123,156,204,0.3)', color: '#8fafd4',
               }}>
                 + Nuevo
-              </button>
+              </button>}
             </div>
           )}
         </div>
@@ -1680,7 +1683,7 @@ export default function HRPage() {
                   <div key={s.id} style={{ borderRadius: 10, padding: 16, background: '#141820', border: '1px solid rgba(255,255,255,0.07)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                       <span style={{ fontWeight: 500, fontSize: 13, color: '#c8cdd8' }}>{s.name}</span>
-                      <button onClick={() => deleteShift(s.id)} style={{ fontSize: 12, color: 'rgba(252,165,165,0.6)', background: 'none', border: 'none', cursor: 'pointer' }}>Eliminar</button>
+                      {puedeEliminarRh && <button onClick={() => deleteShift(s.id)} style={{ fontSize: 12, color: 'rgba(252,165,165,0.6)', background: 'none', border: 'none', cursor: 'pointer' }}>Eliminar</button>}
                     </div>
                     <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: 0 }}>{s.startTime} — {s.endTime}</p>
                     <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', margin: '4px 0 0' }}>Tolerancia: {s.toleranceMinutes} min</p>
@@ -2033,7 +2036,7 @@ export default function HRPage() {
                           </div>
                           <div style={{ display: 'flex', gap: 8, flexShrink: 0, marginLeft: 12 }}>
                             {(doc.fileData || doc.url) && <button onClick={() => openDoc(doc)} style={{ fontSize: 12, color: '#7b9ccc', background: 'none', border: 'none', cursor: 'pointer' }}>Ver</button>}
-                            <button onClick={() => removeDoc(doc.id)} style={{ fontSize: 12, color: 'rgba(252,165,165,0.7)', background: 'none', border: 'none', cursor: 'pointer' }}>Eliminar</button>
+                            {puedeEliminarRh && <button onClick={() => removeDoc(doc.id)} style={{ fontSize: 12, color: 'rgba(252,165,165,0.7)', background: 'none', border: 'none', cursor: 'pointer' }}>Eliminar</button>}
                           </div>
                         </div>
                       ))}

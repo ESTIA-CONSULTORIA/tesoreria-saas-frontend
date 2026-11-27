@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { usePuede } from "../../core/hooks/usePuede";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import useDebounce from "../../core/hooks/useDebounce";
@@ -25,6 +26,7 @@ interface Supplier {
 }
 
 export default function SuppliersPage() {
+  const puedeCrearCompras = usePuede('compras', 'crear');
   const { activeCompany } = useCompanyStore();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,12 +101,12 @@ export default function SuppliersPage() {
             <h2 className="text-3xl font-bold">Proveedores</h2>
             <p className="text-slate-400">Gestión de proveedores</p>
           </div>
-          <button
+          {puedeCrearCompras && <button
             onClick={handleCreate}
             className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
           >
             + Nuevo Proveedor
-          </button>
+          </button>}
         </div>
 
         <div className="grid gap-3 rounded-xl border border-slate-800 bg-slate-900 p-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">

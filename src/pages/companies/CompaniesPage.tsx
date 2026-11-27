@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { usePuede } from "../../core/hooks/usePuede";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import CreateCompanyModal from "./CreateCompanyModal";
@@ -14,6 +15,7 @@ interface Company {
 }
 
 export default function CompaniesPage() {
+  const puedeEliminarEmpresas = usePuede('empresas', 'eliminar');
   const { companyId: userCompanyId, user } = useAuthStore();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,12 +107,12 @@ export default function CompaniesPage() {
               >
                 Cancelar
               </button>
-              <button
+              {puedeEliminarEmpresas && <button
                 onClick={handleDeleteConfirm}
                 style={{ padding: '8px 16px', fontSize: '13px', color: '#fff', backgroundColor: '#9B3A3A', border: '1px solid #9B3A3A', borderRadius: '6px', cursor: 'pointer' }}
               >
                 Eliminar
-              </button>
+              </button>}
             </div>
           </div>
         </div>

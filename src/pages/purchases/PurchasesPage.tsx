@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { usePuede } from "../../core/hooks/usePuede";
 import { useSearchParams } from "react-router-dom";
 import { facturaAPagar, PARAM_PAGAR } from "./pagarFactura";
 import MainLayout from "../../core/layout/MainLayout";
@@ -49,6 +50,7 @@ interface Supplier {
 }
 
 export default function PurchasesPage() {
+  const puedeEditarCompras = usePuede('compras', 'editar');
   const { activeBranch, activeCompany } = useCompanyStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const pagarId = searchParams.get(PARAM_PAGAR); // viene de Tesorería (CxP) → "Pagar ahora"
@@ -422,9 +424,9 @@ export default function PurchasesPage() {
                                 Ver
                               </button>
                               {order.status === "BORRADOR" && (
-                                <button className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700" onClick={() => handleViewOrder(order)}>
+                                {puedeEditarCompras && <button className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700" onClick={() => handleViewOrder(order)}>
                                   Editar
-                                </button>
+                                </button>}
                               )}
                               {order.status === "BORRADOR" && (
                                 <button className="rounded bg-green-600 px-2 py-1 text-xs text-white hover:bg-green-700" onClick={() => markOrderAsSent(order.id)}>
@@ -784,12 +786,12 @@ export default function PurchasesPage() {
                 >
                   Cancelar
                 </button>
-                <button
+                {puedeEditarCompras && <button
                   onClick={registerPayment}
                   className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
                 >
                   Registrar Pago
-                </button>
+                </button>}
               </div>
             </div>
           </div>

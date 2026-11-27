@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { usePuede } from "../../core/hooks/usePuede";
 import { activarConTeclado } from '../../core/utils/accesoTeclado';
 import MainLayout from "../../core/layout/MainLayout";
 import MatrizPermisos from '../permisos/MatrizPermisos';
@@ -66,6 +67,9 @@ const MODULE_NAMES: Record<string, string> = {
 };
 
 export default function UsersPage() {
+  const puedeEliminarUsuarios = usePuede('usuarios', 'eliminar');
+  const puedeCrearUsuarios = usePuede('usuarios', 'crear');
+  const puedeEditarUsuarios = usePuede('usuarios', 'editar');
   const { activeCompany } = useCompanyStore();
   const esSoporte = useAuthStore((s) => s.user?.roleCode) === "SOPORTE";
   // Solo SOPORTE elige negocio ("" = todos); el servidor ignora ?tenantId= para cualquier otro rol.
@@ -201,10 +205,10 @@ export default function UsersPage() {
                 style={{ padding: '6px 16px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', fontSize: 12, cursor: 'pointer' }}>
                 Cancelar
               </button>
-              <button onClick={handleDeleteConfirm}
+              {puedeEliminarUsuarios && <button onClick={handleDeleteConfirm}
                 style={{ padding: '6px 16px', borderRadius: 7, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.1)', color: '#f87171', fontSize: 12, cursor: 'pointer' }}>
                 Eliminar
-              </button>
+              </button>}
             </div>
           </div>
         </div>
@@ -273,10 +277,10 @@ export default function UsersPage() {
               {/* Header Usuarios */}
               <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.07)', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.62)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Usuarios</span>
-                <button onClick={() => { setEditingUser(null); setModalOpen(true); }}
+                {puedeCrearUsuarios && <button onClick={() => { setEditingUser(null); setModalOpen(true); }}
                   style={{ fontSize: 12, padding: '3px 8px', borderRadius: 6, border: '1px solid rgba(123,156,204,0.3)', background: 'rgba(123,156,204,0.08)', color: '#8fafd4', cursor: 'pointer' }}>
                   + Nuevo
-                </button>
+                </button>}
               </div>
               {/* Lista usuarios */}
               <div style={{ flex: 1, overflowY: 'auto' }}>
@@ -333,10 +337,10 @@ export default function UsersPage() {
                       <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', marginTop: 2 }}>Rol: {selectedUser.roleCode}</div>
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
-                      <button onClick={() => { setEditingUser(selectedUser); setModalOpen(true); }}
+                      {puedeEditarUsuarios && <button onClick={() => { setEditingUser(selectedUser); setModalOpen(true); }}
                         style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', fontSize: 12, cursor: 'pointer' }}>
                         Editar
-                      </button>
+                      </button>}
                       <button onClick={() => handleDelete(selectedUser.id)}
                         style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(252,165,165,0.2)', background: 'transparent', color: 'rgba(252,165,165,0.7)', fontSize: 12, cursor: 'pointer' }}>
                         Eliminar

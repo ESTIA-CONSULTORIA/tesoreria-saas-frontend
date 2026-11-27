@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { usePuede } from "../../core/hooks/usePuede";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
 import CreateInsumoModal from "./CreateInsumoModal";
@@ -106,6 +107,8 @@ interface FamiliaInsumo {
 }
 
 export default function CostsPage() {
+  const puedeEliminarCostos = usePuede('costos', 'eliminar');
+  const puedeEditarCostos = usePuede('costos', 'editar');
   const { activeCompany } = useCompanyStore();
   const [activeTab, setActiveTab] = useState("insumos");
   const [insumos, setInsumos] = useState<Insumo[]>([]);
@@ -769,9 +772,9 @@ export default function CostsPage() {
                               <button className="rounded bg-slate-700 px-2 py-1 text-xs text-white hover:bg-slate-600" onClick={() => handleViewInsumo(insumo)}>
                                 Ver
                               </button>
-                              <button className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700" onClick={() => { setSelectedInsumo(insumo); setInsumoModalOpen(true); }}>
+                              {puedeEditarCostos && <button className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700" onClick={() => { setSelectedInsumo(insumo); setInsumoModalOpen(true); }}>
                                 Editar
-                              </button>
+                              </button>}
                               {insumo.isActive && (
                                 <button className="rounded bg-amber-700 px-2 py-1 text-xs text-white hover:bg-amber-600" onClick={() => { setInsumoToReplace(insumo); setReplaceInsumoModalOpen(true); }}>
                                   Reemplazar
@@ -805,9 +808,9 @@ export default function CostsPage() {
                         <button className="flex-1 rounded bg-slate-700 px-2 py-1 text-xs text-white hover:bg-slate-600" onClick={() => handleViewInsumo(insumo)}>
                           Ver
                         </button>
-                        <button className="flex-1 rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700" onClick={() => { setSelectedInsumo(insumo); setInsumoModalOpen(true); }}>
+                        {puedeEditarCostos && <button className="flex-1 rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700" onClick={() => { setSelectedInsumo(insumo); setInsumoModalOpen(true); }}>
                           Editar
-                        </button>
+                        </button>}
                         {insumo.isActive && (
                           <button className="flex-1 rounded bg-amber-700 px-2 py-1 text-xs text-white hover:bg-amber-600" onClick={() => { setInsumoToReplace(insumo); setReplaceInsumoModalOpen(true); }}>
                             Reemplazar
@@ -861,9 +864,9 @@ export default function CostsPage() {
                               <button className="rounded bg-slate-700 px-2 py-1 text-xs text-white hover:bg-slate-600" onClick={() => { setSelectedRecipe(recipe); setViewRecipeModalOpen(true); }}>
                                 Ver
                               </button>
-                              <button className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700" onClick={() => { setSelectedRecipe(recipe); setRecipeModalOpen(true); }}>
+                              {puedeEditarCostos && <button className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700" onClick={() => { setSelectedRecipe(recipe); setRecipeModalOpen(true); }}>
                                 Editar
-                              </button>
+                              </button>}
                             </div>
                           </td>
                         </tr>
@@ -890,9 +893,9 @@ export default function CostsPage() {
                         <button className="flex-1 rounded bg-slate-700 px-2 py-1 text-xs text-white hover:bg-slate-600" onClick={() => { setSelectedRecipe(recipe); setViewRecipeModalOpen(true); }}>
                           Ver
                         </button>
-                        <button className="flex-1 rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700" onClick={() => { setSelectedRecipe(recipe); setRecipeModalOpen(true); }}>
+                        {puedeEditarCostos && <button className="flex-1 rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700" onClick={() => { setSelectedRecipe(recipe); setRecipeModalOpen(true); }}>
                           Editar
-                        </button>
+                        </button>}
                       </div>
                     </div>
                   ))}
@@ -2045,12 +2048,12 @@ export default function CostsPage() {
                 >
                   Cancelar
                 </button>
-                <button
+                {puedeEliminarCostos && <button
                   onClick={handleDeleteConfirm}
                   className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
                 >
                   Eliminar
-                </button>
+                </button>}
               </div>
             </div>
           </div>
