@@ -112,6 +112,13 @@ async function main() {
       await page.getByRole('button', { name: 'Vacaciones' }).last().click();
       await page.getByText(/Portal del empleado: recibos, cartas y correcciones/).waitFor({ timeout: 10000 });
     });
+    await paso('RH: la ficha del empleado muestra «Acceso al portal del empleado»', async () => {
+      await page.goto(`${WEB}/hr`);
+      await page.getByRole('button', { name: 'Editar' }).first().click();
+      await page.getByRole('button', { name: /Relación Laboral/ }).click();
+      await page.getByText('Acceso al portal del empleado').waitFor({ timeout: 15000 });
+      sinErrores(page);
+    });
     await abrir('/users', /Usuarios/i, 'Usuarios');
     await abrir('/reports', /Reportes a la medida/, 'Reportes a la medida', async () => {
       await page.getByRole('button', { name: 'Generar reporte' }).click();

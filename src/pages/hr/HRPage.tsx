@@ -1941,6 +1941,11 @@ export default function HRPage() {
                     </select>
                     <p className="text-xs text-slate-500 mt-1">Solo necesario si esta persona debe iniciar sesión en el sistema (portal empleado, checador, etc.). Los usuarios ya vinculados a otro empleado no aparecen en la lista.</p>
                   </div>
+                  {isEdit && editingEmp.id && (
+                    <div className="col-span-2">
+                      <PortalAccesoPanel employeeId={editingEmp.id} headers={headers} />
+                    </div>
+                  )}
                 </div>
               )}
 
