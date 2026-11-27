@@ -1,3 +1,4 @@
+import ReportBuilderPanel from "./ReportBuilderPanel";
 import { useEffect, useState } from "react";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
@@ -116,6 +117,7 @@ export default function ReportsPage() {
         }}
       />
         <div className="p-6 space-y-6">
+        <ReportBuilderPanel />
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-bold">Reportes</h2>
