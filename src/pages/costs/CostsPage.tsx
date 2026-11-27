@@ -1,3 +1,4 @@
+import InventarioAlmacenPanel from "./InventarioAlmacenPanel";
 import { useEffect, useState } from "react";
 import { usePuede } from "../../core/hooks/usePuede";
 import MainLayout from "../../core/layout/MainLayout";
@@ -1020,6 +1021,7 @@ export default function CostsPage() {
             {/* TAB 4: Almacenes */}
             {activeTab === "almacenes" && (
               <div>
+                <InventarioAlmacenPanel />
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-semibold">Almacenes</h3>
                   <button
