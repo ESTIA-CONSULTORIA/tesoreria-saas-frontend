@@ -126,6 +126,7 @@ export default function ReportsPage() {
           <div className="flex gap-2">
             <select
               value={period}
+              aria-label="Periodo del reporte"
               onChange={(e) => setPeriod(e.target.value)}
               className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm"
             >
