@@ -102,7 +102,7 @@ const MODULE_PATHS: Record<ModKey, string[]> = {
   rh:            ["/hr", "/employee"],
   tesoreria:     ["/banks", "/movements", "/transfers", "/treasury", "/reconciliation"],
   corte_retroactivo: ["/pos/backfill"],
-  pos:           ["/pos", "/mesas", "/ventas-offline"],
+  pos:           ["/pos", "/mesas", "/ventas-offline"], // «/pos/cortes» cuelga de «/pos»
   compras:       ["/suppliers", "/purchases", "/ocr"],
   costos:        ["/costs"],
   membresias:    ["/membresias"],
@@ -393,9 +393,11 @@ export default function TopBar() {
 
   // Mesas: el enlace aparece solo si el negocio tiene activa la capacidad mesas_cuenta_abierta.
   const puedeVerOffline = user?.roleCode === 'ADMIN' || user?.roleCode === 'GERENTE';
+  const puedeVerCortes = puedeVerOffline || user?.roleCode === 'SOPORTE';
   const posSubItems = [
     ...SUBNAV.pos,
     ...(mesasOn ? [{ label: 'Mesas', path: '/mesas' }] : []),
+    ...(puedeVerCortes ? [{ label: 'Cortes de caja', path: '/pos/cortes' }] : []),
     ...(puedeVerOffline ? [{ label: 'Ventas offline', path: '/ventas-offline' }] : []),
   ];
 

@@ -19,6 +19,7 @@ import LogsPage from "./pages/administration/LogsPage";
 import ESTIAExecutiveAccess from "./pages/mobile-analytics/MobileAnalyticsApp";
 import POSPage from "./pages/pos/POSPage";
 import BackfillCortePage from "./pages/pos/BackfillCortePage";
+import CortesCajaPage from "./pages/pos/CortesCajaPage";
 import OCRPage from "./pages/ocr/OCRPage";
 import HRPage from "./pages/hr/HRPage";
 import IntegrationsPage from "./pages/integrations/IntegrationsPage";
@@ -515,6 +516,17 @@ function App() {
           <ProtectedRoute>
             <ModuloRoute modulo="pos">
               <MesasPage />
+            </ModuloRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/pos/cortes"
+        element={
+          <ProtectedRoute>
+            <ModuloRoute modulo="pos">
+              <CortesCajaPage />
             </ModuloRoute>
           </ProtectedRoute>
         }

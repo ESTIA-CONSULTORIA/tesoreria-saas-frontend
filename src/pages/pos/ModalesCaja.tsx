@@ -8,14 +8,15 @@ import { ErrorCampo } from '../../core/components/ErrorCampo';
 import { ModalFooter } from '../../core/components/ModalFooter';
 import { CobroModal } from '../../core/components/cobro/CobroModal';
 import { ICONO_FORMA, type ClaveForma, type OpcionForma } from '../../core/components/cobro/reglasCobro';
-import { DENOMINACIONES, conciliacionTurno, diferenciasPrecorte, efectivoEsperado, totalContado, type TurnoCaja } from './cajaTurno';
+import { BILLETES, MONEDAS, claveBillete, claveMoneda, corteZ, totalContado, type TurnoCaja } from './cajaTurno';
+import { TecladoNumerico } from '../../core/components/TecladoNumerico';
+import { TiraZ } from './TiraZ';
 import { aperturaDelTurno, formatoDuracion, formatoFechaHora, formatoHora } from '../../core/utils/tiempo';
 
 // Ventanas de caja de uso diario (apertura, retiro, depósito, precorte, corte, cobro). Presentacionales: el estado y las
 // llamadas a la API viven en POSPage. Todas usan ModalPOS (90vw × 90vh, botones fijos, columnas, sin scroll a 1366×768).
 
 const money = (v: unknown) => { const n = Number(v) || 0; return `${n < 0 ? '-' : ''}$${Math.abs(n).toFixed(2)}`; };
-const colorDif = (d: number) => (d === 0 ? '!text-content-2' : d < 0 ? '!text-danger' : '!text-ok');
 const btnCancelar = 'px-6 py-2.5 rounded !bg-surface-2 !text-content-1 hover:!bg-surface-2';
 
 // ───────────────────────── Apertura de turno ─────────────────────────
@@ -76,19 +77,24 @@ export function AperturaTurnoModal(p: {
 }
 
 // ───────────────────────── Retiro / Depósito ─────────────────────────
+// Todo retiro y todo depósito de efectivo lo autoriza un supervisor (GERENTE o ADMIN) con SU PIN: la caja captura monto y motivo, y el
+// supervisor teclea su PIN aquí mismo. El servidor lo valida (nada se registra sin un PIN válido). Esta ventana NO muestra cuánto
+// efectivo espera el sistema: eso solo lo ve el corte Z de un supervisor.
 export function MovimientoEfectivoModal(p: {
   tipo: 'RETIRO' | 'DEPOSITO';
-  esperado?: number;
   monto: string;
   setMonto: (v: string) => void;
   concepto: string;
   setConcepto: (v: string) => void;
-  autorizadoPor: string;
-  setAutorizadoPor: (v: string) => void;
+  /** PIN del supervisor (solo dígitos). */
+  pin: string;
+  setPin: (v: string) => void;
+  /** false cuando el monto queda por debajo del umbral que configuró el negocio: entonces el PIN no se pide. */
+  pedirPin: boolean;
   /** Error de la operación (servidor) que se muestra dentro de la ventana, en vez de un alert(). */
   error?: string | null;
   /** Errores de validación por campo. */
-  errores?: { monto?: string; autorizadoPor?: string; concepto?: string };
+  errores?: { monto?: string; pin?: string; concepto?: string };
   /** Mientras se envía: el botón queda deshabilitado (un segundo clic no manda otra operación). */
   enviando?: boolean;
   onCancel: () => void;
@@ -96,11 +102,15 @@ export function MovimientoEfectivoModal(p: {
 }) {
   const retiro = p.tipo === 'RETIRO';
   const campo = (c: boolean) => `w-full px-3 py-2 rounded !bg-nav !text-content-1 ${c ? 'border !border-danger' : ''}`;
+  const alTeclear = (t: string) => {
+    if (t === 'borrar') p.setPin(p.pin.slice(0, -1));
+    else if (/^[0-9]$/.test(t) && p.pin.length < 12) p.setPin(p.pin + t);
+  };
   return (
     <ModalPOS
-      size="md"
+      size="lg"
       title={retiro ? '💰 Retiro de Efectivo' : '💵 Depósito de Efectivo'}
-      subtitle={p.esperado !== undefined ? `Efectivo esperado en caja: ${money(p.esperado)}` : undefined}
+      subtitle="Lo autoriza un supervisor con su PIN"
       onClose={p.onCancel}
       enterModo="siguiente"
       atajos={[{ tecla: 'F4', etiqueta: retiro ? 'Registrar retiro' : 'Registrar depósito', accion: p.onConfirm }]}
@@ -112,47 +122,46 @@ export function MovimientoEfectivoModal(p: {
       }
     >
       {p.error ? <AlertaModal className="mb-3">{p.error}</AlertaModal> : null}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         <CampoMoneda etiqueta="Monto" requerido valor={p.monto} onCambio={p.setMonto} error={p.errores?.monto} conTeclado autoFocus />
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="mov-autoriza" className="mb-1 block text-sm !text-content-3">Autorizado por *</label>
-            <select
-              id="mov-autoriza"
-              value={p.autorizadoPor}
-              onChange={(e) => p.setAutorizadoPor(e.target.value)}
-              aria-invalid={p.errores?.autorizadoPor ? true : undefined}
-              className={campo(!!p.errores?.autorizadoPor)}
-            >
-              <option value="">Seleccionar autorizador</option>
-              <option value="admin">Administrador</option>
-              <option value="soporte">Soporte</option>
-            </select>
-            <ErrorCampo id="mov-autoriza" mensaje={p.errores?.autorizadoPor} />
-          </div>
-          <div>
-            <label htmlFor="mov-concepto" className="mb-1 block text-sm !text-content-3">{retiro ? 'Motivo *' : 'Origen *'}</label>
-            <textarea
-              id="mov-concepto"
-              value={p.concepto}
-              onChange={(e) => p.setConcepto(e.target.value)}
-              placeholder={retiro ? 'Motivo del retiro' : 'Origen del depósito'}
-              rows={4}
-              aria-invalid={p.errores?.concepto ? true : undefined}
-              className={campo(!!p.errores?.concepto)}
-            />
-            <ErrorCampo id="mov-concepto" mensaje={p.errores?.concepto} />
-          </div>
+        <div>
+          <label htmlFor="mov-concepto" className="mb-1 block text-sm !text-content-3">{retiro ? 'Motivo *' : 'Origen / motivo *'}</label>
+          <textarea
+            id="mov-concepto"
+            value={p.concepto}
+            onChange={(e) => p.setConcepto(e.target.value)}
+            placeholder={retiro ? 'Motivo del retiro' : 'Origen del depósito'}
+            rows={6}
+            aria-invalid={p.errores?.concepto ? true : undefined}
+            className={campo(!!p.errores?.concepto)}
+          />
+          <ErrorCampo id="mov-concepto" mensaje={p.errores?.concepto} />
+        </div>
+        <div>
+          {p.pedirPin ? (
+            <>
+              <span id="mov-pin-etiqueta" className="mb-1 block text-sm !text-content-3">PIN del supervisor *</span>
+              <div role="img" aria-labelledby="mov-pin-etiqueta" aria-label={`PIN del supervisor: ${p.pin.length} dígitos`} data-testid="pin-supervisor"
+                className="mb-2 flex h-9 items-center justify-center gap-2 rounded !bg-nav">
+                {p.pin.length === 0 ? <span className="text-xs !text-content-3">Teclea tu PIN</span> : Array.from({ length: p.pin.length }, (_, i) => <span key={i} aria-hidden="true" className="h-2.5 w-2.5 rounded-full !bg-btn" />)}
+              </div>
+              <TecladoNumerico tamano="normal" onTecla={alTeclear} />
+              <ErrorCampo id="mov-pin" mensaje={p.errores?.pin} />
+            </>
+          ) : (
+            <p className="text-sm !text-content-3">Este monto no necesita el PIN de un supervisor.</p>
+          )}
         </div>
       </div>
     </ModalPOS>
   );
 }
 
-// ───────────────────────── Precorte X ─────────────────────────
+// ───────────────────────── Precorte (a ciegas) ─────────────────────────
+// La caja DECLARA lo que tiene: efectivo por denominación (SIN el fondo inicial) y los totales de terminal y transferencias. No hay
+// nada precargado ni se muestra lo que el sistema espera, ni diferencias: eso se compara en el corte Z, solo para un supervisor.
 export function PrecorteModal(p: {
-  turno: TurnoCaja & { id: string; totalVentas?: number | string };
-  tickets: number;
+  turno: TurnoCaja & { id: string; folio?: string | null };
   cashCounts: Record<string, number>;
   setCashCounts: (v: Record<string, number>) => void;
   debito: string;
@@ -168,14 +177,7 @@ export function PrecorteModal(p: {
   onCancel: () => void;
   onSave: () => void;
 }) {
-  const t = p.turno;
-  const difs = diferenciasPrecorte(t, {
-    efectivo: totalContado(p.cashCounts),
-    debito: Number(p.debito) || 0,
-    credito: Number(p.credito) || 0,
-    transferencia: Number(p.transferencia) || 0,
-  });
-  const ef = difs[0];
+  const declarado = totalContado(p.cashCounts);
   const soloNumeros = (setter: (v: string) => void) => (e: ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value.replace(/[^0-9.]/g, '');
     if (val.startsWith('0') && val.length > 1 && val[1] !== '.') val = val.slice(1);
@@ -187,23 +189,39 @@ export function PrecorteModal(p: {
     ['Transferencias', p.transferencia, p.setTransferencia],
     ['Vales/Cupones', p.vales, p.setVales],
   ];
+  const cambiar = (clave: string) => (e: ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/[^0-9]/g, '');
+    if (val.startsWith('0') && val.length > 1) val = val.slice(1);
+    p.setCashCounts({ ...p.cashCounts, [clave]: Number(val) || 0 });
+  };
+  const fila = (clave: string, etiqueta: string, valor: number) => (
+    <div key={clave} className="flex items-center gap-2">
+      <span className="w-16 text-sm text-right">{etiqueta} ×</span>
+      <input
+        type="text"
+        inputMode="numeric"
+        aria-label={`Cantidad de ${clave.startsWith('m') ? 'monedas' : 'billetes'} de $${valor}`}
+        value={p.cashCounts[clave] ? p.cashCounts[clave] : ''}
+        placeholder="0"
+        onChange={cambiar(clave)}
+        className="w-14 px-2 py-1 rounded !bg-surface-2 !text-content-1 text-sm"
+      />
+      <span className="text-xs !text-content-3">= {money((p.cashCounts[clave] || 0) * valor)}</span>
+    </div>
+  );
   return (
     <ModalPOS
       size="xl"
-      title={`📊 Precorte X — Turno #${p.turno.id.slice(0, 8)}`}
+      title={`📊 Precorte — Turno ${p.turno.folio ?? `#${p.turno.id.slice(0, 8)}`}`}
+      subtitle="Cuenta tu caja y declara lo que tienes. El fondo inicial no se cuenta."
       onClose={p.onCancel}
       enterModo="siguiente"
       atajos={[{ tecla: 'F4', etiqueta: 'Guardar precorte', accion: p.onSave }]}
       footer={
         <ModalFooter
           resumen={
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm" data-testid="precorte-diferencia">
-              <div><span className="!text-content-3">Esperado </span><span className="font-semibold">{money(ef.sistema)}</span></div>
-              <div><span className="!text-content-3">Contado </span><span className="font-semibold">{money(ef.declarado)}</span></div>
-              <div className={`text-base font-bold ${colorDif(ef.diferencia)}`}>
-                Diferencia efectivo {ef.diferencia > 0 ? '+' : ''}{money(ef.diferencia)}
-                {ef.diferencia < 0 ? ' (faltante)' : ef.diferencia > 0 ? ' (sobrante)' : ' ✓'}
-              </div>
+            <div className="text-sm" data-testid="precorte-declarado">
+              <span className="!text-content-3">Efectivo que declaras </span><span className="text-base font-bold">{money(declarado)}</span>
             </div>
           }
           secundario={<Boton variante="secundario" onClick={p.onCancel}>Cancelar</Boton>}
@@ -212,93 +230,40 @@ export function PrecorteModal(p: {
       }
     >
       {p.error ? <AlertaModal className="mb-3">{p.error}</AlertaModal> : null}
-      <div className="grid gap-4 lg:grid-cols-[1fr_1.3fr_1fr]">
+      <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
         <div className="!bg-nav rounded-lg p-4">
-          <h4 className="font-semibold mb-3">Resumen de Ventas</h4>
-          <dl className="space-y-1.5 text-sm">
-            {([
-              ['Total ventas', money(t.totalVentas)],
-              ['Efectivo', money(t.totalEfectivo)],
-              ['Tarjeta (déb./créd.)', money(t.totalTarjeta)],
-              ['Transferencia SPEI', money(t.totalTransferencia)],
-              ['Cortesía', money(t.totalCortesia)],
-              ['Tickets', String(p.tickets)],
-            ] as [string, string][]).map(([k, v]) => (
-              <div key={k} className="flex justify-between">
-                <dt className="!text-content-3">{k}</dt>
-                <dd>{v}</dd>
-              </div>
-            ))}
-            <div className="flex justify-between border-t !border-line pt-1.5">
-              <dt className="!text-content-3">Fondo inicial</dt>
-              <dd>{money(t.fondoInicial)}</dd>
+          <h4 className="font-semibold mb-3">Conteo de efectivo</h4>
+          <div className="grid grid-cols-2 gap-x-6">
+            <div className="space-y-2">
+              <h5 className="text-xs uppercase !text-content-3">Billetes</h5>
+              {BILLETES.map((b) => fila(claveBillete(b), `$${b}`, b))}
             </div>
-            <div className="flex justify-between">
-              <dt className="!text-content-3">Depósitos / Retiros</dt>
-              <dd>{money(t.totalDepositos)} / {money(t.totalRetiros)}</dd>
+            <div className="space-y-2">
+              <h5 className="text-xs uppercase !text-content-3">Monedas</h5>
+              {MONEDAS.map((m) => fila(claveMoneda(m), m === 0.5 ? '$0.50' : `$${m}`, m))}
             </div>
-          </dl>
+          </div>
+          <div className="mt-3 pt-3 border-t !border-line font-semibold">TOTAL EFECTIVO: {money(declarado)}</div>
         </div>
 
         <div className="!bg-nav rounded-lg p-4">
-          <h4 className="font-semibold mb-3">Conteo de Efectivo</h4>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-            {DENOMINACIONES.map((denom) => (
-              <div key={denom} className="flex items-center gap-2">
-                <span className="w-14 text-sm text-right">${denom} ×</span>
+          <h4 className="font-semibold mb-2">Otras formas de pago (declaración)</h4>
+          <p className="mb-3 text-xs !text-content-3">Captura el total que marcan tus terminales y transferencias recibidas.</p>
+          <div className="space-y-2">
+            {declaraciones.map(([etiqueta, valor, setter]) => (
+              <div key={etiqueta} className="flex items-center gap-2">
+                <span className="w-28 text-sm">{etiqueta}:</span>
                 <input
                   type="text"
-                  inputMode="numeric"
-                  aria-label={`Cantidad de billetes o monedas de $${denom}`}
-                  value={p.cashCounts[denom] || 0}
-                  onChange={(e) => {
-                    let val = e.target.value.replace(/[^0-9]/g, '');
-                    if (val.startsWith('0') && val.length > 1) val = val.slice(1);
-                    p.setCashCounts({ ...p.cashCounts, [denom]: Number(val) || 0 });
-                  }}
-                  className="w-16 px-2 py-1 rounded !bg-surface-2 !text-content-1 text-sm"
+                  inputMode="decimal"
+                  aria-label={etiqueta}
+                  value={valor}
+                  onChange={soloNumeros(setter)}
+                  placeholder="0.00"
+                  className="flex-1 min-w-0 px-2 py-1 rounded !bg-surface-2 !text-content-1 text-sm"
                 />
-                <span className="text-xs !text-content-3">= ${(p.cashCounts[denom] || 0) * denom}</span>
               </div>
             ))}
-          </div>
-          <div className="mt-3 pt-3 border-t !border-line font-semibold">TOTAL EFECTIVO: {money(ef.declarado)}</div>
-        </div>
-
-        <div className="space-y-3">
-          <div className="!bg-nav rounded-lg p-4">
-            <h4 className="font-semibold mb-2">Otras Formas de Pago (Declaración)</h4>
-            <div className="space-y-2">
-              {declaraciones.map(([etiqueta, valor, setter]) => (
-                <div key={etiqueta} className="flex items-center gap-2">
-                  <span className="w-28 text-sm">{etiqueta}:</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    aria-label={etiqueta}
-                    value={valor}
-                    onChange={soloNumeros(setter)}
-                    placeholder="0.00"
-                    className="flex-1 min-w-0 px-2 py-1 rounded !bg-surface-2 !text-content-1 text-sm"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="!bg-nav rounded-lg p-4">
-            <h4 className="font-semibold mb-2">Diferencias vs sistema</h4>
-            <table className="w-full text-sm">
-              <tbody>
-                {difs.map((f) => (
-                  <tr key={f.clave}>
-                    <td className="py-0.5 !text-content-3">{f.nombre}</td>
-                    <td className={`py-0.5 text-right font-semibold ${colorDif(f.diferencia)}`}>
-                      {f.diferencia > 0 ? '+' : ''}{money(f.diferencia)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </div>
         </div>
       </div>
@@ -306,32 +271,35 @@ export function PrecorteModal(p: {
   );
 }
 
-// ───────────────────────── Corte de caja (Z) ─────────────────────────
+// ───────────────────────── Cierre de turno / corte Z ─────────────────────────
+// La caja a ciegas (cajera) solo confirma el cierre con lo que declaró: NO recibe totales del sistema ni diferencias. Un supervisor
+// (ADMIN, GERENTE, SOPORTE) ve la tira Z: por forma de pago, lo que espera el sistema, lo declarado y la diferencia (faltante/sobrante).
 export function CierreTurnoModal(p: {
   turno: TurnoCaja & { id: string; folio?: string | null; fecha?: string; horaApertura?: string; horaCierre?: string | null; abiertoEn?: string | null; cerradoEn?: string | null; totalVentas?: number | string; precorteDeclaracion?: Record<string, unknown> };
-  totalesServidor?: Record<string, number>;
+  /** shiftSummary.calculatedTotals: solo llega para ADMIN, GERENTE y SOPORTE; la caja a ciegas no lo recibe. */
+  totalesServidor?: Record<string, any>;
   /** Error de la operación (ventas sin sincronizar, servidor) que se muestra dentro de la ventana, en vez de un alert(). */
   error?: string | null;
   onCancel: () => void;
   onClose: () => void;
 }) {
   const t = p.turno;
-  const conc = conciliacionTurno(t, t.precorteDeclaracion, p.totalesServidor);
-  const dif = (d: number) => (d === 0 ? '' : d < 0 ? '!text-danger' : '!text-ok');
+  const z = corteZ(p.totalesServidor, t.precorteDeclaracion);
+  const declaracion = t.precorteDeclaracion || {};
   return (
     <ModalPOS
       size="lg"
-      title={`🔒 Corte de Caja — Turno ${t.folio ?? `#${t.id.slice(0, 8)}`}`}
+      title={`🔒 ${z ? 'Corte de Caja' : 'Cerrar turno'} — Turno ${t.folio ?? `#${t.id.slice(0, 8)}`}`}
       onClose={p.onCancel}
       enterModo="avanzar"
       atajos={[{ tecla: 'F10', etiqueta: 'Cerrar turno', accion: p.onClose }]}
       footer={
         <ModalFooter
-          resumen={
-            <div className={`text-base font-bold ${dif(conc.totalDif) || '!text-content-2'}`} data-testid="cierre-diferencia">
-              Diferencia total {money(conc.totalDif)}
+          resumen={z ? (
+            <div className="text-sm" data-testid="cierre-diferencia">
+              <span className="!text-content-3">Efectivo esperado en caja </span><span className="font-semibold">{money(z.efectivoEnCaja)}</span>
             </div>
-          }
+          ) : undefined}
           secundario={<Boton variante="secundario" onClick={p.onCancel}>Cancelar</Boton>}
           principal={<Boton variante="peligro" onClick={p.onClose}>Cerrar Turno Definitivamente</Boton>}
         />
@@ -347,7 +315,6 @@ export function CierreTurnoModal(p: {
               ['Hora cierre', formatoHora(new Date())],
               ['Duración', formatoDuracion(aperturaDelTurno(t), new Date())],
               ['Fondo inicial', money(t.fondoInicial)],
-              ['Total ventas', money(t.totalVentas)],
               ['Total retiros', money(t.totalRetiros)],
               ['Total depósitos', money(t.totalDepositos)],
             ] as [string, string][]).map(([k, v]) => (
@@ -358,35 +325,29 @@ export function CierreTurnoModal(p: {
             ))}
           </dl>
         </div>
-        <div className="!bg-nav rounded-lg p-4">
-          <h4 className="font-semibold mb-2">Conciliación — Sistema vs Declarado</h4>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b !border-line">
-                <th className="text-left py-2">Forma de Pago</th>
-                <th className="text-right py-2">Sistema</th>
-                <th className="text-right py-2">Declarado</th>
-                <th className="text-right py-2">Diferencia</th>
-              </tr>
-            </thead>
-            <tbody>
-              {conc.filas.map((row) => (
-                <tr key={row.nombre} className="border-b !border-line">
-                  <td className="py-1.5">{row.nombre}</td>
-                  <td className="text-right py-1.5">{money(row.sistema)}</td>
-                  <td className="text-right py-1.5">{row.noDeclarado ? '-' : money(row.declarado)}</td>
-                  <td className={`text-right py-1.5 font-semibold ${dif(row.dif)}`}>{row.noDeclarado ? '-' : money(row.dif)}</td>
-                </tr>
+        {z ? (
+          <div className="!bg-nav rounded-lg p-4">
+            <TiraZ totales={p.totalesServidor} declaracion={t.precorteDeclaracion} />
+          </div>
+        ) : (
+          <div className="!bg-nav rounded-lg p-4" data-testid="cierre-declarado">
+            <h4 className="font-semibold mb-2">Lo que declaraste</h4>
+            <dl className="space-y-1.5 text-sm">
+              {([
+                ['Efectivo (sin fondo)', money(declaracion.efectivoContado)],
+                ['Tarjeta débito', money(declaracion.debitoDeclarado)],
+                ['Tarjeta crédito', money(declaracion.creditoDeclarado)],
+                ['Transferencias', money(declaracion.transferenciaDeclarada)],
+              ] as [string, string][]).map(([k, v]) => (
+                <div key={k} className="flex justify-between">
+                  <dt className="!text-content-3">{k}</dt>
+                  <dd>{v}</dd>
+                </div>
               ))}
-              <tr className="border-t !border-line font-bold">
-                <td className="py-2">TOTAL</td>
-                <td className="text-right py-2">{money(conc.totalSistema)}</td>
-                <td className="text-right py-2">{money(conc.totalDeclarado)}</td>
-                <td className={`text-right py-2 ${dif(conc.totalDif)}`}>{money(conc.totalDif)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+            </dl>
+            <p className="mt-3 text-xs !text-content-3">Al cerrar, tu declaración queda registrada. Un supervisor revisa el corte.</p>
+          </div>
+        )}
       </div>
     </ModalPOS>
   );
@@ -566,4 +527,3 @@ export function CobroPOS(p: {
   );
 }
 
-export { efectivoEsperado };
