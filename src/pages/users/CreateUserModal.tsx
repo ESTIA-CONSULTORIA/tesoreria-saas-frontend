@@ -15,13 +15,13 @@ interface User {
   companyId?: string;
   branchId?: string;
   isActive: boolean;
-  executivePin?: string;
+  tienePinEjecutivo?: boolean;
 }
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  onCreated: () => void;
+  onCreated: (aviso?: string) => void;
   user?: User | null;
   /** Negocio que la pantalla Usuarios tiene filtrado (SOPORTE). */
   negocioFiltro?: string;
@@ -102,7 +102,7 @@ export default function CreateUserModal({ open, onClose, onCreated, user, negoci
       setCompanyId(user.companyId || "");
       setBranchId(user.branchId || "");
       setIsActive(user.isActive);
-      setExecutivePin(user.executivePin || "");
+      setExecutivePin(""); // el PIN guardado nunca vuelve del servidor: vacío = no cambia
       setPassword("");
     } else {
       setFirstName("");
@@ -193,6 +193,13 @@ export default function CreateUserModal({ open, onClose, onCreated, user, negoci
         return;
       }
 
+      // Error frecuente: teclear el PIN del supervisor en el campo de contraseña. Ese campo cambia la contraseña de ACCESO; el PIN va en «PIN Ejecutivo».
+      if (isExecRole && password && /^[0-9]{6,12}$/.test(password) && !executivePin) {
+        setError("Escribiste solo números en la contraseña de acceso. Si querías poner el PIN del supervisor, captúralo en «PIN Ejecutivo» (más abajo). Esta contraseña es para iniciar sesión.");
+        setLoading(false);
+        return;
+      }
+
       if (user) {
         const payload: Record<string, any> = {
           name: fullName,
@@ -229,7 +236,7 @@ export default function CreateUserModal({ open, onClose, onCreated, user, negoci
         });
       }
 
-      onCreated();
+      onCreated(isExecRole && executivePin ? "PIN ejecutivo guardado." : undefined);
       onClose();
 
       setFirstName("");
@@ -377,7 +384,7 @@ export default function CreateUserModal({ open, onClose, onCreated, user, negoci
                 </div>
               ) : (
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Nuevo password / PIN (dejar vacío para no cambiar)</label>
+                  <label className="block text-xs text-slate-400 mb-1">Nueva contraseña de acceso (no es el PIN del supervisor; dejar vacío para no cambiar)</label>
                   <input
                     type="password"
                     value={password}
@@ -448,7 +455,7 @@ export default function CreateUserModal({ open, onClose, onCreated, user, negoci
                   placeholder="••••••"
                   className="w-full rounded-lg border border-slate-700 bg-slate-800 p-3 text-white outline-none focus:border-blue-500"
                 />
-                <p className="text-xs text-slate-500 mt-1">Se usa para acceder a la vista ejecutiva móvil. Debe ser distinto al de otros usuarios; si lo dejas vacío no cambia.</p>
+                <p className="text-xs text-slate-500 mt-1">{user ? (user.tienePinEjecutivo ? "Este usuario ya tiene un PIN guardado. " : "Este usuario todavía no tiene PIN guardado. ") : ""}Es el PIN con el que autoriza retiros y depósitos de caja y entra a la vista ejecutiva. Debe ser distinto al de otros usuarios; si lo dejas vacío no cambia.</p>
               </div>
             )}
 
