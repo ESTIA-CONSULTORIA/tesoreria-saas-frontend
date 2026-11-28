@@ -1,7 +1,12 @@
 // Única forma de mostrar horas y fechas de operación (turnos, cortes, ventas): siempre en la zona del negocio (America/Tijuana), sin
 // importar la zona del navegador ni la del servidor (UTC). Antes la apertura salía en UTC (horaApertura del servidor) y el cierre en la
 // hora local del navegador, y el cierre aparecía antes que la apertura.
-export const ZONA_NEGOCIO = 'America/Tijuana';
+/** Zona del negocio (America/Tijuana por defecto). El servidor la entrega al iniciar sesión y la pantalla la fija con fijarZonaNegocio(). */
+export let ZONA_NEGOCIO = 'America/Tijuana';
+export function fijarZonaNegocio(zona?: string | null): void {
+  if (typeof zona !== 'string' || !zona) return;
+  try { new Intl.DateTimeFormat('es-MX', { timeZone: zona }); ZONA_NEGOCIO = zona; } catch { /* zona desconocida: se queda la actual */ }
+}
 
 type Instante = string | number | Date | null | undefined;
 
@@ -71,4 +76,40 @@ export function formatoDuracion(desde: Instante, hasta: Instante): string {
   const min = Math.round((b.getTime() - a.getTime()) / 60000);
   if (min < 60) return `${min} min`;
   return `${Math.floor(min / 60)} h ${String(min % 60).padStart(2, '0')} min`;
+}
+
+// ───────── Días calendario «YYYY-MM-DD» en la zona del negocio (nunca en UTC) ─────────
+// `new Date().toISOString().slice(0, 10)` es la fecha UTC: después de las 16:00 en Baja California ya es el día siguiente.
+
+/** «2026-11-27»: el día de ese instante en la zona del negocio. */
+export function fechaYmd(valor?: Instante): string {
+  const d = aFecha(valor ?? new Date());
+  if (!d) return '';
+  return d.toLocaleDateString('en-CA', { timeZone: ZONA_NEGOCIO, year: 'numeric', month: '2-digit', day: '2-digit' });
+}
+
+/** Hoy en la zona del negocio. */
+export const hoyYmd = (): string => fechaYmd(new Date());
+
+/** Suma días a un día calendario «YYYY-MM-DD» (sin horas de por medio). */
+export function sumarDiasYmd(ymd: string, dias: number): string {
+  const [a, m, d] = ymd.split('-').map(Number);
+  return ymdDe(a, m - 1, d + dias);
+}
+
+/** «YYYY-MM-DD» de un año, un mes (0 a 11) y un día; acepta desbordes (día 0 = último del mes anterior). */
+export function ymdDe(anio: number, mes0: number, dia: number): string {
+  const f = new Date(Date.UTC(anio, mes0, dia));
+  return `${f.getUTCFullYear()}-${String(f.getUTCMonth() + 1).padStart(2, '0')}-${String(f.getUTCDate()).padStart(2, '0')}`;
+}
+
+/** «27/11/2026» de una fecha sola «YYYY-MM-DD» (sin convertir de zona: ya es un día calendario). */
+export function formatoDiaYmd(ymd: string | null | undefined): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(ymd ?? ''));
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : String(ymd ?? '');
+}
+
+/** Fecha de una venta: el instante real si lo trae (en la zona del negocio); si no, su día calendario. */
+export function fechaDeVenta(v: { createdAt?: string | null; fecha?: string | null }): string {
+  return v.createdAt ? formatoFechaHora(v.createdAt) : formatoDiaYmd(v.fecha);
 }

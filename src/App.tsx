@@ -1,3 +1,4 @@
+import { fijarZonaNegocio } from './core/utils/tiempo';
 import { Routes, Route } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import CompaniesPage from "./pages/companies/CompaniesPage";
@@ -109,6 +110,8 @@ function App() {
     api.get('/auth/me')
       .then((res) => {
         if (res.data?.id) {
+          // Zona horaria del negocio: la pantalla muestra y calcula «hoy» igual que el servidor (America/Tijuana por defecto)
+          api.get('/auth/zona-horaria').then((z) => fijarZonaNegocio(z.data?.zonaHoraria)).catch(() => undefined);
           useAuthStore.getState().login(
             {
               id: res.data.id,

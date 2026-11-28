@@ -1,3 +1,4 @@
+import { hoyYmd } from '../../core/utils/tiempo';
 import BandejaPortal from "./BandejaPortal";
 import { usePuede } from "../../core/hooks/usePuede";
 import PortalAccesoPanel from "./PortalAccesoPanel";
@@ -163,13 +164,13 @@ export default function HRPage() {
   const [loadingAttendance, setLoadingAttendance] = useState(false);
   const [attendanceCount, setAttendanceCount]   = useState(0);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
-  const [attendanceForm, setAttendanceForm]     = useState({ employeeId: '', date: new Date().toISOString().split('T')[0], checkIn: '08:00', checkOut: '' });
+  const [attendanceForm, setAttendanceForm]     = useState({ employeeId: '', date: hoyYmd(), checkIn: '08:00', checkOut: '' });
   const [attendanceSaving, setAttendanceSaving] = useState(false);
 
   // Asistencia por período (tabla de incidencias)
   const [attendancePeriod, setAttendancePeriod] = useState<{start: string, end: string}>({
-    start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-    end: new Date().toISOString().split('T')[0],
+    start: hoyYmd().slice(0, 8) + '01',
+    end: hoyYmd(),
   });
   const [periodAttendance, setPeriodAttendance] = useState<any[]>([]);
   const [loadingPeriodAtt, setLoadingPeriodAtt] = useState(false);
@@ -381,7 +382,7 @@ export default function HRPage() {
         checkOut: attendanceForm.checkOut || undefined,
       }, { headers });
       setShowAttendanceModal(false);
-      setAttendanceForm({ employeeId: '', date: new Date().toISOString().split('T')[0], checkIn: '08:00', checkOut: '' });
+      setAttendanceForm({ employeeId: '', date: hoyYmd(), checkIn: '08:00', checkOut: '' });
       loadAttendance();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error al registrar asistencia');

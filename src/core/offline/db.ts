@@ -1,3 +1,4 @@
+import { fechaYmd } from '../utils/tiempo';
 import Dexie, { type Table } from 'dexie';
 import { getDeviceId, getDeviceIdFragment } from '../device/deviceId';
 
@@ -216,7 +217,7 @@ export function generateLocalId(): string {
  * VTA-{YYYYMMDD}-{fragmento de dispositivo}-{sufijo aleatorio}. La fecha usa
  * clientTimestamp (hora real del evento), no la fecha de sincronización. */
 export function generateOfflineSaleFolio(clientTimestamp: string): string {
-  const yyyymmdd = new Date(clientTimestamp).toISOString().slice(0, 10).replace(/-/g, '');
+  const yyyymmdd = fechaYmd(clientTimestamp).replace(/-/g, '');
   const randomSuffix = Array.from(crypto.getRandomValues(new Uint8Array(4)))
     .map((b) => (b % 36).toString(36))
     .join('')

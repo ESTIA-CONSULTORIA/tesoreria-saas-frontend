@@ -1,3 +1,4 @@
+import { hoyYmd } from '../../core/utils/tiempo';
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../../core/api/api';
 import { useCompanyStore } from '../../core/store/useCompanyStore';
@@ -205,7 +206,7 @@ export function ContractsTab({ employees, tenantId, companyId }: Props) {
       : template?.contractType === 'DETERMINADO' ? 'Determinado'
       : 'Indeterminado';
     const nivel = template?.employeeLevel === 'EJECUTIVO' ? 'Ejecutivo' : 'Operativo';
-    const fecha = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    const fecha = hoyYmd().replace(/-/g, '');
     return `${empresa}_${empName}_${tipo}_${nivel}_${fecha}.${ext}`;
   };
 

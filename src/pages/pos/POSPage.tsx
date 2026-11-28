@@ -30,7 +30,7 @@ import { AlertaModal } from "../../core/components/AlertaModal";
 import { Boton } from "../../core/components/Boton";
 import { AutorizacionGerente, type Autorizador } from "./AutorizacionGerente";
 import ModalTema from "./ModalTema";
-import { aperturaDelTurno, formatoFechaHora, formatoHora } from "../../core/utils/tiempo";
+import { aperturaDelTurno, fechaDeVenta, fijarZonaNegocio, formatoFechaHora, formatoHora } from "../../core/utils/tiempo";
 import { descuentoPedidoPct as calcularDescuentoPct, firmaTicket, ticketRequiereAutorizacion, topeDescuento } from "./reglasAutorizacion";
 import { ModalFooter } from "../../core/components/ModalFooter";
 import { AperturaTurnoModal, CierreTurnoModal, CobroPOS, MovimientoEfectivoModal, PrecorteModal } from "./ModalesCaja";
@@ -92,6 +92,7 @@ interface Shift {
 type ApiErrorLike = { response?: { data?: { message?: string | string[] } } };
 
 interface Sale {
+  createdAt?: string;
   id: string;
   folio: string;
   fecha: string;
@@ -356,6 +357,10 @@ export default function POSPage() {
   const [umbralEdit, setUmbralEdit] = useState<string>("0");
   const [guardandoUmbral, setGuardandoUmbral] = useState(false);
   const [umbralMsg, setUmbralMsg] = useState<{ ok: boolean; texto: string } | null>(null);
+  // Zona horaria del negocio: de ella salen la fecha y la hora de ventas, turnos y folios.
+  const [zonaNegocio, setZonaNegocio] = useState<string>("America/Tijuana");
+  const [zonasMx, setZonasMx] = useState<Array<{ zona: string; nombre: string }>>([]);
+  const [zonaMsg, setZonaMsg] = useState<{ ok: boolean; texto: string } | null>(null);
   const [errCierre, setErrCierre] = useState<string | null>(null);
   const [shiftSummary, setShiftSummary] = useState<any>(null);
   const [showExitConfirmModal, setShowExitConfirmModal] = useState(false);
@@ -1589,6 +1594,36 @@ export default function POSPage() {
     } catch { /* se queda en 0: siempre pedir PIN */ }
   }
 
+  async function cargarZonaNegocio() {
+    const tid = localStorage.getItem("tenant_id");
+    if (!tid || !puedeConfigurarCaja) return;
+    try {
+      const r = await api.get(`/tenant-settings/${tid}/zona-horaria`);
+      if (r.data?.zonaHoraria) setZonaNegocio(r.data.zonaHoraria);
+      setZonasMx(Array.isArray(r.data?.zonas) ? r.data.zonas : []);
+    } catch { /* sin acceso: se queda la zona actual */ }
+  }
+
+  async function guardarZonaNegocio(zona: string) {
+    const tid = localStorage.getItem("tenant_id");
+    if (!tid) return;
+    setZonaMsg(null);
+    try {
+      const r = await api.put(`/tenant-settings/${tid}/zona-horaria`, { zonaHoraria: zona });
+      setZonaNegocio(r.data.zonaHoraria);
+      fijarZonaNegocio(r.data.zonaHoraria);
+      setZonaMsg({ ok: true, texto: "Guardado." });
+    } catch (error) {
+      const msg = (error as ApiErrorLike)?.response?.data?.message;
+      setZonaMsg({ ok: false, texto: (Array.isArray(msg) ? msg.join(". ") : msg) || "No se pudo guardar la zona horaria." });
+    }
+  }
+
+  useEffect(() => {
+    if (authChecked && user) void cargarZonaNegocio();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authChecked, user?.roleCode]);
+
   async function guardarUmbralCaja() {
     const tid = localStorage.getItem("tenant_id");
     if (!tid) return;
@@ -2661,7 +2696,7 @@ export default function POSPage() {
                   ) : (
                     salesHistory.slice(0, 10).map((sale) => (
                       <tr key={sale.id} className="hover:bg-tono-slate-800/50">
-                        <td className="px-4 py-3 text-sm">{sale.fecha}</td>
+                        <td className="px-4 py-3 text-sm">{fechaDeVenta(sale)}</td>
                         <td className="px-4 py-3 text-sm">{nombreCajero((sale as any).cajero || user?.id)}</td>
                         <td className="px-4 py-3 text-sm text-right">{sale.items?.length || 0}</td>
                         <td className="px-4 py-3 text-sm text-right">${Number(sale.total).toFixed(2)}</td>
@@ -2838,6 +2873,27 @@ export default function POSPage() {
               </div>
             )}
 
+            {puedeConfigurarCaja && zonasMx.length > 0 && (
+              <div className="rounded-xl border !border-line !bg-nav p-4">
+                <h3 className="text-lg font-semibold mb-3">Zona horaria del negocio</h3>
+                <p className="text-xs !text-content-3 mb-3">
+                  De ella salen la fecha y la hora de las ventas, los turnos y los folios (una venta de las 8 de la noche es de ese día).
+                </p>
+                <label htmlFor="zona-negocio" className="block text-sm !text-content-3 mb-1">Zona horaria</label>
+                <select
+                  id="zona-negocio"
+                  value={zonaNegocio}
+                  onChange={(e) => guardarZonaNegocio(e.target.value)}
+                  className="w-full px-3 py-2 rounded !bg-surface-1 !text-content-1"
+                >
+                  {zonasMx.map((z) => <option key={z.zona} value={z.zona}>{z.nombre}</option>)}
+                </select>
+                <div className="mt-3 h-4 text-xs">
+                  {zonaMsg && <span className={zonaMsg.ok ? "!text-ok" : "!text-danger"}>{zonaMsg.texto}</span>}
+                </div>
+              </div>
+            )}
+
             <div className="rounded-xl border !border-line !bg-nav p-4">
               <h3 className="text-lg font-semibold mb-3">Impuestos</h3>
               <div>
@@ -3004,7 +3060,7 @@ export default function POSPage() {
                   {salesHistory.map((sale) => (
                     <tr key={sale.id} className="hover:bg-tono-slate-700/50">
                       <td className="px-4 py-2 text-sm">{sale.folio}</td>
-                      <td className="px-4 py-2 text-sm">{sale.fecha}</td>
+                      <td className="px-4 py-2 text-sm">{fechaDeVenta(sale)}</td>
                       <td className="px-4 py-2 text-right text-sm font-semibold">
                         ${Number(sale.total).toFixed(2)}
                       </td>

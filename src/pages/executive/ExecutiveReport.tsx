@@ -1,3 +1,4 @@
+import { fechaYmd, hoyYmd, sumarDiasYmd } from '../../core/utils/tiempo';
 import { useEffect, useState } from "react";
 import {
   BarChart,
@@ -236,15 +237,15 @@ export default function ExecutiveReport({
             val = allSales.reduce((s: number, sale: any) => s + Number(sale.total || 0), 0);
             const ticketProm = allSales.length > 0 ? Math.round(val / allSales.length) : 0;
 
-            const todayStr = new Date().toISOString().slice(0, 10);
-            const yd = new Date(); yd.setDate(yd.getDate() - 1);
-            const yesterdayStr = yd.toISOString().slice(0, 10);
+            const todayStr = hoyYmd();
+            const yesterdayStr = sumarDiasYmd(todayStr, -1);
+            const diaDe = (s: { date?: string; createdAt?: string }) => (/^\d{4}-\d{2}-\d{2}$/.test(s.date ?? '') ? (s.date as string) : fechaYmd(s.createdAt ?? s.date));
 
             const hoy = allSales
-              .filter((s: any) => (s.date || s.createdAt || "").slice(0, 10) === todayStr)
+              .filter((s: any) => diaDe(s) === todayStr)
               .reduce((s: number, sale: any) => s + Number(sale.total || 0), 0);
             const ayer = allSales
-              .filter((s: any) => (s.date || s.createdAt || "").slice(0, 10) === yesterdayStr)
+              .filter((s: any) => diaDe(s) === yesterdayStr)
               .reduce((s: number, sale: any) => s + Number(sale.total || 0), 0);
 
             const productMap: Record<string, number> = {};

@@ -1,3 +1,4 @@
+import { hoyYmd } from '../../core/utils/tiempo';
 import { createPortal } from "react-dom";
 import { usePilaEscape } from "../../core/components/usePilaEscape";
 import { useState, useEffect } from "react";
@@ -23,7 +24,7 @@ interface Insumo {
 export default function CreateOrderModal({ open, onClose, onCreated, suppliers }: Props) {
   const [formData, setFormData] = useState({
     supplierId: "",
-    fecha: new Date().toISOString().split('T')[0],
+    fecha: hoyYmd(),
     fechaEntregaEsperada: "",
     notas: "",
     incluirIVA: true,
@@ -48,7 +49,7 @@ export default function CreateOrderModal({ open, onClose, onCreated, suppliers }
     if (open) {
       setFormData({
         supplierId: "",
-        fecha: new Date().toISOString().split('T')[0],
+        fecha: hoyYmd(),
         fechaEntregaEsperada: "",
         notas: "",
         incluirIVA: true,

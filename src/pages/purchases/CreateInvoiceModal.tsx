@@ -1,3 +1,4 @@
+import { hoyYmd, sumarDiasYmd } from '../../core/utils/tiempo';
 import { createPortal } from "react-dom";
 import { usePilaEscape } from "../../core/components/usePilaEscape";
 import { useState, useEffect } from "react";
@@ -26,7 +27,7 @@ export default function CreateInvoiceModal({ open, onClose, onCreated, suppliers
     numero: "",
     supplierId: "",
     ocId: "",
-    fecha: new Date().toISOString().split('T')[0],
+    fecha: hoyYmd(),
     fechaVencimiento: "",
     metodoPago: "",
     diasCredito: 0,
@@ -54,7 +55,7 @@ export default function CreateInvoiceModal({ open, onClose, onCreated, suppliers
         numero: "",
         supplierId: "",
         ocId: "",
-        fecha: new Date().toISOString().split('T')[0],
+        fecha: hoyYmd(),
         fechaVencimiento: "",
         metodoPago: "",
         diasCredito: 0,
@@ -164,9 +165,7 @@ export default function CreateInvoiceModal({ open, onClose, onCreated, suppliers
 
   useEffect(() => {
     if (formData.diasCredito > 0 && formData.fecha) {
-      const fecha = new Date(formData.fecha);
-      fecha.setDate(fecha.getDate() + formData.diasCredito);
-      setFormData({ ...formData, fechaVencimiento: fecha.toISOString().split('T')[0] });
+      setFormData({ ...formData, fechaVencimiento: sumarDiasYmd(String(formData.fecha).slice(0, 10), formData.diasCredito) });
     } else if (formData.diasCredito === 0) {
       setFormData({ ...formData, fechaVencimiento: formData.fecha });
     }

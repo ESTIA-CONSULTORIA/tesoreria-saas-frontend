@@ -1,3 +1,4 @@
+import { hoyYmd } from '../../core/utils/tiempo';
 import { useState, useEffect } from 'react';
 import { api } from '../../core/api/api';
 import MainLayout from '../../core/layout/MainLayout';
@@ -24,7 +25,7 @@ const DEFAULT_FIELDS: CorteField[] = [
 // Campos que sí tienen columna propia en Shift; el resto se anota en `notas`
 const KNOWN_KEYS = ['efectivo', 'tarjeta', 'transferencia', 'cortesia'];
 
-const todayStr = () => new Date().toISOString().slice(0, 10);
+const todayStr = () => hoyYmd();
 
 export default function BackfillCortePage() {
   const { user } = useAuthStore();
