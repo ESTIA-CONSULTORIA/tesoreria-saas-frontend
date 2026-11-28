@@ -1,3 +1,4 @@
+import { hoyYmd } from '../../core/utils/tiempo';
 import { useEffect, useState } from "react";
 import { usePuede } from "../../core/hooks/usePuede";
 import { useSearchParams } from "react-router-dom";
@@ -80,7 +81,7 @@ export default function PurchasesPage() {
   const [paymentData, setPaymentData] = useState({
     amount: 0,
     accountId: "",
-    fechaPago: new Date().toISOString().split('T')[0],
+    fechaPago: hoyYmd(),
     referencia: "",
     notas: "",
   });
@@ -219,7 +220,7 @@ export default function PurchasesPage() {
     setPaymentData({
       amount: Number(invoice.total) - Number(invoice.montoPagado),
       accountId: "",
-      fechaPago: new Date().toISOString().split('T')[0],
+      fechaPago: hoyYmd(),
       referencia: "",
       notas: "",
     });

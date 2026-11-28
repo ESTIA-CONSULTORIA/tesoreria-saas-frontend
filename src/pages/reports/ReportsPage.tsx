@@ -1,3 +1,4 @@
+import { hoyYmd, ymdDe } from '../../core/utils/tiempo';
 import ReportBuilderPanel from "./ReportBuilderPanel";
 import { useEffect, useState } from "react";
 import MainLayout from "../../core/layout/MainLayout";
@@ -33,27 +34,28 @@ export default function ReportsPage() {
   }, [startDate, endDate, activeCompany?.id]);
 
   function setDatesByPeriod(selectedPeriod: string) {
-    const now = new Date();
+    const [anio, mes1] = hoyYmd().split('-').map(Number);
+    const mes = mes1 - 1;
     let start = "";
     let end = "";
 
     switch (selectedPeriod) {
       case "mes":
-        start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-        end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+        start = ymdDe(anio, mes, 1);
+        end = ymdDe(anio, mes + 1, 0);
         break;
       case "mes-anterior":
-        start = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0];
-        end = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
+        start = ymdDe(anio, mes - 1, 1);
+        end = ymdDe(anio, mes, 0);
         break;
       case "trimestre":
-        const quarterStart = Math.floor(now.getMonth() / 3) * 3;
-        start = new Date(now.getFullYear(), quarterStart, 1).toISOString().split('T')[0];
-        end = new Date(now.getFullYear(), quarterStart + 3, 0).toISOString().split('T')[0];
+        const quarterStart = Math.floor(mes / 3) * 3;
+        start = ymdDe(anio, quarterStart, 1);
+        end = ymdDe(anio, quarterStart + 3, 0);
         break;
       case "anio":
-        start = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0];
-        end = new Date(now.getFullYear(), 11, 31).toISOString().split('T')[0];
+        start = ymdDe(anio, 0, 1);
+        end = ymdDe(anio, 11, 31);
         break;
     }
 

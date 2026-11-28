@@ -1,3 +1,4 @@
+import { hoyYmd } from '../../core/utils/tiempo';
 import { useEffect, useState } from "react";
 import MainLayout from "../../core/layout/MainLayout";
 import { api } from "../../core/api/api";
@@ -118,7 +119,7 @@ export default function AdministrationPage() {
       await api.post("/addons", {
         tenantId,
         moduloNombre,
-        activoDesde: new Date().toISOString().split('T')[0],
+        activoDesde: hoyYmd(),
         status: "ACTIVO",
         precio: 0,
       });

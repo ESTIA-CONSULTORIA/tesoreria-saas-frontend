@@ -1,3 +1,4 @@
+import { hoyYmd } from '../../core/utils/tiempo';
 import InventarioAlmacenPanel from "./InventarioAlmacenPanel";
 import { useEffect, useState } from "react";
 import { usePuede } from "../../core/hooks/usePuede";
@@ -141,7 +142,7 @@ export default function CostsPage() {
   const [selectedAlmacen, setSelectedAlmacen] = useState<Almacen | null>(null);
   const [selectedFamilia, setSelectedFamilia] = useState<FamiliaInsumo | null>(null);
   const [physicalCountConfig, setPhysicalCountConfig] = useState({
-    fecha: new Date().toISOString().split('T')[0],
+    fecha: hoyYmd(),
     almacen: "",
     responsable: "",
   });
@@ -320,7 +321,7 @@ export default function CostsPage() {
       
       setPhysicalCountSessionOpen(false);
       setPhysicalCountConfig({
-        fecha: new Date().toISOString().split('T')[0],
+        fecha: hoyYmd(),
         almacen: "",
         responsable: "",
       });
