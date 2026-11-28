@@ -119,7 +119,59 @@ async function main() {
       await page.getByText('Acceso al portal del empleado').waitFor({ timeout: 15000 });
       sinErrores(page);
     });
-    await abrir('/users', /Usuarios/i, 'Usuarios');
+    for (const [vpNombre, vp] of [['1366x768', { width: 1366, height: 768 }], ['1920x1080', { width: 1920, height: 1080 }]]) {
+      await paso(`Usuarios y Roles ${vpNombre}: roles como chips, buscar, filtrar, abrir detalle y crear usuario, sin scroll de página`, async () => {
+        await page.setViewportSize(vp);
+        await page.goto(`${WEB}/users`);
+        await page.getByRole('button', { name: 'Todos (' }).waitFor({ timeout: 20000 });
+        const filas = page.locator('tbody tr');
+        await filas.first().waitFor({ timeout: 10000 });
+        const total = await filas.count();
+        // sin scroll de la página; el botón «+ Nuevo usuario» visible sin bajar
+        const desborde = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+        if (desborde > 4) throw new Error('la página tiene scroll vertical (' + desborde + ' px)');
+        const nuevo = page.getByRole('button', { name: '+ Nuevo usuario' });
+        await nuevo.waitFor({ timeout: 5000 });
+        if (!(await nuevo.isVisible()) || (await nuevo.boundingBox()).y > vp.height) throw new Error('«+ Nuevo usuario» no se ve sin bajar');
+        // filtrar por rol (chip) → solo ese rol y aparece el detalle de permisos
+        const chips = page.getByRole('group', { name: 'Filtrar por rol' }).getByRole('button');
+        const nChips = await chips.count();
+        if (nChips < 2) throw new Error('faltan los chips de rol');
+        await chips.nth(1).click();
+        await page.getByText(/permisos/i).first().waitFor({ timeout: 10000 });
+        if ((await page.locator('tbody tr').count()) > total) throw new Error('el filtro por rol no redujo la lista');
+        await chips.first().click();
+        // buscar por correo
+        const correo = (await page.locator('tbody tr').first().locator('td').nth(1).innerText()).trim();
+        await page.getByLabel('Buscar usuario por nombre o correo').fill(correo.slice(0, 6));
+        if ((await page.locator('tbody tr').count()) < 1) throw new Error('la búsqueda no encontró al usuario');
+        await page.getByLabel('Buscar usuario por nombre o correo').fill('zzzz-no-existe');
+        await page.getByText('Ningún usuario coincide con el filtro.').waitFor({ timeout: 5000 });
+        await page.getByLabel('Buscar usuario por nombre o correo').fill('');
+        await page.getByLabel('Filtrar por estado').selectOption('inactivos');
+        await page.getByLabel('Filtrar por estado').selectOption('todos');
+        // detalle con teclado (Enter sobre la fila)
+        await page.locator('tbody tr').first().focus();
+        await page.keyboard.press('Enter');
+        await page.getByRole('button', { name: 'Cerrar' }).waitFor({ timeout: 5000 });
+        // crear usuario
+        const correoNuevo = 'ui.' + vpNombre.replace(/W/g, '') + '.' + Date.now() + '@e2e.mx';
+        await nuevo.click();
+        await page.getByPlaceholder('Nombre', { exact: true }).fill('Prueba');
+        await page.getByPlaceholder('Apellido').fill('Pantalla');
+        await page.getByPlaceholder('Correo electrónico').fill(correoNuevo);
+        await page.getByPlaceholder('Contraseña').fill('ClaveUi12345');
+        const selRol = page.locator('select').filter({ has: page.locator('option', { hasText: 'Seleccionar rol' }) });
+        const valor = await selRol.evaluate((s) => { const o = [...s.options].find((x) => /CONTADOR/.test(x.textContent || '')); return o ? o.value : ''; });
+        if (valor) await selRol.selectOption(valor);
+        await page.getByRole('button', { name: /Guardar usuario/ }).click();
+        await page.getByText(correoNuevo).first().waitFor({ timeout: 15000 });
+        if (vpNombre === '1366x768') { await axe(page, 'Usuarios y Roles'); try { mkdirSync('test-resultados', { recursive: true }); await page.screenshot({ path: 'test-resultados/usuarios-1366x768.png' }); } catch { /* sin captura */ } }
+        else { try { await page.screenshot({ path: 'test-resultados/usuarios-1920x1080.png' }); } catch { /* sin captura */ } }
+        sinErrores(page);
+      });
+    }
+    await page.setViewportSize({ width: 1366, height: 768 });
     await abrir('/reports', /Reportes a la medida/, 'Reportes a la medida', async () => {
       await page.getByRole('button', { name: 'Generar reporte' }).click();
       await page.getByText(/Ventas cobradas: Total vendido/).first().waitFor({ timeout: 15000 });
