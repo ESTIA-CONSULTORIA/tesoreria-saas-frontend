@@ -66,6 +66,12 @@ const MODULE_NAMES: Record<string, string> = {
   ADMINISTRATION: 'Administración', SETTINGS: 'Configuración',
 };
 
+const TXT = '#c8cdd8';
+const ACENTO = '#8fafd4';
+const TXT_SUAVE = 'rgba(255,255,255,0.62)';
+const FONDO_LISTA = '#0f1117';
+const FONDO_DETALLE = '#141820';
+
 export default function UsersPage() {
   const puedeEliminarUsuarios = usePuede('usuarios', 'eliminar');
   const puedeCrearUsuarios = usePuede('usuarios', 'crear');
@@ -93,6 +99,8 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [view, setView] = useState<'rol' | 'user' | null>(null);
   const [localPermissions, setLocalPermissions] = useState<Permission[]>([]);
+  const [busqueda, setBusqueda] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState<'todos' | 'activos' | 'inactivos'>('todos');
 
   useEffect(() => { loadData(); }, [activeCompany?.id, negocioSel]);
   useEffect(() => {
@@ -188,6 +196,18 @@ export default function UsersPage() {
     } finally { setDeleteConfirmId(null); }
   }
 
+  const textoBusqueda = busqueda.trim().toLowerCase();
+  const usuariosVisibles = users.filter((u) =>
+    (!selectedRol || u.roleCode === selectedRol.code) &&
+    (filtroEstado === 'todos' || (filtroEstado === 'activos') === u.isActive) &&
+    (!textoBusqueda || (u.name || '').toLowerCase().includes(textoBusqueda) || u.email.toLowerCase().includes(textoBusqueda)));
+  const cuentaPorRol = (code: string) => users.filter((u) => u.roleCode === code).length;
+  function elegirRol(rol: Role | null) {
+    setSelectedUser(null);
+    if (!rol) { setSelectedRol(null); setView(null); return; }
+    setSelectedRol(rol); setLocalPermissions(rol.permissions || []); setView('rol');
+  }
+
   function handleCloseUserModal() { setModalOpen(false); setEditingUser(null); }
 
   return (
@@ -197,12 +217,12 @@ export default function UsersPage() {
 
       {deleteConfirmOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.7)' }}>
-          <div style={{ width: 360, borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#141820', padding: 24 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#c8cdd8', marginBottom: 8 }}>Eliminar usuario</div>
+          <div style={{ width: 360, borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: FONDO_DETALLE, padding: 24 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: TXT, marginBottom: 8 }}>Eliminar usuario</div>
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>¿Estás seguro? Esta acción no se puede deshacer.</div>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
               <button onClick={() => { setDeleteConfirmOpen(false); setDeleteConfirmId(null); }}
-                style={{ padding: '6px 16px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', fontSize: 12, cursor: 'pointer' }}>
+                style={{ padding: '6px 16px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: TXT, fontSize: 12, cursor: 'pointer' }}>
                 Cancelar
               </button>
               {puedeEliminarUsuarios && <button onClick={handleDeleteConfirm}
@@ -214,12 +234,14 @@ export default function UsersPage() {
         </div>
       )}
 
-      <div style={{ padding: '0 24px 16px' }}>
-        <div style={{ marginBottom: 12 }}>
-          <h2 className="text-content-1" style={{ fontSize: 16, fontWeight: 600, marginBottom: 2 }}>Usuarios y Roles</h2>
-          <p className="text-content-2" style={{ fontSize: 12 }}>Administración de usuarios y roles</p>
+      <div style={{ padding: '0 24px 12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
+          <div style={{ marginRight: 'auto' }}>
+            <h2 className="text-content-1" style={{ fontSize: 16, fontWeight: 600, marginBottom: 0 }}>Usuarios y Roles</h2>
+            <p className="text-content-2" style={{ fontSize: 12 }}>Administración de usuarios y roles</p>
+          </div>
           {esSoporte && (
-            <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <label htmlFor="usuarios-negocio" className="text-content-3" style={{ fontSize: 12 }}>Negocio</label>
               <select id="usuarios-negocio" value={negocioSel}
                 onChange={(ev) => { setNegocioSel(ev.target.value); setSelectedUser(null); setView(null); }}
@@ -232,10 +254,18 @@ export default function UsersPage() {
               </select>
             </div>
           )}
+          <button onClick={() => setRoleModalOpen(true)}
+            style={{ fontSize: 12, padding: '5px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: TXT, cursor: 'pointer' }}>
+            + Nuevo rol
+          </button>
+          {puedeCrearUsuarios && <button onClick={() => { setEditingUser(null); setModalOpen(true); }}
+            style={{ fontSize: 12, padding: '5px 12px', borderRadius: 6, border: '1px solid rgba(123,156,204,0.3)', background: 'rgba(123,156,204,0.08)', color: ACENTO, cursor: 'pointer' }}>
+            + Nuevo usuario
+          </button>}
         </div>
 
         {error && (
-          <div style={{ marginBottom: 10, padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', color: '#f87171', fontSize: 12 }}>
+          <div style={{ marginBottom: 8, padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)', color: '#f87171', fontSize: 12 }}>
             {error}
           </div>
         )}
@@ -243,127 +273,141 @@ export default function UsersPage() {
         {loading ? (
           <div className="text-content-2" style={{ fontSize: 12, padding: 24 }}>Cargando datos...</div>
         ) : (
-          <div style={{ display: 'flex', height: 'calc(100vh - 180px)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, overflow: 'hidden' }}>
+          <div style={{ display: 'flex', height: 'calc(100vh - 190px)', minHeight: 320, border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, overflow: 'hidden' }}>
 
-            {/* ── PANEL IZQUIERDO ── */}
-            <div style={{ width: 260, borderRight: '1px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', background: '#0f1117', flexShrink: 0 }}>
+            {/* ── LISTA DE USUARIOS (principal) ── */}
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', background: FONDO_LISTA }}>
 
-              {/* Header Roles */}
-              <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.62)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Roles</span>
-                <button onClick={() => setRoleModalOpen(true)}
-                  style={{ fontSize: 12, padding: '3px 8px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', cursor: 'pointer' }}>
-                  + Nuevo
+              {/* Roles: chips compactos que filtran */}
+              <div role="group" aria-label="Filtrar por rol" style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                <button type="button" onClick={() => elegirRol(null)} aria-pressed={!selectedRol}
+                  style={{ fontSize: 12, padding: '3px 10px', borderRadius: 99, cursor: 'pointer', color: !selectedRol ? ACENTO : TXT,
+                    border: !selectedRol ? '1px solid rgba(123,156,204,0.5)' : '1px solid rgba(255,255,255,0.1)',
+                    background: !selectedRol ? 'rgba(123,156,204,0.12)' : 'transparent' }}>
+                  Todos ({users.length})
                 </button>
-              </div>
-              {/* Lista roles */}
-              <div style={{ flexShrink: 0 }}>
-                {roles.map(rol => (
-                  <div key={rol.id}
-                    onClick={() => { setSelectedRol(rol); setLocalPermissions(rol.permissions || []); setSelectedUser(null); setView('rol'); }}
-                    {...activarConTeclado(() => { setSelectedRol(rol); setLocalPermissions(rol.permissions || []); setSelectedUser(null); setView('rol'); })}
-                    aria-pressed={selectedRol?.id === rol.id}
-                    style={{
-                      padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)',
-                      background: selectedRol?.id === rol.id ? 'rgba(123,156,204,0.1)' : 'transparent',
-                      borderLeft: selectedRol?.id === rol.id ? '3px solid #8fafd4' : '3px solid transparent',
-                    }}>
-                    <div style={{ fontSize: 12, color: '#c8cdd8' }}>{rol.name}</div>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)' }}>{rol.code}</div>
-                  </div>
-                ))}
+                {roles.map((rol) => {
+                  const activo = selectedRol?.id === rol.id;
+                  return (
+                    <button type="button" key={rol.id} onClick={() => elegirRol(rol)} aria-pressed={activo} title={rol.code}
+                      style={{ fontSize: 12, padding: '3px 10px', borderRadius: 99, cursor: 'pointer', color: activo ? ACENTO : TXT,
+                        border: activo ? '1px solid rgba(123,156,204,0.5)' : '1px solid rgba(255,255,255,0.1)',
+                        background: activo ? 'rgba(123,156,204,0.12)' : 'transparent' }}>
+                      {rol.name} ({cuentaPorRol(rol.code)})
+                    </button>
+                  );
+                })}
               </div>
 
-              {/* Header Usuarios */}
-              <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.07)', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.62)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Usuarios</span>
-                {puedeCrearUsuarios && <button onClick={() => { setEditingUser(null); setModalOpen(true); }}
-                  style={{ fontSize: 12, padding: '3px 8px', borderRadius: 6, border: '1px solid rgba(123,156,204,0.3)', background: 'rgba(123,156,204,0.08)', color: '#8fafd4', cursor: 'pointer' }}>
-                  + Nuevo
-                </button>}
+              {/* Buscador y estado */}
+              <div style={{ display: 'flex', gap: 8, padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.07)', alignItems: 'center' }}>
+                <input type="search" aria-label="Buscar usuario por nombre o correo" placeholder="Buscar por nombre o correo"
+                  value={busqueda} onChange={(ev) => setBusqueda(ev.target.value)}
+                  className="bg-surface-1 text-content-1 border border-line"
+                  style={{ flex: 1, minWidth: 0, fontSize: 12, padding: '5px 10px', borderRadius: 6 }} />
+                <select aria-label="Filtrar por estado" value={filtroEstado} onChange={(ev) => setFiltroEstado(ev.target.value as 'todos' | 'activos' | 'inactivos')}
+                  className="bg-surface-1 text-content-1 border border-line" style={{ fontSize: 12, padding: '5px 8px', borderRadius: 6 }}>
+                  <option value="todos">Todos los estados</option>
+                  <option value="activos">Activos</option>
+                  <option value="inactivos">Inactivos</option>
+                </select>
+                <span className="text-content-3" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>{usuariosVisibles.length} de {users.length}</span>
               </div>
-              {/* Lista usuarios */}
+
+              {/* Tabla: scroll solo aquí */}
               <div style={{ flex: 1, overflowY: 'auto' }}>
-                {users.map(u => (
-                  <div key={u.id}
-                    onClick={() => { setSelectedUser(u); setSelectedRol(null); setView('user'); }}
-                    {...activarConTeclado(() => { setSelectedUser(u); setSelectedRol(null); setView('user'); })}
-                    aria-pressed={selectedUser?.id === u.id}
-                    style={{
-                      padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)',
-                      background: selectedUser?.id === u.id ? 'rgba(123,156,204,0.1)' : 'transparent',
-                      borderLeft: selectedUser?.id === u.id ? '3px solid #8fafd4' : '3px solid transparent',
-                    }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
-                      <div style={{ fontSize: 12, color: '#c8cdd8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.name || u.email}</div>
-                      <span style={{ fontSize: 12, padding: '1px 5px', borderRadius: 99, flexShrink: 0,
-                        background: u.isActive ? 'rgba(74,222,128,0.12)' : 'rgba(255,255,255,0.06)',
-                        color: u.isActive ? '#4ade80' : 'rgba(255,255,255,0.62)' }}>
-                        {u.isActive ? 'Activo' : 'Inactivo'}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</div>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)' }}>{u.roleCode}</div>
-                    {esSoporte && (
-                      <div className="text-content-3" style={{ fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{etiquetaNegocio(u.tenantNombre, u.tenantId)}</div>
-                    )}
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, tableLayout: 'fixed' }}>
+                  <thead style={{ position: 'sticky', top: 0, background: FONDO_LISTA, zIndex: 1 }}>
+                    <tr style={{ textAlign: 'left', color: TXT_SUAVE }}>
+                      <th scope="col" style={{ padding: '6px 12px', fontWeight: 500 }}>Nombre</th>
+                      <th scope="col" style={{ padding: '6px 8px', fontWeight: 500 }}>Correo</th>
+                      <th scope="col" style={{ padding: '6px 8px', fontWeight: 500, width: 110 }}>Rol</th>
+                      <th scope="col" style={{ padding: '6px 8px', fontWeight: 500 }}>{esSoporte ? 'Negocio · Sucursal' : 'Sucursal'}</th>
+                      <th scope="col" style={{ padding: '6px 12px 6px 8px', fontWeight: 500, width: 80 }}>Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {usuariosVisibles.map((u) => {
+                      const sel = selectedUser?.id === u.id;
+                      const abrir = () => { setSelectedUser(u); setSelectedRol(null); setView('user'); };
+                      const celda = { padding: '7px 8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } as const;
+                      return (
+                        <tr key={u.id} onClick={abrir} {...activarConTeclado(abrir)} aria-pressed={sel}
+                          style={{ cursor: 'pointer', borderTop: '1px solid rgba(255,255,255,0.04)', color: TXT,
+                            background: sel ? 'rgba(123,156,204,0.1)' : 'transparent' }}>
+                          <td style={{ ...celda, paddingLeft: 12, borderLeft: sel ? '3px solid #8fafd4' : '3px solid transparent' }}>{u.name || u.email}</td>
+                          <td style={{ ...celda, color: TXT_SUAVE }}>{u.email}</td>
+                          <td style={celda}>{u.roleName || u.roleCode}</td>
+                          <td style={{ ...celda, color: TXT_SUAVE }}>
+                            {esSoporte ? `${etiquetaNegocio(u.tenantNombre, u.tenantId)} · ` : ''}{etiquetaAmbito(u.sucursalNombre, u.branchId)}
+                          </td>
+                          <td style={{ ...celda, paddingRight: 12 }}>
+                            <span style={{ fontSize: 12, padding: '1px 6px', borderRadius: 99,
+                              background: u.isActive ? 'rgba(74,222,128,0.12)' : 'rgba(255,255,255,0.06)',
+                              color: u.isActive ? '#4ade80' : TXT_SUAVE }}>
+                              {u.isActive ? 'Activo' : 'Inactivo'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                {usuariosVisibles.length === 0 && (
+                  <div className="text-content-2" style={{ fontSize: 12, padding: 24, textAlign: 'center' }}>
+                    {users.length === 0 ? 'Aún no hay usuarios.' : 'Ningún usuario coincide con el filtro.'}
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
-            {/* ── PANEL DERECHO ── */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#141820', minWidth: 0 }}>
-
-              {/* Estado vacío */}
-              {!view && (
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.62)', fontSize: 13 }}>
-                  Selecciona un rol o usuario para ver el detalle
-                </div>
-              )}
-
-              {/* Vista ROL — matriz de permisos del negocio (manda en el servidor) */}
-              {view === 'rol' && selectedRol && (
-                <MatrizPermisos rolCode={selectedRol.code} rolNombre={selectedRol.name} descripcion={selectedRol.description} />
-              )}
-
-              {/* Vista USUARIO — detalle */}
-              {view === 'user' && selectedUser && (
-                <div style={{ flex: 1, padding: 24, overflowY: 'auto' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
-                    <div>
-                      <div style={{ fontSize: 17, fontWeight: 500, color: '#c8cdd8', marginBottom: 4 }}>{selectedUser.name || selectedUser.email}</div>
-                      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.62)' }}>{selectedUser.email}</div>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', marginTop: 2 }}>Rol: {selectedUser.roleCode}</div>
-                    </div>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      {puedeEditarUsuarios && <button onClick={() => { setEditingUser(selectedUser); setModalOpen(true); }}
-                        style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#c8cdd8', fontSize: 12, cursor: 'pointer' }}>
-                        Editar
-                      </button>}
-                      <button onClick={() => handleDelete(selectedUser.id)}
-                        style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(252,165,165,0.2)', background: 'transparent', color: 'rgba(252,165,165,0.7)', fontSize: 12, cursor: 'pointer' }}>
-                        Eliminar
-                      </button>
-                    </div>
+            {/* ── DETALLE (rol o usuario), solo cuando hay selección ── */}
+            {view && (
+              <div style={{ width: view === 'rol' ? 520 : 340, maxWidth: '55%', borderLeft: '1px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', background: FONDO_DETALLE, minWidth: 0, flexShrink: 0 }}>
+                {view === 'rol' && selectedRol && (
+                  <div style={{ flex: 1, overflowY: 'auto' }}>
+                    <MatrizPermisos rolCode={selectedRol.code} rolNombre={selectedRol.name} descripcion={selectedRol.description} />
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    {[
-                      { label: 'Estado', value: selectedUser.isActive ? 'Activo' : 'Inactivo' },
-                      { label: 'Rol', value: selectedUser.roleName || selectedUser.roleCode || '—' },
-                      { label: 'Negocio', value: etiquetaNegocio(selectedUser.tenantNombre, selectedUser.tenantId) },
-                      { label: 'Empresa', value: etiquetaAmbito(selectedUser.empresaNombre, selectedUser.companyId) },
-                      { label: 'Sucursal', value: etiquetaAmbito(selectedUser.sucursalNombre, selectedUser.branchId) },
-                    ].map(item => (
-                      <div key={item.label} style={{ padding: '12px 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', background: '#0f1117' }}>
-                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.label}</div>
-                        <div style={{ fontSize: 13, color: '#c8cdd8' }}>{item.value}</div>
+                )}
+
+                {view === 'user' && selectedUser && (
+                  <div style={{ flex: 1, padding: 20, overflowY: 'auto' }}>
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ fontSize: 16, fontWeight: 500, color: TXT, marginBottom: 4 }}>{selectedUser.name || selectedUser.email}</div>
+                      <div style={{ fontSize: 12, color: TXT_SUAVE, overflowWrap: 'anywhere' }}>{selectedUser.email}</div>
+                      <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                        {puedeEditarUsuarios && <button onClick={() => { setEditingUser(selectedUser); setModalOpen(true); }}
+                          style={{ padding: '5px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: TXT, fontSize: 12, cursor: 'pointer' }}>
+                          Editar
+                        </button>}
+                        {puedeEliminarUsuarios && <button onClick={() => handleDelete(selectedUser.id)}
+                          style={{ padding: '5px 14px', borderRadius: 8, border: '1px solid rgba(252,165,165,0.2)', background: 'transparent', color: 'rgba(252,165,165,0.7)', fontSize: 12, cursor: 'pointer' }}>
+                          Eliminar
+                        </button>}
+                        <button onClick={() => { setSelectedUser(null); setView(null); }}
+                          style={{ padding: '5px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: TXT_SUAVE, fontSize: 12, cursor: 'pointer', marginLeft: 'auto' }}>
+                          Cerrar
+                        </button>
                       </div>
-                    ))}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8 }}>
+                      {[
+                        { label: 'Estado', value: selectedUser.isActive ? 'Activo' : 'Inactivo' },
+                        { label: 'Rol', value: selectedUser.roleName || selectedUser.roleCode || '—' },
+                        { label: 'Negocio', value: etiquetaNegocio(selectedUser.tenantNombre, selectedUser.tenantId) },
+                        { label: 'Empresa', value: etiquetaAmbito(selectedUser.empresaNombre, selectedUser.companyId) },
+                        { label: 'Sucursal', value: etiquetaAmbito(selectedUser.sucursalNombre, selectedUser.branchId) },
+                      ].map(item => (
+                        <div key={item.label} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.07)', background: FONDO_LISTA }}>
+                          <div style={{ fontSize: 12, color: TXT_SUAVE, marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.label}</div>
+                          <div style={{ fontSize: 13, color: TXT }}>{item.value}</div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
           </div>
         )}
