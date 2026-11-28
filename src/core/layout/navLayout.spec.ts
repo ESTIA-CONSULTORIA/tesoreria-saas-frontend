@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { repartirNav } from './navOverflow';
-import { itemsConfiguracion, PATH_DATOS_FISCALES, rutaConfiguracion, veConfiguracion } from './navConfiguracion';
+import { itemsConfiguracion, PATH_DATOS_FISCALES, PATH_TICKET, rutaConfiguracion, veConfiguracion } from './navConfiguracion';
 
 describe('barra principal: lo que no cabe va a «Más»', () => {
   // 10 módulos de ~100 px con separación de 4: ocupan 1036.
@@ -47,12 +47,12 @@ describe('barra principal: lo que no cabe va a «Más»', () => {
 describe('Configuración: Datos fiscales para ADMIN y GERENTE con el mismo recorrido', () => {
   it('el ADMIN ve todo, con Datos fiscales dentro', () => {
     const labels = itemsConfiguracion('ADMIN').map((i) => i.label);
-    expect(labels).toEqual(['Usuarios', 'General', 'Config. Login', 'Apariencia', 'Campos del Corte', 'Datos fiscales']);
+    expect(labels).toEqual(['Usuarios', 'General', 'Config. Login', 'Apariencia', 'Campos del Corte', 'Datos fiscales', 'Ticket']);
     expect(rutaConfiguracion('ADMIN')).toBe('/settings');
   });
 
-  it('el GERENTE ve únicamente Datos fiscales y el botón «Configuración» lo lleva ahí', () => {
-    expect(itemsConfiguracion('GERENTE').map((i) => i.path)).toEqual([PATH_DATOS_FISCALES]);
+  it('el GERENTE ve Datos fiscales y Ticket, y el botón «Configuración» lo lleva a Datos fiscales', () => {
+    expect(itemsConfiguracion('GERENTE').map((i) => i.path)).toEqual([PATH_DATOS_FISCALES, PATH_TICKET]);
     expect(rutaConfiguracion('GERENTE')).toBe(PATH_DATOS_FISCALES);
     expect(veConfiguracion('GERENTE')).toBe(true);
   });

@@ -2,6 +2,7 @@
 // El backend de Datos fiscales permite ADMIN y GERENTE; el resto de Configuración es solo de ADMIN (y SOPORTE).
 
 export const PATH_DATOS_FISCALES = '/settings/fiscal';
+export const PATH_TICKET = '/settings/ticket';
 
 export interface ItemSubnav {
   label: string;
@@ -19,6 +20,7 @@ export const SUBNAV_CONFIGURACION: ItemSubnav[] = [
   { label: 'Apariencia', path: '/settings/appearance' },
   { label: 'Campos del Corte', path: '/settings/corte-fields' },
   { label: 'Datos fiscales', path: PATH_DATOS_FISCALES, roles: ['ADMIN', 'GERENTE', 'SOPORTE'] },
+  { label: 'Ticket', path: PATH_TICKET, roles: ['ADMIN', 'GERENTE', 'SOPORTE'] },
 ];
 
 const veItem = (rol: string | undefined, i: ItemSubnav) => !!rol && (i.roles ?? ADMIN_O_SOPORTE).includes(rol);

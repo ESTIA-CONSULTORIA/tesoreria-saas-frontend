@@ -20,6 +20,7 @@ import ESTIAExecutiveAccess from "./pages/mobile-analytics/MobileAnalyticsApp";
 import POSPage from "./pages/pos/POSPage";
 import BackfillCortePage from "./pages/pos/BackfillCortePage";
 import CortesCajaPage from "./pages/pos/CortesCajaPage";
+import TicketConfigPage from "./pages/settings/TicketConfigPage";
 import OCRPage from "./pages/ocr/OCRPage";
 import HRPage from "./pages/hr/HRPage";
 import IntegrationsPage from "./pages/integrations/IntegrationsPage";
@@ -437,6 +438,18 @@ function App() {
             <ModuloRoute modulo="configuracion">
               <LoginConfigPage />
             </ModuloRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Ticket: el mensaje al pie lo editan ADMIN, GERENTE y SOPORTE (el servidor lo valida igual). */}
+      <Route
+        path="/settings/ticket"
+        element={
+          <ProtectedRoute>
+            <RoleRoute roles={['ADMIN', 'GERENTE', 'SOPORTE']}>
+              <TicketConfigPage />
+            </RoleRoute>
           </ProtectedRoute>
         }
       />

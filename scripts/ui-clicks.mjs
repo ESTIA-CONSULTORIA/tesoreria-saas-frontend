@@ -87,7 +87,8 @@ async function main() {
     await paso('Selector de empresa y sucursal', async () => {
       const dato = await page.evaluate(async (api) => {
         const get = async (u) => (await fetch(api + '/api/v1' + u, { credentials: 'include' })).json();
-        const emp = (await get('/companies'))[0];
+        const todas = await get('/companies');
+        const emp = todas.find((c) => /Saz/.test(c.tradeName || c.legalName || '')) ?? todas[0]; // la del empleado de prueba (el orden sin ORDER BY cambia al actualizar una fila)
         const suc = (await get('/branches')).find((b) => b.companyId === emp.id);
         return { emp: { id: emp.id, name: emp.tradeName || emp.legalName }, suc: { id: suc.id, name: suc.name } };
       }, API);
@@ -138,7 +139,7 @@ async function main() {
         const nChips = await chips.count();
         if (nChips < 2) throw new Error('faltan los chips de rol');
         await chips.nth(1).click();
-        await page.getByText(/permisos/i).first().waitFor({ timeout: 10000 });
+        await page.getByRole('button', { name: 'Guardar cambios' }).waitFor({ timeout: 15000 });
         if ((await page.locator('tbody tr').count()) > total) throw new Error('el filtro por rol no redujo la lista');
         await chips.first().click();
         // buscar por correo
@@ -214,6 +215,25 @@ async function main() {
     await paso('Cajera: vende en efectivo ($139.20 y $382.80) y con tarjeta', async () => {
       const r = [await ventaApi(120, 1, 'EFECTIVO'), await ventaApi(330, 1, 'EFECTIVO'), await ventaApi(25, 1, 'DEBITO')];
       if (r.some((x) => x !== 201)) throw new Error('ventas: ' + r.join(','));
+    });
+    await paso('Cajera: cobra una venta y el ticket trae los datos reales y el mensaje de solo lectura', async () => {
+      await page.getByText('Platillo B').first().click();
+      await page.getByRole('button', { name: /^cobrar$/i }).click();
+      const cobro = page.getByRole('dialog');
+      await cobro.getByRole('button', { name: /Efectivo/ }).first().click();
+      await cobro.getByRole('button', { name: /Exacto/ }).click();
+      await cobro.getByRole('button', { name: /Agregar pago/ }).click();
+      await cobro.getByRole('button', { name: /CONFIRMAR COBRO/ }).click();
+      await page.getByText('Venta registrada').waitFor({ timeout: 20000 });
+      const ticket = await page.locator('#print-area').innerText();
+      for (const k of [/Av\. Reforma 123, Mexicali, Baja California/, /RFC: GUE010203AB9/, /Tel: 686 555 0101/, /¡Gracias por su compra!/]) {
+        if (!k.test(ticket)) throw new Error('el ticket no muestra ' + k + ': ' + ticket.slice(0, 200));
+      }
+      if (/Calle Demo|XAXX010101000|\(555\) 123-4567|Mensaje \(opcional\)/.test(ticket)) throw new Error('el ticket trae datos de ejemplo o el mensaje editable');
+      if (await page.locator('#print-area textarea').count()) throw new Error('el ticket aún tiene un campo de mensaje editable');
+      await page.screenshot({ path: 'test-resultados/pos-ticket.png' });
+      await page.getByRole('dialog').getByRole('button', { name: 'Cerrar', exact: true }).last().click();
+      sinErrores(page);
     });
     const tecleaPin = async (dlg, pin) => { const pad = dlg.getByTestId('pin-supervisor').locator('..'); for (const d of pin) await pad.getByRole('button', { name: d, exact: true }).click(); };
     await paso('Cajera: retiro pide PIN del supervisor, no muestra el esperado y rechaza un PIN falso', async () => {
@@ -302,7 +322,16 @@ async function main() {
       await page.screenshot({ path: 'test-resultados/pos-corte-z-gerente.png' });
       sinErrores(page);
     });
-    await page.context().close();
+    await paso('Gerente: Configuración → Ticket cambia el mensaje (solo lectura en el POS)', async () => {
+      await page.goto(`${WEB}/settings/ticket`);
+      await page.getByText('Mensaje de la empresa').first().waitFor({ timeout: 20000 });
+      await page.getByLabel('Mensaje de la empresa').first().fill('Mensaje nuevo desde Configuración');
+      await page.getByRole('button', { name: 'Guardar' }).first().click();
+      await page.getByText('Guardado.').first().waitFor({ timeout: 10000 });
+      await axe(page, 'Configuración → Ticket');
+      await page.screenshot({ path: 'test-resultados/config-ticket.png' });
+      sinErrores(page);
+    });
     await page.context().close();
 
     // ───────── Portal del empleado a 1366x768 y en móvil ─────────
