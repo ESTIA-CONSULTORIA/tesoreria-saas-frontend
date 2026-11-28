@@ -356,6 +356,9 @@ export default function POSPage() {
   const puedeConfigurarCaja = user?.roleCode === "ADMIN" || user?.roleCode === "GERENTE" || user?.roleCode === "SOPORTE";
   const [umbralEdit, setUmbralEdit] = useState<string>("0");
   const [guardandoUmbral, setGuardandoUmbral] = useState(false);
+  // Quitar el bloqueo por intentos fallidos de PIN: solo ADMIN y SOPORTE (el servidor lo valida igual).
+  const puedeDesbloquearPin = user?.roleCode === "ADMIN" || user?.roleCode === "SOPORTE";
+  const [desbloqueoMsg, setDesbloqueoMsg] = useState<{ ok: boolean; texto: string } | null>(null);
   const [umbralMsg, setUmbralMsg] = useState<{ ok: boolean; texto: string } | null>(null);
   // Zona horaria del negocio: de ella salen la fecha y la hora de ventas, turnos y folios.
   const [zonaNegocio, setZonaNegocio] = useState<string>("America/Tijuana");
@@ -1624,6 +1627,19 @@ export default function POSPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authChecked, user?.roleCode]);
 
+  async function desbloquearPines() {
+    const tid = localStorage.getItem("tenant_id");
+    if (!tid) return;
+    setDesbloqueoMsg(null);
+    try {
+      const r = await api.post(`/tenant-settings/${tid}/desbloquear-pin`, {});
+      setDesbloqueoMsg({ ok: true, texto: r.data?.mensaje || "Intentos de PIN restablecidos." });
+    } catch (error) {
+      const msg = (error as ApiErrorLike)?.response?.data?.message;
+      setDesbloqueoMsg({ ok: false, texto: (Array.isArray(msg) ? msg.join(". ") : msg) || "No se pudo desbloquear." });
+    }
+  }
+
   async function guardarUmbralCaja() {
     const tid = localStorage.getItem("tenant_id");
     if (!tid) return;
@@ -2866,6 +2882,13 @@ export default function POSPage() {
                     Guardar
                   </button>
                 </div>
+                {puedeDesbloquearPin && (
+                  <div className="mt-4 border-t !border-line pt-3">
+                    <p className="text-xs !text-content-3 mb-2">Si alguien se bloqueó por intentos fallidos de PIN, puedes quitar el bloqueo ahora (si no, se libera solo a los 15 minutos).</p>
+                    <button type="button" onClick={desbloquearPines} className="px-4 py-2 rounded !bg-btn !text-on-solid text-sm hover:!bg-btn-hover">Desbloquear intentos de PIN</button>
+                    {desbloqueoMsg && <span className={`ml-3 text-xs ${desbloqueoMsg.ok ? "!text-ok" : "!text-danger"}`}>{desbloqueoMsg.texto}</span>}
+                  </div>
+                )}
                 <div className="mt-3 h-4 text-xs">
                   {guardandoUmbral && <span className="!text-content-3">Guardando...</span>}
                   {!guardandoUmbral && umbralMsg && <span className={umbralMsg.ok ? "!text-ok" : "!text-danger"}>{umbralMsg.texto}</span>}

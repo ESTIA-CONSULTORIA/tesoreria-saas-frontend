@@ -143,7 +143,7 @@ export function MovimientoEfectivoModal(p: {
               <span id="mov-pin-etiqueta" className="mb-1 block text-sm !text-content-3">PIN del supervisor *</span>
               <div role="img" aria-labelledby="mov-pin-etiqueta" aria-label={`PIN del supervisor: ${p.pin.length} dígitos`} data-testid="pin-supervisor"
                 className="mb-2 flex h-9 items-center justify-center gap-2 rounded !bg-nav">
-                {p.pin.length === 0 ? <span className="text-xs !text-content-3">Teclea tu PIN</span> : Array.from({ length: p.pin.length }, (_, i) => <span key={i} aria-hidden="true" className="h-2.5 w-2.5 rounded-full !bg-btn" />)}
+                {p.pin.length === 0 ? <span className="text-xs !text-content-3">PIN del supervisor</span> : Array.from({ length: p.pin.length }, (_, i) => <span key={i} aria-hidden="true" className="h-2.5 w-2.5 rounded-full !bg-btn" />)}
               </div>
               <TecladoNumerico tamano="normal" onTecla={alTeclear} />
               <ErrorCampo id="mov-pin" mensaje={p.errores?.pin} />

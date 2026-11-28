@@ -24,6 +24,7 @@ interface User {
   tenantNombre?: string | null;
   empresaNombre?: string | null;
   sucursalNombre?: string | null;
+  tienePinEjecutivo?: boolean;
 }
 
 interface Negocio {
@@ -91,6 +92,7 @@ export default function UsersPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [avisoPin, setAvisoPin] = useState("");
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
@@ -212,7 +214,8 @@ export default function UsersPage() {
 
   return (
     <MainLayout>
-      <CreateUserModal open={modalOpen} onClose={handleCloseUserModal} onCreated={loadData} user={editingUser} negocioFiltro={negocioSel} />
+      <CreateUserModal open={modalOpen} onClose={handleCloseUserModal} onCreated={(aviso) => { loadData(); if (aviso) { setAvisoPin(aviso); window.setTimeout(() => setAvisoPin(""), 6000); } }} user={editingUser} negocioFiltro={negocioSel} />
+      {avisoPin && <div role="status" style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 60, padding: '10px 16px', borderRadius: 8, background: FONDO_DETALLE, color: TXT, border: `1px solid ${ACENTO}`, fontSize: 13 }}>{avisoPin}</div>}
       <CreateRoleModal open={roleModalOpen} onClose={() => setRoleModalOpen(false)} onCreated={loadData} />
 
       {deleteConfirmOpen && (
@@ -375,6 +378,9 @@ export default function UsersPage() {
                     <div style={{ marginBottom: 16 }}>
                       <div style={{ fontSize: 16, fontWeight: 500, color: TXT, marginBottom: 4 }}>{selectedUser.name || selectedUser.email}</div>
                       <div style={{ fontSize: 12, color: TXT_SUAVE, overflowWrap: 'anywhere' }}>{selectedUser.email}</div>
+                      {(selectedUser.roleCode === 'ADMIN' || selectedUser.roleCode === 'GERENTE') && (
+                        <div style={{ fontSize: 12, color: TXT_SUAVE, marginTop: 4 }}>PIN ejecutivo (autoriza retiros): {selectedUser.tienePinEjecutivo ? 'asignado' : 'sin asignar'}</div>
+                      )}
                       <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                         {puedeEditarUsuarios && <button onClick={() => { setEditingUser(selectedUser); setModalOpen(true); }}
                           style={{ padding: '5px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: TXT, fontSize: 12, cursor: 'pointer' }}>
