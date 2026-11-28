@@ -172,6 +172,26 @@ async function main() {
         sinErrores(page);
       });
     }
+    await paso('Usuarios: editar al gerente, escribir el PIN ejecutivo y guardar → la petición lleva executivePin y el detalle dice «asignado»', async () => {
+      await page.setViewportSize({ width: 1366, height: 768 });
+      await page.goto(`${WEB}/users`);
+      await page.getByLabel('Buscar usuario por nombre o correo').waitFor({ timeout: 20000 });
+      await page.getByLabel('Buscar usuario por nombre o correo').fill('gerente@demo.com');
+      await page.locator('tbody tr').first().click();
+      await page.getByRole('button', { name: 'Editar' }).first().click();
+      const campo = page.getByPlaceholder('••••••');
+      await campo.waitFor({ timeout: 5000 });
+      await campo.fill('482915');
+      const envio = page.waitForRequest((r) => r.method() === 'PUT' && r.url().includes('/users/'));
+      await page.getByRole('button', { name: 'Actualizar usuario' }).click();
+      const cuerpo = (await envio).postData() || '';
+      if (!/"executivePin":"482915"/.test(cuerpo)) throw new Error('la petición de guardado no lleva executivePin');
+      await page.getByText('PIN ejecutivo guardado.').waitFor({ timeout: 10000 });
+      await page.locator('tbody tr').first().click();
+      await page.getByText(/PIN ejecutivo .autoriza retiros.: asignado/).waitFor({ timeout: 10000 });
+      try { await page.screenshot({ path: 'test-resultados/usuarios-pin-asignado.png' }); } catch { /* sin captura */ }
+      sinErrores(page);
+    });
     await page.setViewportSize({ width: 1366, height: 768 });
     await abrir('/reports', /Reportes a la medida/, 'Reportes a la medida', async () => {
       await page.getByRole('button', { name: 'Generar reporte' }).click();
@@ -289,6 +309,18 @@ async function main() {
       await page.goto(`${WEB}/pos/cortes`);
       await page.getByText(/Solo un administrador, un gerente o soporte/).waitFor({ timeout: 20000 });
       if (await page.getByText(/Corte Z — Sistema vs Declarado/).count()) throw new Error('la cajera ve el corte Z');
+    });
+    await paso('Cajero: el menú no muestra RH, Tesorería, Compras ni Integraciones, y /users lo regresa al inicio con aviso (sin botones de administración)', async () => {
+      const pc = page; // la misma sesión de la cajera que acaba de cerrar su turno
+      await pc.goto(`${WEB}/dashboard`);
+      await pc.waitForTimeout(2500);
+      const menu = (await pc.locator('header, nav').allInnerTexts()).join(' ');
+      for (const k of [/RH/, /Integraciones/, /Tesorer/, /Compras/]) if (k.test(menu)) throw new Error('el menú del cajero muestra ' + k);
+      await pc.goto(`${WEB}/users`);
+      await pc.getByText(/Tu rol no tiene acceso a Usuarios/).waitFor({ timeout: 15000 });
+      if (pc.url().includes('/users')) throw new Error('el cajero se quedó en /users');
+      const cuerpo = await pc.locator('body').innerText();
+      if (/Nuevo rol|No tienes permisos/i.test(cuerpo)) throw new Error('el cajero vio botones o avisos de administración');
     });
     await page.context().close();
 

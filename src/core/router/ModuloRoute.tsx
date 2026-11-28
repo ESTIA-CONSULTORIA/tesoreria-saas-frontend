@@ -5,6 +5,7 @@ import { ESPERA_MAXIMA_RUTA_MS, mensajeRedireccion } from "../hooks/moduloDispon
 import { useAuthStore } from "../store/useAuthStore";
 import { leerNegocioActivo } from "../api/negocioActivo";
 import { api } from "../api/api";
+import { puedeHacer } from "../hooks/puedeHacer";
 
 interface Props {
   children: React.ReactNode;
@@ -21,6 +22,17 @@ export default function ModuloRoute({ children, modulo }: Props) {
   const decision = useDecisionRuta(modulo);
   const setModulos = useAuthStore((s) => s.setModulosNegocioSoporte);
   const [agotado, setAgotado] = useState(false);
+  // La matriz de permisos del rol: sin «Ver» en el módulo, la ruta no se muestra (ni sus botones de administración). SOPORTE no se rige por la matriz.
+  const user = useAuthStore((s) => s.user);
+  const permisos = useAuthStore((s) => s.permisos);
+  const setPermisos = useAuthStore((s) => s.setPermisos);
+  const necesitaPermisos = !!user?.id && user.roleCode !== 'SOPORTE' && permisos === null;
+  useEffect(() => {
+    if (!necesitaPermisos) return;
+    let vivo = true;
+    api.get('/permisos/mis-permisos').then((r) => { if (vivo) setPermisos(r.data && typeof r.data === 'object' ? r.data : {}); }).catch(() => { if (vivo) setPermisos({}); });
+    return () => { vivo = false; };
+  }, [necesitaPermisos, setPermisos]);
 
   useEffect(() => {
     if (decision !== 'esperar') return;
@@ -37,6 +49,10 @@ export default function ModuloRoute({ children, modulo }: Props) {
   if (decision === 'esperar') {
     if (agotado) return <Navigate to="/dashboard" replace state={{ avisoRuta: mensajeRedireccion(modulo, 'tiempo-agotado') }} />;
     return <div role="status" className="p-6 text-sm !text-content-2">Comprobando módulos del negocio…</div>;
+  }
+  if (necesitaPermisos) return <div role="status" className="p-6 text-sm !text-content-2">Comprobando permisos…</div>;
+  if (decision === 'permitir' && user?.roleCode !== 'SOPORTE' && !puedeHacer(permisos, modulo, 'ver')) {
+    return <Navigate to="/dashboard" replace state={{ avisoRuta: mensajeRedireccion(modulo, 'sin-permiso') }} />;
   }
   if (decision === 'redirigir') return <Navigate to="/dashboard" replace state={{ avisoRuta: mensajeRedireccion(modulo, 'no-disponible') }} />;
   return <>{children}</>;

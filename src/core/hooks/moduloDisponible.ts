@@ -59,11 +59,12 @@ export function decisionRuta(modulo: string, sesion: SesionModulos): 'permitir' 
 /** Tiempo máximo de espera de la puerta de ruta (módulos del negocio de SOPORTE) antes de sacar al usuario con un aviso. */
 export const ESPERA_MAXIMA_RUTA_MS = 8000;
 
-const NOMBRE_MODULO: Record<string, string> = { pacientes: 'Pacientes', membresias: 'Membresías', rh: 'Recursos humanos', sat_cfdi: 'Datos fiscales' };
+const NOMBRE_MODULO: Record<string, string> = { pacientes: 'Pacientes', membresias: 'Membresías', rh: 'Recursos humanos', sat_cfdi: 'Datos fiscales', usuarios: 'Usuarios', empresas: 'Empresas', sucursales: 'Sucursales', tesoreria: 'Tesorería', compras: 'Compras', reportes: 'Reportes', integraciones: 'Integraciones' };
 
 /** Aviso en español cuando una ruta saca al usuario al Dashboard. */
-export function mensajeRedireccion(modulo: string, motivo: 'no-disponible' | 'tiempo-agotado'): string {
+export function mensajeRedireccion(modulo: string, motivo: 'no-disponible' | 'tiempo-agotado' | 'sin-permiso'): string {
   const nombre = NOMBRE_MODULO[modulo] ?? modulo;
+  if (motivo === 'sin-permiso') return `Tu rol no tiene acceso a ${nombre}. Si lo necesitas, pídelo a un administrador.`;
   return motivo === 'tiempo-agotado'
     ? `No se pudo comprobar si el negocio tiene el módulo ${nombre}. Inténtalo de nuevo en unos segundos.`
     : `El módulo ${nombre} no está disponible en este negocio.`;
