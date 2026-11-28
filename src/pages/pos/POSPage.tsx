@@ -1920,6 +1920,11 @@ export default function POSPage() {
               >
                 ← Salir
               </button>
+              {esCajeroDeSesion && (
+                <button onClick={() => navigate('/employee')} className="text-sm !text-content-3 hover:text-content-1">
+                  Portal del empleado
+                </button>
+              )}
               <div className="text-sm !text-content-3">
                 Cajero: <span className="!text-content-1">{nombreCajero(selectedCashier || user?.id)}</span>
               </div>

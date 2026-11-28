@@ -1,4 +1,6 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
+import AvisoRuta from "../layout/AvisoRuta";
+import { destinoCajero } from "./accesoCajero";
 import { useAuthStore } from "../store/useAuthStore";
 
 interface Props {
@@ -16,6 +18,7 @@ export default function ProtectedRoute({
   // interceptor de api.ts se encarga (refresh o redirect), igual que siempre.
   const authChecked = useAuthStore((state) => state.authChecked);
   const user = useAuthStore((state) => state.user);
+  const loc = useLocation();
 
   if (!authChecked) {
     return null;
@@ -23,6 +26,13 @@ export default function ProtectedRoute({
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // El CAJERO solo entra al POS y al portal del empleado: cualquier otra pantalla lo regresa al POS (sin mostrar nada de administración).
+  if (user.roleCode === "CAJERO") {
+    const destino = destinoCajero(loc.pathname);
+    if (destino) return <Navigate to={destino.a} replace state={destino.aviso ? { avisoRuta: destino.aviso } : undefined} />;
+    return <><AvisoRuta />{children}</>;
   }
 
   return <>{children}</>;

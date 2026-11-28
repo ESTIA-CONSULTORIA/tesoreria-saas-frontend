@@ -379,7 +379,11 @@ export default function TopBar() {
   }, [ctxOpen, ctxPhase, companies.length, branches.length]);
 
   const activeKey  = getActiveKey(loc.pathname);
-  const visibleNav = NAV.filter(m => modAccess[m.key]);
+  // El CAJERO solo ve el POS y el acceso al portal del empleado (nada más del menú).
+  const esCajero = user?.roleCode === 'CAJERO';
+  const visibleNav = esCajero
+    ? [NAV.find(m => m.key === 'pos')!, { label: 'Portal del empleado', key: 'rh' as ModKey, path: '/employee', modulo: 'rh' }]
+    : NAV.filter(m => modAccess[m.key]);
   const operationalModules: ModKey[] = ['rh', 'tesoreria', 'pos', 'compras', 'reportes', 'integraciones', 'corte_retroactivo', 'costos', 'membresias'];
 
   const dashboardSubItems = (modulosActivos?.includes('empresas') || modulosActivos?.includes('sucursales') || modulosActivos?.includes('usuarios'))

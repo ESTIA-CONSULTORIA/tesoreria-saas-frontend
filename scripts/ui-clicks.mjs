@@ -207,6 +207,8 @@ async function main() {
 
     // ───────── POS: caja a ciegas con la cajera ─────────
     page = await nueva(browser, { width: 1366, height: 768 });
+    const apiCajera = new Set(); // rutas de la API que usa la pantalla de la cajera (para la lista blanca del servidor)
+    page.on('request', (r) => { const u = r.url(); if (u.startsWith(API)) apiCajera.add(r.method() + ' ' + u.slice(API.length).split('?')[0].replace(/[0-9a-f]{8}-[0-9a-f-]{27}/g, ':id')); });
     console.log('POS caja a ciegas (cajera, 1366x768)');
     const ventaApi = (precio, cantidad, forma) => page.evaluate(async ({ api, precio, cantidad, forma }) => {
       const get = async (u) => (await fetch(api + '/api/v1' + u, { credentials: 'include' })).json();
@@ -310,18 +312,23 @@ async function main() {
       await page.getByText(/Solo un administrador, un gerente o soporte/).waitFor({ timeout: 20000 });
       if (await page.getByText(/Corte Z — Sistema vs Declarado/).count()) throw new Error('la cajera ve el corte Z');
     });
-    await paso('Cajero: el menú no muestra RH, Tesorería, Compras ni Integraciones, y /users lo regresa al inicio con aviso (sin botones de administración)', async () => {
-      const pc = page; // la misma sesión de la cajera que acaba de cerrar su turno
-      await pc.goto(`${WEB}/dashboard`);
-      await pc.waitForTimeout(2500);
-      const menu = (await pc.locator('header, nav').allInnerTexts()).join(' ');
-      for (const k of [/RH/, /Integraciones/, /Tesorer/, /Compras/]) if (k.test(menu)) throw new Error('el menú del cajero muestra ' + k);
-      await pc.goto(`${WEB}/users`);
-      await pc.getByText(/Tu rol no tiene acceso a Usuarios/).waitFor({ timeout: 15000 });
-      if (pc.url().includes('/users')) throw new Error('el cajero se quedó en /users');
-      const cuerpo = await pc.locator('body').innerText();
-      if (/Nuevo rol|No tienes permisos/i.test(cuerpo)) throw new Error('el cajero vio botones o avisos de administración');
+    await paso('Cajero: solo POS y portal del empleado; /users, /hr, /treasury, /purchases, /costs, /reports, /integrations, /solutions y /dashboard lo regresan al POS con aviso', async () => {
+      await page.goto(`${WEB}/pos`);
+      await page.getByRole('button', { name: 'Portal del empleado' }).waitFor({ timeout: 20000 });
+      const inicio = await page.locator('body').innerText();
+      for (const k of [/Tesorer/, /Compras/, /Integraciones/, /Soluciones/, /Dashboard/]) if (k.test(inicio)) throw new Error('el POS del cajero muestra ' + k);
+      for (const ruta of ['/users', '/hr', '/treasury', '/purchases', '/costs', '/reports', '/integrations', '/solutions', '/dashboard', '/settings']) {
+        await page.goto(`${WEB}${ruta}`);
+        await page.getByText('No tienes acceso a esa sección').waitFor({ timeout: 15000 });
+        if (new URL(page.url()).pathname !== '/pos') throw new Error(ruta + ' no regresó al POS: ' + page.url());
+        const cuerpo = await page.locator('body').innerText();
+        if (/Nuevo rol|Nuevo usuario|No tienes permisos/i.test(cuerpo)) throw new Error(ruta + ': el cajero vio pantalla o botones de administración');
+      }
+      await page.goto(`${WEB}/`);
+      await page.waitForURL((u) => u.pathname === '/pos', { timeout: 15000 });
+      await page.screenshot({ path: 'test-resultados/cajero-sin-acceso.png' });
     });
+    if (process.env.API_CAJERA) console.log('API_CAJERA ' + JSON.stringify([...apiCajera].sort()));
     await page.context().close();
 
     // ───────── POS: el gerente cierra un turno y SÍ ve el corte Z con diferencias ─────────
