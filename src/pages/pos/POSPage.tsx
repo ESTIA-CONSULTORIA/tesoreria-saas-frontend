@@ -218,7 +218,9 @@ export default function POSPage() {
   const [salesFilter, setSalesFilter] = useState<string>("all");
   const [showReceipt, setShowReceipt] = useState(false);
   const [currentSale, setCurrentSale] = useState<Sale | null>(null);
-  const [ticketMessage, setTicketMessage] = useState("");
+  // Encabezado y mensaje del ticket: SOLO lectura, vienen de los datos reales de la empresa y la sucursal y de Configuración → Ticket.
+  // Un dato que falta no se imprime; nunca hay datos de ejemplo.
+  const [ticketCfg, setTicketCfg] = useState<{ nombreComercial: string | null; direccion: string | null; rfc: string | null; telefono: string | null; mensaje: string } | null>(null);
   const [requireInvoice, setRequireInvoice] = useState(false);
   const [invoiceRfc, setInvoiceRfc] = useState("");
   const [invoiceEmail, setInvoiceEmail] = useState("");
@@ -798,6 +800,12 @@ export default function POSPage() {
   useEffect(() => { if (!showOpenShiftModal) { setErrApertura(null); setErrAperturaFondo(null); } }, [showOpenShiftModal]);
   useEffect(() => { if (!showWithdrawalModal && !showDepositModal) { setErrMovimiento(null); setErrMovimientoCampos({}); } }, [showWithdrawalModal, showDepositModal]);
   useEffect(() => { if (!showPrecutModal) setErrPrecorte(null); }, [showPrecutModal]);
+  useEffect(() => {
+    if (!authChecked || !user) return;
+    api.get("/pos/ticket/config", { params: { ...(branchId ? { branchId } : {}), ...(activeCompany?.id ? { companyId: activeCompany.id } : {}) } })
+      .then((r) => setTicketCfg(r.data ?? null))
+      .catch(() => setTicketCfg(null));
+  }, [authChecked, user?.id, branchId, activeCompany?.id]);
   useEffect(() => {
     if (!shift?.id) return;
     api.get("/pos/shifts/caja-config").then((r) => setUmbralPinCaja(Number(r.data?.umbralPinCaja) || 0)).catch(() => setUmbralPinCaja(0));
@@ -3318,10 +3326,10 @@ export default function POSPage() {
               {config.logoUrl && (
                 <img src={config.logoUrl} alt="Logo" className="w-20 h-20 mx-auto mb-2 object-contain" />
               )}
-              <h3 className="text-xl font-bold">{config.companyName || 'Empresa'}</h3>
-              <p className="text-xs text-content-3 mt-1">Dirección: Calle Demo {"#"}123, Col. Centro</p>
-              <p className="text-xs text-content-3">RFC: XAXX010101000</p>
-              <p className="text-xs text-content-3">Tel: (555) 123-4567</p>
+              <h3 className="text-xl font-bold">{ticketCfg?.nombreComercial || config.companyName || 'Empresa'}</h3>
+              {ticketCfg?.direccion ? <p className="text-xs text-content-3 mt-1">{ticketCfg.direccion}</p> : null}
+              {ticketCfg?.rfc ? <p className="text-xs text-content-3">RFC: {ticketCfg.rfc}</p> : null}
+              {ticketCfg?.telefono ? <p className="text-xs text-content-3">Tel: {ticketCfg.telefono}</p> : null}
               <div className="border-t border-tono-slate-300 my-2"></div>
               <p className="text-sm font-semibold">Ticket #{currentSale.folio}</p>
               <p className="text-xs text-content-3">{formatoFechaHora(currentSale.fecha)}</p>
@@ -3389,17 +3397,12 @@ export default function POSPage() {
               )}
             </div>
 
-            {/* Mensaje opcional */}
-            <div className="border-t border-tono-slate-300 pt-2 mt-2">
-              <label className="text-sm font-semibold block mb-1">Mensaje (opcional):</label>
-              <textarea
-                value={ticketMessage}
-                onChange={(e) => setTicketMessage(e.target.value)}
-                className="w-full p-2 border border-tono-slate-300 rounded text-sm"
-                rows={2}
-                placeholder="¡Gracias por su compra!"
-              />
-            </div>
+            {/* Mensaje del ticket: solo lectura (se configura en Configuración → Ticket) */}
+            {ticketCfg?.mensaje ? (
+              <div className="border-t border-tono-slate-300 pt-2 mt-2 text-center text-sm whitespace-pre-line" data-testid="ticket-mensaje">
+                {ticketCfg.mensaje}
+              </div>
+            ) : null}
 
             {/* Datos de facturación */}
             <div className="border-t border-tono-slate-300 pt-2 mt-2 print:hidden">
