@@ -33,7 +33,7 @@ import ModalTema from "./ModalTema";
 import { aperturaDelTurno, formatoFechaHora, formatoHora } from "../../core/utils/tiempo";
 import { descuentoPedidoPct as calcularDescuentoPct, firmaTicket, ticketRequiereAutorizacion, topeDescuento } from "./reglasAutorizacion";
 import { ModalFooter } from "../../core/components/ModalFooter";
-import { AperturaTurnoModal, CierreTurnoModal, CobroPOS, MovimientoEfectivoModal, PrecorteModal, efectivoEsperado } from "./ModalesCaja";
+import { AperturaTurnoModal, CierreTurnoModal, CobroPOS, MovimientoEfectivoModal, PrecorteModal } from "./ModalesCaja";
 import { totalContado } from "./cajaTurno";
 import { InputBusqueda } from "../../core/components/InputBusqueda";
 import { OPCIONES_POLITICA_COBRO, OPCIONES_POLITICA_DIVISION, type PoliticaCobro, type PoliticaDivision } from "../mesas/mesasLogic";
@@ -279,10 +279,10 @@ export default function POSPage() {
   const enviandoMovimientoRef = useRef(false);
   const [withdrawalAmount, setWithdrawalAmount] = useState<string>("");
   const [withdrawalReason, setWithdrawalReason] = useState<string>("");
-  const [withdrawalAuthorizedBy, setWithdrawalAuthorizedBy] = useState<string>("");
+  const [withdrawalPin, setWithdrawalPin] = useState<string>("");
   const [depositAmount, setDepositAmount] = useState<string>("");
   const [depositOrigin, setDepositOrigin] = useState<string>("");
-  const [depositAuthorizedBy, setDepositAuthorizedBy] = useState<string>("");
+  const [depositPin, setDepositPin] = useState<string>("");
   
   // Login/Shift opening screens
   const [showLoginScreen, setShowLoginScreen] = useState(false);
@@ -345,8 +345,15 @@ export default function POSPage() {
   const [errApertura, setErrApertura] = useState<string | null>(null);
   const [errAperturaFondo, setErrAperturaFondo] = useState<string | null>(null);
   const [errMovimiento, setErrMovimiento] = useState<string | null>(null);
-  const [errMovimientoCampos, setErrMovimientoCampos] = useState<{ monto?: string; autorizadoPor?: string; concepto?: string }>({});
+  const [errMovimientoCampos, setErrMovimientoCampos] = useState<{ monto?: string; pin?: string; concepto?: string }>({});
   const [errPrecorte, setErrPrecorte] = useState<string | null>(null);
+  // Desde qué monto un retiro o depósito pide el PIN de un supervisor (lo configura el negocio; 0 = siempre).
+  const [umbralPinCaja, setUmbralPinCaja] = useState<number>(0);
+  // Configuración del umbral (solo ADMIN, GERENTE y SOPORTE lo ven y lo cambian; el servidor lo valida igual).
+  const puedeConfigurarCaja = user?.roleCode === "ADMIN" || user?.roleCode === "GERENTE" || user?.roleCode === "SOPORTE";
+  const [umbralEdit, setUmbralEdit] = useState<string>("0");
+  const [guardandoUmbral, setGuardandoUmbral] = useState(false);
+  const [umbralMsg, setUmbralMsg] = useState<{ ok: boolean; texto: string } | null>(null);
   const [errCierre, setErrCierre] = useState<string | null>(null);
   const [shiftSummary, setShiftSummary] = useState<any>(null);
   const [showExitConfirmModal, setShowExitConfirmModal] = useState(false);
@@ -791,6 +798,10 @@ export default function POSPage() {
   useEffect(() => { if (!showOpenShiftModal) { setErrApertura(null); setErrAperturaFondo(null); } }, [showOpenShiftModal]);
   useEffect(() => { if (!showWithdrawalModal && !showDepositModal) { setErrMovimiento(null); setErrMovimientoCampos({}); } }, [showWithdrawalModal, showDepositModal]);
   useEffect(() => { if (!showPrecutModal) setErrPrecorte(null); }, [showPrecutModal]);
+  useEffect(() => {
+    if (!shift?.id) return;
+    api.get("/pos/shifts/caja-config").then((r) => setUmbralPinCaja(Number(r.data?.umbralPinCaja) || 0)).catch(() => setUmbralPinCaja(0));
+  }, [shift?.id]);
   useEffect(() => { if (!showCloseShiftModal) setErrCierre(null); }, [showCloseShiftModal]);
 
   useEffect(() => {
@@ -925,18 +936,8 @@ export default function POSPage() {
       return;
     }
 
-    const declaracion = shift.precorteDeclaracion || {};
-    const body = {
-      totalVentas: shift.totalVentas,
-      totalEfectivo: shift.totalEfectivo || 0,
-      totalTarjeta: shift.totalTarjeta || 0,
-      totalTransferencia: shift.totalTransferencia || 0,
-      totalCortesia: shift.totalCortesia || 0,
-      totalDevoluciones: shift.totalDevoluciones || 0,
-      totalRetiros: shift.totalRetiros || 0,
-      totalDepositos: shift.totalDepositos || 0,
-      efectivoContado: Number(declaracion.efectivoContado) || 0,
-    };
+    // El corte usa lo que la caja DECLARÓ en el precorte y lo calcula el servidor: aquí no se manda ningún total.
+    const body = {};
     try {
       await api.put(`/pos/shifts/${shift.id}/close`, body);
       setShift(null);
@@ -948,7 +949,7 @@ export default function POSPage() {
     } catch (error) {
       console.error("Error closing shift:", error);
       if (!isNetworkOrTimeoutError(error)) {
-        setErrCierre("No se pudo cerrar el turno. Inténtalo de nuevo; si persiste, avisa a soporte.");
+        setErrCierre(motivoDeRechazo(error) || "No se pudo cerrar el turno. Inténtalo de nuevo; si persiste, avisa a soporte.");
         return;
       }
       const clientTimestamp = new Date().toISOString();
@@ -962,14 +963,17 @@ export default function POSPage() {
     }
   }
 
+  // ¿Este monto necesita el PIN de un supervisor? Desde el umbral que configuró el negocio (0 = siempre).
+  const pedirPinDe = (monto: string) => !(Number(monto) > 0) || Number(monto) >= umbralPinCaja;
+
   async function handleWithdrawal() {
     setErrMovimiento(null);
     const faltan = {
       monto: withdrawalAmount ? undefined : "Escribe el monto",
-      autorizadoPor: withdrawalAuthorizedBy ? undefined : "Elige quién autoriza",
-      concepto: withdrawalReason ? undefined : "Escribe el motivo",
+      pin: pedirPinDe(withdrawalAmount) && !withdrawalPin ? "El supervisor debe teclear su PIN" : undefined,
+      concepto: withdrawalReason.trim().length >= 3 ? undefined : "Escribe el motivo",
     };
-    if (!shift || faltan.monto || faltan.autorizadoPor || faltan.concepto) {
+    if (!shift || faltan.monto || faltan.pin || faltan.concepto) {
       setErrMovimientoCampos(faltan);
       return;
     }
@@ -981,7 +985,7 @@ export default function POSPage() {
     const body = {
       monto: Number(withdrawalAmount),
       motivo: withdrawalReason,
-      autorizadoPor: withdrawalAuthorizedBy,
+      ...(withdrawalPin ? { supervisorPin: withdrawalPin } : {}),
       idOperacion: opRetiroRef.current,
     };
     try {
@@ -990,23 +994,15 @@ export default function POSPage() {
       setShowWithdrawalModal(false);
       setWithdrawalAmount("");
       setWithdrawalReason("");
-      setWithdrawalAuthorizedBy("");
+      setWithdrawalPin("");
       loadOpenShift(selectedCashier);
     } catch (error) {
       console.error("Error processing withdrawal:", error);
-      if (!isNetworkOrTimeoutError(error)) {
-        setErrMovimiento("No se pudo registrar el retiro. Revisa los datos e inténtalo de nuevo.");
-        return;
-      }
-      // Fase C2: totales del turno quedan congelados hasta que sincronice de verdad
-      // (mismo criterio que stock/ventas) — no se recalcula ni se estima localmente.
-      const clientTimestamp = new Date().toISOString();
-      await enqueueOperation('WITHDRAWAL', { shiftId: shift.id, ...body, clientTimestamp }, clientTimestamp);
-      opRetiroRef.current = null;
-      setShowWithdrawalModal(false);
-      setWithdrawalAmount("");
-      setWithdrawalReason("");
-      setWithdrawalAuthorizedBy("");
+      // Sin conexión NO se encola: la autorización de un supervisor se valida en el servidor y su PIN no se guarda en el equipo.
+      setWithdrawalPin("");
+      setErrMovimiento(isNetworkOrTimeoutError(error)
+        ? "Sin conexión: un retiro necesita la autorización de un supervisor y no se puede registrar sin internet."
+        : motivoDeRechazo(error) || "No se pudo registrar el retiro. Revisa los datos e inténtalo de nuevo.");
     } finally {
       enviandoMovimientoRef.current = false;
       setEnviandoMovimiento(false);
@@ -1017,10 +1013,10 @@ export default function POSPage() {
     setErrMovimiento(null);
     const faltan = {
       monto: depositAmount ? undefined : "Escribe el monto",
-      autorizadoPor: depositAuthorizedBy ? undefined : "Elige quién autoriza",
-      concepto: depositOrigin ? undefined : "Escribe el origen",
+      pin: pedirPinDe(depositAmount) && !depositPin ? "El supervisor debe teclear su PIN" : undefined,
+      concepto: depositOrigin.trim().length >= 3 ? undefined : "Escribe el origen o motivo",
     };
-    if (!shift || faltan.monto || faltan.autorizadoPor || faltan.concepto) {
+    if (!shift || faltan.monto || faltan.pin || faltan.concepto) {
       setErrMovimientoCampos(faltan);
       return;
     }
@@ -1032,7 +1028,8 @@ export default function POSPage() {
     const body = {
       monto: Number(depositAmount),
       origen: depositOrigin,
-      autorizadoPor: depositAuthorizedBy,
+      motivo: depositOrigin,
+      ...(depositPin ? { supervisorPin: depositPin } : {}),
       idOperacion: opDepositoRef.current,
     };
     try {
@@ -1041,22 +1038,14 @@ export default function POSPage() {
       setShowDepositModal(false);
       setDepositAmount("");
       setDepositOrigin("");
-      setDepositAuthorizedBy("");
+      setDepositPin("");
       loadOpenShift(selectedCashier);
     } catch (error) {
       console.error("Error processing deposit:", error);
-      if (!isNetworkOrTimeoutError(error)) {
-        setErrMovimiento("No se pudo registrar el depósito. Revisa los datos e inténtalo de nuevo.");
-        return;
-      }
-      // Fase C2: mismo criterio — totales congelados hasta sincronización real.
-      const clientTimestamp = new Date().toISOString();
-      await enqueueOperation('DEPOSIT', { shiftId: shift.id, ...body, clientTimestamp }, clientTimestamp);
-      opDepositoRef.current = null;
-      setShowDepositModal(false);
-      setDepositAmount("");
-      setDepositOrigin("");
-      setDepositAuthorizedBy("");
+      setDepositPin("");
+      setErrMovimiento(isNetworkOrTimeoutError(error)
+        ? "Sin conexión: un depósito necesita la autorización de un supervisor y no se puede registrar sin internet."
+        : motivoDeRechazo(error) || "No se pudo registrar el depósito. Revisa los datos e inténtalo de nuevo.");
     } finally {
       enviandoMovimientoRef.current = false;
       setEnviandoMovimiento(false);
@@ -1067,7 +1056,7 @@ export default function POSPage() {
     if (!shift) return;
     setErrPrecorte(null);
     const body = {
-      efectivoContado: calculateTotalCash(),
+      efectivoContado: calculateTotalCash(), // SIN el fondo inicial; el servidor lo vuelve a calcular de las denominaciones
       efectivoDenominaciones: cashCounts,
       debitoDeclarado: Number(debitoDeclarado) || 0,
       creditoDeclarado: Number(creditoDeclarado) || 0,
@@ -1583,6 +1572,38 @@ export default function POSPage() {
   }
 
   // Solo ADMIN (el backend también lo exige): cambia la política del negocio.
+  async function cargarUmbralCaja() {
+    const tid = localStorage.getItem("tenant_id");
+    if (!tid || !puedeConfigurarCaja) return;
+    try {
+      const r = await api.get(`/tenant-settings/${tid}/caja-pin`);
+      setUmbralEdit(String(Number(r.data?.umbralPinCaja) || 0));
+    } catch { /* se queda en 0: siempre pedir PIN */ }
+  }
+
+  async function guardarUmbralCaja() {
+    const tid = localStorage.getItem("tenant_id");
+    if (!tid) return;
+    setGuardandoUmbral(true);
+    setUmbralMsg(null);
+    try {
+      const r = await api.put(`/tenant-settings/${tid}/caja-pin`, { umbralPinCaja: Number(umbralEdit) || 0 });
+      setUmbralEdit(String(Number(r.data?.umbralPinCaja) || 0));
+      setUmbralPinCaja(Number(r.data?.umbralPinCaja) || 0);
+      setUmbralMsg({ ok: true, texto: "Guardado." });
+    } catch (error) {
+      const msg = (error as ApiErrorLike)?.response?.data?.message;
+      setUmbralMsg({ ok: false, texto: (Array.isArray(msg) ? msg.join(". ") : msg) || "No se pudo guardar el monto." });
+    } finally {
+      setGuardandoUmbral(false);
+    }
+  }
+
+  useEffect(() => {
+    if (authChecked && user) void cargarUmbralCaja();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authChecked, user?.roleCode]);
+
   async function savePoliticaDevoluciones(value: "SOLO_GERENTE" | "CAJERO_LIBRE") {
     const tid = localStorage.getItem("tenant_id");
     if (!tid) return;
@@ -2776,6 +2797,39 @@ export default function POSPage() {
               </div>
             )}
 
+            {puedeConfigurarCaja && (
+              <div className="rounded-xl border !border-line !bg-nav p-4">
+                <h3 className="text-lg font-semibold mb-3">Retiros y depósitos de caja</h3>
+                <p className="text-xs !text-content-3 mb-3">
+                  Todo retiro o depósito de efectivo lo autoriza un gerente o administrador con su PIN. Aquí eliges desde qué monto se pide
+                  (0 = siempre). Un monto menor queda en la bitácora sin autorizador.
+                </p>
+                <label htmlFor="umbral-pin-caja" className="block text-sm !text-content-3 mb-1">Pedir PIN de supervisor desde este monto ($)</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="umbral-pin-caja"
+                    type="text"
+                    inputMode="decimal"
+                    value={umbralEdit}
+                    onChange={(e) => setUmbralEdit(e.target.value.replace(/[^0-9.]/g, ""))}
+                    className="w-32 px-3 py-2 rounded !bg-surface-1 !text-content-1"
+                  />
+                  <button
+                    type="button"
+                    onClick={guardarUmbralCaja}
+                    disabled={guardandoUmbral}
+                    className="px-4 py-2 rounded !bg-btn !text-on-solid text-sm hover:!bg-btn-hover disabled:opacity-60"
+                  >
+                    Guardar
+                  </button>
+                </div>
+                <div className="mt-3 h-4 text-xs">
+                  {guardandoUmbral && <span className="!text-content-3">Guardando...</span>}
+                  {!guardandoUmbral && umbralMsg && <span className={umbralMsg.ok ? "!text-ok" : "!text-danger"}>{umbralMsg.texto}</span>}
+                </div>
+              </div>
+            )}
+
             <div className="rounded-xl border !border-line !bg-nav p-4">
               <h3 className="text-lg font-semibold mb-3">Impuestos</h3>
               <div>
@@ -3551,13 +3605,13 @@ export default function POSPage() {
           tipo="RETIRO"
           error={errMovimiento}
           errores={errMovimientoCampos}
-          esperado={shift ? efectivoEsperado(shift as any) : undefined}
           monto={withdrawalAmount}
           setMonto={setWithdrawalAmount}
           concepto={withdrawalReason}
           setConcepto={setWithdrawalReason}
-          autorizadoPor={withdrawalAuthorizedBy}
-          setAutorizadoPor={setWithdrawalAuthorizedBy}
+          pin={withdrawalPin}
+          setPin={setWithdrawalPin}
+          pedirPin={pedirPinDe(withdrawalAmount)}
           enviando={enviandoMovimiento}
           onCancel={() => { opRetiroRef.current = null; setShowWithdrawalModal(false); }}
           onConfirm={handleWithdrawal}
@@ -3570,13 +3624,13 @@ export default function POSPage() {
           tipo="DEPOSITO"
           error={errMovimiento}
           errores={errMovimientoCampos}
-          esperado={shift ? efectivoEsperado(shift as any) : undefined}
           monto={depositAmount}
           setMonto={setDepositAmount}
           concepto={depositOrigin}
           setConcepto={setDepositOrigin}
-          autorizadoPor={depositAuthorizedBy}
-          setAutorizadoPor={setDepositAuthorizedBy}
+          pin={depositPin}
+          setPin={setDepositPin}
+          pedirPin={pedirPinDe(depositAmount)}
           enviando={enviandoMovimiento}
           onCancel={() => { opDepositoRef.current = null; setShowDepositModal(false); }}
           onConfirm={handleDeposit}
@@ -3588,7 +3642,6 @@ export default function POSPage() {
         <PrecorteModal
           turno={shift as any}
           error={errPrecorte}
-          tickets={salesHistory.length}
           cashCounts={cashCounts}
           setCashCounts={setCashCounts}
           debito={debitoDeclarado}

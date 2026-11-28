@@ -184,6 +184,127 @@ async function main() {
     await abrir('/settings/appearance', /Apariencia|Tema|Skin/i, 'Apariencia');
     await page.context().close();
 
+    // ───────── POS: caja a ciegas con la cajera ─────────
+    page = await nueva(browser, { width: 1366, height: 768 });
+    console.log('POS caja a ciegas (cajera, 1366x768)');
+    const ventaApi = (precio, cantidad, forma) => page.evaluate(async ({ api, precio, cantidad, forma }) => {
+      const get = async (u) => (await fetch(api + '/api/v1' + u, { credentials: 'include' })).json();
+      const me = await get('/auth/me'); const yo = { ...(me.user ?? me), id: (me.user ?? me).id ?? (me.user ?? me).sub };
+      const turno = await get('/pos/shifts/open?cajero=' + yo.id);
+      const prods = await get('/pos/products');
+      const prod = (Array.isArray(prods) ? prods : prods.data).find((x) => Number(x.price) === precio);
+      const subtotal = precio * cantidad; const total = Math.round(subtotal * 1.16 * 100) / 100;
+      const fp = { forma, monto: total, ...(forma === 'EFECTIVO' ? { montoRecibido: total } : {}), ...(forma === 'DEBITO' ? { ultimos4Digitos: '1111' } : {}) };
+      const r = await fetch(api + '/api/v1/pos/sales', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+        folio: 'VTA-UI-' + Math.random().toString(36).slice(2, 9).toUpperCase(), sucursalId: turno.sucursalId, cajero: yo.id, turnoId: turno.id,
+        items: [{ productoId: prod.id, nombre: prod.name, cantidad, precioUnitario: precio, descuento: 0, subtotal }], subtotal, descuento: 0, impuestos: Math.round((total - subtotal) * 100) / 100, total, formasPago: [fp] }) });
+      return r.status;
+    }, { api: API, precio, cantidad, forma });
+    await paso('Cajera: entra y abre su turno con fondo', async () => {
+      await iniciarSesion(page, 'cajero@demo.com', '1234');
+      await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 20000 });
+      await page.goto(`${WEB}/pos`);
+      const dlg = page.getByRole('dialog');
+      await dlg.getByText('Apertura de Turno').waitFor({ timeout: 20000 });
+      await dlg.getByLabel('Fondo de Caja').fill('500');
+      await dlg.getByRole('button', { name: 'Abrir Turno' }).click();
+      await page.getByRole('button', { name: /Precorte/ }).waitFor({ timeout: 15000 });
+      sinErrores(page);
+    });
+    await paso('Cajera: vende en efectivo ($139.20 y $382.80) y con tarjeta', async () => {
+      const r = [await ventaApi(120, 1, 'EFECTIVO'), await ventaApi(330, 1, 'EFECTIVO'), await ventaApi(25, 1, 'DEBITO')];
+      if (r.some((x) => x !== 201)) throw new Error('ventas: ' + r.join(','));
+    });
+    const tecleaPin = async (dlg, pin) => { const pad = dlg.getByTestId('pin-supervisor').locator('..'); for (const d of pin) await pad.getByRole('button', { name: d, exact: true }).click(); };
+    await paso('Cajera: retiro pide PIN del supervisor, no muestra el esperado y rechaza un PIN falso', async () => {
+      await page.getByRole('button', { name: /Retiro/ }).click();
+      const dlg = page.getByRole('dialog');
+      await dlg.getByText('Retiro de Efectivo').waitFor();
+      if (/esperad/i.test(await dlg.innerText())) throw new Error('el retiro muestra el efectivo esperado');
+      await dlg.getByLabel('Monto').fill('50');
+      await dlg.getByLabel(/Motivo/).fill('Pago a proveedor');
+      await dlg.getByRole('button', { name: 'Retirar' }).click();
+      await dlg.getByText('El supervisor debe teclear su PIN').waitFor({ timeout: 5000 });
+      await tecleaPin(dlg, '000000');
+      await dlg.getByRole('button', { name: 'Retirar' }).click();
+      await dlg.getByText('Se requiere autorización de un supervisor').waitFor({ timeout: 10000 });
+      await page.screenshot({ path: 'test-resultados/pos-retiro-pin.png' });
+      await tecleaPin(dlg, '482915');
+      await dlg.getByRole('button', { name: 'Retirar' }).click();
+      await dlg.waitFor({ state: 'detached', timeout: 15000 });
+      sinErrores(page);
+    });
+    await paso('Cajera: precorte a ciegas (sin esperado ni diferencias), declara por denominación y guarda', async () => {
+      await page.getByRole('button', { name: /Precorte/ }).click();
+      const dlg = page.getByRole('dialog');
+      await dlg.getByText(/Precorte — Turno/).waitFor();
+      const texto = await dlg.innerText();
+      if (/esperado|diferencia|vs sistema|faltante|sobrante/i.test(texto)) throw new Error('el precorte muestra lo esperado o diferencias: ' + texto.match(/.{0,30}(esperado|diferencia|vs sistema|faltante|sobrante).{0,30}/i)?.[0]);
+      if (!/billetes/i.test(texto) || !/monedas/i.test(texto)) throw new Error('faltan billetes y monedas');
+      const val = await dlg.getByLabel('Cantidad de billetes de $500').inputValue();
+      if (val !== '') throw new Error('el conteo viene precargado: ' + val);
+      await dlg.getByLabel('Cantidad de billetes de $500').fill('1');
+      await dlg.getByLabel('Cantidad de monedas de $0.5').fill('3');
+      await dlg.getByLabel('Terminal débito').fill('29');
+      await dlg.getByText(/\$501\.50/).first().waitFor({ timeout: 5000 });
+      await page.screenshot({ path: 'test-resultados/pos-precorte-1366x768.png' });
+      await dlg.getByRole('button', { name: 'Guardar Precorte' }).click();
+      await page.getByText('Precorte guardado correctamente').waitFor({ timeout: 15000 });
+      await page.getByRole('button', { name: 'Entendido' }).click();
+      sinErrores(page);
+    });
+    await paso('Cajera: cerrar turno solo confirma lo declarado (sin tira Z, sin diferencias)', async () => {
+      await page.getByRole('button', { name: 'Cerrar Turno', exact: true }).click();
+      const dlg = page.getByRole('dialog');
+      await dlg.getByText('Lo que declaraste').waitFor({ timeout: 10000 });
+      const texto = await dlg.innerText();
+      if (/esperado|diferencia|faltante|sobrante|Corte Z/i.test(texto)) throw new Error('la cajera ve el corte Z o diferencias');
+      await page.screenshot({ path: 'test-resultados/pos-cierre-cajera.png' });
+      await dlg.getByRole('button', { name: /Cerrar Turno Definitivamente/ }).click();
+      await page.getByText(/Turno cerrado/).first().waitFor({ timeout: 15000 });
+      await page.getByRole('button', { name: 'Entendido' }).click().catch(() => {});
+      sinErrores(page);
+    });
+    await paso('Cajera: «Cortes de caja» le dice que no tiene permiso y no recibe totales', async () => {
+      await page.goto(`${WEB}/pos/cortes`);
+      await page.getByText(/Solo un administrador, un gerente o soporte/).waitFor({ timeout: 20000 });
+      if (await page.getByText(/Corte Z — Sistema vs Declarado/).count()) throw new Error('la cajera ve el corte Z');
+    });
+    await page.context().close();
+
+    // ───────── POS: el gerente cierra un turno y SÍ ve el corte Z con diferencias ─────────
+    // La cajera deja un turno con ventas y precorte (declaró $100 de efectivo; el sistema espera $139.20): por API, como lo dejaría su pantalla.
+    const cx = await browser.newContext();
+    const login = await cx.request.post(`${API}/api/v1/auth/login`, { data: { email: 'cajero@demo.com', password: '1234' } });
+    const yoCaja = (await login.json()).user;
+    const turnoCaja = await (await cx.request.post(`${API}/api/v1/pos/shifts`, { data: { sucursalId: yoCaja.branchId, fondoInicial: 200, cajero: yoCaja.id } })).json();
+    const prodsCaja = await (await cx.request.get(`${API}/api/v1/pos/products`)).json();
+    const prodA = (Array.isArray(prodsCaja) ? prodsCaja : prodsCaja.data).find((x) => Number(x.price) === 120);
+    await cx.request.post(`${API}/api/v1/pos/sales`, { data: { folio: 'VTA-UI-GER-1', sucursalId: yoCaja.branchId, cajero: yoCaja.id, turnoId: turnoCaja.id, items: [{ productoId: prodA.id, nombre: 'Platillo A', cantidad: 1, precioUnitario: 120, descuento: 0, subtotal: 120 }], subtotal: 120, descuento: 0, impuestos: 19.2, total: 139.2, formasPago: [{ forma: 'EFECTIVO', monto: 139.2, montoRecibido: 139.2 }] } });
+    await cx.request.post(`${API}/api/v1/pos/shifts/${turnoCaja.id}/precut`, { data: { efectivoDenominaciones: { '100': 1 }, debitoDeclarado: 0, creditoDeclarado: 0, transferenciaDeclarada: 0 } });
+    await cx.close();
+    page = await nueva(browser, { width: 1366, height: 768 });
+    console.log('Cortes de caja (gerente, 1366x768)');
+    await paso('Gerente: «Cortes de caja» muestra el corte Z con esperado, declarado y diferencia (faltante)', async () => {
+      await iniciarSesion(page, 'gerente@demo.com', 'Admin123');
+      await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 20000 });
+      await page.goto(`${WEB}/pos/cortes`);
+      await page.getByText('Cortes de caja').first().waitFor({ timeout: 20000 });
+      await page.locator('tbody tr', { hasText: 'Abierto' }).first().click();
+      await page.getByText(/Corte Z — Sistema vs Declarado/).waitFor({ timeout: 15000 });
+      const texto = await page.locator('body').innerText();
+      for (const k of [/esperado/i, /declarado/i, /diferencia/i, /efectivo/i, /tarjeta/i, /transferencia/i, /\$339\.20/, /\$139\.20/, /\$100\.00/, /-\$39\.20/, /\(faltante\)/]) {
+        if (!k.test(texto)) throw new Error('el corte Z no muestra ' + k);
+      }
+      const desborde = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+      if (desborde > 4) throw new Error('la página tiene scroll vertical (' + desborde + ' px)');
+      await axe(page, 'Cortes de caja');
+      await page.screenshot({ path: 'test-resultados/pos-corte-z-gerente.png' });
+      sinErrores(page);
+    });
+    await page.context().close();
+    await page.context().close();
+
     // ───────── Portal del empleado a 1366x768 y en móvil ─────────
     for (const [etiqueta, vp] of [['1366x768', { width: 1366, height: 768 }], ['móvil 390x844', { width: 390, height: 844 }]]) {
       page = await nueva(browser, vp);

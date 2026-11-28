@@ -1,46 +1,43 @@
 import { describe, expect, it } from 'vitest';
-import { conciliacionTurno, diferenciasPrecorte, efectivoEsperado, totalContado } from './cajaTurno';
+import { BILLETES, MONEDAS, claveBillete, claveMoneda, corteZ, estadoDiferencia, totalContado } from './cajaTurno';
 
-const turno = { fondoInicial: '500', totalEfectivo: '1200', totalDepositos: '100', totalRetiros: '300', totalTarjeta: '800', totalTransferencia: '250', totalCortesia: '40' };
-
-describe('efectivo esperado y conteo', () => {
-  it('fondo + efectivo + depósitos − retiros (acepta strings numéricos)', () => {
-    expect(efectivoEsperado(turno)).toBe(1500);
+describe('conteo por denominación (declaración a ciegas)', () => {
+  it('billetes 1000, 500, 200, 100, 50, 20 y monedas 20, 10, 5, 2, 1, 0.50', () => {
+    expect([...BILLETES]).toEqual([1000, 500, 200, 100, 50, 20]);
+    expect([...MONEDAS]).toEqual([20, 10, 5, 2, 1, 0.5]);
   });
-  it('total contado por denominaciones', () => {
-    expect(totalContado({ 1000: 1, 500: 2, 20: 3, 1: 4 })).toBe(1000 + 1000 + 60 + 4);
+  it('el billete de $20 y la moneda de $20 se cuentan por separado', () => {
+    expect(totalContado({ [claveBillete(20)]: 2, [claveMoneda(20)]: 3 })).toBe(40 + 60);
+  });
+  it('suma billetes y monedas, incluida la de 50 centavos, al centavo', () => {
+    const conteo = { [claveBillete(1000)]: 1, [claveBillete(500)]: 2, [claveMoneda(5)]: 3, [claveMoneda(0.5)]: 3 };
+    expect(totalContado(conteo)).toBe(1000 + 1000 + 15 + 1.5);
     expect(totalContado({})).toBe(0);
   });
 });
 
-describe('diferenciasPrecorte', () => {
-  it('declarado − sistema: faltante negativo, sobrante positivo', () => {
-    const [ef, tj, tr] = diferenciasPrecorte(turno, { efectivo: 1450, debito: 500, credito: 350, transferencia: 260 });
-    expect(ef.sistema).toBe(1500);
-    expect(ef.diferencia).toBe(-50);
-    expect(tj.sistema).toBe(800);
-    expect(tj.diferencia).toBe(50);
-    expect(tr.diferencia).toBe(10);
+describe('corteZ (solo lo ve ADMIN, GERENTE o SOPORTE)', () => {
+  // Caso real de la prueba de Miguel: fondo 500, retiro 50, ventas en efectivo 139.20 + 382.80 = 522.00 → en caja 972.00
+  const totals = {
+    fondoInicial: 500, efectivoEsperado: 972, efectivoEsperadoSinFondo: 472,
+    totalVentasDebito: 300, totalVentasCredito: 200, totalVentasSPEI: 250, totalRetiros: 50, totalDepositos: 0,
+  };
+  it('el efectivo esperado en caja es fondo + ventas − retiros ($972), y se compara sin el fondo ($472)', () => {
+    const z = corteZ(totals, { efectivoContado: 472, debitoDeclarado: 300, creditoDeclarado: 200, transferenciaDeclarada: 250 })!;
+    expect(z.efectivoEnCaja).toBe(972);
+    expect(z.fondoInicial).toBe(500);
+    expect(z.filas.map((f) => f.esperado)).toEqual([472, 500, 250]);
+    expect(z.filas.every((f) => f.diferencia === 0)).toBe(true);
   });
-  it('todo cuadrado = 0', () => {
-    const f = diferenciasPrecorte(turno, { efectivo: 1500, debito: 800, credito: 0, transferencia: 250 });
-    expect(f.every((x) => x.diferencia === 0)).toBe(true);
+  it('diferencia = declarado − esperado: faltante negativo, sobrante positivo', () => {
+    const z = corteZ(totals, { efectivoContado: 460, debitoDeclarado: 300, creditoDeclarado: 250, transferenciaDeclarada: 250 })!;
+    expect(z.filas[0].diferencia).toBe(-12);
+    expect(z.filas[1].diferencia).toBe(50);
+    expect(estadoDiferencia(z.filas[0].diferencia)).toBe('faltante');
+    expect(estadoDiferencia(z.filas[1].diferencia)).toBe('sobrante');
+    expect(estadoDiferencia(0)).toBe('cuadra');
   });
-});
-
-describe('conciliacionTurno (corte Z)', () => {
-  it('usa los totales del servidor y cae a la fórmula local si faltan', () => {
-    const c = conciliacionTurno(turno, { efectivoContado: 1500, debitoDeclarado: 300, creditoDeclarado: 500, transferenciaDeclarada: 250 }, undefined);
-    expect(c.filas[0].sistema).toBe(1500);
-    expect(c.filas[0].dif).toBe(0);
-    expect(c.filas.find((f) => f.nombre === 'SPEI')!.sistema).toBe(250);
-    expect(c.totalDeclarado).toBe(1500 + 300 + 500 + 250);
-  });
-  it('totales del servidor tienen prioridad y la cortesía no se declara', () => {
-    const c = conciliacionTurno(turno, {}, { efectivoEsperado: 2000, totalVentasDebito: 100, totalVentasCredito: 200, totalVentasSPEI: 50, totalVentasCortesia: 10 });
-    expect(c.filas[0].sistema).toBe(2000);
-    expect(c.filas[4].noDeclarado).toBe(true);
-    expect(c.totalSistema).toBe(2000 + 100 + 200 + 50 + 10);
-    expect(c.totalDif).toBe(c.totalSistema - c.totalDeclarado);
+  it('sin los totales del servidor (caja a ciegas) no hay corte que mostrar', () => {
+    expect(corteZ(undefined, { efectivoContado: 100 })).toBeNull();
   });
 });
